@@ -6,5 +6,6 @@ public enum OrderStatus {
     REJECTED,  // Order is rejected by admin
     EXPIRED,   // Order expired after 2 weeks without update
     COMPLETED, // Order processing is completed
-    CANCELLED  // Order is cancelled by customer
+    CANCELLED,  // Order is cancelled by customer
+    ALL
 }

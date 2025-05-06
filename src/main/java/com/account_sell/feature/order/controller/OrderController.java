@@ -14,14 +14,13 @@ import com.account_sell.feature.order.dto.response.ValidateAccountNumberResponse
 import com.account_sell.feature.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("/api/v1/orders")
+@RequestMapping("/api/v1/admin/orders")
 @RequiredArgsConstructor
 @Slf4j
 @Validated

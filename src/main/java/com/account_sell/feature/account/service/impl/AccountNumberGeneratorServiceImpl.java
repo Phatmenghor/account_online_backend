@@ -25,7 +25,7 @@ public class AccountNumberGeneratorServiceImpl implements AccountNumberGenerator
     @Override
     public GenerateAccountResponse generateSpecialAccountNumbers(GenerateAccountRequest request, int limit) {
         log.info("Generating special account numbers with pattern: {}, price range: {} - {}, filter: {}, limit: {}, type: {}",
-                request.getUserInputMinunum4DigitalTo9(), request.getMinPrice(), request.getMaxPrice(),
+                request.getInputNumber(), request.getMinPrice(), request.getMaxPrice(),
                 request.getFilter(), limit, request.getAccountType());
 
         // Validate request
@@ -37,7 +37,7 @@ public class AccountNumberGeneratorServiceImpl implements AccountNumberGenerator
             log.debug("Applying default limit of 10");
         }
 
-        String inputPattern = request.getUserInputMinunum4DigitalTo9();
+        String inputPattern = request.getInputNumber();
         double minPrice = request.getMinPrice();
         double maxPrice = request.getMaxPrice();
 
@@ -78,12 +78,12 @@ public class AccountNumberGeneratorServiceImpl implements AccountNumberGenerator
      * @throws InvalidInputException if request is invalid
      */
     private void validateRequest(GenerateAccountRequest request) {
-        if (request.getUserInputMinunum4DigitalTo9() == null || request.getUserInputMinunum4DigitalTo9().trim().isEmpty()) {
+        if (request.getInputNumber() == null || request.getInputNumber().trim().isEmpty()) {
             log.error("Input number pattern is required");
             throw new InvalidInputException("Input number pattern is required");
         }
 
-        String input = request.getUserInputMinunum4DigitalTo9().trim();
+        String input = request.getInputNumber().trim();
 
         if (input.length() > 9) {
             log.error("Input must not exceed 9 digits: {}", input);

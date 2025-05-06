@@ -13,17 +13,18 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
+    @Mapping(source = "ratePrice", target = "ratePrice")
     OrderResponse toOrderResponse(OrderEntity order);
-    
+
     List<OrderResponse> toOrderResponseList(List<OrderEntity> orders);
-    
+
     @Mapping(source = "order.id", target = "orderId")
     @Mapping(source = "order.accountNumber", target = "accountNumber")
     @Mapping(source = "order.customerName", target = "customerName")
     OrderHistoryResponse toOrderHistoryResponse(OrderHistoryEntity history);
-    
+
     List<OrderHistoryResponse> toOrderHistoryResponseList(List<OrderHistoryEntity> historyList);
-    
+
     default <T> OrderListResponse<T> toListResponse(Page<?> page, List<T> content) {
         return OrderListResponse.<T>builder()
                 .content(content)

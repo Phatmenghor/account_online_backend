@@ -2,6 +2,7 @@ package com.account_sell.feature.order.service.impl;
 
 import com.account_sell.enumation.AccountType;
 import com.account_sell.enumation.OrderStatus;
+import com.account_sell.enumation.PriceRange;
 import com.account_sell.exceptions.error.BadRequestException;
 import com.account_sell.exceptions.error.DuplicateNameException;
 import com.account_sell.exceptions.error.NotFoundException;
@@ -81,11 +82,15 @@ public class OrderServiceImpl implements OrderService {
 
         // Calculate price based on the pattern
         double calculatedPrice = PatternUtil.calculatePrice(accountNumber);
+        PriceRange priceRange = PriceRange.getRangeByPrice(calculatedPrice);
+
+
         return ValidateAccountNumberResponse.builder()
                 .isValid(true)
                 .isAvailable(true)
                 .accountNumber(accountNumber)
                 .price(BigDecimal.valueOf(calculatedPrice))
+                .ratePrice(priceRange.getRangeDescription())
                 .message("Account number is available")
                 .build();
     }
@@ -95,24 +100,11 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse createOrder(CreateOrderRequest request) {
         log.info("Creating order for account number: {}", request.getAccountNumber());
 
-        // Validate account number first
-        ValidateAccountNumberRequest validateRequest = new ValidateAccountNumberRequest(request.getAccountNumber());
-        ValidateAccountNumberResponse validation = validateAccountNumber(validateRequest);
-
-        if (!validation.isValid()) {
-            log.error("Invalid account number format: {}", request.getAccountNumber());
-            throw new BadRequestException("Invalid account number: " + validation.getMessage());
-        }
-
-        if (!validation.isAvailable()) {
-            log.error("Account number already exists: {}", request.getAccountNumber());
-            throw new DuplicateNameException("Account number is already booked");
-        }
-
         // Create new order
         OrderEntity order = OrderEntity.builder()
                 .accountNumber(request.getAccountNumber())
-                .price(validation.getPrice())
+                .price(request.getPrice())
+                .ratePrice(request.getRatePrice())
                 .customerName(request.getCustomerName())
                 .phoneNumber(request.getPhoneNumber())
                 .idNumber(request.getIdNumber())

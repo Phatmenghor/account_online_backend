@@ -18,7 +18,7 @@ public class GenerateAccountRequest {
 
     @NotBlank(message = "Input number pattern is required")
     @Size(min = 1, max = 9, message = "Input must be between 1 and 9 digits")
-    private String userInputMinunum4DigitalTo9;
+    private String inputNumber;
 
     @Min(value = 0, message = "Minimum price cannot be negative")
     private double minPrice;
