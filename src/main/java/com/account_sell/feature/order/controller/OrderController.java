@@ -30,7 +30,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping("/validate")
-    public ResponseEntity<ApiResponse<ValidateAccountNumberResponse>> validateAccountNumber(
+    public ApiResponse<ValidateAccountNumberResponse> validateAccountNumber(
             @RequestBody @Valid ValidateAccountNumberRequest request) {
 
         log.info("Received request to validate account number: {}", request.getAccountNumber());
@@ -39,15 +39,15 @@ public class OrderController {
 
         log.info("Validation completed: {} - {}", request.getAccountNumber(), response.getMessage());
 
-        return ResponseEntity.ok(new ApiResponse<>(
+        return new ApiResponse<>(
                 response.isValid() && response.isAvailable() ? "success" : "warning",
                 response.getMessage(),
                 response
-        ));
+        );
     }
 
     @PostMapping()
-    public ResponseEntity<ApiResponse<OrderResponse>> createOrder(
+    public ApiResponse<OrderResponse> createOrder(
             @RequestBody @Valid CreateOrderRequest request) {
 
         log.info("Received request to create order for account number: {}", request.getAccountNumber());
@@ -56,30 +56,30 @@ public class OrderController {
 
         log.info("Order created successfully with ID: {}", response.getId());
 
-        return ResponseEntity.ok(new ApiResponse<>(
+        return new ApiResponse<>(
                 "success",
                 "Order created successfully",
                 response
-        ));
+        );
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<ApiResponse<OrderResponse>> getOrderById(@PathVariable Long id) {
+    public ApiResponse<OrderResponse> getOrderById(@PathVariable Long id) {
         log.info("Received request to get order with ID: {}", id);
 
         OrderResponse response = orderService.getOrderById(id);
 
         log.info("Successfully retrieved order with ID: {}", id);
 
-        return ResponseEntity.ok(new ApiResponse<>(
+        return new ApiResponse<>(
                 "success",
                 "Order retrieved successfully",
                 response
-        ));
+        );
     }
 
     @PostMapping("/{id}/status")
-    public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatus(
+    public ApiResponse<OrderResponse> updateOrderStatus(
             @PathVariable Long id,
             @RequestBody @Valid UpdateOrderStatusRequest request) {
 
@@ -89,11 +89,11 @@ public class OrderController {
 
         log.info("Order status updated successfully for ID: {}", id);
 
-        return ResponseEntity.ok(new ApiResponse<>(
+        return new ApiResponse<>(
                 "success",
                 "Order status updated successfully",
                 response
-        ));
+        );
     }
 
     @PostMapping("/booked")
@@ -123,7 +123,7 @@ public class OrderController {
     }
 
     @PostMapping("/history")
-    public ResponseEntity<ApiResponse<OrderListResponse<OrderHistoryResponse>>> getOrderHistory(
+    public ApiResponse<OrderListResponse<OrderHistoryResponse>> getOrderHistory(
             @RequestParam(value = "pageNo", defaultValue = "1") int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @RequestParam(value = "status", required = false) OrderStatus status,
@@ -145,11 +145,11 @@ public class OrderController {
 
         log.info("Successfully retrieved {} order history records", response.getTotalElements());
 
-        return ResponseEntity.ok(new ApiResponse<>(
+        return new ApiResponse<>(
                 "success",
                 "Order history retrieved successfully",
                 response
-        ));
+        );
     }
 
     /**
@@ -158,17 +158,17 @@ public class OrderController {
      */
     @PostMapping("/cleanup")
     @RequiresRole(value = {"ADMIN"})
-    public ResponseEntity<ApiResponse<String>> triggerOrderCleanup() {
+    public ApiResponse<String> triggerOrderCleanup() {
         log.info("Received request to manually trigger order cleanup");
 
         orderService.processOldOrders();
 
         log.info("Order cleanup process completed successfully");
 
-        return ResponseEntity.ok(new ApiResponse<>(
+        return new ApiResponse<>(
                 "success",
                 "Order cleanup process completed successfully",
                 "All orders not updated for 2 weeks have been moved to EXPIRED status"
-        ));
+        );
     }
 }
