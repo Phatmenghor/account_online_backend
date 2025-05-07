@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class OrderHistoryResponse {
     private Long id;
-    private Long orderId;
+    private OrderResponse order;
     private String accountNumber;
     private String customerName;
     private OrderStatus oldStatus;

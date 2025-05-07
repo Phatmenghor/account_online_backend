@@ -41,15 +41,6 @@ public enum PriceRange {
         return DEFAULT;
     }
 
-    public static PriceRange getRangeByPrice(double price) {
-        for (PriceRange range : values()) {
-            if (price >= range.minRange && price < range.maxRange) {
-                return range;
-            }
-        }
-        return PREMIUM_10000; // Default to PREMIUM_100000 for any prices above the defined ranges
-    }
-
     /**
      * Get range description for this price
      *

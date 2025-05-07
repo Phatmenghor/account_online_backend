@@ -13,6 +13,8 @@ public interface OrderService {
     // Account validation
     ValidateAccountNumberResponse validateAccountNumber(ValidateAccountNumberRequest request);
 
+    ValidateAccountNumberResponse validateAccountBank(ValidateAccountNumberRequest request);
+
     // Order CRUD operations
     OrderResponse createOrder(CreateOrderRequest request);
 

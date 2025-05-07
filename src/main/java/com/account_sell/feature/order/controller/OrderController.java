@@ -12,6 +12,8 @@ import com.account_sell.feature.order.dto.response.OrderListResponse;
 import com.account_sell.feature.order.dto.response.OrderResponse;
 import com.account_sell.feature.order.dto.response.ValidateAccountNumberResponse;
 import com.account_sell.feature.order.service.OrderService;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -27,40 +29,6 @@ import javax.validation.Valid;
 public class OrderController {
 
     private final OrderService orderService;
-
-    @PostMapping("/validate")
-    public ApiResponse<ValidateAccountNumberResponse> validateAccountNumber(
-            @RequestBody @Valid ValidateAccountNumberRequest request) {
-
-        log.info("Received request to validate account number: {}", request.getAccountNumber());
-
-        ValidateAccountNumberResponse response = orderService.validateAccountNumber(request);
-
-        log.info("Validation completed: {} - {}", request.getAccountNumber(), response.getMessage());
-
-        return new ApiResponse<>(
-                response.isValid() && response.isAvailable() ? "success" : "warning",
-                response.getMessage(),
-                response
-        );
-    }
-
-    @PostMapping()
-    public ApiResponse<OrderResponse> createOrder(
-            @RequestBody @Valid CreateOrderRequest request) {
-
-        log.info("Received request to create order for account number: {}", request.getAccountNumber());
-
-        OrderResponse response = orderService.createOrder(request);
-
-        log.info("Order created successfully with ID: {}", response.getId());
-
-        return new ApiResponse<>(
-                "success",
-                "Order created successfully",
-                response
-        );
-    }
 
     @PostMapping("/{id}")
     public ApiResponse<OrderResponse> getOrderById(@PathVariable Long id) {
@@ -95,11 +63,15 @@ public class OrderController {
         );
     }
 
-    @PostMapping("/booked")
+    @PostMapping("/booked-and-accepted")
     public ApiResponse<OrderListResponse<OrderResponse>> getBookedOrders(
             @Valid
             @RequestParam(value = "pageNo", defaultValue = "1") int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
+            @Parameter(
+                    schema = @Schema(allowableValues = {"BOOKED", "ACCEPTED"})
+            )
+            @RequestParam(value = "status", required = false) OrderStatus status,
             @RequestParam(value = "search", required = false) String search) {
 
         log.info("Received request to get BOOKED orders - page: {}, size: {}, search: '{}'",
@@ -109,6 +81,11 @@ public class OrderController {
         filterRequest.setPageNo(pageNo - 1);
         filterRequest.setPageSize(pageSize);
         filterRequest.setSearch(search);
+
+        // Set status if provided
+        if (status != null) {
+            filterRequest.setStatus(status);
+        }
 
         OrderListResponse<OrderResponse> response = orderService.getBookedOrders(filterRequest);
 

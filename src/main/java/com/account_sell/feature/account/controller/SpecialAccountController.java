@@ -14,7 +14,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
 @RestController
-@RequestMapping("/api/v1/admin/special-accounts")
+@RequestMapping("/api/v1/user/special-accounts")
 @RequiredArgsConstructor
 @Slf4j
 @Validated

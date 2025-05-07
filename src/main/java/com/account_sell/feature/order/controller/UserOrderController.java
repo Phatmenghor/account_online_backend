@@ -25,7 +25,7 @@ public class UserOrderController {
 
     private final OrderService orderService;
 
-    @PostMapping("/validate")
+    @PostMapping("/validate/account-number")
     public ApiResponse<ValidateAccountNumberResponse> validateAccountNumber(
             @RequestBody @Valid ValidateAccountNumberRequest request) {
 
@@ -34,6 +34,23 @@ public class UserOrderController {
         ValidateAccountNumberResponse response = orderService.validateAccountNumber(request);
 
         log.info("Validation completed: {} - {}", request.getAccountNumber(), response.getMessage());
+
+        return new ApiResponse<>(
+                response.isValid() && response.isAvailable() ? "success" : "warning",
+                response.getMessage(),
+                response
+        );
+    }
+
+    @PostMapping("/validate/account-bank")
+    public ApiResponse<ValidateAccountNumberResponse> validateAccountBank(
+            @RequestBody @Valid ValidateAccountNumberRequest request){
+
+        log.info("Received request to validate account bank: {}", request.getAccountNumber());
+
+        ValidateAccountNumberResponse response = orderService.validateAccountBank(request);
+
+        log.info("Validation completed : {} - {}", request.getAccountNumber(), response.getMessage());
 
         return new ApiResponse<>(
                 response.isValid() && response.isAvailable() ? "success" : "warning",

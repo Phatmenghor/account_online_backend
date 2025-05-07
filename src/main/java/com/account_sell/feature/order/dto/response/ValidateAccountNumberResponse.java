@@ -17,6 +17,5 @@ public class ValidateAccountNumberResponse {
     private boolean isAvailable;
     private String accountNumber;
     private BigDecimal price;
-    private String ratePrice;
     private String message;
 }

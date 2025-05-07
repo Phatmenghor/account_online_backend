@@ -18,7 +18,7 @@ public interface OrderMapper {
 
     List<OrderResponse> toOrderResponseList(List<OrderEntity> orders);
 
-    @Mapping(source = "order.id", target = "orderId")
+    @Mapping(source = "order", target = "order")
     @Mapping(source = "order.accountNumber", target = "accountNumber")
     @Mapping(source = "order.customerName", target = "customerName")
     OrderHistoryResponse toOrderHistoryResponse(OrderHistoryEntity history);

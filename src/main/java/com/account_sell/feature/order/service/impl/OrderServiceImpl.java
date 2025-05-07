@@ -52,9 +52,10 @@ public class OrderServiceImpl implements OrderService {
         String accountNumber = request.getAccountNumber();
 
         // Check if account number already exists in our system with BOOKED status
-        boolean isAlreadyBooked = orderRepository.existsByAccountNumberAndStatus(accountNumber, OrderStatus.BOOKED);
+        boolean isAlreadyUsed = orderRepository.existsByAccountNumberAndStatusIn(
+                accountNumber, List.of(OrderStatus.BOOKED, OrderStatus.ACCEPTED));
 
-        if (isAlreadyBooked) {
+        if (isAlreadyUsed) {
             log.warn("Account number already exists in our system with BOOKED status: {}", accountNumber);
             return ValidateAccountNumberResponse.builder()
                     .isValid(true)
@@ -76,21 +77,49 @@ public class OrderServiceImpl implements OrderService {
                     .validBy("BANK")
                     .isAvailable(false)
                     .accountNumber(accountNumber)
-                    .message("Account number is valid, exists in bank system, and is available")
+                    .message("Account number is valid, exists in bank system, and is not available")
                     .build();
         }
 
         // Calculate price based on the pattern
         double calculatedPrice = PatternUtil.calculatePrice(accountNumber);
-        PriceRange priceRange = PriceRange.getRangeByPrice(calculatedPrice);
-
 
         return ValidateAccountNumberResponse.builder()
                 .isValid(true)
                 .isAvailable(true)
                 .accountNumber(accountNumber)
                 .price(BigDecimal.valueOf(calculatedPrice))
-                .ratePrice(priceRange.getRangeDescription())
+                .message("Account number is available")
+                .build();
+    }
+
+    public ValidateAccountNumberResponse validateAccountBank(ValidateAccountNumberRequest request){
+
+        String accountNumber = request.getAccountNumber();
+
+        // Validate with bank's system via SOAP
+        boolean existsInBankSystem = bankAccountService.validateBankAccount(accountNumber);
+
+        // If the account doesn't exist in the bank system, it's invalid
+        if (existsInBankSystem) {
+            log.warn("Account number doesn't exist in bank system : {}", accountNumber);
+            return ValidateAccountNumberResponse.builder()
+                    .isValid(false)
+                    .validBy("BANK")
+                    .isAvailable(false)
+                    .accountNumber(accountNumber)
+                    .message("Account number is valid, exists in bank system, and is not available")
+                    .build();
+        }
+
+        // Calculate price based on the pattern
+        double calculatedPrice = PatternUtil.calculatePrice(accountNumber);
+
+        return ValidateAccountNumberResponse.builder()
+                .isValid(true)
+                .isAvailable(true)
+                .accountNumber(accountNumber)
+                .price(BigDecimal.valueOf(calculatedPrice))
                 .message("Account number is available")
                 .build();
     }
@@ -199,7 +228,7 @@ public class OrderServiceImpl implements OrderService {
 
         // Get orders with BOOKED status and search
         Page<OrderEntity> ordersPage = orderRepository.findBookedOrdersWithSearch(
-                OrderStatus.BOOKED,
+                request.getStatus(),
                 request.getSearch(),
                 pageable);
 

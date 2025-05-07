@@ -9,8 +9,7 @@ public enum AccountType {
     FD_RD("FD / RD"),
     DOB("DOB"),
     PHONE("Phone"),
-    NORMAL("Normal"),
-    ALL("All");
+    NORMAL("Normal");
 
     private final String displayName;
 
