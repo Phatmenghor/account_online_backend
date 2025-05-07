@@ -2,9 +2,7 @@ package com.account_sell.feature.order.service.impl;
 
 import com.account_sell.enumation.AccountType;
 import com.account_sell.enumation.OrderStatus;
-import com.account_sell.enumation.PriceRange;
 import com.account_sell.exceptions.error.BadRequestException;
-import com.account_sell.exceptions.error.DuplicateNameException;
 import com.account_sell.exceptions.error.NotFoundException;
 import com.account_sell.feature.order.dto.request.CreateOrderRequest;
 import com.account_sell.feature.order.dto.request.OrderFilterRequest;
@@ -34,6 +32,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -53,7 +52,7 @@ public class OrderServiceImpl implements OrderService {
 
         // Check if account number already exists in our system with BOOKED status
         boolean isAlreadyUsed = orderRepository.existsByAccountNumberAndStatusIn(
-                accountNumber, List.of(OrderStatus.BOOKED, OrderStatus.ACCEPTED));
+                accountNumber, Arrays.asList(OrderStatus.BOOKED, OrderStatus.ACCEPTED));
 
         if (isAlreadyUsed) {
             log.warn("Account number already exists in our system with BOOKED status: {}", accountNumber);
