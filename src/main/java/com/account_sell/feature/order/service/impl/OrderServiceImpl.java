@@ -175,6 +175,20 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public OrderHistoryResponse getOrderHistoryById(Long id) {
+        log.info("Fetching order history with ID: {}", id);
+
+        OrderHistoryEntity order = orderHistoryRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("Order history not found with ID: {}", id);
+                    return new NotFoundException("Order history not found with ID: " + id);
+                });
+
+        log.info("Found order history with ID: {}", id);
+        return orderMapper.toOrderHistoryResponse(order);
+    }
+
+    @Override
     @Transactional
     public OrderResponse updateOrderStatus(Long id, UpdateOrderStatusRequest request) {
         log.info("Updating status for order ID: {} to {}", id, request.getNewStatus());

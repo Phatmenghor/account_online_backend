@@ -20,6 +20,8 @@ public interface OrderService {
 
     OrderResponse getOrderById(Long id);
 
+    OrderHistoryResponse getOrderHistoryById(Long id);
+
     OrderResponse updateOrderStatus(Long id, UpdateOrderStatusRequest request);
 
     // Order listings with pagination and search

@@ -17,7 +17,6 @@ public class OrderHistoryResponse {
     private OrderResponse order;
     private String accountNumber;
     private String customerName;
-    private OrderStatus oldStatus;
     private OrderStatus newStatus;
     private String remarks;
     private LocalDateTime createdAt;

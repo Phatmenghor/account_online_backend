@@ -45,6 +45,21 @@ public class OrderController {
         );
     }
 
+    @PostMapping("/history/{id}")
+    public ApiResponse<OrderHistoryResponse> getOrderHistoryById(@PathVariable Long id) {
+        log.info("Received request to get order history with ID: {}", id);
+
+        OrderHistoryResponse response = orderService.getOrderHistoryById(id);
+
+        log.info("Successfully retrieved order history with ID: {}", id);
+
+        return new ApiResponse<>(
+                "success",
+                "Order history retrieved successfully",
+                response
+        );
+    }
+
     @PostMapping("/{id}/status")
     public ApiResponse<OrderResponse> updateOrderStatus(
             @PathVariable Long id,
