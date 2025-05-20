@@ -7,4 +7,5 @@ import lombok.Data;
 public class UpdateUserRequestDto {
     private String email;
     private StatusData status;
+    private String profileUrl;
 }

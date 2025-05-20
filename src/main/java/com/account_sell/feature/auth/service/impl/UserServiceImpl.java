@@ -137,6 +137,8 @@ public class UserServiceImpl implements UserService {
             log.info("Updated status: {} -> {}", oldStatus, request.getStatus());
         }
 
+        if (request.getProfileUrl() != null) user.setProfileUrl(request.getProfileUrl());
+
         UserEntity updated = userRepository.save(user);
         log.info("Successfully updated user with id: {}", id);
         return userMapper.mapToDto(updated);

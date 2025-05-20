@@ -91,7 +91,7 @@ public class AuthController {
         }
     }
 
-    @PostMapping("admin/create-user")
+    @PostMapping("create-user")
     @RequiresRole(value = {"ADMIN", "DEVELOPER"}, anyRole = true, message = "Only administrators and developers can create users")
     public ApiResponse<UserResponseDto> createUser(@Valid @RequestBody RegisterRequestDto registerDto) {
         log.info("Admin request to create user with email: {}", registerDto.getEmail());

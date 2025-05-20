@@ -25,6 +25,8 @@ public class UserEntity extends BaseEntity {
 
     private String password;
 
+    private String profileUrl;
+
     @Enumerated(EnumType.STRING)
     private StatusData status;
 

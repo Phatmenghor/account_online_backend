@@ -16,7 +16,15 @@ spring:
           lob:
             non_contextual_creation: true
         temp:
-          use_jdbc_metadata_defaults: false
+          use_jdbc_metadata_defaults:
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.PostgreSQLDialect
+          jdbc:
+            lob:
+              non_contextual_creation: true
+          temp:
+            use_jdbc_metadata_defaults: false
 
   datasource:
     url: jdbc:postgresql://192.168.127.86:5432/account_sell_online

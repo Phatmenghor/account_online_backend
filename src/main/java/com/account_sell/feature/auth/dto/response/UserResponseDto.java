@@ -16,6 +16,7 @@ public class UserResponseDto {
     private String email;
     private String userRole;
     private String userStatus;
+    private String profileUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
