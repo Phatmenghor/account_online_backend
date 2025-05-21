@@ -27,12 +27,9 @@ spring:
             use_jdbc_metadata_defaults: false
 
   datasource:
-#    url: jdbc:postgresql://192.168.127.86:5432/account_sell_online
-#    username: postgres
-#    password: 123cp!@#
-    url: jdbc:postgresql://localhost:5432/account_sell_online
+    url: jdbc:postgresql://192.168.127.86:5432/account_sell_online
     username: postgres
-    password: root
+    password: 123cp!@#
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
