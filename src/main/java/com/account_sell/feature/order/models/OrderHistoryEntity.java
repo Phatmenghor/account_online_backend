@@ -2,6 +2,7 @@ package com.account_sell.feature.order.models;
 
 import com.account_sell.enumation.OrderStatus;
 import com.account_sell.feature.auth.models.BaseEntity;
+import com.account_sell.feature.auth.models.UserEntity;
 import lombok.*;
 
 import javax.persistence.*;
@@ -32,4 +33,8 @@ public class OrderHistoryEntity extends BaseEntity {
     
     @Column(name = "remarks", length = 500)
     private String remarks;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
 }

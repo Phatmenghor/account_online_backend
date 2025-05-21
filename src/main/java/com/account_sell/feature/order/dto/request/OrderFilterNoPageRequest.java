@@ -8,9 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderFilterRequest {
-    private int pageNo = 1;
-    private int pageSize = 10;
+public class OrderFilterNoPageRequest {
     private OrderStatus status;
     private String startDate;
     private String endDate;

@@ -3,10 +3,7 @@ package com.account_sell.feature.order.controller;
 import com.account_sell.config.RequiresRole;
 import com.account_sell.enumation.OrderStatus;
 import com.account_sell.exceptions.response.ApiResponse;
-import com.account_sell.feature.order.dto.request.CreateOrderRequest;
-import com.account_sell.feature.order.dto.request.OrderFilterRequest;
-import com.account_sell.feature.order.dto.request.UpdateOrderStatusRequest;
-import com.account_sell.feature.order.dto.request.ValidateAccountNumberRequest;
+import com.account_sell.feature.order.dto.request.*;
 import com.account_sell.feature.order.dto.response.OrderHistoryResponse;
 import com.account_sell.feature.order.dto.response.OrderListResponse;
 import com.account_sell.feature.order.dto.response.OrderResponse;
@@ -16,10 +13,12 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/admin/orders")
@@ -113,14 +112,20 @@ public class OrderController {
         );
     }
 
-    @PostMapping("/history")
+    @PostMapping("/history/page")
     public ApiResponse<OrderListResponse<OrderHistoryResponse>> getOrderHistory(
             @RequestParam(value = "pageNo", defaultValue = "1") int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @RequestParam(value = "status", required = false) OrderStatus status,
+            @RequestParam(value = "user_id", required = false) Long userId,
+            @Parameter(description = "Start date for filtering (format: dd/MM/yyyy)")
+            @RequestParam(value = "start_date", required = false) String startDate,
+            @Parameter(description = "End date for filtering (format: dd/MM/yyyy)")
+            @RequestParam(value = "end_date", required = false) String endDate,
             @RequestParam(value = "search", required = false) String search) {
 
-        log.info("Received request to get order history - page: {}, size: {}, status: {}, search: '{}'", pageNo - 1, pageSize, status, search);
+        log.info("Received request to get order history - page: {}, size: {}, status: {}, userId: {}, dateRange: {} to {}, search: '{}'",
+                pageNo - 1, pageSize, status, userId, startDate, endDate, search);
 
         OrderFilterRequest filterRequest = new OrderFilterRequest();
         filterRequest.setPageNo(pageNo - 1);
@@ -132,9 +137,69 @@ public class OrderController {
             filterRequest.setStatus(status);
         }
 
+        // Set userId if provided
+        if (userId != null) {
+            filterRequest.setUserId(userId);
+        }
+
+        // Set date range if provided
+        if (StringUtils.hasText(startDate)) {
+            filterRequest.setStartDate(startDate);
+        }
+
+        if (StringUtils.hasText(endDate)) {
+            filterRequest.setEndDate(endDate);
+        }
+
         OrderListResponse<OrderHistoryResponse> response = orderService.getOrderHistory(filterRequest);
 
-        log.info("Successfully retrieved {} order history records", response.getTotalElements());
+        log.info("Successfully retrieved {} order history records ", response.getTotalElements());
+
+        return new ApiResponse<>(
+                "success",
+                "Order history retrieved successfully",
+                response
+        );
+    }
+
+    @PostMapping("/history/all")
+    public ApiResponse<List<OrderHistoryResponse>> getOrderHistoryNoPage(
+            @RequestParam(value = "status", required = false) OrderStatus status,
+            @RequestParam(value = "user_id", required = false) Long userId,
+            @Parameter(description = "Start date for filtering (format: dd/MM/yyyy)")
+            @RequestParam(value = "start_date", required = false) String startDate,
+            @Parameter(description = "End date for filtering (format: dd/MM/yyyy)")
+            @RequestParam(value = "end_date", required = false) String endDate,
+            @RequestParam(value = "search", required = false) String search) {
+
+        log.info("Received request to get order history - status: {}, userId: {}, dateRange: {} to {}, search: '{}'",
+                status, userId, startDate, endDate, search);
+
+        OrderFilterNoPageRequest filterRequest = new OrderFilterNoPageRequest();
+        filterRequest.setSearch(search);
+
+        // Set status if provided
+        if (status != null) {
+            filterRequest.setStatus(status);
+        }
+
+        // Set userId if provided
+        if (userId != null) {
+            filterRequest.setUserId(userId);
+        }
+
+        // Set date range if provided
+        if (StringUtils.hasText(startDate)) {
+            filterRequest.setStartDate(startDate);
+        }
+
+        if (StringUtils.hasText(endDate)) {
+            filterRequest.setEndDate(endDate);
+        }
+
+        List<OrderHistoryResponse> response = orderService.getOrderHistoryNoPage(filterRequest);
+
+        log.info("Successfully retrieved {} order history records", response.size());
 
         return new ApiResponse<>(
                 "success",

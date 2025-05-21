@@ -1,6 +1,7 @@
 package com.account_sell.feature.auth.models;
 
 import com.account_sell.enumation.StatusData;
+import com.account_sell.feature.order.models.OrderHistoryEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -35,4 +36,7 @@ public class UserEntity extends BaseEntity {
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private List<Role> roles = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<OrderHistoryEntity> orderHistory;
 }

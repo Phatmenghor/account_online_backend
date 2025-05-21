@@ -1,6 +1,7 @@
 package com.account_sell.feature.order.dto.response;
 
 import com.account_sell.enumation.OrderStatus;
+import com.account_sell.feature.auth.dto.response.UserHistoryResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,5 +20,6 @@ public class OrderHistoryResponse {
     private String customerName;
     private OrderStatus newStatus;
     private String remarks;
+    private UserHistoryResponse user;
     private LocalDateTime createdAt;
 }

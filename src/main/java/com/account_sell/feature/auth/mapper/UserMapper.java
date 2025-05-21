@@ -1,5 +1,6 @@
 package com.account_sell.feature.auth.mapper;
 
+import com.account_sell.feature.auth.dto.response.UserHistoryResponse;
 import com.account_sell.feature.auth.dto.response.UserResponseDto;
 import com.account_sell.feature.auth.dto.response.AllUserResponseDto;
 import com.account_sell.feature.auth.models.UserEntity;

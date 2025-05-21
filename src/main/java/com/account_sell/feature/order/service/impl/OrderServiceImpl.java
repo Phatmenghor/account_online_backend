@@ -4,10 +4,8 @@ import com.account_sell.enumation.AccountType;
 import com.account_sell.enumation.OrderStatus;
 import com.account_sell.exceptions.error.BadRequestException;
 import com.account_sell.exceptions.error.NotFoundException;
-import com.account_sell.feature.order.dto.request.CreateOrderRequest;
-import com.account_sell.feature.order.dto.request.OrderFilterRequest;
-import com.account_sell.feature.order.dto.request.UpdateOrderStatusRequest;
-import com.account_sell.feature.order.dto.request.ValidateAccountNumberRequest;
+import com.account_sell.feature.auth.models.UserEntity;
+import com.account_sell.feature.order.dto.request.*;
 import com.account_sell.feature.order.dto.response.OrderHistoryResponse;
 import com.account_sell.feature.order.dto.response.OrderListResponse;
 import com.account_sell.feature.order.dto.response.OrderResponse;
@@ -20,6 +18,7 @@ import com.account_sell.feature.order.repository.OrderRepository;
 import com.account_sell.feature.order.service.BankAccountService;
 import com.account_sell.feature.order.service.OrderService;
 import com.account_sell.utils.PatternUtil;
+import com.account_sell.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,7 +30,10 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -44,6 +46,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderHistoryRepository orderHistoryRepository;
     private final OrderMapper orderMapper;
     private final BankAccountService bankAccountService;
+    private final SecurityUtils securityUtils;
 
     @Override
     public ValidateAccountNumberResponse validateAccountNumber(ValidateAccountNumberRequest request) {
@@ -205,12 +208,15 @@ public class OrderServiceImpl implements OrderService {
             throw new BadRequestException("Order already has status: " + request.getNewStatus());
         }
 
+        UserEntity currentUser = securityUtils.getCurrentUser();
+
         // Record history before updating status
         OrderHistoryEntity history = OrderHistoryEntity.builder()
                 .order(order)
                 .oldStatus(order.getStatus())
                 .newStatus(request.getNewStatus())
                 .remarks(request.getRemarks())
+                .user(currentUser)
                 .build();
 
         orderHistoryRepository.save(history);
@@ -253,29 +259,155 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.toListResponse(ordersPage, orderResponses);
     }
 
+    // Order History with pagination
     @Override
     public OrderListResponse<OrderHistoryResponse> getOrderHistory(OrderFilterRequest request) {
-        log.info("Fetching order history with filter - page: {}, size: {}, status: {}, search: {}",
-                request.getPageNo(), request.getPageSize(), request.getStatus(), request.getSearch());
+        log.info("Fetching order history with filter - page: {}, size: {}, status: {}, userId: {}, startDate: {}, endDate: {}, search: {}",
+                request.getPageNo(), request.getPageSize(), request.getStatus(), request.getUserId(),
+                request.getStartDate(), request.getEndDate(), request.getSearch());
 
-        // Create pageable (history is always sorted by createdAt DESC)
+        // Create pageable
         Pageable pageable = PageRequest.of(request.getPageNo(), request.getPageSize());
 
         Page<OrderHistoryEntity> historyPage;
 
+        // Check if date filtering is requested
+        boolean hasDateFilter = (request.getStartDate() != null && !request.getStartDate().isEmpty()) ||
+                (request.getEndDate() != null && !request.getEndDate().isEmpty());
 
-        historyPage = orderHistoryRepository.searchOrderHistory(
-                request.getStatus(),
-                request.getSearch(),
-                pageable);
+        if (hasDateFilter) {
+            // Parse date strings to LocalDateTime
+            LocalDateTime startDateTime = null;
+            LocalDateTime endDateTime = null;
 
+            try {
+                if (request.getStartDate() != null && !request.getStartDate().isEmpty()) {
+                    startDateTime = parseDateTime(request.getStartDate(), true);
+                } else {
+                    // If no start date, use a very old date
+                    startDateTime = LocalDateTime.of(2000, 1, 1, 0, 0);
+                }
 
-        log.info("Found {} history records matching criteria", historyPage.getTotalElements());
+                if (request.getEndDate() != null && !request.getEndDate().isEmpty()) {
+                    endDateTime = parseDateTime(request.getEndDate(), false);
+                } else {
+                    // If no end date, use future date
+                    endDateTime = LocalDateTime.now().plusYears(10);
+                }
+
+                // Validate that end date is not before start date
+                if (endDateTime.isBefore(startDateTime)) {
+                    log.error("End date {} is before start date {}", request.getEndDate(), request.getStartDate());
+                    throw new IllegalArgumentException("End date cannot be before start date");
+                }
+
+                historyPage = orderHistoryRepository.searchOrderHistoryWithDateRange(
+                        request.getStatus(),
+                        request.getUserId(),
+                        startDateTime,
+                        endDateTime,
+                        request.getSearch(),
+                        pageable);
+
+            } catch (DateTimeParseException e) {
+                log.error("Error parsing date: {}", e.getMessage());
+                throw new IllegalArgumentException("Invalid date format. Use MM/dd/yyyy format.");
+            }
+        } else {
+            // Use the original query if no date filtering
+            historyPage = orderHistoryRepository.searchOrderHistory(
+                    request.getStatus(),
+                    request.getUserId(),
+                    request.getSearch(),
+                    pageable);
+        }
+
+        log.info("Found {} history records matching criteria ", historyPage.getTotalElements());
 
         // Convert to response
         List<OrderHistoryResponse> historyResponses = orderMapper.toOrderHistoryResponseList(historyPage.getContent());
 
         return orderMapper.toListResponse(historyPage, historyResponses);
+    }
+
+    // Order history don't have pagination
+    @Override
+    public List<OrderHistoryResponse> getOrderHistoryNoPage(OrderFilterNoPageRequest request) {
+        log.info("Fetching order history with filter - status: {}, userId: {}, startDate: {}, endDate: {}, search: {}",
+                request.getStatus(), request.getUserId(), request.getStartDate(), request.getEndDate(), request.getSearch());
+
+        List<OrderHistoryEntity> historyList;
+
+        // Check if date filtering is requested
+        boolean hasDateFilter = (request.getStartDate() != null && !request.getStartDate().isEmpty()) ||
+                (request.getEndDate() != null && !request.getEndDate().isEmpty());
+
+        if (hasDateFilter) {
+            // Parse date strings to LocalDateTime
+            LocalDateTime startDateTime = null;
+            LocalDateTime endDateTime = null;
+
+            try {
+                if (request.getStartDate() != null && !request.getStartDate().isEmpty()) {
+                    startDateTime = parseDateTime(request.getStartDate(), true);
+                } else {
+                    // If no start date, use a very old date
+                    startDateTime = LocalDateTime.of(2000, 1, 1, 0, 0);
+                }
+
+                if (request.getEndDate() != null && !request.getEndDate().isEmpty()) {
+                    endDateTime = parseDateTime(request.getEndDate(), false);
+                } else {
+                    // If no end date, use future date
+                    endDateTime = LocalDateTime.now().plusYears(10);
+                }
+
+                // Validate that end date is not before start date
+                if (endDateTime.isBefore(startDateTime)) {
+                    log.error("End date {} is before start date {}", request.getEndDate(), request.getStartDate());
+                    throw new IllegalArgumentException("End date cannot be before start date");
+                }
+
+                historyList = orderHistoryRepository.searchOrderHistoryWithDateRangeNoPage(
+                        request.getStatus(),
+                        request.getUserId(),
+                        startDateTime,
+                        endDateTime,
+                        request.getSearch());
+
+            } catch (DateTimeParseException e) {
+                log.error("Error parsing date : {}", e.getMessage());
+                throw new IllegalArgumentException("Invalid date format. Use MM/dd/yyyy format.");
+            }
+        } else {
+            // Use the original query if no date filtering
+            historyList = orderHistoryRepository.searchOrderHistoryNoPage(
+                    request.getStatus(),
+                    request.getUserId(),
+                    request.getSearch());
+        }
+
+        log.info("Found {} history records matching criteria", historyList.size());
+
+        // Convert to response
+        return orderMapper.toOrderHistoryResponseList(historyList);
+    }
+
+    /**
+     * Parse date string to LocalDateTime
+     * @param dateStr Date string in MM/dd/yyyy format
+     * @param isStartOfDay If true, sets time to start of day (00:00:00), otherwise end of day (23:59:59)
+     * @return LocalDateTime
+     */
+    private LocalDateTime parseDateTime(String dateStr, boolean isStartOfDay) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDate date = LocalDate.parse(dateStr, formatter);
+
+        if (isStartOfDay) {
+            return date.atStartOfDay();
+        } else {
+            return date.atTime(23, 59, 59);
+        }
     }
 
     /**
