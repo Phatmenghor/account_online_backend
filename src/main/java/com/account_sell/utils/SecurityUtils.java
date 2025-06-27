@@ -34,7 +34,7 @@ public class SecurityUtils {
                 .orElseThrow(() -> {
                     log.error("User with email {} not found", username);
                     return new NotFoundException("User with email " + username + " not found");
-                });
+            });
 
         log.info("User with email {} successfully retrieved", username);
         return user;

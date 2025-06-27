@@ -188,4 +188,5 @@ public class UserServiceImpl implements UserService {
         log.info("Admin successfully changed password for user: {}", user.getUsername());
         return userMapper.mapToDto(userEntity);
     }
+
 }

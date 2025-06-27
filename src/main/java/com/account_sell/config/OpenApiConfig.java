@@ -25,9 +25,9 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Account Sell API")
+                        .title("CamDx check API")
                         .version("1.0")
-                        .description("Account sell API Documentation"))
+                        .description("CamDx check API Documentation"))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
     }
 

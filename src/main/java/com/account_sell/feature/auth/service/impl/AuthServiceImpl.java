@@ -161,9 +161,8 @@ public class AuthServiceImpl implements AuthService {
             UserEntity user = new UserEntity();
             user.setUsername(registerDto.getEmail());
             user.setPassword(passwordEncoder.encode(registerDto.getPassword()));
-            user.setStatus(registerDto.getStatus() != null ? registerDto.getStatus() : StatusData.ACTIVE);
+            user.setStatus(StatusData.PENDING);
             user.setRoles(Collections.singletonList(role));
-            user.setProfileUrl(registerDto.getProfileUrl());
 
             // Save the user
             final UserEntity savedUser = userRepository.save(user);

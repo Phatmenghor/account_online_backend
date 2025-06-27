@@ -13,39 +13,12 @@ import java.util.List;
 @RequestMapping("/api/v1/enum")
 public class EnumController {
 
-    @PostMapping("/account-type")
-    public ApiResponse<List<AccountType>> getAllAccountTypes() {
+    @PostMapping("/action_user")
+    public ApiResponse<List<ActionEnum>> getAllActionUser() {
         return new ApiResponse<>(
                 "Success",
-                "Get all enum account type successfully...!",
-                Arrays.asList(AccountType.values())
-        );
-    }
-
-    @PostMapping("/filter-type")
-    public ApiResponse<List<FilterType>> getAllFilterTypes() {
-        return new ApiResponse<>(
-                "Success",
-                "Get all enum filter type successfully...!",
-                Arrays.asList(FilterType.values())
-        );
-    }
-
-    @PostMapping("/order-status")
-    public ApiResponse<List<OrderStatus>> getAllOrderStatuses() {
-        return new ApiResponse<>(
-                "Success",
-                "Get all enum order status successfully...!",
-                Arrays.asList(OrderStatus.values())
-        );
-    }
-
-    @PostMapping("/price-range")
-    public ApiResponse<List<PriceRange>> getAllPriceRanges() {
-        return new ApiResponse<>(
-                "Success",
-                "Get all enum price range successfully...!",
-                Arrays.asList(PriceRange.values())
+                "Get all enum action user successfully...!",
+                Arrays.asList(ActionEnum.values())
         );
     }
 
@@ -64,6 +37,15 @@ public class EnumController {
                 "Success",
                 "Get all enum status data successfully...!",
                 Arrays.asList(StatusData.values())
+        );
+    }
+
+    @PostMapping("/gender")
+    public ApiResponse<List<GenderEnum>> getAllGender() {
+        return new ApiResponse<>(
+                "Success",
+                "Get all enum gender data successfully...!",
+                Arrays.asList(GenderEnum.values())
         );
     }
 }

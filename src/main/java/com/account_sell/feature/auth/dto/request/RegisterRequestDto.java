@@ -11,6 +11,10 @@ import javax.validation.constraints.Size;
 
 @Data
 public class RegisterRequestDto {
+
+//    @NotBlank(message = "Id card is required")
+    private Long idCard;
+
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")
     private String email;
@@ -19,11 +23,11 @@ public class RegisterRequestDto {
     @Size(min = 6, message = "Password must have at least 6 characters")
     private String password;
 
-    private String profileUrl;
+    private String fullName;
 
     @NotNull(message = "Role is required")
     private RoleEnum role;
 
-    @NotNull(message = "Status is required")
-    private StatusData status;
+//    @NotNull(message = "Position is required")
+    private String position;
 }

@@ -1,9 +1,9 @@
 server:
-  port: 9002
+  port: 9010
 
 spring:
   application:
-    name: account_sell
+    name: camdx_check
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
@@ -27,7 +27,7 @@ spring:
             use_jdbc_metadata_defaults: false
 
   datasource:
-    url: jdbc:postgresql://192.168.127.86:5432/account_sell_online
+    url: jdbc:postgresql://192.168.103.106:5432/camdx_check
     username: postgres
     password: 123cp!@#
     driver-class-name: org.postgresql.Driver
@@ -37,6 +37,19 @@ spring:
       connectionTimeout: 30000
       idleTimeout: 600000
       maxLifetime: 1800000
+
+# Use for get data staff by IdCard
+    secondary:
+      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      url: "jdbc:sqlserver://192.168.103.71:1433;databaseName=CPBHD;encrypt=true;trustServerCertificate=true"
+      username: cpb_int
+      password: "123cp!@#"
+      hikari:
+        maximum-pool-size: 10
+        connection-timeout: 30000
+        idle-timeout: 600000
+        max-lifetime: 1800000
+
 
 # JWT Configuration
 jwt:
@@ -104,3 +117,4 @@ springdoc:
     path: /swagger-ui.html
     operationsSorter: method
     tagsSorter: alpha
+

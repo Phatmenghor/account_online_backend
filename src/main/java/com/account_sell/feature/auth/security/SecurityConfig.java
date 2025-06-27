@@ -42,8 +42,6 @@ public class SecurityConfig {
                 .authorizeRequests()
                 // Public endpoints
                 .antMatchers("/api/v1/admin/auth/**").permitAll()
-                .antMatchers("/api/v1/user/special-accounts/**").permitAll()
-                .antMatchers("/api/v1/user/orders/**").permitAll()
                 .antMatchers("/api/v1/enum/**").permitAll()
                 .antMatchers("/api/images/**").permitAll()
                 .antMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()

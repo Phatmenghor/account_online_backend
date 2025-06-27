@@ -5,15 +5,19 @@ import com.account_sell.enumation.StatusData;
 import com.account_sell.feature.auth.dto.request.ChangePasswordByAdminRequestDto;
 import com.account_sell.feature.auth.dto.request.ChangePasswordRequestDto;
 import com.account_sell.feature.auth.dto.request.UpdateUserRequestDto;
+import com.account_sell.feature.auth.dto.response.StaffResponseDto;
 import com.account_sell.feature.auth.dto.response.UserResponseDto;
 import com.account_sell.feature.auth.dto.response.AllUserResponseDto;
 import com.account_sell.exceptions.response.ApiResponse;
+import com.account_sell.feature.auth.repository.StaffRepository;
 import com.account_sell.feature.auth.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.sql.SQLException;
+import java.util.List;
 
 /**
  * Controller for user management operations.
@@ -25,6 +29,7 @@ import javax.validation.Valid;
 @Slf4j
 public class UserController {
 
+    private final StaffRepository staffRepository;
     private final UserService userService;
 
     @PostMapping()
@@ -97,7 +102,7 @@ public class UserController {
     }
 
     @PostMapping("change-password")
-    @RequiresRole(value = {"ADMIN", "DEVELOPER"}, anyRole = true)
+    @RequiresRole(value = {"ADMIN", "DEVELOPER", "USER"}, anyRole = true)
     public ApiResponse<UserResponseDto> changePassword(@Valid @RequestBody ChangePasswordRequestDto changePasswordDto) {
         log.info("Request to change password for current user");
 
@@ -117,5 +122,29 @@ public class UserController {
         log.info("Admin successfully changed password for user ID: {}, username: {}",
                 changePasswordDto.getId(), userDto.getEmail());
         return new ApiResponse<>("success", "Password changed by admin successfully.", userDto);
+    }
+
+    // Endpoint to get staff record by id card
+    @PostMapping("/staff/{idCard}")
+    public ApiResponse<StaffResponseDto> getStaffById(@PathVariable("idCard") String idCard) {
+        log.info("Received request to get staff record");
+
+        try {
+            // Call the service method to get the staff record
+            StaffResponseDto staff = staffRepository.getStaffByIdCard(idCard);
+
+            log.debug("Staff details: {}", staff);
+
+            // Return the staff record in ApiResponse with HTTP-200 semantics
+            return new ApiResponse<>("success", "Staff id card response successfully", staff);
+
+        } catch (SQLException e) {
+            log.error("Database error occurred while fetching staff record: {}", e.getMessage(), e);
+            return new ApiResponse<>("error", "Database error occurred while fetching staff record", null);
+
+        } catch (Exception e) {
+            log.error("Unexpected error occurred while fetching staff record: {}", e.getMessage(), e);
+            return new ApiResponse<>("error", "Internal Server Error", null);
+        }
     }
 }
