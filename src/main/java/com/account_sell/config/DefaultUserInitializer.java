@@ -30,8 +30,8 @@ public class DefaultUserInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${app.admin.email:admin@example.com}")
-    private String adminEmail;
+    @Value("${app.admin.idCard:8888}")
+    private String adminCard;
 
     @Value("${app.admin.password:admin123}")
     private String adminPassword;
@@ -39,17 +39,28 @@ public class DefaultUserInitializer implements CommandLineRunner {
     @Value("${app.default-users.create:true}")
     private boolean createDefaultUsers;
 
-    @Value("${app.developer.email:developer@example.com}")
-    private String developerEmail;
+    @Value("${app.super.idCard:9999}")
+    private String superCard;
 
-    @Value("${app.developer.password:developer123}")
-    private String developerPassword;
+    @Value("${app.super.password:super123}")
+    private String superPassword;
 
-    @Value("${app.user.email:user@example.com}")
-    private String userEmail;
+    @Value("${app.user.idCard:7777}")
+    private String userCard;
 
     @Value("${app.user.password:user123}")
     private String userPassword;
+
+    // -------------------
+
+    @Value("${app.admin.email:admin@example.com}")
+    private String adminEmail;
+
+    @Value("${app.super.email:super@example.com}")
+    private String superEmail;
+
+    @Value("${app.user.email:user@example.com}")
+    private String userEmail;
 
     @Override
     public void run(String... args) {
@@ -62,7 +73,7 @@ public class DefaultUserInitializer implements CommandLineRunner {
         if (createDefaultUsers) {
             // Create default users if they don't exist
             createDefaultAdminUser();
-            createDefaultDeveloperUser();
+            createDefaultSuperAdminUser();
             createDefaultRegularUser();
         } else {
             log.info("Default user creation is disabled");
@@ -92,25 +103,25 @@ public class DefaultUserInitializer implements CommandLineRunner {
      */
     private void createDefaultAdminUser() {
         // Skip if user already exists
-        if (userRepository.existsByUsername(adminEmail)) {
-            log.info("Admin user already exists: {}", adminEmail);
+        if (userRepository.existsByUsername(adminCard)) {
+            log.info("Admin user already exists: {}", adminCard);
             return;
         }
 
-        createUserWithRole(adminEmail, adminPassword, RoleEnum.ADMIN);
+        createUserWithRole(adminCard, adminEmail, adminPassword, RoleEnum.ADMIN);
     }
 
     /**
-     * Creates a default developer user if none exists.
+     * Creates a default super admin user if none exists.
      */
-    private void createDefaultDeveloperUser() {
+    private void createDefaultSuperAdminUser() {
         // Skip if user already exists
-        if (userRepository.existsByUsername(developerEmail)) {
-            log.info("Developer user already exists: {}", developerEmail);
+        if (userRepository.existsByUsername(superCard)) {
+            log.info("Super admin user already exists: {}", superCard);
             return;
         }
 
-        createUserWithRole(developerEmail, developerPassword, RoleEnum.DEVELOPER);
+        createUserWithRole(superCard, superEmail, superPassword, RoleEnum.SUPER);
     }
 
     /**
@@ -118,18 +129,18 @@ public class DefaultUserInitializer implements CommandLineRunner {
      */
     private void createDefaultRegularUser() {
         // Skip if user already exists
-        if (userRepository.existsByUsername(userEmail)) {
-            log.info("Regular user already exists: {}", userEmail);
+        if (userRepository.existsByUsername(userCard)) {
+            log.info("Regular user already exists: {}", userCard);
             return;
         }
 
-        createUserWithRole(userEmail, userPassword, RoleEnum.USER);
+        createUserWithRole(userCard, userEmail, userPassword, RoleEnum.USER);
     }
 
     /**
      * Helper method to create a user with a specific role
      */
-    private void createUserWithRole(String username, String password, RoleEnum roleEnum) {
+    private void createUserWithRole(String username, String email, String password, RoleEnum roleEnum) {
         try {
             // Get the role directly from the database
             Role role = roleRepository.findByName(roleEnum)
@@ -141,6 +152,7 @@ public class DefaultUserInitializer implements CommandLineRunner {
             // Create new user - IMPORTANT: Initialize with new ArrayList
             UserEntity user = new UserEntity();
             user.setUsername(username);
+            user.setEmail(email);
             user.setStatus(StatusData.ACTIVE);
             user.setPassword(passwordEncoder.encode(password));
 

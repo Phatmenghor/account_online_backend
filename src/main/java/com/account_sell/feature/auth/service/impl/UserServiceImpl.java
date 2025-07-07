@@ -24,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,27 +39,38 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
-    public AllUserResponseDto getAllUser(int pageNo, int pageSize, String search, StatusData status) {
+    public AllUserResponseDto getAllUser(int pageNo, int pageSize,
+                                         String search, StatusData status) {
+
         log.info("Getting users with pageNo={}, pageSize={}", pageNo, pageSize);
-        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(pageNo, pageSize,
+                Sort.by(Sort.Direction.DESC, "createdAt"));
 
         Page<UserEntity> userPage;
 
         boolean hasSearch = search != null && !search.trim().isEmpty();
         boolean hasStatus = status != null;
 
-        if (hasSearch && hasStatus) {
-            log.info("Searching users by username: '{}' AND status: {}", search, status);
-            userPage = userRepository.findByUsernameContainingIgnoreCaseAndStatus(search, status, pageable);
-        } else if (hasSearch) {
-            log.info("Searching users by username: '{}'", search);
-            userPage = userRepository.findByUsernameContainingIgnoreCase(search, pageable);
-        } else if (hasStatus) {
-            log.info("Searching users by status: {}", status);
-            userPage = userRepository.findByStatus(status, pageable);
+        if (!hasStatus) {
+            List<StatusData> activeStatuses = Arrays.asList(StatusData.ACTIVE, StatusData.INACTIVE);
+
+            if (hasSearch) {
+                log.info("Searching users by search='{}' AND statuses {}", search, activeStatuses);
+                userPage = userRepository
+                        .searchByMultipleFieldsAndStatuses(search, activeStatuses, pageable);
+            } else {
+                log.info("Fetching users with statuses {}", activeStatuses);
+                userPage = userRepository.findByStatusIn(activeStatuses, pageable);
+            }
         } else {
-            log.info("No filters provided. Fetching all users.");
-            userPage = userRepository.findAll(pageable);
+            if (hasSearch) {
+                log.info("Searching users by search='{}' AND status={}", search, status);
+                userPage = userRepository
+                        .searchByMultipleFieldsAndStatus(search, status, pageable);
+            } else {
+                log.info("Searching users by status={}", status);
+                userPage = userRepository.findByStatus(status, pageable);
+            }
         }
 
         List<UserResponseDto> content = userPage.getContent().stream()
@@ -66,10 +78,13 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
 
         log.debug("Retrieved {} users from page {} of {}",
-                userPage.getNumberOfElements(), userPage.getNumber(), userPage.getTotalPages());
+                userPage.getNumberOfElements(),
+                userPage.getNumber(), userPage.getTotalPages());
 
         return userMapper.mapToListDto(content, userPage);
     }
+
+
 
     @Override
     public UserResponseDto getUserById(Long id) {
@@ -117,18 +132,18 @@ public class UserServiceImpl implements UserService {
                     return new NotFoundException("User id " + id + " not found");
                 });
 
-        // Only update email if provided in the request
-        if (request.getEmail() != null) {
-            // Check if email is being changed and is already in use by another user
-            if (!user.getUsername().equals(request.getEmail()) &&
-                    userRepository.existsByUsername(request.getEmail())) {
-                log.warn("Update failed: Email already in use: {}", request.getEmail());
-                throw new DuplicateNameException("Email is already in use, please choose another one.");
+        // Only update card id if provided in the request
+        if (request.getIdCard() != null) {
+            // Check if card id is being changed and is already in use by another user
+            if (!user.getUsername().equals(request.getIdCard()) &&
+                    userRepository.existsByUsername(request.getIdCard())) {
+                log.warn("Update failed: Id card already in use: {}", request.getIdCard());
+                throw new DuplicateNameException("Id card is already in use, please choose another one.");
             }
 
             String oldUsername = user.getUsername();
-            user.setUsername(request.getEmail());
-            log.info("Updated username: {} -> {}", oldUsername, request.getEmail());
+            user.setUsername(request.getIdCard());
+            log.info("Updated username: {} -> {}", oldUsername, request.getIdCard());
         }
 
         // Only update status if provided in the request
@@ -175,7 +190,7 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(requestDto.getId())
                 .orElseThrow(() -> {
                     log.error("User with id {} not found for password change", requestDto.getId());
-                    return new NotFoundException("User with email " + requestDto.getId() + " not found");
+                    return new NotFoundException("User with id card " + requestDto.getId() + " not found");
                 });
 
         if (!requestDto.getNewPassword().equals(requestDto.getConfirmNewPassword())) {
@@ -188,5 +203,4 @@ public class UserServiceImpl implements UserService {
         log.info("Admin successfully changed password for user: {}", user.getUsername());
         return userMapper.mapToDto(userEntity);
     }
-
 }

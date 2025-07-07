@@ -25,18 +25,18 @@ public class SecurityUtils {
             throw new NotFoundException("User not authenticated.");
         }
 
-        // Get the username (email) from the authentication object
+        // Get the (username = Idcard) from the authentication object
         String username = authentication.getName();
-        log.info("Fetching user with email: {}", username);
+        log.info("Fetching user with id card: {}", username);
 
         // Fetch the user from the repository
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> {
-                    log.error("User with email {} not found", username);
-                    return new NotFoundException("User with email " + username + " not found");
+                    log.error("User with id card {} not found", username);
+                    return new NotFoundException("User with id card " + username + " not found");
             });
 
-        log.info("User with email {} successfully retrieved", username);
+        log.info("User with id card {} successfully retrieved", username);
         return user;
     }
 }

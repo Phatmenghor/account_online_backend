@@ -44,11 +44,12 @@ public class SecurityConfig {
                 .antMatchers("/api/v1/admin/auth/**").permitAll()
                 .antMatchers("/api/v1/enum/**").permitAll()
                 .antMatchers("/api/images/**").permitAll()
+                .antMatchers("/api/v1/admin/staff/**").permitAll()
                 .antMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                 // Role-based access control examples
 //                .antMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
-//                .antMatchers("/api/v1/dev/**").hasAuthority("DEVELOPER")
+//                .antMatchers("/api/v1/dev/**").hasAuthority("SUPER")
 
                 // For any other request, require authentication
                 .anyRequest().authenticated()

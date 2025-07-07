@@ -73,16 +73,19 @@ app:
 
   # Default admin user
   admin:
+    idCard: 8888
     email: admin@cbcsender.com
     password: Admin@123
 
-  # Default developer user
-  developer:
-    email: developer@cbcsender.com
-    password: Developer@123
+  # Default superAdmin user
+  super:
+    idCard: 9999
+    email: superAdmin@cbcsender.com
+    password: Super@123
 
   # Default regular user
   user:
+    idCard: 7777
     email: user@cbcsender.com
     password: User@123
 

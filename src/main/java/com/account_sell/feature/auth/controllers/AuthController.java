@@ -25,11 +25,11 @@ public class AuthController {
 
     @PostMapping("login")
     public ApiResponse<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDto loginDto) {
-        log.info("Login request received for user: {}", loginDto.getEmail());
+        log.info("Login request received for user: {}", loginDto.getIdCard());
 
         AuthResponseDTO authResponse = authService.login(loginDto);
 
-        log.info("Login successful for user: {}", loginDto.getEmail());
+        log.info("Login successful for user: {}", loginDto.getIdCard());
 
         return new ApiResponse<>(
                 "success",
@@ -40,11 +40,11 @@ public class AuthController {
 
     @PostMapping("register")
     public ApiResponse<UserResponseDto> register(@Valid @RequestBody RegisterRequestDto registerDto) {
-        log.info("Registration request received for email: {}", registerDto.getEmail());
+        log.info("Registration request received for id card: {}", registerDto.getIdCard());
 
         UserResponseDto userResponse = authService.register(registerDto);
 
-        log.info("Registration successful for user: {}", registerDto.getEmail());
+        log.info("Registration successful for user: {}", registerDto.getIdCard());
 
         return new ApiResponse<>(
                 "success",
@@ -92,13 +92,15 @@ public class AuthController {
     }
 
     @PostMapping("create-user")
-    @RequiresRole(value = {"ADMIN", "DEVELOPER"}, anyRole = true, message = "Only administrators and developers can create users")
+    @RequiresRole(value = {"ADMIN", "SUPER"}, anyRole = true, message = "Only administrators and super admin can create users")
     public ApiResponse<UserResponseDto> createUser(@Valid @RequestBody RegisterRequestDto registerDto) {
-        log.info("Admin request to create user with email: {}", registerDto.getEmail());
+        log.info("Admin request to create user with id card: {}", registerDto.getIdCard());
+
+
 
         UserResponseDto userResponse = authService.createUserByAdmin(registerDto);
 
-        log.info("Admin successfully created user with email: {}", registerDto.getEmail());
+        log.info("Admin successfully created user with id card: {}", registerDto.getIdCard());
 
         return new ApiResponse<>(
                 "success",

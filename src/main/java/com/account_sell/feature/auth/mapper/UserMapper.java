@@ -1,6 +1,6 @@
 package com.account_sell.feature.auth.mapper;
 
-import com.account_sell.feature.auth.dto.response.UserHistoryResponse;
+
 import com.account_sell.feature.auth.dto.response.UserResponseDto;
 import com.account_sell.feature.auth.dto.response.AllUserResponseDto;
 import com.account_sell.feature.auth.models.UserEntity;
@@ -22,7 +22,9 @@ public interface UserMapper {
      * @return UserResponseDto
      */
     @Mapping(source = "id", target = "id")
-    @Mapping(source = "username", target = "email")
+    @Mapping(source = "email", target = "email")
+    @Mapping(source = "username", target = "idCard")
+    @Mapping(source = "branch", target = "branch")
     @Mapping(source = "status", target = "userStatus", qualifiedByName = "mapStatus")
     @Mapping(source = "roles", target = "userRole", qualifiedByName = "mapRoles")
     @Mapping(source = "createdAt", target = "createdAt")

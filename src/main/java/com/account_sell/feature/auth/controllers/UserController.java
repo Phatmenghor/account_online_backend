@@ -11,6 +11,7 @@ import com.account_sell.feature.auth.dto.response.AllUserResponseDto;
 import com.account_sell.exceptions.response.ApiResponse;
 import com.account_sell.feature.auth.repository.StaffRepository;
 import com.account_sell.feature.auth.service.UserService;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -33,11 +34,12 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping()
-    @RequiresRole(value = {"ADMIN", "DEVELOPER"}, anyRole = true)
+    @RequiresRole(value = {"ADMIN", "SUPER"}, anyRole = true)
     public ApiResponse<AllUserResponseDto> getAllUsers(
             @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
             @RequestParam(value = "search", required = false) String search,
+            @Parameter(description = "Filter users by status: ACTIVE, INACTIVE, or PENDING (shows users still awaiting approval).")
             @RequestParam(value = "status", required = false) StatusData statusData) {
 
         // Use default values instead of validation
@@ -72,18 +74,18 @@ public class UserController {
 
         UserResponseDto user = userService.getUserByToken();
 
-        log.info("Successfully retrieved current user details: {}", user.getEmail());
+        log.info("Successfully retrieved current user details: {}", user.getIdCard());
         return new ApiResponse<>("success", "Current user details retrieved successfully", user);
     }
 
     @PostMapping("/deleteById/{id}")
-    @RequiresRole(value = {"ADMIN", "DEVELOPER"}, anyRole = true)
+    @RequiresRole(value = {"ADMIN", "SUPER"}, anyRole = true)
     public ApiResponse<UserResponseDto> deleteUser(@PathVariable("id") Long userId) {
         log.info("Request to delete user with ID: {}", userId);
 
         UserResponseDto deletedUser = userService.deleteUserId(userId);
 
-        log.info("Successfully deleted user with ID: {}, username: {}", userId, deletedUser.getEmail());
+        log.info("Successfully deleted user with ID: {}, username: {}", userId, deletedUser.getIdCard());
         return new ApiResponse<>("success", "User deleted successfully", deletedUser);
     }
 
@@ -92,59 +94,35 @@ public class UserController {
             @PathVariable("id") Long userId,
             @RequestBody UpdateUserRequestDto request) {
 
-        log.info("Request to update user with ID: {}, email: {}, status: {}",
-                userId, request.getEmail(), request.getStatus());
+        log.info("Request to update user with ID: {}, IdCard: {}, status: {}",
+                userId, request.getIdCard(), request.getStatus());
 
         UserResponseDto updatedUser = userService.updateUserId(userId, request);
 
-        log.info("Successfully updated user with ID: {}, username: {}", userId, updatedUser.getEmail());
+        log.info("Successfully updated user with ID: {}, username: {}", userId, updatedUser.getIdCard());
         return new ApiResponse<>("success", "User updated successfully", updatedUser);
     }
 
     @PostMapping("change-password")
-    @RequiresRole(value = {"ADMIN", "DEVELOPER", "USER"}, anyRole = true)
+    @RequiresRole(value = {"ADMIN", "SUPER", "USER"}, anyRole = true)
     public ApiResponse<UserResponseDto> changePassword(@Valid @RequestBody ChangePasswordRequestDto changePasswordDto) {
         log.info("Request to change password for current user");
 
         UserResponseDto userDto = userService.changePassword(changePasswordDto);
 
-        log.info("Successfully changed password for user: {}", userDto.getEmail());
+        log.info("Successfully changed password for user: {}", userDto.getIdCard());
         return new ApiResponse<>("success", "Password changed successfully.", userDto);
     }
 
     @PostMapping("change-password-by-admin")
-    @RequiresRole(value = {"ADMIN", "DEVELOPER"}, anyRole = true)
+    @RequiresRole(value = {"ADMIN", "SUPER"}, anyRole = true)
     public ApiResponse<UserResponseDto> changePasswordByAdmin(@Valid @RequestBody ChangePasswordByAdminRequestDto changePasswordDto) {
         log.info("Request by admin to change password for user ID: {}", changePasswordDto.getId());
 
         UserResponseDto userDto = userService.changePasswordByAdmin(changePasswordDto);
 
         log.info("Admin successfully changed password for user ID: {}, username: {}",
-                changePasswordDto.getId(), userDto.getEmail());
+                changePasswordDto.getId(), userDto.getIdCard());
         return new ApiResponse<>("success", "Password changed by admin successfully.", userDto);
-    }
-
-    // Endpoint to get staff record by id card
-    @PostMapping("/staff/{idCard}")
-    public ApiResponse<StaffResponseDto> getStaffById(@PathVariable("idCard") String idCard) {
-        log.info("Received request to get staff record");
-
-        try {
-            // Call the service method to get the staff record
-            StaffResponseDto staff = staffRepository.getStaffByIdCard(idCard);
-
-            log.debug("Staff details: {}", staff);
-
-            // Return the staff record in ApiResponse with HTTP-200 semantics
-            return new ApiResponse<>("success", "Staff id card response successfully", staff);
-
-        } catch (SQLException e) {
-            log.error("Database error occurred while fetching staff record: {}", e.getMessage(), e);
-            return new ApiResponse<>("error", "Database error occurred while fetching staff record", null);
-
-        } catch (Exception e) {
-            log.error("Unexpected error occurred while fetching staff record: {}", e.getMessage(), e);
-            return new ApiResponse<>("error", "Internal Server Error", null);
-        }
     }
 }

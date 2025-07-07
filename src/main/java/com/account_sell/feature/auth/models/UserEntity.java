@@ -21,15 +21,17 @@ public class UserEntity extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String username;
+    private String username; // idCard
+
+    private String email;
 
     private String password;
-
-    private Long idCard;
 
     private String fullName;
 
     private String position;
+
+    private String branch;
 
     private String profileUrl;
 
@@ -42,4 +44,7 @@ public class UserEntity extends BaseEntity {
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private List<Role> roles = new ArrayList<>();
 
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<LogAction> logActions;
 }

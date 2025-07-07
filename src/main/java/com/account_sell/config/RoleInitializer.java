@@ -29,6 +29,9 @@ public class RoleInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${app.admin.idCard:8888}")
+    private String adminCard;
+
     @Value("${app.admin.email:admin@example.com}")
     private String adminEmail;
 
@@ -81,7 +84,8 @@ public class RoleInitializer implements CommandLineRunner {
 
         // Create new admin user
         UserEntity adminUser = new UserEntity();
-        adminUser.setUsername(adminEmail);
+        adminUser.setUsername(adminCard);
+        adminUser.setEmail(adminEmail);
         adminUser.setStatus(StatusData.ACTIVE);
         adminUser.setPassword(passwordEncoder.encode(adminPassword));
         adminUser.setRoles(Collections.singletonList(adminRole.get()));

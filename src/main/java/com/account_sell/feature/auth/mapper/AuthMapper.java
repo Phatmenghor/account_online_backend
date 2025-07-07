@@ -12,7 +12,8 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface AuthMapper {
 
-    @Mapping(source = "username", target = "email")
+    @Mapping(source = "username", target = "idCard")
+    @Mapping(source = "email", target = "email")
     @Mapping(source = "status", target = "userStatus", qualifiedByName = "mapStatus")
     @Mapping(source = "roles", target = "userRole", qualifiedByName = "rolesToRoleString")
     UserResponseDto userToUserResponseDto(UserEntity user);
