@@ -30,34 +30,30 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             Pageable pageable);
 
     // search with statuses
-    @Query("""
-                SELECT u FROM UserEntity u
-                WHERE u.status IN :statuses
-                AND (
-                    LOWER(u.username) LIKE LOWER(CONCAT('%', :searchText, '%'))
-                    OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchText, '%'))
-                    OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchText, '%'))
-                )
-            """)
+    @Query("SELECT u FROM UserEntity u " +
+            "WHERE u.status IN :statuses " +
+            "AND (" +
+            "  LOWER(u.username) LIKE LOWER(CONCAT('%', :searchText, '%')) " +
+            "  OR LOWER(u.email)    LIKE LOWER(CONCAT('%', :searchText, '%')) " +
+            "  OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchText, '%')) " +
+            ")")
     Page<UserEntity> searchByMultipleFieldsAndStatuses(
             @Param("searchText") String searchText,
-            @Param("statuses") List<StatusData> statuses,
-            Pageable pageable
-    );
+            @Param("statuses")   List<StatusData> statuses,
+            Pageable pageable);
+
 
     // search with status
-    @Query("""
-                SELECT u FROM UserEntity u
-                WHERE u.status = :status
-                AND (
-                    LOWER(u.username) LIKE LOWER(CONCAT('%', :searchText, '%'))
-                    OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchText, '%'))
-                    OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchText, '%'))
-                )
-            """)
+    @Query("SELECT u FROM UserEntity u " +
+            "WHERE u.status = :status " +
+            "AND (" +
+            "  LOWER(u.username) LIKE LOWER(CONCAT('%', :searchText, '%')) " +
+            "  OR LOWER(u.email)    LIKE LOWER(CONCAT('%', :searchText, '%')) " +
+            "  OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchText, '%')) " +
+            ")")
     Page<UserEntity> searchByMultipleFieldsAndStatus(
             @Param("searchText") String searchText,
-            @Param("status") StatusData status,
-            Pageable pageable
-    );
+            @Param("status")     StatusData status,
+            Pageable pageable);
+
 }
