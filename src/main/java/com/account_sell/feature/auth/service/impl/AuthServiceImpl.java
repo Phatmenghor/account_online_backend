@@ -208,7 +208,7 @@ public class AuthServiceImpl implements AuthService {
             user.setPosition(registerDto.getPosition());
             user.setBranch(registerDto.getBranch());
             user.setPassword(passwordEncoder.encode(registerDto.getPassword()));
-            user.setStatus(StatusData.PENDING);
+            user.setStatus(StatusData.ACTIVE);
             user.setRoles(Collections.singletonList(role));
 
             // Save the user
