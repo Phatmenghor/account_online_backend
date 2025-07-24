@@ -48,4 +48,13 @@ public class EnumController {
                 Arrays.asList(GenderEnum.values())
         );
     }
+
+    @PostMapping("/status-log")
+    public ApiResponse<List<StatusLogEnum>> getAllStatusLog() {
+        return new ApiResponse<>(
+                "Success",
+                "Get all enum status log data successfully...!",
+                Arrays.asList(StatusLogEnum.values())
+        );
+    }
 }

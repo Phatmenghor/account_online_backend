@@ -1,6 +1,7 @@
 package com.account_sell.feature.auth.dto.response;
 
 import com.account_sell.enumation.ActionEnum;
+import com.account_sell.enumation.StatusLogEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,9 @@ public class LogActionDTO {
     
     @NotNull(message = "Action type is required")
     private ActionEnum actionType;
+
+    private StatusLogEnum statusLog;
+    private String statusCode;
     
     @NotNull(message = "User ID is required")
     private Long userId;

@@ -6,7 +6,6 @@ import com.account_sell.feature.auth.mapper.LogActionMapper;
 import com.account_sell.feature.auth.models.LogAction;
 import com.account_sell.feature.auth.models.UserEntity;
 import com.account_sell.feature.auth.repository.LogActionRepository;
-import com.account_sell.feature.auth.repository.UserRepository;
 import com.account_sell.feature.auth.service.LogActionService;
 import com.account_sell.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;

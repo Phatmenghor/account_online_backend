@@ -11,10 +11,12 @@ public interface LogActionMapper {
 
     @Mapping(source = "user.id", target = "userId")
     @Mapping(source = "user.username", target = "username")
+    @Mapping(source = "statusLog", target = "statusLog")
     LogActionDTO toDTO(LogAction logAction);
     
     @Mapping(source = "userId", target = "user.id")
     @Mapping(target = "id", ignore = true)
+    @Mapping(source = "statusLog", target = "statusLog")
     LogAction toEntity(LogActionCreateDTO createDTO);
 
 }
