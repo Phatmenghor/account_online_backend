@@ -30,37 +30,19 @@ public class DefaultUserInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${app.admin.idCard:8888}")
-    private String adminCard;
-
-    @Value("${app.admin.password:admin123}")
-    private String adminPassword;
 
     @Value("${app.default-users.create:true}")
     private boolean createDefaultUsers;
 
-    @Value("${app.super.idCard:9999}")
+    @Value("${app.super.idCard:phatmenghor19@gmail.com}")
     private String superCard;
 
-    @Value("${app.super.password:super123}")
+    @Value("${app.super.password:88889999}")
     private String superPassword;
 
-    @Value("${app.user.idCard:7777}")
-    private String userCard;
-
-    @Value("${app.user.password:user123}")
-    private String userPassword;
-
-    // -------------------
-
-    @Value("${app.admin.email:admin@example.com}")
-    private String adminEmail;
-
-    @Value("${app.super.email:super@example.com}")
+    @Value("${app.super.email:phatmenghor19@gmail.com}")
     private String superEmail;
 
-    @Value("${app.user.email:user@example.com}")
-    private String userEmail;
 
     @Override
     public void run(String... args) {
@@ -72,9 +54,7 @@ public class DefaultUserInitializer implements CommandLineRunner {
         // Only create default users if enabled in config
         if (createDefaultUsers) {
             // Create default users if they don't exist
-            createDefaultAdminUser();
             createDefaultSuperAdminUser();
-            createDefaultRegularUser();
         } else {
             log.info("Default user creation is disabled");
         }
@@ -98,18 +78,6 @@ public class DefaultUserInitializer implements CommandLineRunner {
         });
     }
 
-    /**
-     * Creates a default admin user if no admin exists.
-     */
-    private void createDefaultAdminUser() {
-        // Skip if user already exists
-        if (userRepository.existsByUsername(adminCard)) {
-            log.info("Admin user already exists: {}", adminCard);
-            return;
-        }
-
-        createUserWithRole(adminCard, adminEmail, adminPassword, RoleEnum.ADMIN);
-    }
 
     /**
      * Creates a default super admin user if none exists.
@@ -122,19 +90,6 @@ public class DefaultUserInitializer implements CommandLineRunner {
         }
 
         createUserWithRole(superCard, superEmail, superPassword, RoleEnum.SUPER);
-    }
-
-    /**
-     * Creates a default regular user if none exists.
-     */
-    private void createDefaultRegularUser() {
-        // Skip if user already exists
-        if (userRepository.existsByUsername(userCard)) {
-            log.info("Regular user already exists: {}", userCard);
-            return;
-        }
-
-        createUserWithRole(userCard, userEmail, userPassword, RoleEnum.USER);
     }
 
     /**

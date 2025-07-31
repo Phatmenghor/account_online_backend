@@ -4,10 +4,12 @@ import com.account_sell.enumation.ActionEnum;
 import com.account_sell.enumation.StatusLogEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "log_action")
 @Data

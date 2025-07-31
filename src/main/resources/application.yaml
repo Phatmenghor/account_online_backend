@@ -50,20 +50,12 @@ spring:
         idle-timeout: 600000
         max-lifetime: 1800000
 
-
 # JWT Configuration
 jwt:
   secret:
-    key: da2bd42bef8f9f957d647ed13571d35b59c7055fb723eacdb05154878da17d77d3180385fc232cab38bded0fc7dbda0d439cc275e91164ade266d64d50633bc7
-  expiration-min: 144000000000  # 24 hours
+    key: f7e8d9c6b5a4938271605f4e3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a0
+  expiration-min: 525600  # 1 year (365 days × 24 hours × 60 minutes)
   issuer: account-sell-api
-
-bank:
-  soap:
-    url: http://192.168.127.31:7003/CPB.MB.TWS/services
-    username: APPLOS
-    password: WWss123!@#
-    enabled: true  # Set to false in test environments
 
 # Default users configuration
 app:
@@ -71,23 +63,12 @@ app:
   default-users:
     create: true
 
-  # Default admin user
-  admin:
-    idCard: 8888
-    email: admin@cbcsender.com
-    password: Admin@123
 
   # Default superAdmin user
   super:
-    idCard: 9999
-    email: superAdmin@cbcsender.com
-    password: Super@123
-
-  # Default regular user
-  user:
-    idCard: 7777
-    email: user@cbcsender.com
-    password: User@123
+    idCard: phatmenghor19@gmail.com
+    password: 88889999
+    email: phatmenghor19@gmail.com
 
 # CORS Configuration
 cors:
