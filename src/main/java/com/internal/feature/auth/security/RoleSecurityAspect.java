@@ -29,8 +29,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RoleSecurityAspect {
 
-    @Around("@annotation(com.account_sell.config.RequiresRole) || " +
-            "@within(com.account_sell.config.RequiresRole)")
+    @Around("@annotation(com.internal.config.RequiresRole) || " +
+            "@within(com.internal.config.RequiresRole)")
     public Object checkRole(ProceedingJoinPoint joinPoint) throws Throwable {
         log.debug("Checking role permissions for {}", joinPoint.getSignature().toShortString());
 

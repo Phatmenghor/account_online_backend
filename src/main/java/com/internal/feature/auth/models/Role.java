@@ -10,7 +10,7 @@ import javax.persistence.*;
 @Getter
 @Entity
 @Table(name = "roles")
-public class Role {
+public class Role extends BaseEntity{
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)

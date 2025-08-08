@@ -8,12 +8,12 @@
 		<version>2.7.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.account_sell</groupId>
+	<groupId>com.internal</groupId>
 	<artifactId>api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>api</name>
-	<description>CamDX Check API</description>
+	<description>Internal BGK API</description>
 	<properties>
 		<java.version>1.8</java.version>
 	</properties>
@@ -129,7 +129,7 @@
 				</configuration>
 			</plugin>
 		</plugins>
-		<finalName>camdx_check</finalName>
+		<finalName>internal_bgk</finalName>
 	</build>
 
 
