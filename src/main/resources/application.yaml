@@ -4,27 +4,18 @@ server:
 spring:
   application:
     name: internal_bkg_report
+
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
-      show-sql: true
-      format_sql: true
+    show-sql: false
     properties:
       hibernate:
+        format_sql: true
         jdbc:
           lob:
             non_contextual_creation: true
-        temp:
-          use_jdbc_metadata_defaults:
-      properties:
-        hibernate:
-          dialect: org.hibernate.dialect.PostgreSQLDialect
-          jdbc:
-            lob:
-              non_contextual_creation: true
-          temp:
-            use_jdbc_metadata_defaults: false
 
   datasource:
     url: jdbc:postgresql://192.168.103.106:5432/internal_bkg_report
@@ -34,15 +25,13 @@ spring:
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
-      connectionTimeout: 30000
-      idleTimeout: 600000
-      maxLifetime: 1800000
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
-# Use for get data staff by IdCard
     secondary:
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
       url: "jdbc:sqlserver://192.168.103.71:1433;databaseName=CPBHD;encrypt=true;trustServerCertificate=true"
-#      url: "jdbc:sqlserver://10.18.1.150:1433;databaseName=CPBHD;encrypt=true;trustServerCertificate=true"
       username: cpb_int
       password: "123cp!@#"
       hikari:
@@ -51,55 +40,33 @@ spring:
         idle-timeout: 600000
         max-lifetime: 1800000
 
-# JWT Configuration
 jwt:
   secret:
     key: f7e8d9c6b5a4938271605f4e3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a0
-  expiration-min: 525600  # 1 year (365 days × 24 hours × 60 minutes)
+  expiration-min: 525600
   issuer: internal_bkg_report_api
 
-# Default users configuration
 app:
-  # Whether to create default users on startup
   default-users:
     create: true
-
-
-  # Default superAdmin user
   super:
     idCard: phatmenghor19@gmail.com
     password: 88889999
     email: phatmenghor19@gmail.com
 
-# CORS Configuration
-cors:
-  allowed-origins: "*"
-  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
-  allowed-headers: "*"
-  max-age: 3600
-
-# Security Configuration
-security:
-  require-ssl: false
-  basic:
-    enabled: false
-  ignored: /api/v1/auth/**,/swagger-ui/**,/v3/api-docs/**
-
-# Logging Configuration
 logging:
   level:
     root: INFO
-    com.cbc_sender: DEBUG
-    org.springframework.security: INFO
-    org.springframework.web: INFO
+    com.internal: INFO
+    org.springframework.security: WARN
+    org.springframework.web: WARN
     org.hibernate: WARN
+    org.hibernate.SQL: DEBUG
 
-# Swagger/OpenAPI Configuration
 springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
-    operationsSorter: method
-    tagsSorter: alpha
-
+    operations-sorter: method
+    tags-sorter: alpha

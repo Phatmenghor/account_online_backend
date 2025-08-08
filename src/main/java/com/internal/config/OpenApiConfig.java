@@ -16,8 +16,7 @@ import org.springframework.context.annotation.Configuration;
         type = SecuritySchemeType.HTTP,
         scheme = "bearer",
         bearerFormat = "JWT",
-        in = SecuritySchemeIn.HEADER,
-        description = "JWT authorization"
+        in = SecuritySchemeIn.HEADER
 )
 public class OpenApiConfig {
 
@@ -35,7 +34,7 @@ public class OpenApiConfig {
     public GroupedOpenApi publicApi() {
         return GroupedOpenApi.builder()
                 .group("public")
-                .pathsToMatch("/**") // match all paths
+                .pathsToMatch("/**")
                 .build();
     }
 }

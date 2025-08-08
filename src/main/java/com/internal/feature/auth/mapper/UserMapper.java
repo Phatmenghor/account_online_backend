@@ -10,17 +10,10 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * MapStruct mapper for user entity-DTO conversions.
- */
+
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    /**
-     * Maps a UserEntity to UserResponseDto.
-     * @param user the user entity
-     * @return UserResponseDto
-     */
     @Mapping(source = "id", target = "id")
     @Mapping(source = "email", target = "email")
     @Mapping(source = "username", target = "idCard")
@@ -31,12 +24,6 @@ public interface UserMapper {
     @Mapping(source = "updatedAt", target = "updatedAt")
     UserResponseDto mapToDto(UserEntity user);
 
-    /**
-     * Maps a list of UserResponseDto and Page<UserEntity> to AllUserResponseDto.
-     * @param content list of UserResponseDto
-     * @param user Page of UserEntity
-     * @return AllUserResponseDto
-     */
     @Named("mapToListDto")
     default AllUserResponseDto mapToListDto(List<UserResponseDto> content, Page<UserEntity> user) {
         AllUserResponseDto userResponse = new AllUserResponseDto();
@@ -49,21 +36,11 @@ public interface UserMapper {
         return userResponse;
     }
 
-    /**
-     * Maps a status enum to its string representation.
-     * @param status the status enum
-     * @return String representation of status
-     */
     @Named("mapStatus")
     default String mapStatus(com.internal.enumation.StatusData status) {
         return status != null ? status.name() : null;
     }
 
-    /**
-     * Maps a list of roles to a comma-separated string of role names.
-     * @param roles list of roles
-     * @return comma-separated string of role names
-     */
     @Named("mapRoles")
     default String mapRoles(List<com.internal.feature.auth.models.Role> roles) {
         if (roles == null || roles.isEmpty()) {

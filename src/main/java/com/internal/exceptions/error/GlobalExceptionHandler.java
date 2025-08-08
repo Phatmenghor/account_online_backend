@@ -2,57 +2,92 @@ package com.internal.exceptions.error;
 
 import com.internal.exceptions.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import javax.validation.ConstraintViolationException;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.*;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
+        log.warn("Authentication failed: {}", ex.getMessage());
+        
+        return buildErrorResponse(
+            HttpStatus.UNAUTHORIZED, 
+            "Invalid username or password"
+        );
+    }
+
+    @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationCredentialsNotFound(AuthenticationCredentialsNotFoundException ex) {
+        log.warn("Authentication credentials not found: {}", ex.getMessage());
+        
+        return buildErrorResponse(
+            HttpStatus.UNAUTHORIZED, 
+            "Authentication required"
+        );
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException ex) {
+        log.warn("Resource not found: {}", ex.getMessage());
+        
+        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateNameException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateNameException(DuplicateNameException ex) {
+        log.warn("Duplicate resource: {}", ex.getMessage());
+        
+        return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException ex) {
+        log.warn("Unauthorized access: {}", ex.getMessage());
+        
+        return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException ex) {
+        log.warn("Bad request: {}", ex.getMessage());
+        
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     @ExceptionHandler(InvalidInputException.class)
     public ResponseEntity<ErrorResponse> handleInvalidInputException(InvalidInputException ex) {
-        log.error("Invalid input exception: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .message(ex.getMessage())
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        log.warn("Invalid input: {}", ex.getMessage());
+        
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-
-        String errorMessage = errors.entrySet().stream()
-                .map(entry -> entry.getKey() + ": " + entry.getValue())
+        String errorMessage = ex.getBindingResult().getAllErrors().stream()
+                .map(error -> ((FieldError) error).getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
 
-        log.error("Validation errors: {}", errorMessage);
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .message("Validation error: " + errorMessage)
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        log.warn("Validation errors: {}", errorMessage);
+        
+        return buildErrorResponse(
+            HttpStatus.BAD_REQUEST, 
+            "Validation error: " + errorMessage
+        );
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -61,73 +96,53 @@ public class GlobalExceptionHandler {
                 .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
                 .collect(Collectors.joining(", "));
 
-        log.error("Constraint violation: {}", errorMessage);
+        log.warn("Constraint violation: {}", errorMessage);
+        
+        return buildErrorResponse(
+            HttpStatus.BAD_REQUEST,
+            "Validation error: " + errorMessage
+        );
+    }
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .message("Validation error: " + errorMessage)
-                .build();
+    @ExceptionHandler(SQLException.class)
+    public ResponseEntity<ErrorResponse> handleSQLException(SQLException ex) {
+        log.error("Database error - Code: {}, State: {}, Message: {}", 
+                ex.getErrorCode(), ex.getSQLState(), ex.getMessage());
+        
+        return buildErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR, 
+            "Database error occurred"
+        );
+    }
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        log.error("Data integrity violation: {}", ex.getMessage());
+        
+        String message = ex.getMessage().contains("unique") || ex.getMessage().contains("duplicate") 
+            ? "Resource already exists" 
+            : "Data integrity violation";
+            
+        return buildErrorResponse(HttpStatus.CONFLICT, message);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex) {
-        log.error("Unhandled exception", ex);
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .message("An unexpected error occurred: " + ex.getMessage())
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        log.error("Unhandled exception: {}", ex.getMessage(), ex);
+        
+        return buildErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR, 
+            "An unexpected error occurred"
+        );
     }
 
-    @ExceptionHandler(DuplicateNameException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateNameException(DuplicateNameException ex) {
-
-        // Log at warn (or error) level – use whichever you prefer
-        log.warn("Duplicate value: {}", ex.getMessage());
-
+    private ResponseEntity<ErrorResponse> buildErrorResponse(HttpStatus status, String message) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CONFLICT.value())   // 409
-                .message(ex.getMessage())              // “Id card already in use, please choose another one.”
+                .status(status.value())
+                .message(message)
                 .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+                
+        return new ResponseEntity<>(errorResponse, status);
     }
-
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException ex) {
-
-        log.warn("Resource not found: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.NOT_FOUND.value())   // 404
-                .message(ex.getMessage())               // e.g. “User not found”
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException ex) {
-
-        log.warn("Unauthorized access attempt: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.FORBIDDEN.value())   // 403
-                .message(ex.getMessage())               // e.g. “You are not allowed to do that”
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
-    }
-
-
-
 }

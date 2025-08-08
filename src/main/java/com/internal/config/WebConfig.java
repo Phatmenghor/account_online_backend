@@ -12,11 +12,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*") // Next.js frontend URL
-                .allowedMethods("GET", "POST", "PUT", "DELETE","OPTIONS")
+                .allowedOrigins("*")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*");
     }
-
 
     @Override
     public void configureContentNegotiation(ContentNegotiationConfigurer configure) {
