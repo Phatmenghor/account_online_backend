@@ -25,9 +25,9 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("CamDx check API")
+                        .title("Internal BKG API")
                         .version("1.0")
-                        .description("CamDx check API Documentation"))
+                        .description("Internal BKG API Documentation"))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
     }
 
