@@ -30,7 +30,7 @@
     </appender>
 
     <!-- Application specific logging -->
-    <logger name="com.account_sell" level="INFO" additivity="false">
+    <logger name="com.internal" level="INFO" additivity="false">
         <appender-ref ref="FILE" />
         <appender-ref ref="CONSOLE" />
     </logger>

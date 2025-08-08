@@ -1,9 +1,9 @@
 server:
-  port: 9010
+  port: 8080
 
 spring:
   application:
-    name: camdx_check
+    name: internal_bkg_report
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
@@ -27,7 +27,7 @@ spring:
             use_jdbc_metadata_defaults: false
 
   datasource:
-    url: jdbc:postgresql://192.168.103.106:5432/camdx_db
+    url: jdbc:postgresql://192.168.103.106:5432/internal_bkg_report
     username: postgres
     password: 123cp!@#
     driver-class-name: org.postgresql.Driver
@@ -42,6 +42,7 @@ spring:
     secondary:
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
       url: "jdbc:sqlserver://192.168.103.71:1433;databaseName=CPBHD;encrypt=true;trustServerCertificate=true"
+#      url: "jdbc:sqlserver://10.18.1.150:1433;databaseName=CPBHD;encrypt=true;trustServerCertificate=true"
       username: cpb_int
       password: "123cp!@#"
       hikari:
@@ -55,7 +56,7 @@ jwt:
   secret:
     key: f7e8d9c6b5a4938271605f4e3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a0
   expiration-min: 525600  # 1 year (365 days × 24 hours × 60 minutes)
-  issuer: account-sell-api
+  issuer: internal_bkg_report_api
 
 # Default users configuration
 app:
