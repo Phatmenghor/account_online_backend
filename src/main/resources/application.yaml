@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: internal_bkg_report
+    name: internal_cbc_report
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -44,7 +44,7 @@ jwt:
   secret:
     key: f7e8d9c6b5a4938271605f4e3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a0
   expiration-min: 525600
-  issuer: internal_bkg_report_api
+  issuer: internal_cbc_report_api
 
 app:
   default-users:

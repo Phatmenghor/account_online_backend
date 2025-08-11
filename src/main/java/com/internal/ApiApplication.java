@@ -22,8 +22,8 @@ public class ApiApplication {
 	}
 
 	public static void main(String[] args) {
-		log.info("Starting Internal BKG API Application...");
+		log.info("Starting Internal CBC API Application...");
 		SpringApplication.run(ApiApplication.class, args);
-		log.info("Internal BKG API Application started successfully");
+		log.info("Internal CBC API Application started successfully");
 	}
 }
