@@ -18,7 +18,7 @@ spring:
             non_contextual_creation: true
 
   datasource:
-    url: jdbc:postgresql://192.168.103.106:5432/internal_bkg_report
+    url: jdbc:postgresql://192.168.103.106:5432/internal_cbc_report
     username: postgres
     password: 123cp!@#
     driver-class-name: org.postgresql.Driver
@@ -42,7 +42,7 @@ spring:
 
 jwt:
   secret:
-    key: f7e8d9c6b5a4938271605f4e3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a0
+    key: f7e8d9c6b5a4938271605f4e3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a001
   expiration-min: 525600
   issuer: internal_cbc_report_api
 
