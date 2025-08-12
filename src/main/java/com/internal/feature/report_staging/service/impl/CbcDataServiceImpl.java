@@ -57,7 +57,7 @@ public class CbcDataServiceImpl implements CbcDataService {
 
     @Override
     public DataLoadStatusDto loadCbcData(CbcDataRequestDto request) {
-        log.info("Starting CBC data load operation for date range: {} to {}", 
+        log.info("Starting CBC data load operation for date range: {} to {}",
                 request.getStartDate(), request.getEndDate());
 
         validateDateRange(request);
@@ -73,14 +73,14 @@ public class CbcDataServiceImpl implements CbcDataService {
             try {
                 // Clear existing data first
                 clearExistingDataSync();
-                
+
                 // Then load new data
                 long recordCount = loadDataFromSqlServer(request, currentUser);
-                
+
                 LocalDateTime endTime = LocalDateTime.now();
                 currentLoadStatus = new DataLoadStatusDto(
-                        "SUCCESS", 
-                        String.format("Data loading completed successfully. Processed %d records", recordCount), 
+                        "SUCCESS",
+                        String.format("Data loading completed successfully. Processed %d records", recordCount),
                         recordCount, endTime, startTime, endTime);
 
                 log.info("CBC data loading completed successfully. Total records: {}", recordCount);
@@ -89,8 +89,8 @@ public class CbcDataServiceImpl implements CbcDataService {
                 log.error("Error during data loading: {}", e.getMessage(), e);
                 LocalDateTime endTime = LocalDateTime.now();
                 currentLoadStatus = new DataLoadStatusDto(
-                        "FAILED", 
-                        "Data loading failed: " + e.getMessage(), 
+                        "FAILED",
+                        "Data loading failed: " + e.getMessage(),
                         0L, null, startTime, endTime);
             }
         });
@@ -102,7 +102,7 @@ public class CbcDataServiceImpl implements CbcDataService {
         if (request.getStartDate().isAfter(request.getEndDate())) {
             throw new BadRequestException("Start date cannot be after end date");
         }
-        
+
         if (request.getStartDate().isAfter(LocalDate.now())) {
             throw new BadRequestException("Start date cannot be in the future");
         }
@@ -149,7 +149,7 @@ public class CbcDataServiceImpl implements CbcDataService {
             callableStatement.setDate(1, Date.valueOf(request.getStartDate()));
             callableStatement.setDate(2, Date.valueOf(request.getEndDate()));
 
-            log.info("Executing stored procedure {} with parameters: {}, {}", 
+            log.info("Executing stored procedure {} with parameters: {}, {}",
                     STORED_PROCEDURE_NAME, request.getStartDate(), request.getEndDate());
 
             resultSet = callableStatement.executeQuery();
@@ -157,7 +157,7 @@ public class CbcDataServiceImpl implements CbcDataService {
             return processResultSet(resultSet, request, currentUser);
 
         } catch (SQLException e) {
-            log.error("SQL error during data loading - Code: {}, State: {}, Message: {}", 
+            log.error("SQL error during data loading - Code: {}, State: {}, Message: {}",
                     e.getErrorCode(), e.getSQLState(), e.getMessage());
             throw new RuntimeException("Failed to load CBC data from SQL Server: " + e.getMessage(), e);
         } catch (Exception e) {
@@ -177,6 +177,10 @@ public class CbcDataServiceImpl implements CbcDataService {
                 CbcMainRecordEntity mainRecord = mapResultSetToEntity(resultSet, request, currentUser);
                 entities.add(mainRecord);
                 recordCount++;
+
+                log.info("Executing stored index {} with index: {}",
+                        STORED_PROCEDURE_NAME, recordCount);
+
 
                 // Batch save - simpler approach without complex transaction management
                 if (entities.size() >= BATCH_SIZE) {
@@ -288,7 +292,7 @@ public class CbcDataServiceImpl implements CbcDataService {
     private CbcAddressInformationEntity createAddressInformation(ResultSet rs, CbcMainRecordEntity mainRecord, String currentUser) throws SQLException {
         CbcAddressInformationEntity addressInfo = new CbcAddressInformationEntity();
         addressInfo.setMainRecord(mainRecord);
-        
+
         // Address 1
         addressInfo.setAddressType1(rs.getString("AddressType-1"));
         addressInfo.setProvince1(rs.getString("Province-1"));
@@ -303,7 +307,7 @@ public class CbcDataServiceImpl implements CbcDataService {
         addressInfo.setCity1Khmer(rs.getString("City-1(Khmer)"));
         addressInfo.setCountry1(rs.getString("Country-1"));
         addressInfo.setPostalCode1(rs.getString("PostalCode-1"));
-        
+
         // Address 2
         addressInfo.setAddressType2(rs.getString("AddressType-2"));
         addressInfo.setProvince2(rs.getString("Province-2"));
@@ -318,7 +322,7 @@ public class CbcDataServiceImpl implements CbcDataService {
         addressInfo.setCity2Khmer(rs.getString("City-2(Khmer)"));
         addressInfo.setCountry2(rs.getString("Country-2"));
         addressInfo.setPostalCode2(rs.getString("PostalCode-2"));
-        
+
         // Address 3
         addressInfo.setAddress3Type(rs.getString("Address-3Type"));
         addressInfo.setProvince3(rs.getString("Province-3"));
@@ -333,7 +337,7 @@ public class CbcDataServiceImpl implements CbcDataService {
         addressInfo.setCity3Khmer(rs.getString("City-3(Khmer)"));
         addressInfo.setCountry3(rs.getString("Country-3"));
         addressInfo.setPostalCode3(rs.getString("PostalCode-3"));
-        
+
         addressInfo.setCreatedBy(currentUser);
         addressInfo.setUpdatedBy(currentUser);
         return addressInfo;
@@ -343,28 +347,28 @@ public class CbcDataServiceImpl implements CbcDataService {
         CbcContactInformationEntity contactInfo = new CbcContactInformationEntity();
         contactInfo.setMainRecord(mainRecord);
         contactInfo.setEmailAddress(rs.getString("EmailAddress"));
-        
+
         // Contact 1
         contactInfo.setContactNumberType1(rs.getString("ContactNumberType1"));
         contactInfo.setContactNumberCountryCode1(rs.getString("ContactNumber–CountryCode1"));
         contactInfo.setContactNumberArea1(rs.getString("ContactNumber–Area1"));
         contactInfo.setContactNumberNumber1(rs.getString("ContactNumber–Number1"));
         contactInfo.setContactNumberExtension1(rs.getString("ContactNumber–Extension1"));
-        
+
         // Contact 2
         contactInfo.setContactNumberType2(rs.getString("ContactNumberType2"));
         contactInfo.setContactNumberCountryCode2(rs.getString("ContactNumber–CountryCode2"));
         contactInfo.setContactNumberArea2(rs.getString("ContactNumber–Area2"));
         contactInfo.setContactNumberNumber2(rs.getString("ContactNumber–Number2"));
         contactInfo.setContactNumberExtension2(rs.getString("ContactNumber–Extension2"));
-        
+
         // Contact 3
         contactInfo.setContactNumberType3(rs.getString("ContactNumberType3"));
         contactInfo.setContactNumberCountryCode3(rs.getString("ContactNumber–CountryCode3"));
         contactInfo.setContactNumberArea3(rs.getString("ContactNumber–Area3"));
         contactInfo.setContactNumberNumber3(rs.getString("ContactNumber–Number3"));
         contactInfo.setContactNumberExtension3(rs.getString("ContactNumber–Extension3"));
-        
+
         contactInfo.setCreatedBy(currentUser);
         contactInfo.setUpdatedBy(currentUser);
         return contactInfo;
@@ -373,7 +377,7 @@ public class CbcDataServiceImpl implements CbcDataService {
     private CbcEmploymentInformationEntity createEmploymentInformation(ResultSet rs, CbcMainRecordEntity mainRecord, String currentUser) throws SQLException {
         CbcEmploymentInformationEntity employmentInfo = new CbcEmploymentInformationEntity();
         employmentInfo.setMainRecord(mainRecord);
-        
+
         // Employment 1
         employmentInfo.setEmploymentStatus1(rs.getString("Employment Status-1"));
         employmentInfo.setEmploymentType1(rs.getString("Employment Type-1"));
@@ -399,7 +403,7 @@ public class CbcDataServiceImpl implements CbcDataService {
         employmentInfo.setCurrency1(rs.getString("Currency-1"));
         employmentInfo.setMonthlyBasicSalaryIncome1(getBigDecimalFromResultSet(rs, "MonthlyBasicSalary/Income-1"));
         employmentInfo.setTotalMonthlySalaryIncome1(getBigDecimalFromResultSet(rs, "TotalMonthlySalary/Income-1"));
-        
+
         // Employment 2
         employmentInfo.setEmployerType2(rs.getString("Employer-2Type"));
         employmentInfo.setSelfEmployed2(rs.getString("SelfEmployed-2"));
@@ -425,12 +429,12 @@ public class CbcDataServiceImpl implements CbcDataService {
         employmentInfo.setCurrency2(rs.getString("Currency–2"));
         employmentInfo.setMonthlyBasicSalaryIncome2(getBigDecimalFromResultSet(rs, "MonthlyBasicSalary/Income-2"));
         employmentInfo.setTotalMonthlySalaryIncome2(getBigDecimalFromResultSet(rs, "TotalMonthlySalary/Income-2"));
-        
+
         // Employment 3
         employmentInfo.setEmployerType3(rs.getString("EmployerType-3"));
         employmentInfo.setSelfEmployed3(rs.getString("SelfEmployed-3"));
         employmentInfo.setEmployer3NameEnglish(rs.getString("Employer-3Name(English)"));
-        
+
         employmentInfo.setCreatedBy(currentUser);
         employmentInfo.setUpdatedBy(currentUser);
         return employmentInfo;
@@ -439,35 +443,35 @@ public class CbcDataServiceImpl implements CbcDataService {
     private CbcSecurityInformationEntity createSecurityInformation(ResultSet rs, CbcMainRecordEntity mainRecord, String currentUser) throws SQLException {
         CbcSecurityInformationEntity securityInfo = new CbcSecurityInformationEntity();
         securityInfo.setMainRecord(mainRecord);
-        
+
         // Security 1
         securityInfo.setSecurityType1(rs.getString("Security Type-1"));
         securityInfo.setSecurityNumber1(rs.getString("Security Number-1"));
         securityInfo.setSecurityCurrency1(rs.getString("Security Currency-1"));
         securityInfo.setSecurityValue1(getBigDecimalFromResultSet(rs, "Security Value-1"));
         securityInfo.setSecurityLocation1(rs.getString("Security Location-1"));
-        
+
         // Security 2
         securityInfo.setSecurityType2(rs.getString("Security Type-2"));
         securityInfo.setSecurityNumber2(rs.getString("Security Number-2"));
         securityInfo.setSecurityCurrency2(rs.getString("Security Currency-2"));
         securityInfo.setSecurityValue2(getBigDecimalFromResultSet(rs, "Security Value-2"));
         securityInfo.setSecurityLocation2(rs.getString("Security Location-2"));
-        
+
         // Security 3
         securityInfo.setSecurityType3(rs.getString("Security Type-3"));
         securityInfo.setSecurityNumber3(rs.getString("Security Number-3"));
         securityInfo.setSecurityCurrency3(rs.getString("Security Currency-3"));
         securityInfo.setSecurityValue3(getBigDecimalFromResultSet(rs, "Security Value-3"));
         securityInfo.setSecurityLocation3(rs.getString("Security Location-3"));
-        
+
         securityInfo.setSecurityTypePrimary(rs.getString("SecurityType-Primary"));
         securityInfo.setSpecialNote(rs.getString("Special Note"));
         securityInfo.setEnquiryMemberReference(rs.getString("Enquiry Member Reference"));
         securityInfo.setLoanToSectorSection(rs.getString("Loan to sector/Section"));
         securityInfo.setCurrency3(rs.getString("Currency-3"));
         securityInfo.setBranchAddressCode(rs.getString("Branch Address Code"));
-        
+
         securityInfo.setCreatedBy(currentUser);
         securityInfo.setUpdatedBy(currentUser);
         return securityInfo;
@@ -535,7 +539,7 @@ public class CbcDataServiceImpl implements CbcDataService {
 
     @Override
     public PaginationResponse<CbcMainRecordResponseDto> getCbcRecordsPaginated(CbcFilterRequestDto filterRequest) {
-        log.info("Fetching CBC records with pagination. Page: {}, Size: {}", 
+        log.info("Fetching CBC records with pagination. Page: {}, Size: {}",
                 filterRequest.getPage(), filterRequest.getSize());
 
         // Create specification for filtering
@@ -547,7 +551,7 @@ public class CbcDataServiceImpl implements CbcDataService {
 
         // Create pageable
         Sort sort = Sort.by(Sort.Direction.fromString(filterRequest.getSortDirection()),
-                          filterRequest.getSortBy());
+                filterRequest.getSortBy());
         Pageable pageable = PageRequest.of(filterRequest.getPage() - 1, filterRequest.getSize(), sort);
 
         // Fetch data
@@ -562,10 +566,10 @@ public class CbcDataServiceImpl implements CbcDataService {
     }
 
     private PaginationResponse<CbcMainRecordResponseDto> createPaginationResponse(
-            List<CbcMainRecordResponseDto> content, 
-            Page<CbcMainRecordEntity> page, 
+            List<CbcMainRecordResponseDto> content,
+            Page<CbcMainRecordEntity> page,
             CbcFilterRequestDto filterRequest) {
-        
+
         PaginationResponse<CbcMainRecordResponseDto> response = new PaginationResponse<>();
         response.setContent(content);
         response.setPageNo(filterRequest.getPage());
@@ -588,9 +592,9 @@ public class CbcDataServiceImpl implements CbcDataService {
     @Transactional
     public CbcMainRecordResponseDto updateCbcRecord(Long id, CbcUpdateRequestDto updateRequest) {
         log.info("Updating CBC record with ID: {}", id);
-        
+
         String currentUser = getCurrentUsername();
-        
+
         CbcMainRecordEntity entity = mainRecordRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("CBC record not found with ID: " + id));
 
@@ -599,7 +603,7 @@ public class CbcDataServiceImpl implements CbcDataService {
 
         CbcMainRecordEntity savedEntity = mainRecordRepository.save(entity);
         log.info("CBC record updated successfully with ID: {}", id);
-        
+
         return cbcMapper.toMainRecordResponseDto(savedEntity);
     }
 
@@ -653,11 +657,11 @@ public class CbcDataServiceImpl implements CbcDataService {
     @Transactional
     public void deleteCbcRecord(Long id) {
         log.info("Deleting CBC record with ID: {}", id);
-        
+
         if (!mainRecordRepository.existsById(id)) {
             throw new NotFoundException("CBC record not found with ID: " + id);
         }
-        
+
         mainRecordRepository.deleteById(id);
         log.info("CBC record deleted successfully with ID: {}", id);
     }
@@ -667,12 +671,12 @@ public class CbcDataServiceImpl implements CbcDataService {
     public void deleteAllCbcRecords() {
         log.info("Deleting all CBC records");
         mainRecordRepository.deleteAllData();
-        
+
         // Reset status
         currentLoadStatus = new DataLoadStatusDto(
-                "IDLE", "All records deleted. No data loading operation in progress", 
+                "IDLE", "All records deleted. No data loading operation in progress",
                 0L, null, null, null);
-        
+
         log.info("All CBC records deleted successfully");
     }
 
