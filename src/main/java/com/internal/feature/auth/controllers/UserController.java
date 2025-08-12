@@ -5,6 +5,7 @@ import com.internal.enumation.StatusData;
 import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.auth.dto.request.ChangePasswordByAdminRequestDto;
 import com.internal.feature.auth.dto.request.ChangePasswordRequestDto;
+import com.internal.feature.auth.dto.request.GetAllUserRequestDto;
 import com.internal.feature.auth.dto.request.UpdateUserRequestDto;
 import com.internal.feature.auth.dto.response.AllUserResponseDto;
 import com.internal.feature.auth.dto.response.UserResponseDto;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("/api/v1/admin/user")
+@RequestMapping("/api/v1/user")
 @RequiredArgsConstructor
 @CrossOrigin
 @Slf4j
@@ -29,21 +30,12 @@ public class UserController {
 
     @PostMapping
     @RequiresRole(value = {"ADMIN", "SUPER"}, anyRole = true)
-    public ResponseEntity<ApiResponse<AllUserResponseDto>> getAllUsers(
-            @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
-            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
-            @RequestParam(value = "search", required = false) String search,
-            @RequestParam(value = "status", required = false) StatusData statusData) {
+    public ResponseEntity<ApiResponse<AllUserResponseDto>> getAllUsers(@RequestBody GetAllUserRequestDto request) {
 
-        log.info("Fetching users - page: {}, size: {}, search: '{}', status: {}", 
-                pageNo, pageSize, search, statusData);
+        log.info("Fetching users - page: {}, size: {}, search: '{}', status: {}",
+                request.getPageNo(), request.getPageSize(), request.getSearch(), request.getStatus());
 
-        AllUserResponseDto result = userService.getAllUser(
-            Math.max(pageNo - 1, 0), 
-            Math.max(pageSize, 1), 
-            search, 
-            statusData
-        );
+        AllUserResponseDto result = userService.getAllUser(request);
         
         log.info("Successfully retrieved {} users (page {}/{})",
                 result.getContent().size(), result.getPageNo(), result.getTotalPages());

@@ -8,9 +8,11 @@ import com.internal.exceptions.error.NotFoundException;
 import com.internal.exceptions.error.UnauthorizedException;
 import com.internal.feature.auth.dto.request.LoginRequestDto;
 import com.internal.feature.auth.dto.request.RegisterRequestDto;
+import com.internal.feature.auth.dto.request.UpdateUserRequestDto;
 import com.internal.feature.auth.dto.response.AuthResponseDTO;
 import com.internal.feature.auth.dto.response.UserResponseDto;
 import com.internal.feature.auth.mapper.AuthMapper;
+import com.internal.feature.auth.mapper.UserMapper;
 import com.internal.feature.auth.models.Role;
 import com.internal.feature.auth.models.UserEntity;
 import com.internal.feature.auth.repository.RoleRepository;
@@ -23,6 +25,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +43,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JWTGenerator jwtGenerator;
     private final AuthMapper authMapper;
+    private final UserMapper userMapper;
 
     @Override
     public AuthResponseDTO login(LoginRequestDto loginDto) {
@@ -81,6 +85,61 @@ public class AuthServiceImpl implements AuthService {
     public UserResponseDto createUserByAdmin(RegisterRequestDto registerDto) {
         log.info("Processing admin user creation with id card: {}", registerDto.getIdCard());
         return createUser(registerDto, StatusData.ACTIVE, "Admin creation");
+    }
+
+    @Override
+    public UserResponseDto updateUserProfile(UpdateUserRequestDto requestDto, String name) {
+        log.info("Processing update user profile: {}", requestDto.getIdCard());
+
+        // 1. Load user by username (e.g. idCard or username)
+        UserEntity user = userRepository.findByUsername(name)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        // 2. Update fields
+        updateUserFields(user, requestDto);
+
+
+        // 3. Save updated user entity
+        UserEntity updatedUser = userRepository.save(user);
+
+        return userMapper.mapToDto(updatedUser);
+    }
+
+    private void updateUserFields(UserEntity user, UpdateUserRequestDto request) {
+        if (request.getIdCard() != null) {
+            validateUniqueIdCard(user, request.getIdCard());
+            user.setUsername(request.getIdCard());
+        }
+
+        if (request.getEmail() != null) {
+            user.setEmail(request.getEmail());
+        }
+
+        if (request.getStatus() != null) {
+            user.setStatus(request.getStatus());
+        }
+
+        if (request.getFullName() != null) {
+            user.setFullName(request.getFullName());
+        }
+
+        if (request.getProfileUrl() != null) {
+            user.setProfileUrl(request.getProfileUrl());
+        }
+
+        if (request.getPosition() != null) {
+            user.setPosition(request.getPosition());
+        }
+
+        if (request.getBranch() != null) {
+            user.setBranch(request.getBranch());
+        }
+    }
+
+    private void validateUniqueIdCard(UserEntity user, String newIdCard) {
+        if (!user.getUsername().equals(newIdCard) && userRepository.existsByUsername(newIdCard)) {
+            throw new DuplicateNameException("Id card is already in use, please choose another one.");
+        }
     }
 
     @Override

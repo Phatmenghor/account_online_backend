@@ -15,7 +15,7 @@ import javax.validation.Valid;
 import java.sql.SQLException;
 
 @RestController
-@RequestMapping("/api/v1/admin/staff")
+@RequestMapping("/api/v1/staff")
 @Validated
 @Slf4j
 @RequiredArgsConstructor
@@ -23,20 +23,19 @@ import java.sql.SQLException;
 public class StaffController {
 
     private final StaffRepository staffRepository;
-
-    @PostMapping("/staff-by-cardid")
-    public ResponseEntity<ApiResponse<StaffResponseDto>> getStaffByCardId(@RequestBody @Valid CardIdRequestDto request) throws SQLException {
-        log.info("Fetching staff record by card ID: {}", request.getCardId());
-
-        StaffResponseDto staff = staffRepository.getStaffByCardId(request.getCardId());
-        log.info("Successfully retrieved staff record for card ID: {}", request.getCardId());
-
-        return ResponseEntity.ok(new ApiResponse<>(
-            "success", 
-            "Staff response successfully", 
-            staff
-        ));
-    }
+//
+//    @PostMapping("/staff-by-cardid")
+//    public ResponseEntity<ApiResponse<StaffResponseDto>> getStaffByCardId(@RequestBody @Valid CardIdRequestDto request) throws SQLException {
+//        log.info("Fetching staff record by card ID: {}", request.getCardId());
+//        StaffResponseDto staff = staffRepository.getStaffByCardId(request.getCardId());
+//        log.info("Successfully retrieved staff record for card ID: {}", request.getCardId());
+//
+//        return ResponseEntity.ok(new ApiResponse<>(
+//            "success",
+//            "Staff response successfully",
+//            staff
+//        ));
+//    }
 
     @PostMapping("/{idCard}")
     public ResponseEntity<ApiResponse<StaffResponseDto>> getStaffById(@PathVariable("idCard") String idCard) throws SQLException {
@@ -46,8 +45,8 @@ public class StaffController {
         log.info("Successfully retrieved staff record for ID card: {}", idCard);
 
         return ResponseEntity.ok(new ApiResponse<>(
-            "success", 
-            "Staff id card response successfully", 
+            "success",
+            "Staff id card response successfully",
             staff
         ));
     }

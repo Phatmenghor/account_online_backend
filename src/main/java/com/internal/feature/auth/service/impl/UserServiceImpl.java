@@ -6,6 +6,7 @@ import com.internal.exceptions.error.DuplicateNameException;
 import com.internal.exceptions.error.NotFoundException;
 import com.internal.feature.auth.dto.request.ChangePasswordByAdminRequestDto;
 import com.internal.feature.auth.dto.request.ChangePasswordRequestDto;
+import com.internal.feature.auth.dto.request.GetAllUserRequestDto;
 import com.internal.feature.auth.dto.request.UpdateUserRequestDto;
 import com.internal.feature.auth.dto.response.AllUserResponseDto;
 import com.internal.feature.auth.dto.response.UserResponseDto;
@@ -39,12 +40,17 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
-    public AllUserResponseDto getAllUser(int pageNo, int pageSize, String search, StatusData status) {
-        log.debug("Getting users with pageNo={}, pageSize={}, search={}, status={}", 
-                pageNo, pageSize, search, status);
-        
-        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<UserEntity> userPage = fetchUsers(search, status, pageable);
+    public AllUserResponseDto getAllUser(GetAllUserRequestDto requestDto) {
+        log.debug("Getting users with pageNo={}, pageSize={}, search={}, status={}",
+                requestDto.getPageNo(), requestDto.getPageSize(), requestDto.getSearch(), requestDto.getStatus());
+
+        GetAllUserRequestDto userRequestDto = new GetAllUserRequestDto(Math.max(requestDto.getPageNo() - 1, 0),
+                Math.max(requestDto.getPageSize(), 1),
+                requestDto.getSearch(),
+                requestDto.getStatus());
+
+        Pageable pageable = PageRequest.of(userRequestDto.getPageNo(), userRequestDto.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<UserEntity> userPage = fetchUsers(userRequestDto.getSearch(), userRequestDto.getStatus(), pageable);
 
         List<UserResponseDto> content = userPage.getContent().stream()
                 .map(userMapper::mapToDto)
@@ -132,7 +138,7 @@ public class UserServiceImpl implements UserService {
         boolean hasStatus = status != null;
 
         if (!hasStatus) {
-            List<StatusData> activeStatuses = Arrays.asList(StatusData.ACTIVE, StatusData.INACTIVE);
+            List<StatusData> activeStatuses = Arrays.asList(StatusData.ACTIVE, StatusData.DELETE);
             return hasSearch 
                 ? userRepository.searchByMultipleFieldsAndStatuses(search, activeStatuses, pageable)
                 : userRepository.findByStatusIn(activeStatuses, pageable);
@@ -152,7 +158,11 @@ public class UserServiceImpl implements UserService {
         if (request.getStatus() != null) {
             user.setStatus(request.getStatus());
         }
-        
+
+        if (request.getFullName() != null) {
+            user.setFullName(request.getFullName());
+        }
+
         if (request.getProfileUrl() != null) {
             user.setProfileUrl(request.getProfileUrl());
         }

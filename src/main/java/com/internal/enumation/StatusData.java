@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum StatusData {
     PENDING,
     ACTIVE,
-    INACTIVE;
+    DELETE;
 
     @JsonCreator
     public static StatusData fromString(String value) {

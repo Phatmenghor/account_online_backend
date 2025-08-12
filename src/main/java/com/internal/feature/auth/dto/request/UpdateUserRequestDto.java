@@ -7,6 +7,9 @@ import lombok.Data;
 public class UpdateUserRequestDto {
     private String idCard;
     private String email;
+    private String fullName;
     private StatusData status;
     private String profileUrl;
+    private String position;
+    private String branch;
 }

@@ -3,12 +3,13 @@ package com.internal.feature.auth.service;
 import com.internal.enumation.StatusData;
 import com.internal.feature.auth.dto.request.ChangePasswordByAdminRequestDto;
 import com.internal.feature.auth.dto.request.ChangePasswordRequestDto;
+import com.internal.feature.auth.dto.request.GetAllUserRequestDto;
 import com.internal.feature.auth.dto.request.UpdateUserRequestDto;
 import com.internal.feature.auth.dto.response.UserResponseDto;
 import com.internal.feature.auth.dto.response.AllUserResponseDto;
 
 public interface UserService {
-    AllUserResponseDto getAllUser(int pageNo, int pageSize, String search, StatusData status);
+    AllUserResponseDto getAllUser(GetAllUserRequestDto requestDto);
 
     UserResponseDto getUserById(Long id);
 

@@ -1,5 +1,6 @@
 package com.internal.feature.auth.repository.impl;
 
+import com.internal.exceptions.error.StaffNotFoundException;
 import com.internal.feature.auth.dto.response.StaffResponseDto;
 import com.internal.feature.auth.repository.StaffRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +45,7 @@ public class StaffRepositoryImpl implements StaffRepository {
                     return staff;
                 } else {
                     log.warn("No staff record found for card ID: {}", cardId);
-                    throw new RuntimeException("Staff not found with card ID: " + cardId);
+                    throw new StaffNotFoundException("Staff not found with card ID: " + cardId);
                 }
             }
         } catch (ClassNotFoundException e) {

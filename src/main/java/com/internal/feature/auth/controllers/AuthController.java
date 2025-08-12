@@ -4,6 +4,7 @@ import com.internal.config.RequiresRole;
 import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.auth.dto.request.LoginRequestDto;
 import com.internal.feature.auth.dto.request.RegisterRequestDto;
+import com.internal.feature.auth.dto.request.UpdateUserRequestDto;
 import com.internal.feature.auth.dto.response.AuthResponseDTO;
 import com.internal.feature.auth.dto.response.UserResponseDto;
 import com.internal.feature.auth.service.AuthService;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/admin/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Authentication")
@@ -82,6 +85,24 @@ public class AuthController {
         String status = isValid ? "success" : "error";
         
         return ResponseEntity.ok(new ApiResponse<>(status, message, isValid));
+    }
+
+    @PostMapping("/token/update-profile")
+    @RequiresRole(value = {"ADMIN", "SUPER"}, anyRole = true)
+    public ResponseEntity<ApiResponse<UserResponseDto>> updateUserProfile(@Valid @RequestBody UpdateUserRequestDto registerDto) {
+        log.info("Admin update profile request for ID card: {}", registerDto.getIdCard());
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        UserResponseDto userResponse = authService.updateUserProfile(registerDto, authentication.getName());
+        log.info("Admin update profile successful for: {}", registerDto.getIdCard());
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse<>(
+                        "success",
+                        "User profile updated successfully",
+                        userResponse
+                ));
     }
 
     @PostMapping("/create-user")
