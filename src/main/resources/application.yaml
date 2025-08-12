@@ -31,7 +31,8 @@ spring:
 
     secondary:
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-      url: "jdbc:sqlserver://192.168.103.71:1433;databaseName=CPBHD;encrypt=true;trustServerCertificate=true"
+#      url: "jdbc:sqlserver://192.168.103.71:1433;databaseName=CPBHD;encrypt=true;trustServerCertificate=true"
+      url: "jdbc:sqlserver://10.18.1.150:1433;databaseName=CPBHD;encrypt=true;trustServerCertificate=true"
       username: cpb_int
       password: "123cp!@#"
       hikari:

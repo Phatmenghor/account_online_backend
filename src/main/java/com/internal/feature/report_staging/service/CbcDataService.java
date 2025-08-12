@@ -5,6 +5,7 @@ import com.internal.feature.report_staging.dto.request.CbcDataRequestDto;
 import com.internal.feature.report_staging.dto.response.CbcMainRecordResponseDto;
 import com.internal.feature.report_staging.dto.response.DataLoadStatusDto;
 import com.internal.feature.report_staging.dto.update.CbcUpdateRequestDto;
+import com.internal.feature.report_staging.models.CbcMainRecordEntity;
 import com.internal.utils.pagination.PaginationResponse;
 
 import java.util.List;
@@ -68,4 +69,11 @@ public interface CbcDataService {
      * @return Total number of records
      */
     long getTotalRecordsCount();
+
+    /**
+     * Save entities batch with transaction (used internally for batch processing)
+     * @param entities List of entities to save
+     * @param totalProcessed Total number of records processed so far
+     */
+    void saveEntitiesBatch(List<CbcMainRecordEntity> entities, long totalProcessed);
 }
