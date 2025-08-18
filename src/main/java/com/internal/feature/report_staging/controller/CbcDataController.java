@@ -2,16 +2,15 @@ package com.internal.feature.report_staging.controller;
 
 import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.report_staging.dto.filter.CbcFilterRequestDto;
-import com.internal.feature.report_staging.dto.request.CbcDataRequestDto;
-import com.internal.feature.report_staging.dto.response.CbcMainRecordResponseDto;
-import com.internal.feature.report_staging.dto.response.DataLoadStatusDto;
-import com.internal.feature.report_staging.dto.update.CbcUpdateRequestDto;
+import com.internal.feature.report_staging.dto.request.MoveToFinalRequestDto;
+import com.internal.feature.report_staging.dto.response.BatchSessionResponseDto;
+import com.internal.feature.report_staging.dto.response.CbcRecordResponseDto;
 import com.internal.feature.report_staging.service.CbcDataService;
 import com.internal.utils.pagination.PaginationResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +26,10 @@ public class CbcDataController {
 
     private final CbcDataService cbcDataService;
 
-    @PostMapping("/load")
+    // ============ STAGING OPERATIONS ============
+
+    @PostMapping("/staging/load")
+    @Operation(summary = "Load CBC data from SQL Server to staging table")
     public ResponseEntity<ApiResponse<DataLoadStatusDto>> loadCbcData(@Valid @RequestBody CbcDataRequestDto request) {
         log.info("Received request to load CBC data for date range: {} to {}",
                 request.getStartDate(), request.getEndDate());
@@ -41,7 +43,8 @@ public class CbcDataController {
         ));
     }
 
-    @GetMapping("/load-status")
+    @GetMapping("/staging/load-status")
+    @Operation(summary = "Get current data loading status")
     public ResponseEntity<ApiResponse<DataLoadStatusDto>> getLoadStatus() {
         log.info("Fetching current load status");
 
@@ -54,143 +57,188 @@ public class CbcDataController {
         ));
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<CbcMainRecordResponseDto>>> getAllCbcRecords() {
-        log.info("Fetching all CBC records without pagination");
-
-        List<CbcMainRecordResponseDto> records = cbcDataService.getAllCbcRecords();
-
-        return ResponseEntity.ok(new ApiResponse<>(
-                "success",
-                String.format("CBC records retrieved successfully. Total: %d", records.size()),
-                records
-        ));
-    }
-
-    @PostMapping("/paginated")
-    public ResponseEntity<ApiResponse<PaginationResponse<CbcMainRecordResponseDto>>> getCbcRecordsPaginated(
+    @PostMapping("/staging/records")
+    @Operation(summary = "Get staging records with pagination and filtering")
+    public ResponseEntity<ApiResponse<PaginationResponse<CbcRecordResponseDto>>> getStagingRecordsPaginated(
             @Valid @RequestBody CbcFilterRequestDto filterRequest) {
-        log.info("Fetching CBC records with pagination - Page: {}, Size: {}",
+        log.info("Fetching staging records with pagination - Page: {}, Size: {}",
                 filterRequest.getPage(), filterRequest.getSize());
 
-        PaginationResponse<CbcMainRecordResponseDto> paginatedRecords = 
-                cbcDataService.getCbcRecordsPaginated(filterRequest);
+        PaginationResponse<CbcRecordResponseDto> paginatedRecords = 
+                cbcDataService.getStagingRecordsPaginated(filterRequest);
 
         return ResponseEntity.ok(new ApiResponse<>(
                 "success",
-                String.format("CBC records retrieved successfully. Page %d/%d", 
+                String.format("Staging records retrieved successfully. Page %d/%d", 
                         paginatedRecords.getPageNo(), paginatedRecords.getTotalPages()),
                 paginatedRecords
         ));
     }
 
-    @PostMapping("/by-id")
-    public ResponseEntity<ApiResponse<CbcMainRecordResponseDto>> getCbcRecordById(@RequestBody IdRequest request) {
-        log.info("Fetching CBC record by ID: {}", request.getId());
+    @GetMapping("/staging/records/{id}")
+    @Operation(summary = "Get single staging record by ID")
+    public ResponseEntity<ApiResponse<CbcRecordResponseDto>> getStagingRecordById(@PathVariable Long id) {
+        log.info("Fetching staging record by ID: {}", id);
 
-        CbcMainRecordResponseDto record = cbcDataService.getCbcRecordById(request.getId());
+        CbcRecordResponseDto record = cbcDataService.getStagingRecordById(id);
 
         return ResponseEntity.ok(new ApiResponse<>(
                 "success",
-                "CBC record retrieved successfully",
+                "Staging record retrieved successfully",
                 record
         ));
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<ApiResponse<CbcMainRecordResponseDto>> updateCbcRecord(@Valid @RequestBody UpdateRequest request) {
-        log.info("Updating CBC record with ID: {}", request.getId());
+    @PutMapping("/staging/records/{id}")
+    @Operation(summary = "Update staging record")
+    public ResponseEntity<ApiResponse<CbcRecordResponseDto>> updateStagingRecord(
+            @PathVariable Long id, 
+            @Valid @RequestBody CbcUpdateRequestDto updateRequest) {
+        log.info("Updating staging record with ID: {}", id);
 
-        CbcMainRecordResponseDto updatedRecord = cbcDataService.updateCbcRecord(request.getId(), request.getUpdateData());
+        CbcRecordResponseDto updatedRecord = cbcDataService.updateStagingRecord(id, updateRequest);
 
         return ResponseEntity.ok(new ApiResponse<>(
                 "success",
-                "CBC record updated successfully",
+                "Staging record updated successfully",
                 updatedRecord
         ));
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<ApiResponse<String>> deleteCbcRecord(@RequestBody IdRequest request) {
-        log.info("Deleting CBC record with ID: {}", request.getId());
+    @GetMapping("/staging/count")
+    @Operation(summary = "Get total count of staging records")
+    public ResponseEntity<ApiResponse<RecordCountResponse>> getStagingRecordsCount() {
+        log.info("Fetching staging records count");
 
-        cbcDataService.deleteCbcRecord(request.getId());
-
-        return ResponseEntity.ok(new ApiResponse<>(
-                "success",
-                "CBC record deleted successfully",
-                "Record deleted"
-        ));
-    }
-
-    @DeleteMapping("/delete-all")
-    public ResponseEntity<ApiResponse<String>> deleteAllCbcRecords() {
-        log.info("Deleting all CBC records");
-
-        cbcDataService.deleteAllCbcRecords();
+        long count = cbcDataService.getStagingRecordsCount();
+        RecordCountResponse countResponse = new RecordCountResponse(count, "STAGING");
 
         return ResponseEntity.ok(new ApiResponse<>(
                 "success",
-                "All CBC records deleted successfully",
-                "All records deleted"
-        ));
-    }
-
-    @GetMapping("/count")
-    public ResponseEntity<ApiResponse<RecordCountResponse>> getTotalRecordsCount() {
-        log.info("Fetching total records count");
-
-        long count = cbcDataService.getTotalRecordsCount();
-
-        RecordCountResponse countResponse = new RecordCountResponse(count);
-
-        return ResponseEntity.ok(new ApiResponse<>(
-                "success",
-                "Total records count retrieved successfully",
+                "Staging records count retrieved successfully",
                 countResponse
         ));
     }
 
-    @PostMapping("/search")
-    public ResponseEntity<ApiResponse<PaginationResponse<CbcMainRecordResponseDto>>> searchCbcRecords(
-            @Valid @RequestBody CbcFilterRequestDto searchRequest) {
-        log.info("Searching CBC records with filters");
+    @DeleteMapping("/staging/clear")
+    @Operation(summary = "Clear all staging data")
+    public ResponseEntity<ApiResponse<String>> clearStagingData() {
+        log.info("Clearing all staging data");
 
-        PaginationResponse<CbcMainRecordResponseDto> searchResults = 
-                cbcDataService.getCbcRecordsPaginated(searchRequest);
+        cbcDataService.clearStagingDataSync();
 
         return ResponseEntity.ok(new ApiResponse<>(
                 "success",
-                "Search completed successfully",
-                searchResults
+                "Staging data cleared successfully",
+                "All staging records deleted"
         ));
     }
 
-    // Helper DTOs
-    public static class IdRequest {
-        private Long id;
+    // ============ FINAL/HISTORY OPERATIONS ============
+
+    @PostMapping("/staging/move-to-final")
+    @Operation(summary = "Move all staging records to final table and create batch session")
+    public ResponseEntity<ApiResponse<BatchSessionMoveResponse>> moveStagingToFinal(
+            @RequestBody(required = false) MoveToFinalRequestDto request) {
+        log.info("Moving staging records to final table");
+
+        String batchSessionId = cbcDataService.moveStagingToFinal();
         
-        public Long getId() { return id; }
-        public void setId(Long id) { this.id = id; }
+        BatchSessionMoveResponse response = new BatchSessionMoveResponse();
+        response.setBatchSessionId(batchSessionId);
+        response.setMessage("Records moved to final table successfully");
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                "success",
+                "Records moved to final table successfully with batch session: " + batchSessionId,
+                response
+        ));
     }
 
-    public static class UpdateRequest {
-        private Long id;
-        private CbcUpdateRequestDto updateData;
-        
-        public Long getId() { return id; }
-        public void setId(Long id) { this.id = id; }
-        public CbcUpdateRequestDto getUpdateData() { return updateData; }
-        public void setUpdateData(CbcUpdateRequestDto updateData) { this.updateData = updateData; }
+    @GetMapping("/batch-sessions")
+    @Operation(summary = "Get all batch sessions (for listing view)")
+    public ResponseEntity<ApiResponse<List<BatchSessionResponseDto>>> getAllBatchSessions() {
+        log.info("Fetching all batch sessions");
+
+        List<BatchSessionResponseDto> batchSessions = cbcDataService.getAllBatchSessions();
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                "success",
+                String.format("Retrieved %d batch sessions", batchSessions.size()),
+                batchSessions
+        ));
     }
+
+    @PostMapping("/batch-sessions/filter")
+    @Operation(summary = "Get batch sessions with date/search filters")
+    public ResponseEntity<ApiResponse<List<BatchSessionResponseDto>>> getBatchSessionsWithFilter(
+            @Valid @RequestBody CbcFilterRequestDto filterRequest) {
+        log.info("Fetching batch sessions with filters");
+
+        List<BatchSessionResponseDto> batchSessions = cbcDataService.getBatchSessionsWithFilter(filterRequest);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                "success",
+                String.format("Retrieved %d filtered batch sessions", batchSessions.size()),
+                batchSessions
+        ));
+    }
+
+    @PostMapping("/final/records")
+    @Operation(summary = "Get final records with pagination (filtered by batch session)")
+    public ResponseEntity<ApiResponse<PaginationResponse<CbcRecordResponseDto>>> getFinalRecordsPaginated(
+            @Valid @RequestBody CbcFilterRequestDto filterRequest) {
+        log.info("Fetching final records with pagination - Page: {}, Size: {}, BatchSession: {}",
+                filterRequest.getPage(), filterRequest.getSize(), filterRequest.getBatchSessionId());
+
+        PaginationResponse<CbcRecordResponseDto> paginatedRecords = 
+                cbcDataService.getFinalRecordsPaginated(filterRequest);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                "success",
+                String.format("Final records retrieved successfully. Page %d/%d", 
+                        paginatedRecords.getPageNo(), paginatedRecords.getTotalPages()),
+                paginatedRecords
+        ));
+    }
+
+    @GetMapping("/final/count")
+    @Operation(summary = "Get total count of final records")
+    public ResponseEntity<ApiResponse<RecordCountResponse>> getFinalRecordsCount() {
+        log.info("Fetching final records count");
+
+        long count = cbcDataService.getFinalRecordsCount();
+        RecordCountResponse countResponse = new RecordCountResponse(count, "FINAL");
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                "success",
+                "Final records count retrieved successfully",
+                countResponse
+        ));
+    }
+
+    // ============ HELPER CLASSES ============
 
     public static class RecordCountResponse {
         private final long totalRecords;
+        private final String recordType;
         
-        public RecordCountResponse(long totalRecords) {
+        public RecordCountResponse(long totalRecords, String recordType) {
             this.totalRecords = totalRecords;
+            this.recordType = recordType;
         }
         
         public long getTotalRecords() { return totalRecords; }
+        public String getRecordType() { return recordType; }
+    }
+
+    public static class BatchSessionMoveResponse {
+        private String batchSessionId;
+        private String message;
+        
+        public String getBatchSessionId() { return batchSessionId; }
+        public void setBatchSessionId(String batchSessionId) { this.batchSessionId = batchSessionId; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
     }
 }

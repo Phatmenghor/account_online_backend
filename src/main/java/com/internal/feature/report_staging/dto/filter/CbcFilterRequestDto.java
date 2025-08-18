@@ -1,3 +1,4 @@
+
 package com.internal.feature.report_staging.dto.filter;
 
 import lombok.AllArgsConstructor;
@@ -17,10 +18,16 @@ public class CbcFilterRequestDto {
     private String sortBy = "createdAt";
     private String sortDirection = "DESC";
     
-    // Date filters
+    // Date filters (for batch sessions or final records)
     private LocalDate startDate;
     private LocalDate endDate;
     
+    // Batch session filter (for final records)
+    private String batchSessionId;
+    
     // Simple search
     private String search;
+    
+    // Record type filter
+    private String recordType; // "STAGING" or "FINAL"
 }

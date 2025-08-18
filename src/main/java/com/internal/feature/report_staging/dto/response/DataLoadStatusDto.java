@@ -1,3 +1,4 @@
+
 package com.internal.feature.report_staging.dto.response;
 
 import lombok.AllArgsConstructor;
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DataLoadStatusDto {
-    private String status; // LOADING, SUCCESS, FAILED
+    private String status; // LOADING, SUCCESS, FAILED, IDLE
     private String message;
     private Long totalRecords;
     private LocalDateTime lastLoadTime;
