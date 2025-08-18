@@ -1,4 +1,3 @@
-
 package com.internal.feature.report_staging.dto.response;
 
 import lombok.AllArgsConstructor;

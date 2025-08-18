@@ -5,11 +5,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class CbcUpdateRequestDto {
+    
+    // For single record update
+    private UUID id;
+    
+    // For multiple record update
+    private List<UUID> ids;
     
     // Main Record Updates
     private String accountNumber;
@@ -48,7 +56,7 @@ public class CbcUpdateRequestDto {
     private String idNumber3;
     private String idExpiryDate3;
     
-    // Address Information Updates
+    // Address Information Updates - Address 1
     private String addressType1;
     private String province1;
     private String district1;
@@ -63,6 +71,7 @@ public class CbcUpdateRequestDto {
     private String country1;
     private String postalCode1;
     
+    // Address 2
     private String addressType2;
     private String province2;
     private String district2;
@@ -77,6 +86,7 @@ public class CbcUpdateRequestDto {
     private String country2;
     private String postalCode2;
     
+    // Address 3
     private String address3Type;
     private String province3;
     private String district3;
@@ -109,7 +119,7 @@ public class CbcUpdateRequestDto {
     private String contactNumberNumber3;
     private String contactNumberExtension3;
     
-    // Employment Information Updates
+    // Employment Information Updates - Employment 1
     private String employmentStatus1;
     private String employmentType1;
     private String employer1NameEnglish;
@@ -135,6 +145,7 @@ public class CbcUpdateRequestDto {
     private BigDecimal monthlyBasicSalaryIncome1;
     private BigDecimal totalMonthlySalaryIncome1;
     
+    // Employment 2
     private String employerType2;
     private String selfEmployed2;
     private String employer2NameEnglish;
@@ -160,9 +171,31 @@ public class CbcUpdateRequestDto {
     private BigDecimal monthlyBasicSalaryIncome2;
     private BigDecimal totalMonthlySalaryIncome2;
     
+    // Employment 3
     private String employerType3;
     private String selfEmployed3;
     private String employer3NameEnglish;
+    private String employer3NameKhmer;
+    private String economicSector3;
+    private String businessType3;
+    private String employer3AddressEnglish;
+    private String employer3AddressKhmer;
+    private String employer3Province;
+    private String employer3District;
+    private String employer3Commune;
+    private String employer3Village;
+    private String employer3AddressCityEnglish;
+    private String employer3AddressCityKhmer;
+    private String emp3Country3;
+    private String emp3PostalCode3;
+    private String occupation3English;
+    private String occupation3Khmer;
+    private String dateOfEmployment3;
+    private String lengthOfService3Months;
+    private String contractExpiryDate3;
+    private String currency3;
+    private BigDecimal monthlyBasicSalaryIncome3;
+    private BigDecimal totalMonthlySalaryIncome3;
     
     // Security Information Updates
     private String securityType1;
@@ -187,7 +220,6 @@ public class CbcUpdateRequestDto {
     private String specialNote;
     private String enquiryMemberReference;
     private String loanToSectorSection;
-    private String currency3;
     private String branchAddressCode;
     
     // Loan Information Updates

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @MappedSuperclass
@@ -15,8 +16,19 @@ import java.time.LocalDateTime;
 public abstract class BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(columnDefinition = "uuid", updatable = false)
+    private UUID id;
+
+    // Main Record Fields
+    @Column(name = "account_number")
+    private String accountNumber;
+    @Column(name = "creditor_id")
+    private String creditorId;
+    @Column(name = "account_type")
+    private String accountType;
+    @Column(name = "as_of_date")
+    private String asOfDate;
 
     // Personal Info Fields
     @Column(name = "date_of_birth")
@@ -76,7 +88,7 @@ public abstract class BaseEntity {
     @Column(name = "id_expiry_date_3")
     private String idExpiryDate3;
 
-    // Address Information Fields
+    // Address Information Fields - Address 1
     @Column(name = "address_type_1")
     private String addressType1;
     @Column(name = "province_1")
@@ -104,6 +116,7 @@ public abstract class BaseEntity {
     @Column(name = "postal_code_1")
     private String postalCode1;
 
+    // Address 2
     @Column(name = "address_type_2")
     private String addressType2;
     @Column(name = "province_2")
@@ -131,6 +144,7 @@ public abstract class BaseEntity {
     @Column(name = "postal_code_2")
     private String postalCode2;
 
+    // Address 3
     @Column(name = "address_3_type")
     private String address3Type;
     @Column(name = "province_3")
@@ -192,7 +206,7 @@ public abstract class BaseEntity {
     @Column(name = "contact_number_extension_3")
     private String contactNumberExtension3;
 
-    // Employment Information Fields
+    // Employment Information Fields - Employment 1
     @Column(name = "employment_status_1")
     private String employmentStatus1;
     @Column(name = "employment_type_1")
@@ -242,6 +256,7 @@ public abstract class BaseEntity {
     @Column(name = "total_monthly_salary_income_1", precision = 18, scale = 2)
     private BigDecimal totalMonthlySalaryIncome1;
 
+    // Employment 2
     @Column(name = "employer_type_2")
     private String employerType2;
     @Column(name = "self_employed_2")
@@ -291,12 +306,55 @@ public abstract class BaseEntity {
     @Column(name = "total_monthly_salary_income_2", precision = 18, scale = 2)
     private BigDecimal totalMonthlySalaryIncome2;
 
+    // Employment 3
     @Column(name = "employer_type_3")
     private String employerType3;
     @Column(name = "self_employed_3")
     private String selfEmployed3;
     @Column(name = "employer_3_name_english")
     private String employer3NameEnglish;
+    @Column(name = "employer_3_name_khmer")
+    private String employer3NameKhmer;
+    @Column(name = "economic_sector_3")
+    private String economicSector3;
+    @Column(name = "business_type_3")
+    private String businessType3;
+    @Column(name = "employer_3_address_english")
+    private String employer3AddressEnglish;
+    @Column(name = "employer_3_address_khmer")
+    private String employer3AddressKhmer;
+    @Column(name = "employer_3_province")
+    private String employer3Province;
+    @Column(name = "employer_3_district")
+    private String employer3District;
+    @Column(name = "employer_3_commune")
+    private String employer3Commune;
+    @Column(name = "employer_3_village")
+    private String employer3Village;
+    @Column(name = "employer_3_address_city_english")
+    private String employer3AddressCityEnglish;
+    @Column(name = "employer_3_address_city_khmer")
+    private String employer3AddressCityKhmer;
+    @Column(name = "emp3_country_3")
+    private String emp3Country3;
+    @Column(name = "emp3_postal_code_3")
+    private String emp3PostalCode3;
+    @Column(name = "occupation_3_english")
+    private String occupation3English;
+    @Column(name = "occupation_3_khmer")
+    private String occupation3Khmer;
+    @Column(name = "date_of_employment_3")
+    private String dateOfEmployment3;
+    @Column(name = "length_of_service_3_months")
+    private String lengthOfService3Months;
+    @Column(name = "contract_expiry_date_3")
+    private String contractExpiryDate3;
+    @Column(name = "currency_3")
+    private String currency3;
+    @Column(name = "monthly_basic_salary_income_3", precision = 18, scale = 2)
+    private BigDecimal monthlyBasicSalaryIncome3;
+    @Column(name = "total_monthly_salary_income_3", precision = 18, scale = 2)
+    private BigDecimal totalMonthlySalaryIncome3;
 
     // Security Information Fields
     @Column(name = "security_type_1")
@@ -340,8 +398,6 @@ public abstract class BaseEntity {
     private String enquiryMemberReference;
     @Column(name = "loan_to_sector_section")
     private String loanToSectorSection;
-    @Column(name = "currency_3")
-    private String currency3;
     @Column(name = "branch_address_code")
     private String branchAddressCode;
 
@@ -392,7 +448,7 @@ public abstract class BaseEntity {
     private String emzOutstandingBalance;
     
     @CreatedDate
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
     @LastModifiedDate

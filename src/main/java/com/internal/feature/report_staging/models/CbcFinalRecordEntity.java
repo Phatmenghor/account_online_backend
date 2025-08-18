@@ -1,4 +1,3 @@
-
 package com.internal.feature.report_staging.models;
 
 import lombok.AllArgsConstructor;
@@ -6,7 +5,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -17,10 +18,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "final_cbc_records")
 public class CbcFinalRecordEntity extends BaseEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     // Batch session info for history tracking
     @Column(name = "batch_session_id")
@@ -35,17 +32,16 @@ public class CbcFinalRecordEntity extends BaseEntity {
     @Column(name = "original_load_date")
     private LocalDate originalLoadDate;
 
-    // All the same fields as staging table
-    @Column(name = "account_number")
-    private String accountNumber;
-    @Column(name = "creditor_id")
-    private String creditorId;
-    @Column(name = "account_type")
-    private String accountType;
-    @Column(name = "as_of_date")
-    private String asOfDate;
-
     // History tracking
     @Column(name = "was_updated")
     private Boolean wasUpdated = false;
+    
+    @Column(name = "update_count")
+    private Integer updateCount = 0;
+    
+    @Column(name = "last_updated_date")
+    private LocalDateTime lastUpdatedDate;
+    
+    @Column(name = "archive_status")
+    private String archiveStatus = "ACTIVE"; // ACTIVE, ARCHIVED, DELETED
 }

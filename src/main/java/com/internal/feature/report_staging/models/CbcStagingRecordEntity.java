@@ -1,4 +1,3 @@
-
 package com.internal.feature.report_staging.models;
 
 import lombok.AllArgsConstructor;
@@ -6,8 +5,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
-import java.math.BigDecimal;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 
 @Data
 @NoArgsConstructor
@@ -17,18 +17,13 @@ import java.math.BigDecimal;
 @Table(name = "staging_cbc_records")
 public class CbcStagingRecordEntity extends BaseEntity {
 
-    // Main Record Fields
-    @Column(name = "account_number")
-    private String accountNumber;
-    @Column(name = "creditor_id")
-    private String creditorId;
-    @Column(name = "account_type")
-    private String accountType;
-    @Column(name = "as_of_date")
-    private String asOfDate;
-
-
-    // Status tracking
+    // Status tracking for staging records
     @Column(name = "is_updated")
     private Boolean isUpdated = false;
+    
+    @Column(name = "validation_status")
+    private String validationStatus = "PENDING"; // PENDING, VALIDATED, INVALID
+    
+    @Column(name = "validation_errors", columnDefinition = "TEXT")
+    private String validationErrors;
 }

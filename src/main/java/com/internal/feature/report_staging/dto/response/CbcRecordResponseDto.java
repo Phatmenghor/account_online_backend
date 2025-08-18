@@ -1,78 +1,30 @@
-
 package com.internal.feature.report_staging.dto.response;
 
-import com.internal.feature.report_staging.models.CbcStagingRecordEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.jpa.domain.Specification;
 
-import javax.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class CbcRecordResponseDto {
-    private Long id;
+    private UUID id;
     private String recordType; // "STAGING" or "FINAL"
     
     // Batch info (only for final records)
     private String batchSessionId;
     private LocalDate batchSessionDate;
     private LocalDateTime processedDate;
+    private LocalDate originalLoadDate;
     
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private String createdBy;public class CbcStagingRecordSpecification {
-
-        public static Specification<CbcStagingRecordEntity> withFilters(String search) {
-            return (root, query, criteriaBuilder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-
-                // Search filter
-                if (search != null && !search.trim().isEmpty()) {
-                    String searchPattern = "%" + search.toLowerCase() + "%";
-                    Predicate searchPredicate = criteriaBuilder.or(
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("accountNumber")), searchPattern),
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("creditorId")), searchPattern),
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("firstNameEnglish")), searchPattern),
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("familyNameEnglish")), searchPattern),
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("firstNameKhmer")), searchPattern),
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("familyNameKhmer")), searchPattern),
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("accountType")), searchPattern),
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("unformattedNameEnglish")), searchPattern),
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("unformattedNameKhmer")), searchPattern)
-                    );
-                    predicates.add(searchPredicate);
-                }
-
-                return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-            };
-        }
-
-        public static Specification<CbcStagingRecordEntity> isUpdated(Boolean isUpdated) {
-            return (root, query, criteriaBuilder) -> {
-                if (isUpdated == null) {
-                    return criteriaBuilder.conjunction();
-                }
-                return criteriaBuilder.equal(root.get("isUpdated"), isUpdated);
-            };
-        }
-
-        public static Specification<CbcStagingRecordEntity> hasAccountNumber(String accountNumber) {
-            return (root, query, criteriaBuilder) -> {
-                if (accountNumber == null || accountNumber.trim().isEmpty()) {
-                    return criteriaBuilder.conjunction();
-                }
-                return criteriaBuilder.equal(root.get("accountNumber"), accountNumber);
-            };
-        }
-    }
+    private String createdBy;
     private String updatedBy;
 
     // Main Record Fields
@@ -112,7 +64,7 @@ public class CbcRecordResponseDto {
     private String idNumber3;
     private String idExpiryDate3;
 
-    // Address Information Fields
+    // Address Information Fields - Address 1
     private String addressType1;
     private String province1;
     private String district1;
@@ -127,6 +79,7 @@ public class CbcRecordResponseDto {
     private String country1;
     private String postalCode1;
 
+    // Address 2
     private String addressType2;
     private String province2;
     private String district2;
@@ -141,6 +94,7 @@ public class CbcRecordResponseDto {
     private String country2;
     private String postalCode2;
 
+    // Address 3
     private String address3Type;
     private String province3;
     private String district3;
@@ -173,7 +127,7 @@ public class CbcRecordResponseDto {
     private String contactNumberNumber3;
     private String contactNumberExtension3;
 
-    // Employment Information Fields
+    // Employment Information Fields - Employment 1
     private String employmentStatus1;
     private String employmentType1;
     private String employer1NameEnglish;
@@ -199,6 +153,7 @@ public class CbcRecordResponseDto {
     private BigDecimal monthlyBasicSalaryIncome1;
     private BigDecimal totalMonthlySalaryIncome1;
 
+    // Employment 2
     private String employerType2;
     private String selfEmployed2;
     private String employer2NameEnglish;
@@ -224,9 +179,31 @@ public class CbcRecordResponseDto {
     private BigDecimal monthlyBasicSalaryIncome2;
     private BigDecimal totalMonthlySalaryIncome2;
 
+    // Employment 3
     private String employerType3;
     private String selfEmployed3;
     private String employer3NameEnglish;
+    private String employer3NameKhmer;
+    private String economicSector3;
+    private String businessType3;
+    private String employer3AddressEnglish;
+    private String employer3AddressKhmer;
+    private String employer3Province;
+    private String employer3District;
+    private String employer3Commune;
+    private String employer3Village;
+    private String employer3AddressCityEnglish;
+    private String employer3AddressCityKhmer;
+    private String emp3Country3;
+    private String emp3PostalCode3;
+    private String occupation3English;
+    private String occupation3Khmer;
+    private String dateOfEmployment3;
+    private String lengthOfService3Months;
+    private String contractExpiryDate3;
+    private String currency3;
+    private BigDecimal monthlyBasicSalaryIncome3;
+    private BigDecimal totalMonthlySalaryIncome3;
 
     // Security Information Fields
     private String securityType1;
@@ -251,7 +228,6 @@ public class CbcRecordResponseDto {
     private String specialNote;
     private String enquiryMemberReference;
     private String loanToSectorSection;
-    private String currency3;
     private String branchAddressCode;
 
     // Loan Information Fields
@@ -281,4 +257,9 @@ public class CbcRecordResponseDto {
     // Status tracking
     private Boolean isUpdated;
     private Boolean wasUpdated;
+    private String validationStatus;
+    private String validationErrors;
+    private Integer updateCount;
+    private LocalDateTime lastUpdatedDate;
+    private String archiveStatus;
 }
