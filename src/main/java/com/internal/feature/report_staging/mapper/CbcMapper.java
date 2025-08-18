@@ -62,23 +62,19 @@ public interface CbcMapper {
     // ============ STAGING TO FINAL CONVERSION ============
     
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "batchSessionId", source = "batchSessionId")
-    @Mapping(target = "batchSessionDate", source = "batchSessionDate")
-    @Mapping(target = "processedDate", source = "processedDate")
-    @Mapping(target = "originalLoadDate", source = "originalLoadDate")
-    @Mapping(target = "wasUpdated", source = "stagingEntity.isUpdated")
+    @Mapping(target = "batchSessionId", ignore = true)
+    @Mapping(target = "batchSessionDate", ignore = true)
+    @Mapping(target = "processedDate", ignore = true)
+    @Mapping(target = "originalLoadDate", ignore = true)
+    @Mapping(target = "wasUpdated", source = "isUpdated")
     @Mapping(target = "updateCount", constant = "0")
     @Mapping(target = "lastUpdatedDate", ignore = true)
     @Mapping(target = "archiveStatus", constant = "ACTIVE")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    CbcFinalRecordEntity stagingToFinal(
-        CbcStagingRecordEntity stagingEntity,
-        String batchSessionId,
-        LocalDate batchSessionDate,
-        LocalDateTime processedDate,
-        LocalDate originalLoadDate
-    );
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    CbcFinalRecordEntity stagingToFinal(CbcStagingRecordEntity stagingEntity);
 
     // ============ LIST MAPPINGS ============
     
@@ -87,20 +83,6 @@ public interface CbcMapper {
     List<CbcRecordResponseDto> finalListToResponseDtoList(List<CbcFinalRecordEntity> entities);
 
     // ============ AFTER MAPPING CUSTOMIZATIONS ============
-
-    @AfterMapping
-    default void afterStagingToFinal(@MappingTarget CbcFinalRecordEntity target, 
-                                   CbcStagingRecordEntity source, 
-                                   @Context BatchConversionContext context) {
-        if (context != null) {
-            target.setBatchSessionId(context.getBatchSessionId());
-            target.setBatchSessionDate(context.getBatchSessionDate());
-            target.setProcessedDate(context.getProcessedDate());
-            target.setOriginalLoadDate(context.getOriginalLoadDate());
-            target.setCreatedBy(context.getCreatedBy());
-            target.setUpdatedBy(context.getCreatedBy());
-        }
-    }
 
     @AfterMapping
     default void afterUpdateStaging(@MappingTarget CbcStagingRecordEntity target, 
@@ -123,30 +105,22 @@ public interface CbcMapper {
         }
     }
 
-    // ============ CONTEXT FOR BATCH OPERATIONS ============
+    // ============ HELPER METHODS FOR MANUAL MAPPING ============
     
-    @Context
-    class BatchConversionContext {
-        private String batchSessionId;
-        private LocalDate batchSessionDate;
-        private LocalDateTime processedDate;
-        private LocalDate originalLoadDate;
-        private String createdBy;
-
-        public BatchConversionContext(String batchSessionId, LocalDate batchSessionDate,
-                                      LocalDateTime processedDate, LocalDate originalLoadDate, String createdBy) {
-            this.batchSessionId = batchSessionId;
-            this.batchSessionDate = batchSessionDate;
-            this.processedDate = processedDate;
-            this.originalLoadDate = originalLoadDate;
-            this.createdBy = createdBy;
-        }
-
-        // Getters
-        public String getBatchSessionId() { return batchSessionId; }
-        public LocalDate getBatchSessionDate() { return batchSessionDate; }
-        public LocalDateTime getProcessedDate() { return processedDate; }
-        public LocalDate getOriginalLoadDate() { return originalLoadDate; }
-        public String getCreatedBy() { return createdBy; }
+    /**
+     * Manual mapping method to set batch session information
+     */
+    default void setBatchSessionInfo(CbcFinalRecordEntity target, 
+                                   String batchSessionId,
+                                   LocalDate batchSessionDate,
+                                   LocalDateTime processedDate,
+                                   LocalDate originalLoadDate,
+                                   String createdBy) {
+        target.setBatchSessionId(batchSessionId);
+        target.setBatchSessionDate(batchSessionDate);
+        target.setProcessedDate(processedDate);
+        target.setOriginalLoadDate(originalLoadDate);
+        target.setCreatedBy(createdBy);
+        target.setUpdatedBy(createdBy);
     }
 }

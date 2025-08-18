@@ -13,7 +13,9 @@ import com.internal.feature.report_staging.service.CbcDataService;
 import com.internal.utils.pagination.PaginationResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,7 +38,6 @@ public class CbcDataController {
 
     @PostMapping("/staging/load")
     @Operation(summary = "Load CBC data from SQL Server to staging table")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<DataLoadStatusDto>> loadCbcData(@Valid @RequestBody CbcDataRequestDto request) {
         log.info("Received request to load CBC data for date range: {} to {}",
                 request.getStartDate(), request.getEndDate());
@@ -130,7 +131,6 @@ public class CbcDataController {
 
     @PutMapping("/staging/records/{id}")
     @Operation(summary = "Update single staging record")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<CbcRecordResponseDto>> updateStagingRecord(
             @PathVariable UUID id,
             @Valid @RequestBody CbcUpdateRequestDto updateRequest) {
@@ -147,7 +147,6 @@ public class CbcDataController {
 
     @PutMapping("/staging/records/bulk")
     @Operation(summary = "Update multiple staging records in bulk")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<List<CbcRecordResponseDto>>> updateMultipleStagingRecords(
             @Valid @RequestBody CbcBulkUpdateRequestDto bulkUpdateRequest) {
         log.info("Bulk updating {} staging records", bulkUpdateRequest.getUpdates().size());
@@ -180,7 +179,6 @@ public class CbcDataController {
 
     @PostMapping("/staging/move-to-final")
     @Operation(summary = "Move all staging records to final table and create batch session")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<BatchSessionMoveResponse>> moveStagingToFinal(
             @RequestBody(required = false) MoveToFinalRequestDto request) {
         log.info("Moving staging records to final table");
@@ -247,7 +245,6 @@ public class CbcDataController {
 
     @PutMapping("/final/records/{id}")
     @Operation(summary = "Update single final record")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<CbcRecordResponseDto>> updateFinalRecord(
             @PathVariable UUID id, 
             @Valid @RequestBody CbcUpdateRequestDto updateRequest) {
@@ -264,7 +261,6 @@ public class CbcDataController {
 
     @PutMapping("/final/records/bulk")
     @Operation(summary = "Update multiple final records in bulk")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<List<CbcRecordResponseDto>>> updateMultipleFinalRecords(
             @Valid @RequestBody CbcBulkUpdateRequestDto bulkUpdateRequest) {
         log.info("Bulk updating {} final records", bulkUpdateRequest.getUpdates().size());
@@ -328,7 +324,6 @@ public class CbcDataController {
 
     @PostMapping("/validate-integrity")
     @Operation(summary = "Validate data integrity across staging and final tables")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<String>> validateDataIntegrity() {
         log.info("Starting data integrity validation");
 
@@ -358,6 +353,7 @@ public class CbcDataController {
 
     // ============ HELPER CLASSES ============
 
+    @Getter
     public static class RecordCountResponse {
         private final long totalRecords;
         private final String recordType;
@@ -366,18 +362,14 @@ public class CbcDataController {
             this.totalRecords = totalRecords;
             this.recordType = recordType;
         }
-        
-        public long getTotalRecords() { return totalRecords; }
-        public String getRecordType() { return recordType; }
+
     }
 
+    @Setter
+    @Getter
     public static class BatchSessionMoveResponse {
         private String batchSessionId;
         private String message;
-        
-        public String getBatchSessionId() { return batchSessionId; }
-        public void setBatchSessionId(String batchSessionId) { this.batchSessionId = batchSessionId; }
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
+
     }
 }

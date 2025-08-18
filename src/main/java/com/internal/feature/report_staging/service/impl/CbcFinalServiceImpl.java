@@ -34,6 +34,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -223,9 +224,9 @@ public class CbcFinalServiceImpl implements CbcFinalService {
 
         for (CbcUpdateRequestDto updateRequest : bulkUpdateRequest.getUpdates()) {
             try {
-                List<UUID> targetIds = updateRequest.getIds() != null && !updateRequest.getIds().isEmpty() 
-                    ? updateRequest.getIds() 
-                    : List.of(updateRequest.getId());
+                List<UUID> targetIds = updateRequest.getIds() != null && !updateRequest.getIds().isEmpty()
+                        ? updateRequest.getIds()
+                        : Collections.singletonList(updateRequest.getId());
 
                 for (UUID id : targetIds) {
                     if (id != null) {

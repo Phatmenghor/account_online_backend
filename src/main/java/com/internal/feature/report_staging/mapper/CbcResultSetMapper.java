@@ -4,6 +4,7 @@ import com.internal.feature.report_staging.models.CbcStagingRecordEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -11,16 +12,17 @@ import java.sql.SQLException;
 @Slf4j
 public class CbcResultSetMapper {
 
-    public CbcStagingRecordEntity mapResultSetToStagingEntity(ResultSet rs, String currentUser) throws SQLException {
+    // Remove SQLException from the method signature since we handle all exceptions internally
+    public CbcStagingRecordEntity mapResultSetToStagingEntity(ResultSet rs, String currentUser) {
         CbcStagingRecordEntity entity = new CbcStagingRecordEntity();
-        
+
         try {
             // Main Record Fields
             entity.setAccountNumber(getStringValue(rs, "Account Number"));
             entity.setCreditorId(getStringValue(rs, "CreditorID"));
             entity.setAccountType(getStringValue(rs, "AccountType"));
             entity.setAsOfDate(getStringValue(rs, "AsofDate"));
-            
+
             // Personal Info Fields
             entity.setDateOfBirth(getStringValue(rs, "DateofBirth"));
             entity.setFamilyNameEnglish(getStringValue(rs, "FamilyName(English)"));
@@ -40,7 +42,7 @@ public class CbcResultSetMapper {
             entity.setNationalityCode(getStringValue(rs, "NationalityCode"));
             entity.setTaxpayerRegistrationNumber(getStringValue(rs, "TaxpayerRegistrationNumber"));
             entity.setApplicantType(getStringValue(rs, "ApplicantType"));
-            
+
             // ID Information Fields
             entity.setIdType1(getStringValue(rs, "IDType-1"));
             entity.setIdNumber1(getStringValue(rs, "IDNumber-1"));
@@ -51,7 +53,7 @@ public class CbcResultSetMapper {
             entity.setIdType3(getStringValue(rs, "IDType-3"));
             entity.setIdNumber3(getStringValue(rs, "IDNumber-3"));
             entity.setIdExpiryDate3(getStringValue(rs, "IDExpiryDate-3"));
-            
+
             // Address Information Fields - Address 1
             entity.setAddressType1(getStringValue(rs, "AddressType-1"));
             entity.setProvince1(getStringValue(rs, "Province-1"));
@@ -66,7 +68,7 @@ public class CbcResultSetMapper {
             entity.setCity1Khmer(getStringValue(rs, "City-1(Khmer)"));
             entity.setCountry1(getStringValue(rs, "Country-1"));
             entity.setPostalCode1(getStringValue(rs, "PostalCode-1"));
-            
+
             // Address 2
             entity.setAddressType2(getStringValue(rs, "AddressType-2"));
             entity.setProvince2(getStringValue(rs, "Province-2"));
@@ -81,7 +83,7 @@ public class CbcResultSetMapper {
             entity.setCity2Khmer(getStringValue(rs, "City-2(Khmer)"));
             entity.setCountry2(getStringValue(rs, "Country-2"));
             entity.setPostalCode2(getStringValue(rs, "PostalCode-2"));
-            
+
             // Address 3
             entity.setAddress3Type(getStringValue(rs, "Address-3Type"));
             entity.setProvince3(getStringValue(rs, "Province-3"));
@@ -96,7 +98,7 @@ public class CbcResultSetMapper {
             entity.setCity3Khmer(getStringValue(rs, "City-3(Khmer)"));
             entity.setCountry3(getStringValue(rs, "Country-3"));
             entity.setPostalCode3(getStringValue(rs, "PostalCode-3"));
-            
+
             // Contact Information Fields
             entity.setEmailAddress(getStringValue(rs, "EmailAddress"));
             entity.setContactNumberType1(getStringValue(rs, "ContactNumberType1"));
@@ -114,7 +116,7 @@ public class CbcResultSetMapper {
             entity.setContactNumberArea3(getStringValue(rs, "ContactNumber–Area3"));
             entity.setContactNumberNumber3(getStringValue(rs, "ContactNumber–Number3"));
             entity.setContactNumberExtension3(getStringValue(rs, "ContactNumber–Extension3"));
-            
+
             // Employment Information Fields - Employment 1
             entity.setEmploymentStatus1(getStringValue(rs, "Employment Status-1"));
             entity.setEmploymentType1(getStringValue(rs, "Employment Type-1"));
@@ -140,7 +142,7 @@ public class CbcResultSetMapper {
             entity.setCurrency1(getStringValue(rs, "Currency-1"));
             entity.setMonthlyBasicSalaryIncome1(getBigDecimalValue(rs, "MonthlyBasicSalary/Income-1"));
             entity.setTotalMonthlySalaryIncome1(getBigDecimalValue(rs, "TotalMonthlySalary/Income-1"));
-            
+
             // Employment 2
             entity.setEmployerType2(getStringValue(rs, "Employer-2Type"));
             entity.setSelfEmployed2(getStringValue(rs, "SelfEmployed-2"));
@@ -166,7 +168,7 @@ public class CbcResultSetMapper {
             entity.setCurrency2(getStringValue(rs, "Currency–2"));
             entity.setMonthlyBasicSalaryIncome2(getBigDecimalValue(rs, "MonthlyBasicSalary/Income-2"));
             entity.setTotalMonthlySalaryIncome2(getBigDecimalValue(rs, "TotalMonthlySalary/Income-2"));
-            
+
             // Employment 3
             entity.setEmployerType3(getStringValue(rs, "EmployerType-3"));
             entity.setSelfEmployed3(getStringValue(rs, "SelfEmployed-3"));
@@ -192,7 +194,7 @@ public class CbcResultSetMapper {
             entity.setCurrency3(getStringValue(rs, "Currency-3"));
             entity.setMonthlyBasicSalaryIncome3(getBigDecimalValue(rs, "MonthlyBasicSalary/Income-3"));
             entity.setTotalMonthlySalaryIncome3(getBigDecimalValue(rs, "TotalMonthlySalary/Income-3"));
-            
+
             // Security Information Fields
             entity.setSecurityType1(getStringValue(rs, "Security Type-1"));
             entity.setSecurityNumber1(getStringValue(rs, "Security Number-1"));
@@ -214,7 +216,7 @@ public class CbcResultSetMapper {
             entity.setEnquiryMemberReference(getStringValue(rs, "Enquiry Member Reference"));
             entity.setLoanToSectorSection(getStringValue(rs, "Loan to sector/Section"));
             entity.setBranchAddressCode(getStringValue(rs, "Branch Address Code"));
-            
+
             // Loan Information Fields
             entity.setLoanTermType(getStringValue(rs, "Loan Term Type"));
             entity.setGroupAccountReference(getStringValue(rs, "Group Account Reference"));
@@ -238,18 +240,19 @@ public class CbcResultSetMapper {
             entity.setLossStatusDate(getStringValue(rs, "LossStatusDate"));
             entity.setOriginalAmountAsAtLoadDate(getStringValue(rs, "OriginalAmountasatLoadDate"));
             entity.setEmzOutstandingBalance(getStringValue(rs, "EMZOutstandingBalance"));
-            
+
             // Set audit fields
             entity.setCreatedBy(currentUser);
             entity.setUpdatedBy(currentUser);
             entity.setIsUpdated(false);
             entity.setValidationStatus("PENDING");
-            
-        } catch (SQLException e) {
-            log.error("Error mapping ResultSet to CbcStagingRecordEntity: {}", e.getMessage());
-            throw e;
+
+        } catch (Exception e) {
+            log.error("Error mapping ResultSet to CbcStagingRecordEntity: {}", e.getMessage(), e);
+            // For critical errors, we might want to create a minimal entity or re-throw
+            throw new RuntimeException("Failed to map ResultSet to entity", e);
         }
-        
+
         return entity;
     }
 
