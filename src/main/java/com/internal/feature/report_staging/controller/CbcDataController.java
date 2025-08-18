@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -35,6 +36,7 @@ public class CbcDataController {
 
     @PostMapping("/staging/load")
     @Operation(summary = "Load CBC data from SQL Server to staging table")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<DataLoadStatusDto>> loadCbcData(@Valid @RequestBody CbcDataRequestDto request) {
         log.info("Received request to load CBC data for date range: {} to {}",
                 request.getStartDate(), request.getEndDate());
@@ -64,6 +66,7 @@ public class CbcDataController {
 
     @DeleteMapping("/staging/clear")
     @Operation(summary = "Clear all staging data")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<String>> clearStagingData() {
         log.info("Clearing all staging data");
 
@@ -127,6 +130,7 @@ public class CbcDataController {
 
     @PutMapping("/staging/records/{id}")
     @Operation(summary = "Update single staging record")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<CbcRecordResponseDto>> updateStagingRecord(
             @PathVariable UUID id,
             @Valid @RequestBody CbcUpdateRequestDto updateRequest) {
@@ -143,6 +147,7 @@ public class CbcDataController {
 
     @PutMapping("/staging/records/bulk")
     @Operation(summary = "Update multiple staging records in bulk")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<List<CbcRecordResponseDto>>> updateMultipleStagingRecords(
             @Valid @RequestBody CbcBulkUpdateRequestDto bulkUpdateRequest) {
         log.info("Bulk updating {} staging records", bulkUpdateRequest.getUpdates().size());
@@ -175,6 +180,7 @@ public class CbcDataController {
 
     @PostMapping("/staging/move-to-final")
     @Operation(summary = "Move all staging records to final table and create batch session")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<BatchSessionMoveResponse>> moveStagingToFinal(
             @RequestBody(required = false) MoveToFinalRequestDto request) {
         log.info("Moving staging records to final table");
@@ -241,6 +247,7 @@ public class CbcDataController {
 
     @PutMapping("/final/records/{id}")
     @Operation(summary = "Update single final record")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<CbcRecordResponseDto>> updateFinalRecord(
             @PathVariable UUID id, 
             @Valid @RequestBody CbcUpdateRequestDto updateRequest) {
@@ -257,6 +264,7 @@ public class CbcDataController {
 
     @PutMapping("/final/records/bulk")
     @Operation(summary = "Update multiple final records in bulk")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<List<CbcRecordResponseDto>>> updateMultipleFinalRecords(
             @Valid @RequestBody CbcBulkUpdateRequestDto bulkUpdateRequest) {
         log.info("Bulk updating {} final records", bulkUpdateRequest.getUpdates().size());
@@ -320,6 +328,7 @@ public class CbcDataController {
 
     @PostMapping("/validate-integrity")
     @Operation(summary = "Validate data integrity across staging and final tables")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<String>> validateDataIntegrity() {
         log.info("Starting data integrity validation");
 
@@ -334,6 +343,7 @@ public class CbcDataController {
 
     @PostMapping("/generate-report")
     @Operation(summary = "Generate comprehensive data report")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER')")
     public ResponseEntity<ApiResponse<String>> generateDataReport() {
         log.info("Generating comprehensive data report");
 

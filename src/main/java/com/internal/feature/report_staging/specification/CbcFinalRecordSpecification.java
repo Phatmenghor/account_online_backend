@@ -1,4 +1,3 @@
-
 package com.internal.feature.report_staging.specification;
 
 import com.internal.feature.report_staging.models.CbcFinalRecordEntity;
@@ -19,6 +18,9 @@ public class CbcFinalRecordSpecification {
         
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
+
+            // Always filter for active records
+            predicates.add(criteriaBuilder.equal(root.get("archiveStatus"), "ACTIVE"));
 
             // Batch session date range filter
             if (startDate != null && endDate != null) {
@@ -100,5 +102,10 @@ public class CbcFinalRecordSpecification {
             }
             return criteriaBuilder.equal(root.get("accountNumber"), accountNumber);
         };
+    }
+
+    public static Specification<CbcFinalRecordEntity> isActive() {
+        return (root, query, criteriaBuilder) -> 
+            criteriaBuilder.equal(root.get("archiveStatus"), "ACTIVE");
     }
 }

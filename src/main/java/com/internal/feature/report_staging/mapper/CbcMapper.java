@@ -133,8 +133,8 @@ public interface CbcMapper {
         private LocalDate originalLoadDate;
         private String createdBy;
 
-        public BatchConversionContext(String batchSessionId, LocalDate batchSessionDate, 
-                                    LocalDateTime processedDate, LocalDate originalLoadDate, String createdBy) {
+        public BatchConversionContext(String batchSessionId, LocalDate batchSessionDate,
+                                      LocalDateTime processedDate, LocalDate originalLoadDate, String createdBy) {
             this.batchSessionId = batchSessionId;
             this.batchSessionDate = batchSessionDate;
             this.processedDate = processedDate;

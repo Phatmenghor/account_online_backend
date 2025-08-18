@@ -1,4 +1,3 @@
-
 package com.internal.feature.report_staging.service.impl;
 
 import com.internal.exceptions.error.BadRequestException;
@@ -22,14 +21,15 @@ import com.internal.utils.pagination.PaginationResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -48,6 +48,9 @@ public class CbcFinalServiceImpl implements CbcFinalService {
     private final CbcMapper cbcMapper;
     private final BatchSessionMapper batchSessionMapper;
     private final SecurityUtils securityUtils;
+
+    @Value("${app.data-load.batch-size:1000}")
+    private int batchSize;
 
     // ============ BATCH OPERATIONS ============
 
@@ -389,7 +392,6 @@ public class CbcFinalServiceImpl implements CbcFinalService {
 
     @Transactional
     public void saveInBatches(List<CbcFinalRecordEntity> finalRecords) {
-        int batchSize = 1000;
         for (int i = 0; i < finalRecords.size(); i += batchSize) {
             int endIndex = Math.min(i + batchSize, finalRecords.size());
             List<CbcFinalRecordEntity> batch = finalRecords.subList(i, endIndex);
