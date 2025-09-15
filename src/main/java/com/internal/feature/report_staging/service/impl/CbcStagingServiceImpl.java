@@ -689,7 +689,7 @@ public class CbcStagingServiceImpl implements CbcStagingService {
     private String buildCbcDataQuery() {
         // Call the stored procedure that generates CBC data (4-hour execution)
         return "{CALL dbo.RP_CBC_UPLOAD_MONTHLY_STORE(?, ?)}";
-t ad    }
+    }
 
     private PaginationResponse<CbcRecordResponseDto> createPaginationResponse(
             List<CbcRecordResponseDto> content, 
