@@ -26,7 +26,10 @@ public class Project extends BaseEntity {
     
     @Column(name = "host_server")
     private String hostServer;
-    
+
+    @Column(name = "member_involved")
+    private String memberInvolved;
+
     @Column(name = "host_port")
     private Integer hostPort;
     
