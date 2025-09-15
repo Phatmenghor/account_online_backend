@@ -7,10 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProjectSearchRequestDto {
+public class GetAllProjectRequestDto {
     private String search;
     private int pageNo = 1;
     private int pageSize = 10;
-    private String sortBy = "createdAt";
-    private String sortDir = "DESC";
 }

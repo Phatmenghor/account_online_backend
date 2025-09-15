@@ -157,6 +157,6 @@
                 </configuration>
             </plugin>
         </plugins>
-        <finalName>internal-cbc-api</finalName>
+        <finalName>internal_dev</finalName>
     </build>
 </project>
