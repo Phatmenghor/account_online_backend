@@ -17,7 +17,6 @@ public interface UserMapper {
     @Mapping(source = "id", target = "id")
     @Mapping(source = "email", target = "email")
     @Mapping(source = "username", target = "idCard")
-    @Mapping(source = "branch", target = "branch")
     @Mapping(source = "status", target = "userStatus", qualifiedByName = "mapStatus")
     @Mapping(source = "roles", target = "userRole", qualifiedByName = "mapRoles")
     @Mapping(source = "createdAt", target = "createdAt")

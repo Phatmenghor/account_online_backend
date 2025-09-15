@@ -17,7 +17,7 @@ import java.util.List;
 public class UserEntity extends BaseEntity {
 
     @Column(nullable = false, unique = true)
-    private String username; // idCard
+    private String username;
 
     private String email;
 
@@ -26,8 +26,6 @@ public class UserEntity extends BaseEntity {
     private String fullName;
 
     private String position;
-
-    private String branch;
 
     private String profileUrl;
 

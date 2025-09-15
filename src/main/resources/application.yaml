@@ -1,7 +1,7 @@
 # application.yaml - Configuration for 4-HOUR stored procedure execution
 
 server:
-  port: 8080
+  port: 8888
   servlet:
     context-path: /
   compression:
@@ -11,7 +11,7 @@ server:
 
 spring:
   application:
-    name: internal-cbc-api
+    name: internal-dev-api
 
   # JPA Configuration
   jpa:
@@ -38,7 +38,7 @@ spring:
 
   # Primary Database (PostgreSQL)
   datasource:
-    url: jdbc:postgresql://192.168.103.106:5432/internal_cbc_report
+    url: jdbc:postgresql://192.168.103.106:5432/internal_dev
     username: postgres
     password: 123cp!@#
     driver-class-name: org.postgresql.Driver
@@ -52,38 +52,12 @@ spring:
       pool-name: PostgreSQL-Pool
       auto-commit: false
 
-    # Secondary Database (SQL Server) - EXTREME LONG-RUNNING CONFIGURATION
-    secondary:
-      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-      # CRITICAL: Extended timeouts for 4-hour operations
-      url: "jdbc:sqlserver://10.18.1.150:1433;databaseName=T24_RAWDB_R21;encrypt=true;trustServerCertificate=true;loginTimeout=300;socketTimeout=0;queryTimeout=0;lockTimeout=0"
-      username: cpb_int
-      password: "123cp!@#"
-      hikari:
-        maximum-pool-size: 2      # VERY LIMITED: Only 1-2 concurrent 4-hour operations
-        minimum-idle: 1
-        connection-timeout: 300000     # 5 minutes to establish connection
-        idle-timeout: 18000000         # 5 hours idle timeout
-        max-lifetime: 21600000         # 6 hours max lifetime
-        leak-detection-threshold: 18000000  # 5 hours leak detection
-        pool-name: SQLServer-LongRunning-Pool
-
-  # Task Execution - OPTIMIZED for 4-hour background jobs
-  task:
-    execution:
-      pool:
-        core-size: 1        # ONLY 1 concurrent stored procedure at a time
-        max-size: 2         # Maximum 2 long-running jobs
-        queue-capacity: 5   # Queue additional requests
-        keep-alive: 21600s  # 6 hours keep-alive
-      thread-name-prefix: cbc-long-running-
-
 # JWT Configuration
 jwt:
   secret:
-    key: f7e8d9c6b5a4938271605f4e3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a001
+    key: f7e8d9c6b5a4938271605f4de3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a001
   expiration-min: 525600 # 1 year
-  issuer: internal-cbc-api
+  issuer: internal-dev-api
 
 # Application Configuration - 4-HOUR OPERATION SETTINGS
 app:
@@ -104,11 +78,6 @@ app:
     progress-log-interval-minutes: 10 # Log progress every 10 minutes
     heartbeat-interval-minutes: 5     # Update status every 5 minutes
 
-  sql-server:
-    cbc-stored-procedure: "dbo.RP_CBC_UPLOAD_MONTHLY_STORE"
-    max-execution-time-hours: 4       # Expected 4-hour execution
-    max-concurrent-jobs: 1            # Only 1 CBC job at a time
-    prevent-multiple-runs: true       # Prevent overlapping executions
 
 # Logging Configuration - REDUCED for long-running operations
 logging:

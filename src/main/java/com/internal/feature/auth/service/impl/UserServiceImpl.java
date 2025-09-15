@@ -150,9 +150,9 @@ public class UserServiceImpl implements UserService {
     }
 
     private void updateUserFields(UserEntity user, UpdateUserRequestDto request) {
-        if (request.getIdCard() != null) {
-            validateUniqueIdCard(user, request.getIdCard());
-            user.setUsername(request.getIdCard());
+        if (request.getUsername() != null) {
+            validateUniqueIdCard(user, request.getUsername());
+            user.setUsername(request.getUsername());
         }
         
         if (request.getStatus() != null) {

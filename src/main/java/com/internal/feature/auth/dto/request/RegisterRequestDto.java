@@ -12,7 +12,7 @@ public class RegisterRequestDto {
 
     @NotBlank(message = "Id card is required")
     @Size(min = 4, message = "Id card must have at least 4 characters")
-    private String idCard;
+    private String username;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")
@@ -25,6 +25,5 @@ public class RegisterRequestDto {
     private String fullName;
 
     private RoleEnum role;
-    private String branch;
     private String position;
 }

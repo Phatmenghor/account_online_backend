@@ -18,16 +18,9 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     Boolean existsByUsername(String username);
 
-    Page<UserEntity> findByUsernameContainingIgnoreCaseAndStatus(String username, StatusData status, Pageable pageable);
-
     Page<UserEntity> findByStatus(StatusData status, Pageable pageable);
 
     Page<UserEntity> findByStatusIn(List<StatusData> statuses, Pageable pageable);
-
-    Page<UserEntity> findByUsernameContainingIgnoreCaseAndStatusIn(
-            String username,
-            List<StatusData> statuses,
-            Pageable pageable);
 
     // search with statuses
     @Query("SELECT u FROM UserEntity u " +

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <property name="LOG_PATH" value="logs" />
-    <property name="LOG_FILE_NAME" value="internal_cbc" />
+    <property name="LOG_FILE_NAME" value="internal_dev" />
     <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n" />
     <property name="MAX_FILE_SIZE" value="100MB" />
     <timestamp key="byDay" datePattern="yyyy-MM-dd" />
@@ -21,7 +21,7 @@
             <fileNamePattern>${LOG_PATH}/${LOG_FILE_NAME}-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
             <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
             <maxHistory>30</maxHistory>
-            <totalSizeCap>10GB</totalSizeCap>
+            <totalSizeCap>4GB</totalSizeCap>
         </rollingPolicy>
     </appender>
 
@@ -39,7 +39,7 @@
             <fileNamePattern>${LOG_PATH}/${LOG_FILE_NAME}-error-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
             <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
             <maxHistory>90</maxHistory>
-            <totalSizeCap>5GB</totalSizeCap>
+            <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
     </appender>
 

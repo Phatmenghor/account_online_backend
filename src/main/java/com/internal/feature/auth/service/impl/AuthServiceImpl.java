@@ -47,49 +47,49 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponseDTO login(LoginRequestDto loginDto) {
-        log.info("Processing login request for user: {}", loginDto.getIdCard());
+        log.info("Processing login request for user: {}", loginDto.getUsername());
 
-        UserEntity userEntity = userRepository.findByUsername(loginDto.getIdCard())
+        UserEntity userEntity = userRepository.findByUsername(loginDto.getUsername())
                 .orElseThrow(() -> {
-                    log.warn("Login failed: User not found with id card: {}", loginDto.getIdCard());
+                    log.warn("Login failed: User not found with id card: {}", loginDto.getUsername());
                     return new NotFoundException("User not found");
                 });
 
         if (userEntity.getStatus() != StatusData.ACTIVE) {
             log.warn("Login rejected: User {} is not active. Current status: {}", 
-                    loginDto.getIdCard(), userEntity.getStatus());
-            throw new UnauthorizedException("Account is inactive. Please contact an administrator.");
+                    loginDto.getUsername(), userEntity.getStatus());
+            throw new UnauthorizedException("Account is deleted. Please contact an administrator.");
         }
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        loginDto.getIdCard(),
+                        loginDto.getUsername(),
                         loginDto.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtGenerator.generateToken(authentication);
 
         UserResponseDto userDto = authMapper.userToUserResponseDto(userEntity);
-        log.info("User {} logged in successfully", loginDto.getIdCard());
+        log.info("User {} logged in successfully", loginDto.getUsername());
         
         return new AuthResponseDTO(token, userDto);
     }
 
     @Override
     public UserResponseDto register(RegisterRequestDto registerDto) {
-        log.info("Processing registration request with id card: {}", registerDto.getIdCard());
-        return createUser(registerDto, StatusData.PENDING, "Registration");
+        log.info("Processing registration request with id card: {}", registerDto.getUsername());
+        return createUser(registerDto, "Registration");
     }
     
     @Override
     public UserResponseDto createUserByAdmin(RegisterRequestDto registerDto) {
-        log.info("Processing admin user creation with id card: {}", registerDto.getIdCard());
-        return createUser(registerDto, StatusData.ACTIVE, "Admin creation");
+        log.info("Processing admin user creation with id card: {}", registerDto.getUsername());
+        return createUser(registerDto, "Admin creation");
     }
 
     @Override
     public UserResponseDto updateUserProfile(UpdateUserRequestDto requestDto, String name) {
-        log.info("Processing update user profile: {}", requestDto.getIdCard());
+        log.info("Processing update user profile: {}", requestDto.getUsername());
 
         // 1. Load user by username (e.g. idCard or username)
         UserEntity user = userRepository.findByUsername(name)
@@ -106,9 +106,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private void updateUserFields(UserEntity user, UpdateUserRequestDto request) {
-        if (request.getIdCard() != null) {
-            validateUniqueIdCard(user, request.getIdCard());
-            user.setUsername(request.getIdCard());
+        if (request.getUsername() != null) {
+            validateUniqueIdCard(user, request.getUsername());
+            user.setUsername(request.getUsername());
         }
 
         if (request.getEmail() != null) {
@@ -129,10 +129,6 @@ public class AuthServiceImpl implements AuthService {
 
         if (request.getPosition() != null) {
             user.setPosition(request.getPosition());
-        }
-
-        if (request.getBranch() != null) {
-            user.setBranch(request.getBranch());
         }
     }
 
@@ -171,37 +167,36 @@ public class AuthServiceImpl implements AuthService {
         return true;
     }
 
-    private UserResponseDto createUser(RegisterRequestDto registerDto, StatusData status, String operationType) {
-        if (userRepository.existsByUsername(registerDto.getIdCard())) {
-            log.warn("{} failed: Id card already in use: {}", operationType, registerDto.getIdCard());
+    private UserResponseDto createUser(RegisterRequestDto registerDto, String operationType) {
+        if (userRepository.existsByUsername(registerDto.getUsername())) {
+            log.warn("{} failed: Id card already in use: {}", operationType, registerDto.getUsername());
             throw new DuplicateNameException("Id card is already in use, please choose another one.");
         }
 
         Role role = roleRepository.findByName( registerDto.getRole())
                 .orElseThrow(() -> {
                     log.warn("{} failed: Invalid role provided: {} for user {}", 
-                            operationType,  registerDto.getRole(), registerDto.getIdCard());
+                            operationType,  registerDto.getRole(), registerDto.getUsername());
                     return new BadRequestException("Invalid role provided: " +  registerDto.getRole());
                 });
 
-        UserEntity user = createUserEntity(registerDto, status, role);
+        UserEntity user = createUserEntity(registerDto, role);
         UserEntity savedUser = userRepository.save(user);
         
         log.info("{} successful: User created with id card: {}, status: {}, role: {}",
-                operationType, registerDto.getIdCard(), status,  registerDto.getRole());
+                operationType, registerDto.getUsername(), StatusData.ACTIVE,  registerDto.getRole());
 
         return authMapper.userToUserResponseDto(savedUser);
     }
 
-    private UserEntity createUserEntity(RegisterRequestDto registerDto, StatusData status, Role role) {
+    private UserEntity createUserEntity(RegisterRequestDto registerDto, Role role) {
         UserEntity user = new UserEntity();
-        user.setUsername(registerDto.getIdCard());
+        user.setUsername(registerDto.getUsername());
         user.setEmail(registerDto.getEmail());
         user.setFullName(registerDto.getFullName());
         user.setPosition(registerDto.getPosition());
-        user.setBranch(registerDto.getBranch());
         user.setPassword(passwordEncoder.encode(registerDto.getPassword()));
-        user.setStatus(status);
+        user.setStatus(StatusData.ACTIVE);
         user.setRoles(Collections.singletonList(role));
         return user;
     }
