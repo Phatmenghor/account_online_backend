@@ -1,5 +1,6 @@
 package com.internal.feature.project.dto.update;
 
+import com.internal.enumation.ProjectStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,4 +25,7 @@ public class ProjectConfigUpdateDto {
     private String dbType;
     private String dbServer;
     private String remark;
+    private ProjectStatusEnum projectStatus;
+    private String gitUrl;
+    private String gitBranch;
 }

@@ -54,27 +54,62 @@ public class ProjectServiceImpl implements ProjectService {
         return mapper.toResponseDto(entity);
     }
     
+//    @Override
+//    @Transactional(readOnly = true)
+//    public AllProjectResponseDto getAllProject(GetAllProjectRequestDto requestDto) {
+//        log.debug("Getting projects with pageNo={}, pageSize={}, search={}",
+//                requestDto.getPageNo(), requestDto.getPageSize(), requestDto.getSearch());
+//
+//        GetAllProjectRequestDto projectRequestDto = new GetAllProjectRequestDto(
+//                requestDto.getSearch(),
+//                Math.max(requestDto.getPageNo() - 1, 0),
+//                Math.max(requestDto.getPageSize(), 1)
+//        );
+//
+//        Pageable pageable = PageRequest.of(
+//                projectRequestDto.getPageNo(),
+//                projectRequestDto.getPageSize(),
+//                Sort.by(Sort.Direction.DESC, "createdAt")
+//        );
+//
+//        // Create specification for filtering
+//        Specification<Project> specification = ProjectSpecification.createSpecification(projectRequestDto.getSearch());
+//
+//        Page<Project> projectPage = repository.findAll(specification, pageable);
+//
+//        List<ProjectResponseDto> content = projectPage.getContent()
+//                .stream()
+//                .map(mapper::toResponseDto)
+//                .collect(Collectors.toList());
+//
+//        return mapper.mapToListDto(content, projectPage);
+//    }
+
     @Override
     @Transactional(readOnly = true)
     public AllProjectResponseDto getAllProject(GetAllProjectRequestDto requestDto) {
-        log.debug("Getting projects with pageNo={}, pageSize={}, search={}",
-                requestDto.getPageNo(), requestDto.getPageSize(), requestDto.getSearch());
+        log.debug("Getting projects with pageNo={}, pageSize={}, search={}, projectStatus={}",
+                requestDto.getPageNo(), requestDto.getPageSize(), requestDto.getSearch(), requestDto.getProjectStatus());
 
         GetAllProjectRequestDto projectRequestDto = new GetAllProjectRequestDto(
                 requestDto.getSearch(),
                 Math.max(requestDto.getPageNo() - 1, 0),
-                Math.max(requestDto.getPageSize(), 1)
+                Math.max(requestDto.getPageSize(), 1),
+                requestDto.getProjectStatus()  // Include project status
         );
 
         Pageable pageable = PageRequest.of(
-                projectRequestDto.getPageNo(), 
-                projectRequestDto.getPageSize(), 
+                projectRequestDto.getPageNo(),
+                projectRequestDto.getPageSize(),
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
-        // Create specification for filtering
-        Specification<Project> specification = ProjectSpecification.createSpecification(projectRequestDto.getSearch());
-        
+        // Create specification for filtering including project status
+        Specification<Project> specification = ProjectSpecification.createSpecification(
+                projectRequestDto.getSearch(),
+                projectRequestDto.getProjectStatus()
+        );
+
         Page<Project> projectPage = repository.findAll(specification, pageable);
 
         List<ProjectResponseDto> content = projectPage.getContent()

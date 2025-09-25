@@ -1,14 +1,13 @@
 package com.internal.feature.project.models;
 
+import com.internal.enumation.ProjectStatusEnum;
 import com.internal.feature.auth.models.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
@@ -44,4 +43,14 @@ public class Project extends BaseEntity {
     
     @Column(name = "remark", length = 500)
     private String remark;
+
+    @Enumerated(EnumType.STRING)
+    private ProjectStatusEnum projectStatus;
+
+    @Column(name = "git_url")
+    private String gitUrl;
+
+    @Column(name = "git_branch")
+    private String gitBranch;
+
 }

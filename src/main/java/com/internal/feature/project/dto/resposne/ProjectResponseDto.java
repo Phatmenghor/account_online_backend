@@ -1,5 +1,6 @@
 package com.internal.feature.project.dto.resposne;
 
+import com.internal.enumation.ProjectStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,9 @@ public class ProjectResponseDto {
     private String dbType;
     private String dbServer;
     private String remark;
+    private ProjectStatusEnum projectStatus;
+    private String gitUrl;
+    private String gitBranch;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -22,6 +22,9 @@ public interface ProjectMapper {
     @Mapping(source = "dbType", target = "dbType")
     @Mapping(source = "dbServer", target = "dbServer")
     @Mapping(source = "remark", target = "remark")
+    @Mapping(source = "projectStatus", target = "projectStatus")
+    @Mapping(source = "gitUrl", target = "gitUrl")
+    @Mapping(source = "gitBranch", target = "gitBranch")
     @Mapping(source = "createdAt", target = "createdAt")
     @Mapping(source = "updatedAt", target = "updatedAt")
     ProjectResponseDto toResponseDto(Project entity);
