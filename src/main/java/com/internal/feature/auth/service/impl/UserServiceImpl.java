@@ -159,12 +159,20 @@ public class UserServiceImpl implements UserService {
             user.setStatus(request.getStatus());
         }
 
+        if(request.getEmail() != null){
+            user.setEmail(request.getEmail());
+        }
+
         if (request.getFullName() != null) {
             user.setFullName(request.getFullName());
         }
 
         if (request.getProfileUrl() != null) {
             user.setProfileUrl(request.getProfileUrl());
+        }
+
+        if(request.getPosition() != null){
+            user.setPosition(request.getPosition());
         }
     }
 
