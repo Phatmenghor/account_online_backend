@@ -1,9 +1,7 @@
 package com.internal.feature.auth.controllers;
 
-import com.internal.config.RequiresRole;
 import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.auth.dto.request.LoginRequestDto;
-import com.internal.feature.auth.dto.request.RegisterRequestDto;
 import com.internal.feature.auth.dto.request.UpdateUserRequestDto;
 import com.internal.feature.auth.dto.response.AuthResponseDTO;
 import com.internal.feature.auth.dto.response.UserResponseDto;
@@ -35,31 +33,16 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponseDTO>> login(@Valid @RequestBody LoginRequestDto loginDto) {
-        log.info("Authentication attempt for user: {}", loginDto.getIdCard());
+        log.info("Authentication attempt for user: {}", loginDto.getUsername());
         
         AuthResponseDTO authResponse = authService.login(loginDto);
-        log.info("Authentication successful for user: {}", loginDto.getIdCard());
+        log.info("Authentication successful for user: {}", loginDto.getUsername());
         
         return ResponseEntity.ok(new ApiResponse<>(
             "success",
             "Login successful",
             authResponse
         ));
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserResponseDto>> register(@Valid @RequestBody RegisterRequestDto registerDto) {
-        log.info("Registration request for ID card: {}", registerDto.getIdCard());
-        
-        UserResponseDto userResponse = authService.register(registerDto);
-        log.info("Registration successful for user: {}", registerDto.getIdCard());
-        
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(new ApiResponse<>(
-                "success",
-                "Registration successful. Account pending approval.",
-                userResponse
-            ));
     }
 
     @PostMapping("/roles")
@@ -88,14 +71,13 @@ public class AuthController {
     }
 
     @PostMapping("/token/update-profile")
-    @RequiresRole(value = {"ADMIN", "SUPER"}, anyRole = true)
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUserProfile(@Valid @RequestBody UpdateUserRequestDto registerDto) {
-        log.info("Admin update profile request for ID card: {}", registerDto.getIdCard());
+        log.info("Admin update profile request for ID card: {}", registerDto.getUsername());
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         UserResponseDto userResponse = authService.updateUserProfile(registerDto, authentication.getName());
-        log.info("Admin update profile successful for: {}", registerDto.getIdCard());
+        log.info("Admin update profile successful for: {}", registerDto.getUsername());
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse<>(
@@ -103,21 +85,5 @@ public class AuthController {
                         "User profile updated successfully",
                         userResponse
                 ));
-    }
-
-    @PostMapping("/create-user")
-    @RequiresRole(value = {"ADMIN", "SUPER"}, anyRole = true)
-    public ResponseEntity<ApiResponse<UserResponseDto>> createUser(@Valid @RequestBody RegisterRequestDto registerDto) {
-        log.info("Admin user creation request for ID card: {}", registerDto.getIdCard());
-        
-        UserResponseDto userResponse = authService.createUserByAdmin(registerDto);
-        log.info("Admin user creation successful for: {}", registerDto.getIdCard());
-        
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(new ApiResponse<>(
-                "success",
-                "User created successfully",
-                userResponse
-            ));
     }
 }

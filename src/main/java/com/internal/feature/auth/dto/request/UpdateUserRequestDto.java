@@ -5,11 +5,10 @@ import lombok.Data;
 
 @Data
 public class UpdateUserRequestDto {
-    private String idCard;
+    private String username;
     private String email;
     private String fullName;
     private StatusData status;
     private String profileUrl;
     private String position;
-    private String branch;
 }

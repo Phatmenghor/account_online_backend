@@ -150,13 +150,17 @@ public class UserServiceImpl implements UserService {
     }
 
     private void updateUserFields(UserEntity user, UpdateUserRequestDto request) {
-        if (request.getIdCard() != null) {
-            validateUniqueIdCard(user, request.getIdCard());
-            user.setUsername(request.getIdCard());
+        if (request.getUsername() != null) {
+            validateUniqueIdCard(user, request.getUsername());
+            user.setUsername(request.getUsername());
         }
         
         if (request.getStatus() != null) {
             user.setStatus(request.getStatus());
+        }
+
+        if(request.getEmail() != null){
+            user.setEmail(request.getEmail());
         }
 
         if (request.getFullName() != null) {
@@ -165,6 +169,10 @@ public class UserServiceImpl implements UserService {
 
         if (request.getProfileUrl() != null) {
             user.setProfileUrl(request.getProfileUrl());
+        }
+
+        if(request.getPosition() != null){
+            user.setPosition(request.getPosition());
         }
     }
 

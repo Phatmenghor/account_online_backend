@@ -24,9 +24,9 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Internal CBC API")
+                        .title("Internal DEV API")
                         .version("1.0")
-                        .description("Internal CBC API Documentation"))
+                        .description("Internal DEV API Documentation"))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
     }
 

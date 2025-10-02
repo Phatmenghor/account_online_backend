@@ -3,13 +3,15 @@ package com.internal.enumation;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum StatusData {
-    ACTIVE,
-    DELETE;
+public enum AttendanceStatus {
+    PENDING,
+    APPROVED,
+    REJECTED,
+    CANCELLED;
 
     @JsonCreator
-    public static StatusData fromString(String value) {
-        return StatusData.valueOf(value.toUpperCase());
+    public static AttendanceStatus fromString(String value) {
+        return AttendanceStatus.valueOf(value.toUpperCase());
     }
 
     @JsonValue

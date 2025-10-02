@@ -1,17 +1,16 @@
-# application.yaml - Configuration for 4-HOUR stored procedure execution
+# application.yaml
 
 server:
-  port: 8080
+  port: 8888
   servlet:
     context-path: /
   compression:
     enabled: true
-  # IMPORTANT: Prevent HTTP timeout during long operations
-  connection-timeout: 300000  # 5 minutes (HTTP will return immediately, job runs async)
+  connection-timeout: 300000
 
 spring:
   application:
-    name: internal-cbc-api
+    name: internal-dev-api
 
   # JPA Configuration
   jpa:
@@ -38,7 +37,8 @@ spring:
 
   # Primary Database (PostgreSQL)
   datasource:
-    url: jdbc:postgresql://192.168.103.106:5432/internal_cbc_report
+#    url: jdbc:postgresql://192.168.103.106:5432/internal_dev
+    url: jdbc:postgresql://192.168.103.106:5432/internal_dev_test
     username: postgres
     password: 123cp!@#
     driver-class-name: org.postgresql.Driver
@@ -46,46 +46,36 @@ spring:
       maximum-pool-size: 20
       minimum-idle: 5
       connection-timeout: 30000
-      idle-timeout: 1800000      # 30 minutes
-      max-lifetime: 7200000      # 2 hours
-      leak-detection-threshold: 1800000  # 30 minutes (allow for long operations)
+      idle-timeout: 1800000
+      max-lifetime: 7200000
+      leak-detection-threshold: 1800000
       pool-name: PostgreSQL-Pool
       auto-commit: false
 
-    # Secondary Database (SQL Server) - EXTREME LONG-RUNNING CONFIGURATION
-    secondary:
-      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-      # CRITICAL: Extended timeouts for 4-hour operations
-      url: "jdbc:sqlserver://10.18.1.150:1433;databaseName=T24_RAWDB_R21;encrypt=true;trustServerCertificate=true;loginTimeout=300;socketTimeout=0;queryTimeout=0;lockTimeout=0"
-      username: cpb_int
-      password: "123cp!@#"
-      hikari:
-        maximum-pool-size: 2      # VERY LIMITED: Only 1-2 concurrent 4-hour operations
-        minimum-idle: 1
-        connection-timeout: 300000     # 5 minutes to establish connection
-        idle-timeout: 18000000         # 5 hours idle timeout
-        max-lifetime: 21600000         # 6 hours max lifetime
-        leak-detection-threshold: 18000000  # 5 hours leak detection
-        pool-name: SQLServer-LongRunning-Pool
-
-  # Task Execution - OPTIMIZED for 4-hour background jobs
+  # Task Execution for Async Telegram notifications
   task:
     execution:
       pool:
-        core-size: 1        # ONLY 1 concurrent stored procedure at a time
-        max-size: 2         # Maximum 2 long-running jobs
-        queue-capacity: 5   # Queue additional requests
-        keep-alive: 21600s  # 6 hours keep-alive
-      thread-name-prefix: cbc-long-running-
+        core-size: 2
+        max-size: 5
+        queue-capacity: 100
+        thread-name-prefix: async-telegram-
 
 # JWT Configuration
 jwt:
   secret:
-    key: f7e8d9c6b5a4938271605f4e3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a001
-  expiration-min: 525600 # 1 year
-  issuer: internal-cbc-api
+    key: f7e8d9c6b5a4938271605f4de3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a001
+  expiration-min: 525600
+  issuer: internal-dev-api
 
-# Application Configuration - 4-HOUR OPERATION SETTINGS
+# Telegram Bot Configuration
+telegram:
+  bot:
+    token: "8464259107:AAHdIC3EZb_3uID4vnhteY6PYtmO9WGDBjU"
+    chat-id: "-1002784141362"
+    enabled: true
+
+# Application Configuration
 app:
   default-users:
     create: true
@@ -96,21 +86,15 @@ app:
 
   data-load:
     batch-size: 1000
-    max-retries: 1                    # Only 1 retry for 4-hour jobs
-    timeout-hours: 5                  # 5-hour total timeout
-    connection-timeout-minutes: 5     # 5 minutes to establish connection
-    query-timeout-hours: 4           # 4 hours for query execution (0 = unlimited)
-    network-timeout-hours: 5         # 5 hours network timeout
-    progress-log-interval-minutes: 10 # Log progress every 10 minutes
-    heartbeat-interval-minutes: 5     # Update status every 5 minutes
+    max-retries: 1
+    timeout-hours: 5
+    connection-timeout-minutes: 5
+    query-timeout-hours: 4
+    network-timeout-hours: 5
+    progress-log-interval-minutes: 10
+    heartbeat-interval-minutes: 5
 
-  sql-server:
-    cbc-stored-procedure: "dbo.RP_CBC_UPLOAD_MONTHLY_STORE"
-    max-execution-time-hours: 4       # Expected 4-hour execution
-    max-concurrent-jobs: 1            # Only 1 CBC job at a time
-    prevent-multiple-runs: true       # Prevent overlapping executions
-
-# Logging Configuration - REDUCED for long-running operations
+# Logging Configuration
 logging:
   level:
     root: INFO
@@ -122,15 +106,13 @@ logging:
     org.hibernate: WARN
     org.hibernate.SQL: WARN
     org.hibernate.type.descriptor.sql.BasicBinder: WARN
-    com.zaxxer.hikari: INFO              # Monitor connection pool
-    com.microsoft.sqlserver: INFO        # Monitor SQL Server connections
+    com.zaxxer.hikari: INFO
     org.postgresql: WARN
   pattern:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{20} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-  # File logging for long-running operations
   file:
-    name: logs/cbc-long-running.log
+    name: logs/internal-dev-api.log
     max-size: 100MB
     max-history: 10
 
@@ -146,7 +128,7 @@ springdoc:
     tags-sorter: alpha
     disable-swagger-default-url: true
 
-# Management Endpoints - Enhanced monitoring for long operations
+# Management Endpoints
 management:
   endpoints:
     web:
