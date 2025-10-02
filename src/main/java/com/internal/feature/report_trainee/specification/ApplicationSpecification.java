@@ -82,16 +82,11 @@ public class ApplicationSpecification {
 
                 // Search across all fields
                 searchPredicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("projectName")), searchTerm));
+                        criteriaBuilder.lower(root.get("reportRemark")), searchTerm));
 
 
                 // Combine all search predicates with OR
                 predicates.add(criteriaBuilder.or(searchPredicates.toArray(new Predicate[0])));
-            }
-
-            // TraineeReport status filter
-            if (applicationStatus != null) {
-                predicates.add(criteriaBuilder.equal(root.get("projectStatus"), applicationStatus));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

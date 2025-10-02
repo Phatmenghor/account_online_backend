@@ -92,7 +92,7 @@ public class ApplicationSpecification {
 
             // TraineeReport status filter
             if (applicationStatus != null) {
-                predicates.add(criteriaBuilder.equal(root.get("projectStatus"), applicationStatus));
+                predicates.add(criteriaBuilder.equal(root.get("applicationStatus"), applicationStatus));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
