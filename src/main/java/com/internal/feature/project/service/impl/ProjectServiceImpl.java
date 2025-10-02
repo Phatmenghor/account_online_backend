@@ -49,18 +49,18 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("Fetching project by ID: {}", id);
         
         Project entity = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Project not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found with ID: " + id));
         
         return mapper.toResponseDto(entity);
     }
     
 //    @Override
 //    @Transactional(readOnly = true)
-//    public AllProjectResponseDto getAllProject(GetAllProjectRequestDto requestDto) {
+//    public AllApplicationResponseDto getAllProject(GetAllApplicationRequestDto requestDto) {
 //        log.debug("Getting projects with pageNo={}, pageSize={}, search={}",
 //                requestDto.getPageNo(), requestDto.getPageSize(), requestDto.getSearch());
 //
-//        GetAllProjectRequestDto projectRequestDto = new GetAllProjectRequestDto(
+//        GetAllApplicationRequestDto projectRequestDto = new GetAllApplicationRequestDto(
 //                requestDto.getSearch(),
 //                Math.max(requestDto.getPageNo() - 1, 0),
 //                Math.max(requestDto.getPageSize(), 1)
@@ -73,11 +73,11 @@ public class ProjectServiceImpl implements ProjectService {
 //        );
 //
 //        // Create specification for filtering
-//        Specification<Project> specification = ProjectSpecification.createSpecification(projectRequestDto.getSearch());
+//        Specification<Application> specification = ApplicationSpecification.createSpecification(projectRequestDto.getSearch());
 //
-//        Page<Project> projectPage = repository.findAll(specification, pageable);
+//        Page<Application> projectPage = repository.findAll(specification, pageable);
 //
-//        List<ProjectResponseDto> content = projectPage.getContent()
+//        List<ApplicationResponseDto> content = projectPage.getContent()
 //                .stream()
 //                .map(mapper::toResponseDto)
 //                .collect(Collectors.toList());
@@ -119,13 +119,35 @@ public class ProjectServiceImpl implements ProjectService {
 
         return mapper.mapToListDto(content, projectPage);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProjectResponseDto> getAllListProject(GetAllProjectRequestDto requestDto) {
+        log.debug("Getting projects with pageNo={}, pageSize={}, search={}, projectStatus={}",
+                requestDto.getPageNo(), requestDto.getPageSize(), requestDto.getSearch(), requestDto.getProjectStatus());
+
+
+        Specification<Project> specification = ProjectSpecification.createSpecification(
+                requestDto.getSearch(),
+                requestDto.getProjectStatus()
+        );
+
+        List<Project> projects = repository.findAll(
+                specification,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        return projects.stream()
+                .map(mapper::toResponseDto)
+                .collect(Collectors.toList());
+    }
     
     @Override
     public ProjectResponseDto updateProject(Long id, ProjectUpdateDto updateDto) {
         log.info("Updating project with ID: {}", id);
         
         Project existingEntity = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Project not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found with ID: " + id));
         
         mapper.updateEntityFromDto(updateDto, existingEntity);
         Project updatedEntity = repository.save(existingEntity);
@@ -138,7 +160,7 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("Deleting project with ID: {}", id);
         
         if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Project not found with ID: " + id);
+            throw new ResourceNotFoundException("Application not found with ID: " + id);
         }
         
         repository.deleteById(id);

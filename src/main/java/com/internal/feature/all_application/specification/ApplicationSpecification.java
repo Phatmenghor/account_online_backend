@@ -58,19 +58,20 @@
 //    }
 //}
 
-package com.internal.feature.project.specification;
+package com.internal.feature.all_application.specification;
 
+import com.internal.enumation.ApplicationStatusEnum;
 import com.internal.enumation.ProjectStatusEnum;
-import com.internal.feature.project.models.Project;
+import com.internal.feature.all_application.models.Application;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProjectSpecification {
+public class ApplicationSpecification {
 
-    public static Specification<Project> createSpecification(String search, ProjectStatusEnum projectStatus) {
+    public static Specification<Application> createSpecification(String search, ApplicationStatusEnum applicationStatus) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -83,10 +84,6 @@ public class ProjectSpecification {
                 // Search across all fields
                 searchPredicates.add(criteriaBuilder.like(
                         criteriaBuilder.lower(root.get("projectName")), searchTerm));
-;
-
-                searchPredicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("dbName")), searchTerm));
 
 
                 // Combine all search predicates with OR
@@ -94,8 +91,8 @@ public class ProjectSpecification {
             }
 
             // Application status filter
-            if (projectStatus != null) {
-                predicates.add(criteriaBuilder.equal(root.get("projectStatus"), projectStatus));
+            if (applicationStatus != null) {
+                predicates.add(criteriaBuilder.equal(root.get("projectStatus"), applicationStatus));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
@@ -103,7 +100,7 @@ public class ProjectSpecification {
     }
 
     // Keep the old method for backward compatibility
-    public static Specification<Project> createSpecification(String search) {
+    public static Specification<Application> createSpecification(String search) {
         return createSpecification(search, null);
     }
 }
