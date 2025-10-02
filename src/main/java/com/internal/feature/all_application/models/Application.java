@@ -23,8 +23,9 @@ public class Application extends BaseEntity {
 
     @Column(name = "member_involved")
     private String memberInvolved;
-    
-    @Column(name = "remark")
+
+    @Lob
+    @Column(name = "remark", columnDefinition = "TEXT")
     private String remark;
 
     @Column(name = "department")

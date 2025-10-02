@@ -1,12 +1,12 @@
-package com.internal.feature.all_application.controller;
+package com.internal.feature.report_trainee.controller;
 
 import com.internal.exceptions.response.ApiResponse;
-import com.internal.feature.all_application.dto.filter.GetAllApplicationRequestDto;
-import com.internal.feature.all_application.dto.request.ApplicationRequestDto;
-import com.internal.feature.all_application.dto.resposne.AllApplicationResponseDto;
-import com.internal.feature.all_application.dto.resposne.ApplicationResponseDto;
-import com.internal.feature.all_application.dto.update.ApplicationUpdateDto;
-import com.internal.feature.all_application.service.ApplicationService;
+import com.internal.feature.report_trainee.dto.filter.GetAllReportTraineeRequestDto;
+import com.internal.feature.report_trainee.dto.request.ReportTraineeRequestDto;
+import com.internal.feature.report_trainee.dto.resposne.AllReportTraineeResponseDto;
+import com.internal.feature.report_trainee.dto.resposne.ReportTraineeResponseDto;
+import com.internal.feature.report_trainee.dto.update.ReportTraineeUpdateDto;
+import com.internal.feature.report_trainee.service.ReportTraineeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,20 +16,20 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/application")
+@RequestMapping("/api/report-trainee")
 @RequiredArgsConstructor
 @Slf4j
-public class ApplicationController {
+public class ReportTraineeController {
     
-    private final ApplicationService projectService;
+    private final ReportTraineeService projectService;
     
     // Create TraineeReport
     @PostMapping
-    public ResponseEntity<ApiResponse<ApplicationResponseDto>> createProject(@RequestBody ApplicationRequestDto requestDto) {
-        log.info("Creating project: {}", requestDto.getProjectName());
-        ApplicationResponseDto result = projectService.createProject(requestDto);
+    public ResponseEntity<ApiResponse<ReportTraineeResponseDto>> createProject(@RequestBody ReportTraineeRequestDto requestDto) {
+        log.info("Creating project");
+        ReportTraineeResponseDto result = projectService.createProject(requestDto);
         
-        ApiResponse<ApplicationResponseDto> response = new ApiResponse<>(
+        ApiResponse<ReportTraineeResponseDto> response = new ApiResponse<>(
             "success", 
             "TraineeReport created successfully",
             result
@@ -40,11 +40,11 @@ public class ApplicationController {
     
     // Get TraineeReport by ID
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ApplicationResponseDto>> getProjectById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<ReportTraineeResponseDto>> getProjectById(@PathVariable Long id) {
         log.info("Getting project by ID: {}", id);
-        ApplicationResponseDto result = projectService.getProjectById(id);
+        ReportTraineeResponseDto result = projectService.getProjectById(id);
         
-        ApiResponse<ApplicationResponseDto> response = new ApiResponse<>(
+        ApiResponse<ReportTraineeResponseDto> response = new ApiResponse<>(
             "success", 
             "TraineeReport retrieved successfully",
             result
@@ -55,12 +55,12 @@ public class ApplicationController {
     
     // Get All Projects with Pagination and Filters
     @PostMapping("/all")
-    public ResponseEntity<ApiResponse<AllApplicationResponseDto>> getAllProject(@RequestBody GetAllApplicationRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<AllReportTraineeResponseDto>> getAllProject(@RequestBody GetAllReportTraineeRequestDto requestDto) {
         log.info("Getting all projects with filters - page: {}, size: {}", requestDto.getPageNo(), requestDto.getPageSize());
         
-        AllApplicationResponseDto result = projectService.getAllProject(requestDto);
+        AllReportTraineeResponseDto result = projectService.getAllProject(requestDto);
         
-        ApiResponse<AllApplicationResponseDto> response = new ApiResponse<>(
+        ApiResponse<AllReportTraineeResponseDto> response = new ApiResponse<>(
             "success", 
             "Projects retrieved successfully", 
             result
@@ -71,12 +71,12 @@ public class ApplicationController {
 
 
     @PostMapping("/all-list")
-    public ResponseEntity<ApiResponse<List<ApplicationResponseDto>>> getAllListProject(@RequestBody GetAllApplicationRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<List<ReportTraineeResponseDto>>> getAllListProject(@RequestBody GetAllReportTraineeRequestDto requestDto) {
         log.info("Getting all list projects with filters - page: {}, size: {}", requestDto.getPageNo(), requestDto.getPageSize());
 
-        List<ApplicationResponseDto> result = projectService.getAllListProject(requestDto);
+        List<ReportTraineeResponseDto> result = projectService.getAllListProject(requestDto);
 
-        ApiResponse<List<ApplicationResponseDto>> response = new ApiResponse<>(
+        ApiResponse<List<ReportTraineeResponseDto>> response = new ApiResponse<>(
                 "success",
                 "Projects all retrieved successfully",
                 result
@@ -87,13 +87,13 @@ public class ApplicationController {
     
     // Update TraineeReport
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<ApplicationResponseDto>> updateProject(
+    public ResponseEntity<ApiResponse<ReportTraineeResponseDto>> updateProject(
             @PathVariable Long id, 
-            @RequestBody ApplicationUpdateDto updateDto) {
+            @RequestBody ReportTraineeUpdateDto updateDto) {
         log.info("Updating project ID: {}", id);
-        ApplicationResponseDto result = projectService.updateProject(id, updateDto);
+        ReportTraineeResponseDto result = projectService.updateProject(id, updateDto);
         
-        ApiResponse<ApplicationResponseDto> response = new ApiResponse<>(
+        ApiResponse<ReportTraineeResponseDto> response = new ApiResponse<>(
             "success", 
             "TraineeReport updated successfully",
             result

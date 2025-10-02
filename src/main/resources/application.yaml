@@ -12,6 +12,9 @@ spring:
   application:
     name: internal-dev-api
 
+  main:
+    allow-bean-definition-overriding: true
+
   # JPA Configuration
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -75,7 +78,7 @@ telegram:
     chat-id: "-1002784141362"
     enabled: true
 
-# Application Configuration
+# TraineeReport Configuration
 app:
   default-users:
     create: true

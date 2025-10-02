@@ -23,7 +23,7 @@ public class ProjectController {
     
     private final ProjectService projectService;
     
-    // Create Application
+    // Create TraineeReport
     @PostMapping
     public ResponseEntity<ApiResponse<ProjectResponseDto>> createProject(@RequestBody ProjectRequestDto requestDto) {
         log.info("Creating project: {}", requestDto.getProjectName());
@@ -31,14 +31,14 @@ public class ProjectController {
         
         ApiResponse<ProjectResponseDto> response = new ApiResponse<>(
             "success", 
-            "Application created successfully",
+            "TraineeReport created successfully",
             result
         );
         
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     
-    // Get Application by ID
+    // Get TraineeReport by ID
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProjectResponseDto>> getProjectById(@PathVariable Long id) {
         log.info("Getting project by ID: {}", id);
@@ -46,7 +46,7 @@ public class ProjectController {
         
         ApiResponse<ProjectResponseDto> response = new ApiResponse<>(
             "success", 
-            "Application retrieved successfully",
+            "TraineeReport retrieved successfully",
             result
         );
         
@@ -85,7 +85,7 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
     
-    // Update Application
+    // Update TraineeReport
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ProjectResponseDto>> updateProject(
             @PathVariable Long id, 
@@ -95,14 +95,14 @@ public class ProjectController {
         
         ApiResponse<ProjectResponseDto> response = new ApiResponse<>(
             "success", 
-            "Application updated successfully",
+            "TraineeReport updated successfully",
             result
         );
         
         return ResponseEntity.ok(response);
     }
     
-    // Delete Application
+    // Delete TraineeReport
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> deleteProject(@PathVariable Long id) {
         log.info("Deleting project ID: {}", id);
@@ -110,8 +110,8 @@ public class ProjectController {
         
         ApiResponse<String> response = new ApiResponse<>(
             "success", 
-            "Application deleted successfully",
-            "Application with ID " + id + " has been deleted"
+            "TraineeReport deleted successfully",
+            "TraineeReport with ID " + id + " has been deleted"
         );
         
         return ResponseEntity.ok(response);

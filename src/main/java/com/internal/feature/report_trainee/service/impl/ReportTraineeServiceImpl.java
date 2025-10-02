@@ -1,16 +1,16 @@
-package com.internal.feature.all_application.service.impl;
+package com.internal.feature.report_trainee.service.impl;
 
 import com.internal.exceptions.error.ResourceNotFoundException;
-import com.internal.feature.all_application.dto.filter.GetAllApplicationRequestDto;
-import com.internal.feature.all_application.dto.request.ApplicationRequestDto;
-import com.internal.feature.all_application.dto.resposne.AllApplicationResponseDto;
-import com.internal.feature.all_application.dto.resposne.ApplicationResponseDto;
-import com.internal.feature.all_application.dto.update.ApplicationUpdateDto;
-import com.internal.feature.all_application.mapper.ApplicationMapper;
-import com.internal.feature.all_application.models.Application;
-import com.internal.feature.all_application.repository.ApplicationRepository;
-import com.internal.feature.all_application.service.ApplicationService;
-import com.internal.feature.all_application.specification.ApplicationSpecification;
+import com.internal.feature.report_trainee.dto.filter.GetAllReportTraineeRequestDto;
+import com.internal.feature.report_trainee.dto.request.ReportTraineeRequestDto;
+import com.internal.feature.report_trainee.dto.resposne.AllReportTraineeResponseDto;
+import com.internal.feature.report_trainee.dto.resposne.ReportTraineeResponseDto;
+import com.internal.feature.report_trainee.dto.update.ReportTraineeUpdateDto;
+import com.internal.feature.report_trainee.mapper.ReportTraineeMapper;
+import com.internal.feature.report_trainee.models.TraineeReport;
+import com.internal.feature.report_trainee.repository.ReportTraineeRepository;
+import com.internal.feature.report_trainee.service.ReportTraineeService;
+import com.internal.feature.report_trainee.specification.ApplicationSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -28,27 +28,27 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
-public class ApplicationServiceImpl implements ApplicationService {
+public class ReportTraineeServiceImpl implements ReportTraineeService {
     
-    private final ApplicationRepository repository;
-    private final ApplicationMapper mapper;
+    private final ReportTraineeRepository repository;
+    private final ReportTraineeMapper mapper;
     
     @Override
-    public ApplicationResponseDto createProject(ApplicationRequestDto requestDto) {
-        log.info("Creating new project: {}", requestDto.getProjectName());
+    public ReportTraineeResponseDto createProject(ReportTraineeRequestDto requestDto) {
+        log.info("Creating new project:");
         
-        Application entity = mapper.toEntity(requestDto);
-        Application savedEntity = repository.save(entity);
+        TraineeReport entity = mapper.toEntity(requestDto);
+        TraineeReport savedEntity = repository.save(entity);
         
         return mapper.toResponseDto(savedEntity);
     }
     
     @Override
     @Transactional(readOnly = true)
-    public ApplicationResponseDto getProjectById(Long id) {
+    public ReportTraineeResponseDto getProjectById(Long id) {
         log.info("Fetching project by ID: {}", id);
         
-        Application entity = repository.findById(id)
+        TraineeReport entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("TraineeReport not found with ID: " + id));
         
         return mapper.toResponseDto(entity);
@@ -56,11 +56,11 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional(readOnly = true)
-    public AllApplicationResponseDto getAllProject(GetAllApplicationRequestDto requestDto) {
+    public AllReportTraineeResponseDto getAllProject(GetAllReportTraineeRequestDto requestDto) {
         log.debug("Getting projects with pageNo={}, pageSize={}, search={}, projectStatus={}",
                 requestDto.getPageNo(), requestDto.getPageSize(), requestDto.getSearch(), requestDto.getApplicationStatus());
 
-        GetAllApplicationRequestDto projectRequestDto = new GetAllApplicationRequestDto(
+        GetAllReportTraineeRequestDto projectRequestDto = new GetAllReportTraineeRequestDto(
                 requestDto.getSearch(),
                 Math.max(requestDto.getPageNo() - 1, 0),
                 Math.max(requestDto.getPageSize(), 1),
@@ -74,14 +74,14 @@ public class ApplicationServiceImpl implements ApplicationService {
         );
 
         // Create specification for filtering including project status
-        Specification<Application> specification = ApplicationSpecification.createSpecification(
+        Specification<TraineeReport> specification = ApplicationSpecification.createSpecification(
                 projectRequestDto.getSearch(),
                 projectRequestDto.getApplicationStatus()
         );
 
-        Page<Application> projectPage = repository.findAll(specification, pageable);
+        Page<TraineeReport> projectPage = repository.findAll(specification, pageable);
 
-        List<ApplicationResponseDto> content = projectPage.getContent()
+        List<ReportTraineeResponseDto> content = projectPage.getContent()
                 .stream()
                 .map(mapper::toResponseDto)
                 .collect(Collectors.toList());
@@ -91,17 +91,17 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ApplicationResponseDto> getAllListProject(GetAllApplicationRequestDto requestDto) {
+    public List<ReportTraineeResponseDto> getAllListProject(GetAllReportTraineeRequestDto requestDto) {
         log.debug("Getting projects with pageNo={}, pageSize={}, search={}, projectStatus={}",
                 requestDto.getPageNo(), requestDto.getPageSize(), requestDto.getSearch(), requestDto.getApplicationStatus());
 
 
-        Specification<Application> specification = ApplicationSpecification.createSpecification(
+        Specification<TraineeReport> specification = ApplicationSpecification.createSpecification(
                 requestDto.getSearch(),
                 requestDto.getApplicationStatus()
         );
 
-        List<Application> projects = repository.findAll(
+        List<TraineeReport> projects = repository.findAll(
                 specification,
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
@@ -112,14 +112,14 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
     
     @Override
-    public ApplicationResponseDto updateProject(Long id, ApplicationUpdateDto updateDto) {
+    public ReportTraineeResponseDto updateProject(Long id, ReportTraineeUpdateDto updateDto) {
         log.info("Updating project with ID: {}", id);
         
-        Application existingEntity = repository.findById(id)
+        TraineeReport existingEntity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("TraineeReport not found with ID: " + id));
         
         mapper.updateEntityFromDto(updateDto, existingEntity);
-        Application updatedEntity = repository.save(existingEntity);
+        TraineeReport updatedEntity = repository.save(existingEntity);
         
         return mapper.toResponseDto(updatedEntity);
     }

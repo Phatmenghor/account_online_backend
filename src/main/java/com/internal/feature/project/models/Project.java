@@ -40,8 +40,9 @@ public class Project extends BaseEntity {
     
     @Column(name = "db_server")
     private String dbServer;
-    
-    @Column(name = "remark", length = 500)
+
+    @Lob
+    @Column(name = "remark", columnDefinition = "TEXT")
     private String remark;
 
     @Enumerated(EnumType.STRING)

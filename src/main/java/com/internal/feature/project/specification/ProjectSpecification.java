@@ -1,6 +1,6 @@
 //package com.internal.feature.project.specification;
 //
-//import com.internal.feature.project.models.Application;
+//import com.internal.feature.project.models.TraineeReport;
 //import org.springframework.data.jpa.domain.Specification;
 //
 //import javax.persistence.criteria.Predicate;
@@ -9,7 +9,7 @@
 //
 //public class ApplicationSpecification {
 //
-//    public static Specification<Application> createSpecification(String search) {
+//    public static Specification<TraineeReport> createSpecification(String search) {
 //        return (root, query, criteriaBuilder) -> {
 //            List<Predicate> predicates = new ArrayList<>();
 //
@@ -93,7 +93,7 @@ public class ProjectSpecification {
                 predicates.add(criteriaBuilder.or(searchPredicates.toArray(new Predicate[0])));
             }
 
-            // Application status filter
+            // TraineeReport status filter
             if (projectStatus != null) {
                 predicates.add(criteriaBuilder.equal(root.get("projectStatus"), projectStatus));
             }

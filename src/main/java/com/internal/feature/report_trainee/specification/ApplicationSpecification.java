@@ -58,11 +58,10 @@
 //    }
 //}
 
-package com.internal.feature.all_application.specification;
+package com.internal.feature.report_trainee.specification;
 
 import com.internal.enumation.ApplicationStatusEnum;
-import com.internal.enumation.ProjectStatusEnum;
-import com.internal.feature.all_application.models.Application;
+import com.internal.feature.report_trainee.models.TraineeReport;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.Predicate;
@@ -71,7 +70,7 @@ import java.util.List;
 
 public class ApplicationSpecification {
 
-    public static Specification<Application> createSpecification(String search, ApplicationStatusEnum applicationStatus) {
+    public static Specification<TraineeReport> createSpecification(String search, ApplicationStatusEnum applicationStatus) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -100,7 +99,7 @@ public class ApplicationSpecification {
     }
 
     // Keep the old method for backward compatibility
-    public static Specification<Application> createSpecification(String search) {
+    public static Specification<TraineeReport> createSpecification(String search) {
         return createSpecification(search, null);
     }
 }
