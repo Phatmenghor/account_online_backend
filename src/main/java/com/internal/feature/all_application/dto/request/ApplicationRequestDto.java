@@ -19,6 +19,4 @@ public class ApplicationRequestDto {
     private String year;
     private String urlLink;
     private ApplicationStatusEnum applicationStatus;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }
