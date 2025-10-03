@@ -57,14 +57,13 @@ public class ReportTraineeServiceImpl implements ReportTraineeService {
     @Override
     @Transactional(readOnly = true)
     public AllReportTraineeResponseDto getAllProject(GetAllReportTraineeRequestDto requestDto) {
-        log.debug("Getting projects with pageNo={}, pageSize={}, search={}, projectStatus={}",
-                requestDto.getPageNo(), requestDto.getPageSize(), requestDto.getSearch(), requestDto.getApplicationStatus());
+        log.debug("Getting all projects with pageNo={}, pageSize={}, search={}",
+                requestDto.getPageNo(), requestDto.getPageSize(), requestDto.getSearch());
 
         GetAllReportTraineeRequestDto projectRequestDto = new GetAllReportTraineeRequestDto(
                 requestDto.getSearch(),
                 Math.max(requestDto.getPageNo() - 1, 0),
-                Math.max(requestDto.getPageSize(), 1),
-                requestDto.getApplicationStatus()
+                Math.max(requestDto.getPageSize(), 1)
         );
 
         Pageable pageable = PageRequest.of(
@@ -75,8 +74,7 @@ public class ReportTraineeServiceImpl implements ReportTraineeService {
 
         // Create specification for filtering including project status
         Specification<TraineeReport> specification = ApplicationSpecification.createSpecification(
-                projectRequestDto.getSearch(),
-                projectRequestDto.getApplicationStatus()
+                projectRequestDto.getSearch()
         );
 
         Page<TraineeReport> projectPage = repository.findAll(specification, pageable);
@@ -92,13 +90,12 @@ public class ReportTraineeServiceImpl implements ReportTraineeService {
     @Override
     @Transactional(readOnly = true)
     public List<ReportTraineeResponseDto> getAllListProject(GetAllReportTraineeRequestDto requestDto) {
-        log.debug("Getting projects with pageNo={}, pageSize={}, search={}, projectStatus={}",
-                requestDto.getPageNo(), requestDto.getPageSize(), requestDto.getSearch(), requestDto.getApplicationStatus());
+        log.debug("Getting projects with pageNo={}, pageSize={}, search={}",
+                requestDto.getPageNo(), requestDto.getPageSize(), requestDto.getSearch());
 
 
         Specification<TraineeReport> specification = ApplicationSpecification.createSpecification(
-                requestDto.getSearch(),
-                requestDto.getApplicationStatus()
+                requestDto.getSearch()
         );
 
         List<TraineeReport> projects = repository.findAll(

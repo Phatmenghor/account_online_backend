@@ -70,22 +70,24 @@ import java.util.List;
 
 public class ApplicationSpecification {
 
-    public static Specification<TraineeReport> createSpecification(String search, ApplicationStatusEnum applicationStatus) {
+    public static Specification<TraineeReport> createSpecification(String search) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Search filter
             if (search != null && !search.trim().isEmpty()) {
                 String searchTerm = "%" + search.toLowerCase() + "%";
 
                 List<Predicate> searchPredicates = new ArrayList<>();
 
-                // Search across all fields
-                searchPredicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("reportRemark")), searchTerm));
+                // Add null check for LOB field
+                searchPredicates.add(criteriaBuilder.and(
+                        criteriaBuilder.isNotNull(root.get("reportRemark")),
+                        criteriaBuilder.like(
+                                criteriaBuilder.lower(root.get("reportRemark")),
+                                searchTerm
+                        )
+                ));
 
-
-                // Combine all search predicates with OR
                 predicates.add(criteriaBuilder.or(searchPredicates.toArray(new Predicate[0])));
             }
 
@@ -93,8 +95,4 @@ public class ApplicationSpecification {
         };
     }
 
-    // Keep the old method for backward compatibility
-    public static Specification<TraineeReport> createSpecification(String search) {
-        return createSpecification(search, null);
-    }
 }
