@@ -1,6 +1,7 @@
 package com.internal.feature.auth.dto.request;
 
 import com.internal.enumation.RoleEnum;
+import com.internal.enumation.UserPermission;
 import lombok.Data;
 
 import javax.validation.constraints.Email;
@@ -23,6 +24,8 @@ public class RegisterRequestDto {
     private String password;
 
     private String fullName;
+
+    private UserPermission userPermission;
 
     private RoleEnum role;
     private String position;

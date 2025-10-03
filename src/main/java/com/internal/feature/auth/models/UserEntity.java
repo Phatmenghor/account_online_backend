@@ -1,6 +1,7 @@
 package com.internal.feature.auth.models;
 
 import com.internal.enumation.StatusData;
+import com.internal.enumation.UserPermission;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,9 @@ public class UserEntity extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private StatusData status;
+
+    @Enumerated(EnumType.STRING)
+    private UserPermission userPermission;
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE})
     @JoinTable(name = "user_roles",
