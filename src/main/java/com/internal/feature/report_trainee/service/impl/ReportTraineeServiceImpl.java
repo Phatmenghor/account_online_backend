@@ -10,7 +10,7 @@ import com.internal.feature.report_trainee.mapper.ReportTraineeMapper;
 import com.internal.feature.report_trainee.models.TraineeReport;
 import com.internal.feature.report_trainee.repository.ReportTraineeRepository;
 import com.internal.feature.report_trainee.service.ReportTraineeService;
-import com.internal.feature.report_trainee.specification.ApplicationSpecification;
+import com.internal.feature.report_trainee.specification.ReportTraineeSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -73,7 +73,7 @@ public class ReportTraineeServiceImpl implements ReportTraineeService {
         );
 
         // Create specification for filtering including project status
-        Specification<TraineeReport> specification = ApplicationSpecification.createSpecification(
+        Specification<TraineeReport> specification = ReportTraineeSpecification.createSpecification(
                 projectRequestDto.getSearch()
         );
 
@@ -94,7 +94,7 @@ public class ReportTraineeServiceImpl implements ReportTraineeService {
                 requestDto.getPageNo(), requestDto.getPageSize(), requestDto.getSearch());
 
 
-        Specification<TraineeReport> specification = ApplicationSpecification.createSpecification(
+        Specification<TraineeReport> specification = ReportTraineeSpecification.createSpecification(
                 requestDto.getSearch()
         );
 
