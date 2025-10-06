@@ -147,3 +147,25 @@ management:
     export:
       simple:
         enabled: true
+
+  mail:
+    host: 10.18.1.204
+    port: 25
+    username: ithelpdesk@cambodiapostbank.com.kh
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: false
+    smtp:
+      ssl:
+        trust: '*'
+    default-encoding: UTF-8
+
+  level:
+    org:
+      springframework:
+        mail: DEBUG
+        mail.javamail: DEBUG
