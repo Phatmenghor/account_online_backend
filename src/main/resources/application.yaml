@@ -40,7 +40,7 @@ spring:
 
   # Primary Database (PostgreSQL)
   datasource:
-    url: jdbc:postgresql://192.168.103.106:5432/internal_dev-testing
+    url: jdbc:postgresql://192.168.103.106:5432/internal_dev_testing
 #    url: jdbc:postgresql://192.168.103.106:5432/internal_dev_uat
     username: postgres
     password: 123cp!@#
@@ -74,8 +74,8 @@ jwt:
 # Telegram Bot Configuration
 telegram:
   bot:
-    token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
-    chat-id: "-4816130196"
+    token: "8456716331:AAGhhOG1tJzyY0xOeLoMPbXZjWwNPumPvwA"
+    chat-id: "1476286688"
     enabled: true
 
 # TraineeReport Configuration
