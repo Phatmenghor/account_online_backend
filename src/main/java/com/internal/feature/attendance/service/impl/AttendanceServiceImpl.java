@@ -77,9 +77,6 @@ public class AttendanceServiceImpl implements AttendanceService {
     public AllAttendanceResponseDto getAllAttendances(GetAllAttendanceRequestDto requestDto) {
         log.info("Fetching all attendances - page: {}, size: {}", requestDto.getPageNo(), requestDto.getPageSize());
 
-        UserEntity currentUser = securityUtils.getCurrentUser();
-        validateSuperRole(currentUser);
-
         Pageable pageable = createPageable(requestDto);
         Specification<AttendanceEntity> spec = buildSpecification(requestDto);
         Page<AttendanceEntity> page = attendanceRepository.findAll(spec, pageable);
@@ -188,7 +185,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         AttendanceEntity entity = findAttendanceById(id);
         UserEntity currentUser = securityUtils.getCurrentUser();
 
-        validateSuperRole(currentUser);
         validatePendingStatus(entity);
         validateApprovalStatus(approvalDto.getStatus());
 
@@ -265,13 +261,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         if (!isOwner && !isSuper) {
             log.warn("Unauthorized view attempt by user: {}", currentUser.getUsername());
             throw new UnauthorizedException("You can only view your own attendance requests");
-        }
-    }
-
-    private void validateSuperRole(UserEntity user) {
-        if (!hasRole(user, RoleEnum.SUPER)) {
-            log.warn("Non-SUPER user attempted restricted action: {}", user.getUsername());
-            throw new UnauthorizedException("Only SUPER role can perform this action");
         }
     }
 

@@ -41,7 +41,7 @@ spring:
   # Primary Database (PostgreSQL)
   datasource:
 #    url: jdbc:postgresql://192.168.103.106:5432/internal_dev
-    url: jdbc:postgresql://192.168.103.106:5432/internal_dev_test
+    url: jdbc:postgresql://192.168.103.106:5432/internal_dev
     username: postgres
     password: 123cp!@#
     driver-class-name: org.postgresql.Driver
