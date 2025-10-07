@@ -1,7 +1,7 @@
 # application.yaml
 
 server:
-  port: 8888
+  port: 9998
   servlet:
     context-path: /
   compression:
@@ -10,7 +10,7 @@ server:
 
 spring:
   application:
-    name: internal-dev-api
+    name: internal-dev-api-test
 
   main:
     allow-bean-definition-overriding: true
@@ -40,7 +40,7 @@ spring:
 
   # Primary Database (PostgreSQL)
   datasource:
-    url: jdbc:postgresql://192.168.103.106:5432/internal_dev
+    url: jdbc:postgresql://192.168.103.106:5432/internal_dev-testing
 #    url: jdbc:postgresql://192.168.103.106:5432/internal_dev_uat
     username: postgres
     password: 123cp!@#
