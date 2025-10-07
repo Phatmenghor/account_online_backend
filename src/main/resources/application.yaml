@@ -74,8 +74,12 @@ jwt:
 # Telegram Bot Configuration
 telegram:
   bot:
+    #test token and chat id
     token: "8456716331:AAGhhOG1tJzyY0xOeLoMPbXZjWwNPumPvwA"
     chat-id: "-1003174573947"
+    #product token and chat id
+    #token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
+    #chat-id: "-4816130196"
     enabled: true
 
 # TraineeReport Configuration
