@@ -75,7 +75,7 @@ jwt:
 telegram:
   bot:
     token: "8456716331:AAGhhOG1tJzyY0xOeLoMPbXZjWwNPumPvwA"
-    chat-id: "1476286688"
+    chat-id: "-1476286688"
     enabled: true
 
 # TraineeReport Configuration
