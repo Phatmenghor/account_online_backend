@@ -1,6 +1,7 @@
 package com.internal.feature.attendance.dto.request;
 
 import com.internal.enumation.AttendanceType;
+import com.internal.enumation.LeaveRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,9 @@ public class AttendanceRequestDto {
 
     @NotNull(message = "Attendance type is required")
     private AttendanceType type;
+
+    @NotNull(message = "leaveRequest type is required")
+    private LeaveRequest leaveRequest;
 
     @NotNull(message = "Start date is required")
     private LocalDate startDate;

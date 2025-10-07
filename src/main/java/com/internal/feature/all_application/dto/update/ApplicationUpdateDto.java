@@ -13,7 +13,7 @@ public class ApplicationUpdateDto {
     private String projectName;
     private String memberInvolved;
     private String remark;
-    private Integer department;
+    private String department;
     private String year;
     private String urlLink;
     private ApplicationStatusEnum applicationStatus;

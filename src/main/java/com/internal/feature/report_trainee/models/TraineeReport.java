@@ -17,15 +17,12 @@ import javax.persistence.*;
 @AllArgsConstructor
 public class TraineeReport extends BaseEntity {
 
-    @Lob
     @Column(name = "reportRemark", columnDefinition = "TEXT")
     private String reportRemark;
 
-    @Lob
     @Column(name = "challenge", columnDefinition = "TEXT")
     private String challenge;
 
-    @Lob
     @Column(name = "recommend", columnDefinition = "TEXT")
     private String recommend;
 }

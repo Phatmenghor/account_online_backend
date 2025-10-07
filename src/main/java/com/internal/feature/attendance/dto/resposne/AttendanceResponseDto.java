@@ -2,6 +2,7 @@ package com.internal.feature.attendance.dto.resposne;
 
 import com.internal.enumation.AttendanceStatus;
 import com.internal.enumation.AttendanceType;
+import com.internal.enumation.LeaveRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,7 +27,8 @@ public class AttendanceResponseDto {
     private AttendanceStatus status;
     private LocalDate startDate;
     private LocalDate endDate;
-    private Integer totalDays;
+    private Double totalDays;
+    private LeaveRequest leaveRequest;
     private String reason;
     private String approvedByIdCard;
     private String approvedByFullName;

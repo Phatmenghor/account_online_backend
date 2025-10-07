@@ -2,6 +2,7 @@ package com.internal.feature.attendance.models;
 
 import com.internal.enumation.AttendanceStatus;
 import com.internal.enumation.AttendanceType;
+import com.internal.enumation.LeaveRequest;
 import com.internal.feature.auth.models.BaseEntity;
 import com.internal.feature.auth.models.UserEntity;
 import lombok.AllArgsConstructor;
@@ -33,6 +34,10 @@ public class AttendanceEntity extends BaseEntity {
     @Column(nullable = false)
     private AttendanceStatus status = AttendanceStatus.PENDING;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private LeaveRequest leaveRequest = LeaveRequest.FULL_DAY;
+
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
@@ -40,7 +45,7 @@ public class AttendanceEntity extends BaseEntity {
     private LocalDate endDate;
 
     @Column(name = "total_days")
-    private Integer totalDays;
+    private Double totalDays;
 
     @Column(name = "reason", columnDefinition = "TEXT", nullable = false)
     private String reason;

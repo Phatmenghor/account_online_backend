@@ -12,6 +12,4 @@ public class GetAllReportTraineeRequestDto {
     private String search;
     private int pageNo = 1;
     private int pageSize = 10;
-
-    private ApplicationStatusEnum applicationStatus;
 }

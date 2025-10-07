@@ -73,7 +73,7 @@ public class ProjectServiceImpl implements ProjectService {
 //        );
 //
 //        // Create specification for filtering
-//        Specification<TraineeReport> specification = ApplicationSpecification.createSpecification(projectRequestDto.getSearch());
+//        Specification<TraineeReport> specification = ReportTraineeSpecification.createSpecification(projectRequestDto.getSearch());
 //
 //        Page<TraineeReport> projectPage = repository.findAll(specification, pageable);
 //

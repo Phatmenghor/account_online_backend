@@ -40,8 +40,8 @@ spring:
 
   # Primary Database (PostgreSQL)
   datasource:
-#    url: jdbc:postgresql://192.168.103.106:5432/internal_dev
     url: jdbc:postgresql://192.168.103.106:5432/internal_dev
+#    url: jdbc:postgresql://192.168.103.106:5432/internal_dev_uat
     username: postgres
     password: 123cp!@#
     driver-class-name: org.postgresql.Driver
@@ -74,8 +74,8 @@ jwt:
 # Telegram Bot Configuration
 telegram:
   bot:
-    token: "8464259107:AAHdIC3EZb_3uID4vnhteY6PYtmO9WGDBjU"
-    chat-id: "-1002784141362"
+    token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
+    chat-id: "-4816130196"
     enabled: true
 
 # TraineeReport Configuration
@@ -147,3 +147,25 @@ management:
     export:
       simple:
         enabled: true
+
+  mail:
+    host: 10.18.1.204
+    port: 25
+    username: ithelpdesk@cambodiapostbank.com.kh
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: false
+    smtp:
+      ssl:
+        trust: '*'
+    default-encoding: UTF-8
+
+  level:
+    org:
+      springframework:
+        mail: DEBUG
+        mail.javamail: DEBUG

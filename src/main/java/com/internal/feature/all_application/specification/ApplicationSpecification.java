@@ -7,7 +7,7 @@
 //import java.util.ArrayList;
 //import java.util.List;
 //
-//public class ApplicationSpecification {
+//public class ReportTraineeSpecification {
 //
 //    public static Specification<TraineeReport> createSpecification(String search) {
 //        return (root, query, criteriaBuilder) -> {

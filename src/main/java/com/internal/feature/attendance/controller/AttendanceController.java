@@ -41,6 +41,7 @@ public class AttendanceController {
     }
 
     @PostMapping("/all")
+    @RequiresRole(value = {"SUPER"})
     @Operation(summary = "Get all attendance requests (SUPER role only)")
     public ResponseEntity<ApiResponse<AllAttendanceResponseDto>> getAllAttendances(
             @RequestBody GetAllAttendanceRequestDto requestDto) {

@@ -1,6 +1,7 @@
 package com.internal.feature.attendance.service.impl;
 
 import com.internal.enumation.AttendanceStatus;
+import com.internal.enumation.LeaveRequest;
 import com.internal.enumation.RoleEnum;
 import com.internal.exceptions.error.BadRequestException;
 import com.internal.exceptions.error.NotFoundException;
@@ -47,27 +48,30 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional
     public AttendanceResponseDto createAttendanceRequest(AttendanceRequestDto requestDto) {
-        log.info("Creating attendance request for type: {}", requestDto.getType());
+        log.info("Creating attendance request for type: {} with leaveRequest: {}",
+                requestDto.getType(), requestDto.getLeaveRequest());
 
         UserEntity currentUser = securityUtils.getCurrentUser();
 
         validateDates(requestDto.getStartDate(), requestDto.getEndDate());
-        checkOverlappingAttendances(currentUser.getId(), requestDto.getStartDate(), requestDto.getEndDate(), null);
 
-        int totalDays = calculateTotalDays(requestDto.getStartDate(), requestDto.getEndDate());
+        double totalDays = calculateTotalDays(requestDto.getStartDate(),
+                requestDto.getEndDate(), requestDto.getLeaveRequest());
 
         AttendanceEntity entity = attendanceMapper.toEntity(requestDto);
         entity.setUser(currentUser);
         entity.setTotalDays(totalDays);
 
         AttendanceEntity saved = attendanceRepository.save(entity);
-        log.info("Attendance request created successfully with ID: {}", saved.getId());
+        log.info("Attendance request created successfully with ID: {}, totalDays: {}",
+                saved.getId(), totalDays);
 
         // Send Telegram notification
         try {
             telegramNotificationService.sendAttendanceRequestNotification(saved);
         } catch (Exception e) {
-            log.error("Failed to send Telegram notification, but attendance was created: {}", e.getMessage());
+            log.error("Failed to send Telegram notification, but attendance was created: {}",
+                    e.getMessage());
         }
 
         return attendanceMapper.toDto(saved);
@@ -75,19 +79,36 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     public AllAttendanceResponseDto getAllAttendances(GetAllAttendanceRequestDto requestDto) {
-        log.info("Fetching all attendances - page: {}, size: {}", requestDto.getPageNo(), requestDto.getPageSize());
+        log.info("Fetching all attendances - page: {}, size: {}",
+                requestDto.getPageNo(), requestDto.getPageSize());
 
         Pageable pageable = createPageable(requestDto);
         Specification<AttendanceEntity> spec = buildSpecification(requestDto);
         Page<AttendanceEntity> page = attendanceRepository.findAll(spec, pageable);
 
-        log.info("Retrieved {} attendances out of {} total", page.getContent().size(), page.getTotalElements());
+        log.info("Retrieved {} attendances out of {} total",
+                page.getContent().size(), page.getTotalElements());
         return attendanceMapper.mapToAllAttendanceResponseDto(page);
     }
 
     @Override
+    public List<AttendanceResponseDto> getAllListAttendances(GetAllAttendanceRequestDto requestDto) {
+        log.info("Fetching all attendances");
+
+        UserEntity currentUser = securityUtils.getCurrentUser();
+        validateSuperRole(currentUser);
+
+        Specification<AttendanceEntity> spec = buildSpecification(requestDto);
+        List<AttendanceEntity> page = attendanceRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        log.info("Retrieved attendances out");
+        return attendanceMapper.toDtoList(page);
+    }
+
+    @Override
     public AllAttendanceResponseDto getMyAttendances(GetAllAttendanceRequestDto requestDto) {
-        log.info("Fetching my attendances - page: {}, size: {}", requestDto.getPageNo(), requestDto.getPageSize());
+        log.info("Fetching my attendances - page: {}, size: {}",
+                requestDto.getPageNo(), requestDto.getPageSize());
 
         UserEntity currentUser = securityUtils.getCurrentUser();
         requestDto.setUserId(currentUser.getId());
@@ -123,13 +144,31 @@ public class AttendanceServiceImpl implements AttendanceService {
         validateOwnership(entity, currentUser);
         validatePendingStatus(entity);
 
-        if (requestDto.getStartDate() != null && requestDto.getEndDate() != null) {
-            validateDates(requestDto.getStartDate(), requestDto.getEndDate());
-            checkOverlappingAttendances(currentUser.getId(), requestDto.getStartDate(),
-                    requestDto.getEndDate(), id);
+        // Determine which leaveRequest to use for calculation
+        LeaveRequest leaveRequestForCalc = requestDto.getLeaveRequest() != null
+                ? requestDto.getLeaveRequest()
+                : entity.getLeaveRequest();
 
-            int totalDays = calculateTotalDays(requestDto.getStartDate(), requestDto.getEndDate());
+        // Determine which dates to use for calculation
+        LocalDate startDateForCalc = requestDto.getStartDate() != null
+                ? requestDto.getStartDate()
+                : entity.getStartDate();
+        LocalDate endDateForCalc = requestDto.getEndDate() != null
+                ? requestDto.getEndDate()
+                : entity.getEndDate();
+
+        // Validate dates if any date is being changed
+        if (requestDto.getStartDate() != null || requestDto.getEndDate() != null) {
+            validateDates(startDateForCalc, endDateForCalc);
+        }
+
+        // Check for duplicates if dates or leaveRequest is changing
+        if (requestDto.getStartDate() != null || requestDto.getEndDate() != null
+                || requestDto.getLeaveRequest() != null) {
+
+            double totalDays = calculateTotalDays(startDateForCalc, endDateForCalc, leaveRequestForCalc);
             entity.setTotalDays(totalDays);
+            log.info("Recalculated totalDays: {}", totalDays);
         }
 
         attendanceMapper.updateEntityFromDto(requestDto, entity);
@@ -180,7 +219,8 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional
     public AttendanceResponseDto approveOrRejectAttendance(Long id, ApprovalRequestDto approvalDto) {
-        log.info("Processing approval for attendance ID: {} with status: {}", id, approvalDto.getStatus());
+        log.info("Processing approval for attendance ID: {} with status: {}",
+                id, approvalDto.getStatus());
 
         AttendanceEntity entity = findAttendanceById(id);
         UserEntity currentUser = securityUtils.getCurrentUser();
@@ -205,7 +245,8 @@ public class AttendanceServiceImpl implements AttendanceService {
                 telegramNotificationService.sendAttendanceRejectionNotification(processed);
             }
         } catch (Exception e) {
-            log.error("Failed to send Telegram notification, but approval was processed: {}", e.getMessage());
+            log.error("Failed to send Telegram notification, but approval was processed: {}",
+                    e.getMessage());
         }
 
         return attendanceMapper.toDto(processed);
@@ -227,25 +268,29 @@ public class AttendanceServiceImpl implements AttendanceService {
         if (startDate.isAfter(endDate)) {
             throw new BadRequestException("Start date cannot be after end date");
         }
-
-        if (endDate.isBefore(LocalDate.now())) {
-            throw new BadRequestException("End date cannot be in the past");
-        }
     }
 
-    private void checkOverlappingAttendances(Long userId, LocalDate startDate, LocalDate endDate, Long excludeId) {
-        List<AttendanceEntity> overlapping = attendanceRepository.findOverlappingAttendances(
-                userId, startDate, endDate);
-
-        if (excludeId != null) {
-            overlapping.removeIf(a -> a.getId().equals(excludeId));
-        }
-
-        if (!overlapping.isEmpty()) {
-            log.warn("Overlapping attendance found for user: {}", userId);
-            throw new BadRequestException("You already have an attendance request for these dates");
-        }
-    }
+//    /**
+//     * Check for duplicate leave requests on the same day(s) with the same leave type.
+//     * Users can request different leave types on the same day (e.g., MORNING and AFTERNOON).
+//     */
+//    private void checkDuplicateLeaveRequests(Long userId, LeaveRequest leaveRequest,
+//                                             LocalDate startDate, LocalDate endDate, Long excludeId) {
+//        List<AttendanceEntity> duplicates = attendanceRepository.findDuplicateLeaveRequests(
+//                userId, leaveRequest, startDate, endDate);
+//
+//        if (excludeId != null) {
+//            duplicates.removeIf(a -> a.getId().equals(excludeId));
+//        }
+//
+//        if (!duplicates.isEmpty()) {
+//            log.warn("Duplicate leave request found for user: {} with leaveRequest: {} on dates: {} to {}",
+//                    userId, leaveRequest, startDate, endDate);
+//            throw new BadRequestException(
+//                    String.format("You already have a %s leave request for these dates",
+//                            leaveRequest.name()));
+//        }
+//    }
 
     private void validateOwnership(AttendanceEntity entity, UserEntity currentUser) {
         if (!entity.getUser().getId().equals(currentUser.getId())) {
@@ -285,8 +330,32 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .anyMatch(r -> r.getName() == role);
     }
 
-    private int calculateTotalDays(LocalDate startDate, LocalDate endDate) {
-        return (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
+    /**
+     * Calculate total days based on date range and leave request type
+     *
+     * @param startDate Start date of leave
+     * @param endDate End date of leave
+     * @param leaveRequest Type of leave (FULL_DAY, MORNING, AFTERNOON)
+     * @return Total days as double (0.5 for half days, 1.0 for full days)
+     */
+    private double calculateTotalDays(LocalDate startDate, LocalDate endDate, LeaveRequest leaveRequest) {
+        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+
+        // Default to FULL_DAY if not specified
+        if (leaveRequest == null) {
+            leaveRequest = LeaveRequest.FULL_DAY;
+        }
+
+        switch (leaveRequest) {
+            case MORNING:
+            case AFTERNOON:
+                // Half day leave = 0.5 days per day in range
+                return daysBetween * 0.5;
+            case FULL_DAY:
+            default:
+                // Full day leave = 1.0 days per day in range
+                return (double) daysBetween;
+        }
     }
 
     private Pageable createPageable(GetAllAttendanceRequestDto requestDto) {
