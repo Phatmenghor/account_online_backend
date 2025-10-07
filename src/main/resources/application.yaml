@@ -10,7 +10,7 @@ server:
 
 spring:
   application:
-    name: internal-dev-api
+    name: internal-dev-api-test
 
   main:
     allow-bean-definition-overriding: true
