@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +24,7 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
     private final RestTemplate restTemplate;
 
     private static final String TELEGRAM_API_URL = "https://api.telegram.org/bot%s/sendMessage";
-    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm").withZone(ZoneId.of("Asia/Phnom_Penh"));;
 
     @Override
     @Async
@@ -124,19 +125,19 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
         
         if (report.getReportRemark() != null && !report.getReportRemark().trim().isEmpty()) {
             message.append("📋 <b>Report Remark:</b>\n");
-            message.append(truncateText(report.getReportRemark(), 300));
+            message.append(truncateText(report.getReportRemark(), 1000));
             message.append("\n\n");
         }
         
         if (report.getChallenge() != null && !report.getChallenge().trim().isEmpty()) {
             message.append("⚠️ <b>Challenges:</b>\n");
-            message.append(truncateText(report.getChallenge(), 300));
+            message.append(truncateText(report.getChallenge(), 1000));
             message.append("\n\n");
         }
         
         if (report.getRecommend() != null && !report.getRecommend().trim().isEmpty()) {
             message.append("💡 <b>Recommendations:</b>\n");
-            message.append(truncateText(report.getRecommend(), 300));
+            message.append(truncateText(report.getRecommend(), 1000));
         }
 
         return message.toString();
@@ -158,19 +159,19 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
         
         if (report.getReportRemark() != null && !report.getReportRemark().trim().isEmpty()) {
             message.append("📋 <b>Report Remark:</b>\n");
-            message.append(truncateText(report.getReportRemark(), 300));
+            message.append(truncateText(report.getReportRemark(), 1000));
             message.append("\n\n");
         }
         
         if (report.getChallenge() != null && !report.getChallenge().trim().isEmpty()) {
             message.append("⚠️ <b>Challenges:</b>\n");
-            message.append(truncateText(report.getChallenge(), 300));
+            message.append(truncateText(report.getChallenge(), 1000));
             message.append("\n\n");
         }
         
         if (report.getRecommend() != null && !report.getRecommend().trim().isEmpty()) {
             message.append("💡 <b>Recommendations:</b>\n");
-            message.append(truncateText(report.getRecommend(), 300));
+            message.append(truncateText(report.getRecommend(), 1000));
         }
 
         return message.toString();

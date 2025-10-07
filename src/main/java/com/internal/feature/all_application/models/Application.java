@@ -24,7 +24,6 @@ public class Application extends BaseEntity {
     @Column(name = "member_involved")
     private String memberInvolved;
 
-    @Lob
     @Column(name = "remark", columnDefinition = "TEXT")
     private String remark;
 
@@ -37,6 +36,5 @@ public class Application extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private ApplicationStatusEnum applicationStatus;
 
-    @Column(name = "urlLink")
     private String urlLink;
 }

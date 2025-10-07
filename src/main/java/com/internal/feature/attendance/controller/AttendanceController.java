@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/attendance")
@@ -29,7 +30,6 @@ public class AttendanceController {
     private final AttendanceService attendanceService;
 
     @PostMapping("/request")
-    @Operation(summary = "Create attendance request")
     public ResponseEntity<ApiResponse<AttendanceResponseDto>> createAttendanceRequest(
             @Valid @RequestBody AttendanceRequestDto requestDto) {
         log.info("Received create attendance request for type: {}", requestDto.getType());
@@ -41,8 +41,6 @@ public class AttendanceController {
     }
 
     @PostMapping("/all")
-    @RequiresRole(value = {"SUPER"})
-    @Operation(summary = "Get all attendance requests (SUPER role only)")
     public ResponseEntity<ApiResponse<AllAttendanceResponseDto>> getAllAttendances(
             @RequestBody GetAllAttendanceRequestDto requestDto) {
         log.info("Received get all attendances request");
@@ -53,8 +51,17 @@ public class AttendanceController {
                 String.format("Retrieved %d attendances", response.getContent().size()), response));
     }
 
+    @PostMapping("/all-list")
+    public ResponseEntity<ApiResponse<List<AttendanceResponseDto>>> getAllListAttendances(
+            @RequestBody GetAllAttendanceRequestDto requestDto) {
+        log.info("Received get all attendances request");
+
+        List<AttendanceResponseDto> response = attendanceService.getAllListAttendances(requestDto);
+
+        return ResponseEntity.ok(new ApiResponse<>("success", "Retrieved all attendances", response));
+    }
+
     @PostMapping("/my")
-    @Operation(summary = "Get my attendance requests")
     public ResponseEntity<ApiResponse<AllAttendanceResponseDto>> getMyAttendances(
             @RequestBody GetAllAttendanceRequestDto requestDto) {
         log.info("Received get my attendances request");
@@ -66,7 +73,6 @@ public class AttendanceController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get attendance by ID")
     public ResponseEntity<ApiResponse<AttendanceResponseDto>> getAttendanceById(@PathVariable Long id) {
         log.info("Received get attendance by ID request: {}", id);
 
@@ -76,7 +82,6 @@ public class AttendanceController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update attendance request (only PENDING status)")
     public ResponseEntity<ApiResponse<AttendanceResponseDto>> updateAttendance(
             @PathVariable Long id,
             @RequestBody AttendanceUpdateRequestDto requestDto) {
@@ -88,7 +93,6 @@ public class AttendanceController {
     }
 
     @PostMapping("/{id}/cancel")
-    @Operation(summary = "Cancel attendance request")
     public ResponseEntity<ApiResponse<AttendanceResponseDto>> cancelAttendance(@PathVariable Long id) {
         log.info("Received cancel attendance request for ID: {}", id);
 
@@ -98,7 +102,6 @@ public class AttendanceController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete attendance request (only PENDING status)")
     public ResponseEntity<ApiResponse<String>> deleteAttendance(@PathVariable Long id) {
         log.info("Received delete attendance request for ID: {}", id);
 
@@ -110,7 +113,6 @@ public class AttendanceController {
 
     @PostMapping("/{id}/approve")
     @RequiresRole(value = {"SUPER"})
-    @Operation(summary = "Approve or reject attendance request (SUPER role only)")
     public ResponseEntity<ApiResponse<AttendanceResponseDto>> approveOrRejectAttendance(
             @PathVariable Long id,
             @Valid @RequestBody ApprovalRequestDto approvalDto) {

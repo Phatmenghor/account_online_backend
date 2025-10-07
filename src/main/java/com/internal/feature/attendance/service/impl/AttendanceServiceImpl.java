@@ -54,8 +54,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         UserEntity currentUser = securityUtils.getCurrentUser();
 
         validateDates(requestDto.getStartDate(), requestDto.getEndDate());
-        checkDuplicateLeaveRequests(currentUser.getId(), requestDto.getLeaveRequest(),
-                requestDto.getStartDate(), requestDto.getEndDate(), null);
 
         double totalDays = calculateTotalDays(requestDto.getStartDate(),
                 requestDto.getEndDate(), requestDto.getLeaveRequest());
@@ -94,6 +92,20 @@ public class AttendanceServiceImpl implements AttendanceService {
         log.info("Retrieved {} attendances out of {} total",
                 page.getContent().size(), page.getTotalElements());
         return attendanceMapper.mapToAllAttendanceResponseDto(page);
+    }
+
+    @Override
+    public List<AttendanceResponseDto> getAllListAttendances(GetAllAttendanceRequestDto requestDto) {
+        log.info("Fetching all attendances");
+
+        UserEntity currentUser = securityUtils.getCurrentUser();
+        validateSuperRole(currentUser);
+
+        Specification<AttendanceEntity> spec = buildSpecification(requestDto);
+        List<AttendanceEntity> page = attendanceRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        log.info("Retrieved attendances out");
+        return attendanceMapper.toDtoList(page);
     }
 
     @Override
@@ -156,8 +168,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         // Check for duplicates if dates or leaveRequest is changing
         if (requestDto.getStartDate() != null || requestDto.getEndDate() != null
                 || requestDto.getLeaveRequest() != null) {
-            checkDuplicateLeaveRequests(currentUser.getId(), leaveRequestForCalc,
-                    startDateForCalc, endDateForCalc, id);
 
             double totalDays = calculateTotalDays(startDateForCalc, endDateForCalc, leaveRequestForCalc);
             entity.setTotalDays(totalDays);
@@ -262,30 +272,29 @@ public class AttendanceServiceImpl implements AttendanceService {
         if (startDate.isAfter(endDate)) {
             throw new BadRequestException("Start date cannot be after end date");
         }
-        // Removed past date validation - backdated requests are now allowed
     }
 
-    /**
-     * Check for duplicate leave requests on the same day(s) with the same leave type.
-     * Users can request different leave types on the same day (e.g., MORNING and AFTERNOON).
-     */
-    private void checkDuplicateLeaveRequests(Long userId, LeaveRequest leaveRequest,
-                                             LocalDate startDate, LocalDate endDate, Long excludeId) {
-        List<AttendanceEntity> duplicates = attendanceRepository.findDuplicateLeaveRequests(
-                userId, leaveRequest, startDate, endDate);
-
-        if (excludeId != null) {
-            duplicates.removeIf(a -> a.getId().equals(excludeId));
-        }
-
-        if (!duplicates.isEmpty()) {
-            log.warn("Duplicate leave request found for user: {} with leaveRequest: {} on dates: {} to {}",
-                    userId, leaveRequest, startDate, endDate);
-            throw new BadRequestException(
-                    String.format("You already have a %s leave request for these dates",
-                            leaveRequest.name()));
-        }
-    }
+//    /**
+//     * Check for duplicate leave requests on the same day(s) with the same leave type.
+//     * Users can request different leave types on the same day (e.g., MORNING and AFTERNOON).
+//     */
+//    private void checkDuplicateLeaveRequests(Long userId, LeaveRequest leaveRequest,
+//                                             LocalDate startDate, LocalDate endDate, Long excludeId) {
+//        List<AttendanceEntity> duplicates = attendanceRepository.findDuplicateLeaveRequests(
+//                userId, leaveRequest, startDate, endDate);
+//
+//        if (excludeId != null) {
+//            duplicates.removeIf(a -> a.getId().equals(excludeId));
+//        }
+//
+//        if (!duplicates.isEmpty()) {
+//            log.warn("Duplicate leave request found for user: {} with leaveRequest: {} on dates: {} to {}",
+//                    userId, leaveRequest, startDate, endDate);
+//            throw new BadRequestException(
+//                    String.format("You already have a %s leave request for these dates",
+//                            leaveRequest.name()));
+//        }
+//    }
 
     private void validateOwnership(AttendanceEntity entity, UserEntity currentUser) {
         if (!entity.getUser().getId().equals(currentUser.getId())) {

@@ -41,7 +41,6 @@ public class Project extends BaseEntity {
     @Column(name = "db_server")
     private String dbServer;
 
-    @Lob
     @Column(name = "remark", columnDefinition = "TEXT")
     private String remark;
 
@@ -53,5 +52,4 @@ public class Project extends BaseEntity {
 
     @Column(name = "git_branch")
     private String gitBranch;
-
 }
