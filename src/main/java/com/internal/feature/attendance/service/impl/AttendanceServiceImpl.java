@@ -96,7 +96,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         log.info("Fetching all attendances");
 
         UserEntity currentUser = securityUtils.getCurrentUser();
-        validateSuperRole(currentUser);
 
         Specification<AttendanceEntity> spec = buildSpecification(requestDto);
         List<AttendanceEntity> page = attendanceRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "createdAt"));
