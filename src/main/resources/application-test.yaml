@@ -9,8 +9,10 @@ server:
   connection-timeout: 300000
 
 spring:
+  profiles:
+      active: test
   application:
-    name: internal-dev-api
+    name: internal-dev-api-test
 
   main:
     allow-bean-definition-overriding: true

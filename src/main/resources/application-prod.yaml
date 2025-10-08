@@ -9,6 +9,8 @@ server:
   connection-timeout: 300000
 
 spring:
+  profiles:
+      active: prod
   application:
     name: internal-dev-api
 
