@@ -9,16 +9,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.ZoneOffset;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,11 +27,13 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
 
     private final TelegramConfig telegramConfig;
     private final RestTemplate restTemplate;
+    private final UserRepository userRepository;
 
     private static final String TELEGRAM_API_URL = "https://api.telegram.org/bot%s/sendMessage";
+    private static final ZoneId UTC_PLUS7 = ZoneOffset.ofHours(7);
+
     private static final DateTimeFormatter DATETIME_FORMATTER =
-            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
-                    .withZone(ZoneId.of("UTC"));
+            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm").withZone(UTC_PLUS7);
 
     @Override
     @Async
@@ -40,7 +42,6 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
             log.debug("Telegram notification is disabled");
             return;
         }
-
         try {
             String message = buildReportCreatedMessage(report);
             sendTelegramMessage(message);
@@ -57,7 +58,6 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
             log.debug("Telegram notification is disabled");
             return;
         }
-
         try {
             String message = buildReportUpdatedMessage(report);
             sendTelegramMessage(message);
@@ -74,7 +74,6 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
             log.debug("Telegram notification is disabled");
             return;
         }
-
         try {
             String message = buildReportDeletedMessage(reportId, deletedBy);
             sendTelegramMessage(message);
@@ -117,108 +116,109 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
     }
 
     private String buildReportCreatedMessage(TraineeReport report) {
+        UserEntity userEntity = userRepository.findByUsername(report.getCreatedBy())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         StringBuilder message = new StringBuilder();
-
-        message.append("📝 <b>New Trainee Report Created</b>\n\n");
-        message.append(String.format("🆔 <b>Report ID:</b> #%d\n", report.getId()));
-        message.append(String.format(" <b>Report By:</b> %s\n", report.getReportBy()));
+        message.append("🆕 <b>New Trainee Report Created</b>\n");
+        message.append("─────────────────────────\n");
+        message.append(String.format("🆔 <b>Report ID:</b> <code>INTERNAL#%d</code>\n", report.getId()));
+        message.append(String.format("👤 <b>Reported By:</b> %s (%s)\n", userEntity.getFullName(), userEntity.getEmail()));
 
         if (report.getCreatedBy() != null && !report.getCreatedBy().trim().isEmpty()) {
-            message.append(String.format("👤 <b>Created By:</b> %s\n", report.getCreatedBy()));
+            message.append(String.format("📝 <b>Created By:</b> %s\n", report.getCreatedBy()));
         }
-        
+
         if (report.getCreatedAt() != null) {
-            message.append(String.format("🕐 <b>Created At:</b> %s\n\n", 
-                    report.getCreatedAt().format(DATETIME_FORMATTER)));
+            message.append(String.format("🕒 <b>Created At:</b> %s\n", report.getCreatedAt().format(DATETIME_FORMATTER)));
         }
-        
+
         if (report.getReportRemark() != null && !report.getReportRemark().trim().isEmpty()) {
-            message.append("📋 <b>Report Remark:</b>\n");
-            message.append(truncateText(report.getReportRemark(), 1000));
-            message.append("\n\n");
+            message.append("\n📋 <b>Report Remark:</b>\n");
+            message.append(truncateText(report.getReportRemark(), 1000)).append("\n");
         }
-        
+
         if (report.getChallenge() != null && !report.getChallenge().trim().isEmpty()) {
-            message.append("⚠️ <b>Challenges:</b>\n");
-            message.append(truncateText(report.getChallenge(), 1000));
-            message.append("\n\n");
+            message.append("\n⚠️ <b>Challenges:</b>\n");
+            message.append(truncateText(report.getChallenge(), 1000)).append("\n");
         }
-        
+
         if (report.getRecommend() != null && !report.getRecommend().trim().isEmpty()) {
-            message.append("💡 <b>Recommendations:</b>\n");
-            message.append(truncateText(report.getRecommend(), 1000));
+            message.append("\n💡 <b>Recommendations:</b>\n");
+            message.append(truncateText(report.getRecommend(), 1000)).append("\n");
         }
+
+        message.append("\n─────────────────────────\n");
+        message.append("📌 <i>Sent via Internal Trainee Report System</i>");
 
         return message.toString();
     }
 
     private String buildReportUpdatedMessage(TraineeReport report) {
+        UserEntity userEntity = userRepository.findByUsername(report.getCreatedBy())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         StringBuilder message = new StringBuilder();
-        message.append("✏️ <b>Trainee Report Updated</b>\n\n");
-        message.append(String.format("🆔 <b>Report ID:</b> #%d\n", report.getId()));
-        message.append(String.format(" <b>Report By:</b> %s\n", report.getReportBy()));
+        message.append("✏️ <b>Trainee Report Updated</b>\n");
+        message.append("─────────────────────────\n");
+        message.append(String.format("🆔 <b>Report ID:</b> <code>INTERNAL#%d</code>\n", report.getId()));
+        message.append(String.format("👤 <b>Reported By:</b> %s (%s)\n", userEntity.getFullName(), userEntity.getEmail()));
 
         if (report.getUpdatedBy() != null && !report.getUpdatedBy().trim().isEmpty()) {
-            message.append(String.format("👤 <b>Updated By:</b> %s\n", report.getUpdatedBy()));
+            message.append(String.format("📝 <b>Updated By:</b> %s\n", report.getUpdatedBy()));
         }
-        
+
         if (report.getUpdatedAt() != null) {
-            message.append(String.format("🕐 <b>Updated At:</b> %s\n\n", 
-                    report.getUpdatedAt().format(DATETIME_FORMATTER)));
+            message.append(String.format("🕒 <b>Updated At:</b> %s\n", report.getUpdatedAt().format(DATETIME_FORMATTER)));
         }
-        
+
         if (report.getReportRemark() != null && !report.getReportRemark().trim().isEmpty()) {
-            message.append("📋 <b>Report Remark:</b>\n");
-            message.append(truncateText(report.getReportRemark(), 1000));
-            message.append("\n\n");
+            message.append("\n📋 <b>Report Remark:</b>\n");
+            message.append(truncateText(report.getReportRemark(), 1000)).append("\n");
         }
-        
+
         if (report.getChallenge() != null && !report.getChallenge().trim().isEmpty()) {
-            message.append("⚠️ <b>Challenges:</b>\n");
-            message.append(truncateText(report.getChallenge(), 1000));
-            message.append("\n\n");
+            message.append("\n⚠️ <b>Challenges:</b>\n");
+            message.append(truncateText(report.getChallenge(), 1000)).append("\n");
         }
-        
+
         if (report.getRecommend() != null && !report.getRecommend().trim().isEmpty()) {
-            message.append("💡 <b>Recommendations:</b>\n");
-            message.append(truncateText(report.getRecommend(), 1000));
+            message.append("\n💡 <b>Recommendations:</b>\n");
+            message.append(truncateText(report.getRecommend(), 1000)).append("\n");
         }
+
+        message.append("\n─────────────────────────\n");
+        message.append("📌 <i>Sent via Internal Trainee Report System</i>");
 
         return message.toString();
     }
 
     private String buildReportDeletedMessage(Long reportId, String deletedBy) {
+        UserEntity userEntity = userRepository.findByUsername(deletedBy)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         StringBuilder message = new StringBuilder();
-        message.append("🗑️ <b>Trainee Report Deleted</b>\n\n");
-        message.append(String.format("🆔 <b>Report ID:</b> #%d\n", reportId));
+        message.append("🗑️ <b>Trainee Report Deleted</b>\n");
+        message.append("─────────────────────────\n");
+        message.append(String.format("🆔 <b>Report ID:</b> <code>INTERNAL#%d</code>\n", reportId));
+        message.append(String.format("👤 <b>Reported By:</b> %s (%s)\n", userEntity.getFullName(), userEntity.getEmail()));
 
         if (deletedBy != null && !deletedBy.trim().isEmpty()) {
-            message.append(String.format("👤 <b>Deleted By:</b> %s\n", deletedBy));
+            message.append(String.format("📝 <b>Deleted By:</b> %s\n", deletedBy));
         }
-        
-        message.append(String.format("🕐 <b>Deleted At:</b> %s\n", 
+
+        message.append(String.format("🕒 <b>Deleted At:</b> %s\n",
                 java.time.LocalDateTime.now().format(DATETIME_FORMATTER)));
+
+        message.append("\n─────────────────────────\n");
+        message.append("📌 <i>Sent via Internal Trainee Report System</i>");
 
         return message.toString();
     }
 
-    /**
-     * Truncate text to specified length and add ellipsis if needed
-     */
     private String truncateText(String text, int maxLength) {
-        if (text == null) {
-            return "";
-        }
-        
+        if (text == null) return "";
         text = text.trim();
-        
-        if (text.length() <= maxLength) {
-            return text;
-        }
-        
-        return text.substring(0, maxLength) + "...";
+        return text.length() <= maxLength ? text : text.substring(0, maxLength) + "...";
     }
 }

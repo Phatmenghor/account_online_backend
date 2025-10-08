@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,8 +25,13 @@ public class TelegramNotificationServiceImpl implements TelegramNotificationServ
     private final RestTemplate restTemplate;
 
     private static final String TELEGRAM_API_URL = "https://api.telegram.org/bot%s/sendMessage";
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy").withZone(ZoneId.of("Asia/Phnom_Penh"));;
-    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm").withZone(ZoneId.of("UTC"));;
+    private static final ZoneId UTC_PLUS7 = ZoneOffset.ofHours(7);
+
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("dd-MM-yyyy").withZone(UTC_PLUS7);
+
+    private static final DateTimeFormatter DATETIME_FORMATTER =
+            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm").withZone(UTC_PLUS7);
 
     @Override
     @Async

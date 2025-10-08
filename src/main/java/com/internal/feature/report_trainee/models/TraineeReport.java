@@ -20,10 +20,6 @@ public class TraineeReport extends BaseEntity {
     @Column(name = "reportRemark", columnDefinition = "TEXT")
     private String reportRemark;
 
-    @Column(name = "reportBy", columnDefinition = "TEXT")
-    private String reportBy;
-
-
     @Column(name = "challenge", columnDefinition = "TEXT")
     private String challenge;
 

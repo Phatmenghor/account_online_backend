@@ -44,7 +44,6 @@ public class ReportTraineeServiceImpl implements ReportTraineeService {
         String reportBy = securityUtils.getCurrentUser().getUsername();
 
         TraineeReport entity = mapper.toEntity(requestDto);
-        entity.setReportBy(reportBy);
         TraineeReport savedEntity = repository.save(entity);
         
         // Send Telegram notification
