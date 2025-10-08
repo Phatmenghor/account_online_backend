@@ -9,8 +9,7 @@ server:
   connection-timeout: 300000
 
 spring:
-  profiles:
-    active: test
+  profiles: test
   application:
     name: internal-dev-api-test
 
