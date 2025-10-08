@@ -1,12 +1,16 @@
 package com.internal.feature.report_trainee.service.impl;
 
 import com.internal.config.TelegramConfig;
+import com.internal.feature.auth.models.UserEntity;
+import com.internal.feature.auth.repository.UserRepository;
 import com.internal.feature.report_trainee.models.TraineeReport;
 import com.internal.feature.report_trainee.service.TraineeReportTelegramNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -14,6 +18,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +29,9 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
     private final RestTemplate restTemplate;
 
     private static final String TELEGRAM_API_URL = "https://api.telegram.org/bot%s/sendMessage";
-    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm").withZone(ZoneId.of("Asia/Phnom_Penh"));;
+    private static final DateTimeFormatter DATETIME_FORMATTER =
+            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
+                    .withZone(ZoneId.of("UTC"));
 
     @Override
     @Async
@@ -110,10 +117,13 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
     }
 
     private String buildReportCreatedMessage(TraineeReport report) {
+
         StringBuilder message = new StringBuilder();
+
         message.append("📝 <b>New Trainee Report Created</b>\n\n");
         message.append(String.format("🆔 <b>Report ID:</b> #%d\n", report.getId()));
-        
+        message.append(String.format(" <b>Report By:</b> %s\n", report.getReportBy()));
+
         if (report.getCreatedBy() != null && !report.getCreatedBy().trim().isEmpty()) {
             message.append(String.format("👤 <b>Created By:</b> %s\n", report.getCreatedBy()));
         }
@@ -144,10 +154,12 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
     }
 
     private String buildReportUpdatedMessage(TraineeReport report) {
+
         StringBuilder message = new StringBuilder();
         message.append("✏️ <b>Trainee Report Updated</b>\n\n");
         message.append(String.format("🆔 <b>Report ID:</b> #%d\n", report.getId()));
-        
+        message.append(String.format(" <b>Report By:</b> %s\n", report.getReportBy()));
+
         if (report.getUpdatedBy() != null && !report.getUpdatedBy().trim().isEmpty()) {
             message.append(String.format("👤 <b>Updated By:</b> %s\n", report.getUpdatedBy()));
         }
@@ -178,10 +190,11 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
     }
 
     private String buildReportDeletedMessage(Long reportId, String deletedBy) {
+
         StringBuilder message = new StringBuilder();
         message.append("🗑️ <b>Trainee Report Deleted</b>\n\n");
         message.append(String.format("🆔 <b>Report ID:</b> #%d\n", reportId));
-        
+
         if (deletedBy != null && !deletedBy.trim().isEmpty()) {
             message.append(String.format("👤 <b>Deleted By:</b> %s\n", deletedBy));
         }

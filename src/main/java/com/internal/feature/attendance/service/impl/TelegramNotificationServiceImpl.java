@@ -25,7 +25,7 @@ public class TelegramNotificationServiceImpl implements TelegramNotificationServ
 
     private static final String TELEGRAM_API_URL = "https://api.telegram.org/bot%s/sendMessage";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy").withZone(ZoneId.of("Asia/Phnom_Penh"));;
-    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm").withZone(ZoneId.of("Asia/Phnom_Penh"));;
+    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm").withZone(ZoneId.of("UTC"));;
 
     @Override
     @Async
