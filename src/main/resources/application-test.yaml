@@ -1,7 +1,7 @@
 # application.yaml
 
 server:
-  port: 8888
+  port: 8887
   servlet:
     context-path: /
   compression:
@@ -42,7 +42,7 @@ spring:
   # Primary Database (PostgreSQL)
   datasource:
     url: jdbc:postgresql://192.168.103.106:5432/internal_dev_testing
-#    url: jdbc:postgresql://192.168.103.106:5432/internal_dev_uat
+    #    url: jdbc:postgresql://192.168.103.106:5432/internal_dev_uat
     username: postgres
     password: 123cp!@#
     driver-class-name: org.postgresql.Driver

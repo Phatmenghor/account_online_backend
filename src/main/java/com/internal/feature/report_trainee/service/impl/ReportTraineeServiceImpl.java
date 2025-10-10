@@ -40,7 +40,9 @@ public class ReportTraineeServiceImpl implements ReportTraineeService {
     @Override
     public ReportTraineeResponseDto createProject(ReportTraineeRequestDto requestDto) {
         log.info("Creating new trainee report");
-        
+
+        String reportBy = securityUtils.getCurrentUser().getUsername();
+
         TraineeReport entity = mapper.toEntity(requestDto);
         TraineeReport savedEntity = repository.save(entity);
         

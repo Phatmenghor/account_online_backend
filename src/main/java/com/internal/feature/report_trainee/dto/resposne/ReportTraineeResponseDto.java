@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ReportTraineeResponseDto {
     private Long id;
+    private String reportBy;
     private String reportRemark;
     private String challenge;
     private String recommend;
