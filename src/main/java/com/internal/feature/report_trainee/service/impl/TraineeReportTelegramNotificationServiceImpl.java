@@ -13,10 +13,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.ZoneOffset;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,21 +28,18 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
     private final UserRepository userRepository;
 
     private static final String TELEGRAM_API_URL = "https://api.telegram.org/bot%s/sendMessage";
-    private static final ZoneId UTC_PLUS7 = ZoneOffset.ofHours(7);
+    private static final ZoneId PHNOM_PENH = ZoneId.of("Asia/Phnom_Penh");
 
+    // 👉 12-hour format with AM/PM indicator
     private static final DateTimeFormatter DATETIME_FORMATTER =
-            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm").withZone(UTC_PLUS7);
+            DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a");
 
     @Override
     @Async
     public void sendReportCreatedNotification(TraineeReport report) {
-        if (!telegramConfig.isEnabled()) {
-            log.debug("Telegram notification is disabled");
-            return;
-        }
+        if (!telegramConfig.isEnabled()) return;
         try {
-            String message = buildReportCreatedMessage(report);
-            sendTelegramMessage(message);
+            sendTelegramMessage(buildReportMessage(report, "Created"));
             log.info("Telegram notification sent for new trainee report ID: {}", report.getId());
         } catch (Exception e) {
             log.error("Failed to send Telegram notification for trainee report creation: {}", e.getMessage(), e);
@@ -54,13 +49,9 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
     @Override
     @Async
     public void sendReportUpdatedNotification(TraineeReport report) {
-        if (!telegramConfig.isEnabled()) {
-            log.debug("Telegram notification is disabled");
-            return;
-        }
+        if (!telegramConfig.isEnabled()) return;
         try {
-            String message = buildReportUpdatedMessage(report);
-            sendTelegramMessage(message);
+            sendTelegramMessage(buildReportMessage(report, "Updated"));
             log.info("Telegram notification sent for updated trainee report ID: {}", report.getId());
         } catch (Exception e) {
             log.error("Failed to send Telegram notification for trainee report update: {}", e.getMessage(), e);
@@ -70,13 +61,23 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
     @Override
     @Async
     public void sendReportDeletedNotification(Long reportId, String deletedBy) {
-        if (!telegramConfig.isEnabled()) {
-            log.debug("Telegram notification is disabled");
-            return;
-        }
+        if (!telegramConfig.isEnabled()) return;
         try {
-            String message = buildReportDeletedMessage(reportId, deletedBy);
-            sendTelegramMessage(message);
+            UserEntity userEntity = userRepository.findByUsername(deletedBy)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            StringBuilder message = new StringBuilder();
+            message.append("🗑️ <b>Trainee Report Deleted</b>\n")
+                    .append("─────────────────────────\n")
+                    .append(String.format("🆔 <b>Report ID:</b> <code>INTERNAL#%d</code>\n", reportId))
+                    .append(String.format("👤 <b>Position:</b> %s (%s)\n",
+                            nullToNA(userEntity.getPosition()), nullToNA(userEntity.getPosition())))
+                    .append(String.format("👤 <b>Deleted By:</b> %s (%s)\n",
+                            nullToNA(userEntity.getFullName()), nullToNA(userEntity.getEmail())))
+                    .append(String.format("🕒 <b>Deleted At:</b> %s\n", formatToPhnomPenh(LocalDateTime.now())))
+                    .append("\n─────────────────────────\n📌 <i>Sent via Internal Trainee Report System</i>");
+
+            sendTelegramMessage(message.toString());
             log.info("Telegram notification sent for deleted trainee report ID: {}", reportId);
         } catch (Exception e) {
             log.error("Failed to send Telegram notification for trainee report deletion: {}", e.getMessage(), e);
@@ -85,7 +86,6 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
 
     private void sendTelegramMessage(String message) {
         String url = String.format(TELEGRAM_API_URL, telegramConfig.getToken());
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -97,13 +97,7 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    request,
-                    String.class
-            );
-
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
             if (response.getStatusCode() == HttpStatus.OK) {
                 log.debug("Telegram message sent successfully");
             } else {
@@ -115,110 +109,55 @@ public class TraineeReportTelegramNotificationServiceImpl implements TraineeRepo
         }
     }
 
-    private String buildReportCreatedMessage(TraineeReport report) {
+    private String buildReportMessage(TraineeReport report, String type) {
         UserEntity userEntity = userRepository.findByUsername(report.getCreatedBy())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+        String icon = type.equals("Created") ? "🆕" : "✏️";
+
         StringBuilder message = new StringBuilder();
-        message.append("🆕 <b>New Trainee Report Created</b>\n");
-        message.append("─────────────────────────\n");
-        message.append(String.format("🆔 <b>Report ID:</b> <code>INTERNAL#%d</code>\n", report.getId()));
-        message.append(String.format("👤 <b>Reported By:</b> %s (%s)\n", userEntity.getFullName(), userEntity.getEmail()));
+        message.append(String.format("%s <b>Trainee Report %s</b>\n", icon, type))
+                .append("─────────────────────────\n")
+                .append(String.format("🆔 <b>Report ID:</b> <code>INTERNAL#%d</code>\n", report.getId()))
+                .append(String.format("👤 <b>Reported By:</b> %s (%s)\n",
+                        nullToNA(userEntity.getFullName()), nullToNA(userEntity.getEmail())))
+                .append(String.format("👤 <b>Position:</b> %s (%s)\n",
+                        nullToNA(userEntity.getPosition()), nullToNA(userEntity.getPosition())))
+                .append(String.format("📝 <b>%s By:</b> %s\n", type,
+                        nullToNA(type.equals("Created") ? report.getCreatedBy() : report.getUpdatedBy())))
+                .append(String.format("🕒 <b>%s At:</b> %s\n", type,
+                        type.equals("Created")
+                                ? formatToPhnomPenh(report.getCreatedAt())
+                                : formatToPhnomPenh(report.getUpdatedAt())));
 
-        if (report.getCreatedBy() != null && !report.getCreatedBy().trim().isEmpty()) {
-            message.append(String.format("📝 <b>Created By:</b> %s\n", report.getCreatedBy()));
-        }
-
-        if (report.getCreatedAt() != null) {
-            message.append(String.format("🕒 <b>Created At:</b> %s\n", report.getCreatedAt().format(DATETIME_FORMATTER)));
-        }
-
-        if (report.getReportRemark() != null && !report.getReportRemark().trim().isEmpty()) {
-            message.append("\n📋 <b>Report Remark:</b>\n");
-            message.append(truncateText(report.getReportRemark(), 1000)).append("\n");
-        }
-
-        if (report.getChallenge() != null && !report.getChallenge().trim().isEmpty()) {
-            message.append("\n⚠️ <b>Challenges:</b>\n");
-            message.append(truncateText(report.getChallenge(), 1000)).append("\n");
-        }
-
-        if (report.getRecommend() != null && !report.getRecommend().trim().isEmpty()) {
-            message.append("\n💡 <b>Recommendations:</b>\n");
-            message.append(truncateText(report.getRecommend(), 1000)).append("\n");
-        }
-
-        message.append("\n─────────────────────────\n");
-        message.append("📌 <i>Sent via Internal Trainee Report System</i>");
+        // Optional fields
+        message.append("\n📋 <b>Report Remark:</b>\n")
+                .append(nullToNA(truncateText(report.getReportRemark(), 1000))).append("\n")
+                .append("\n⚠️ <b>Challenges:</b>\n")
+                .append(nullToNA(truncateText(report.getChallenge(), 1000))).append("\n")
+                .append("\n💡 <b>Recommendations:</b>\n")
+                .append(nullToNA(truncateText(report.getRecommend(), 1000))).append("\n")
+                .append("\n─────────────────────────\n📌 <i>Sent via Internal Trainee Report System</i>");
 
         return message.toString();
     }
 
-    private String buildReportUpdatedMessage(TraineeReport report) {
-        UserEntity userEntity = userRepository.findByUsername(report.getCreatedBy())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        StringBuilder message = new StringBuilder();
-        message.append("✏️ <b>Trainee Report Updated</b>\n");
-        message.append("─────────────────────────\n");
-        message.append(String.format("🆔 <b>Report ID:</b> <code>INTERNAL#%d</code>\n", report.getId()));
-        message.append(String.format("👤 <b>Reported By:</b> %s (%s)\n", userEntity.getFullName(), userEntity.getEmail()));
-
-        if (report.getUpdatedBy() != null && !report.getUpdatedBy().trim().isEmpty()) {
-            message.append(String.format("📝 <b>Updated By:</b> %s\n", report.getUpdatedBy()));
-        }
-
-        if (report.getUpdatedAt() != null) {
-            message.append(String.format("🕒 <b>Updated At:</b> %s\n", report.getUpdatedAt().format(DATETIME_FORMATTER)));
-        }
-
-        if (report.getReportRemark() != null && !report.getReportRemark().trim().isEmpty()) {
-            message.append("\n📋 <b>Report Remark:</b>\n");
-            message.append(truncateText(report.getReportRemark(), 1000)).append("\n");
-        }
-
-        if (report.getChallenge() != null && !report.getChallenge().trim().isEmpty()) {
-            message.append("\n⚠️ <b>Challenges:</b>\n");
-            message.append(truncateText(report.getChallenge(), 1000)).append("\n");
-        }
-
-        if (report.getRecommend() != null && !report.getRecommend().trim().isEmpty()) {
-            message.append("\n💡 <b>Recommendations:</b>\n");
-            message.append(truncateText(report.getRecommend(), 1000)).append("\n");
-        }
-
-        message.append("\n─────────────────────────\n");
-        message.append("📌 <i>Sent via Internal Trainee Report System</i>");
-
-        return message.toString();
-    }
-
-    private String buildReportDeletedMessage(Long reportId, String deletedBy) {
-        UserEntity userEntity = userRepository.findByUsername(deletedBy)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        StringBuilder message = new StringBuilder();
-        message.append("🗑️ <b>Trainee Report Deleted</b>\n");
-        message.append("─────────────────────────\n");
-        message.append(String.format("🆔 <b>Report ID:</b> <code>INTERNAL#%d</code>\n", reportId));
-        message.append(String.format("👤 <b>Reported By:</b> %s (%s)\n", userEntity.getFullName(), userEntity.getEmail()));
-
-        if (deletedBy != null && !deletedBy.trim().isEmpty()) {
-            message.append(String.format("📝 <b>Deleted By:</b> %s\n", deletedBy));
-        }
-
-        message.append(String.format("🕒 <b>Deleted At:</b> %s\n",
-                java.time.LocalDateTime.now().format(DATETIME_FORMATTER)));
-
-        message.append("\n─────────────────────────\n");
-        message.append("📌 <i>Sent via Internal Trainee Report System</i>");
-
-        return message.toString();
+    /** Converts UTC LocalDateTime → Asia/Phnom_Penh (UTC+7) with 12-hour format */
+    private String formatToPhnomPenh(LocalDateTime utcDateTime) {
+        if (utcDateTime == null) return "N/A";
+        return utcDateTime
+                .atOffset(ZoneOffset.UTC)
+                .atZoneSameInstant(PHNOM_PENH)
+                .format(DATETIME_FORMATTER);
     }
 
     private String truncateText(String text, int maxLength) {
-        if (text == null) return "";
+        if (text == null || text.trim().isEmpty()) return "N/A";
         text = text.trim();
         return text.length() <= maxLength ? text : text.substring(0, maxLength) + "...";
+    }
+
+    private String nullToNA(String value) {
+        return (value == null || value.trim().isEmpty()) ? "N/A" : value.trim();
     }
 }
