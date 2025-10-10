@@ -10,8 +10,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,13 +24,15 @@ public class TelegramNotificationServiceImpl implements TelegramNotificationServ
     private final RestTemplate restTemplate;
 
     private static final String TELEGRAM_API_URL = "https://api.telegram.org/bot%s/sendMessage";
-    private static final ZoneId UTC_PLUS7 = ZoneOffset.ofHours(7);
 
+    private static final ZoneId PHNOM_PENH = ZoneId.of("Asia/Phnom_Penh");
+
+    // ✅ Use 12-hour time format with AM/PM
     private static final DateTimeFormatter DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("dd-MM-yyyy").withZone(UTC_PLUS7);
+            DateTimeFormatter.ofPattern("dd-MM-yyyy").withZone(PHNOM_PENH);
 
     private static final DateTimeFormatter DATETIME_FORMATTER =
-            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm").withZone(UTC_PLUS7);
+            DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a");
 
     @Override
     @Async
@@ -86,7 +87,6 @@ public class TelegramNotificationServiceImpl implements TelegramNotificationServ
 
     private void sendTelegramMessage(String message) {
         String url = String.format(TELEGRAM_API_URL, telegramConfig.getToken());
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -98,13 +98,7 @@ public class TelegramNotificationServiceImpl implements TelegramNotificationServ
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    request,
-                    String.class
-            );
-
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
             if (response.getStatusCode() == HttpStatus.OK) {
                 log.debug("Telegram message sent successfully");
             } else {
@@ -116,6 +110,7 @@ public class TelegramNotificationServiceImpl implements TelegramNotificationServ
         }
     }
 
+    // ✅ Build message for new request
     private String buildNewRequestMessage(AttendanceEntity attendance) {
         String typeFormatted = formatAttendanceType(attendance.getType().name());
         String leaveTypeFormatted = formatLeaveRequest(attendance.getLeaveRequest().name());
@@ -134,129 +129,108 @@ public class TelegramNotificationServiceImpl implements TelegramNotificationServ
                         "🕐 <b>Submitted:</b> %s\n\n" +
                         "⚠️ <b>Status:</b> PENDING APPROVAL",
                 attendance.getId(),
-                attendance.getUser().getFullName() != null ? attendance.getUser().getFullName() : "N/A",
-                attendance.getUser().getUsername(),
-                attendance.getUser().getPosition() != null ? attendance.getUser().getPosition() : "N/A",
-                typeFormatted,
-                leaveTypeFormatted,
-                attendance.getStartDate().format(DATE_FORMATTER),
-                attendance.getEndDate().format(DATE_FORMATTER),
+                nullToNA(attendance.getUser().getFullName()),
+                nullToNA(attendance.getUser().getUsername()),
+                nullToNA(attendance.getUser().getPosition()),
+                nullToNA(typeFormatted),
+                nullToNA(leaveTypeFormatted),
+                formatDate(attendance.getStartDate()),
+                formatDate(attendance.getEndDate()),
                 formatDays(attendance.getTotalDays()),
-                attendance.getReason(),
-                attendance.getCreatedAt().format(DATETIME_FORMATTER)
+                nullToNA(attendance.getReason()),
+                formatDateTime(attendance.getCreatedAt())
         );
     }
 
+    // ✅ Approval message
     private String buildApprovalMessage(AttendanceEntity attendance) {
         String typeFormatted = formatAttendanceType(attendance.getType().name());
         String leaveTypeFormatted = formatLeaveRequest(attendance.getLeaveRequest().name());
 
         StringBuilder message = new StringBuilder();
-        message.append("✅ <b>Attendance Request APPROVED</b>\n\n");
-        message.append(String.format("📋 <b>Request ID:</b> #%d\n", attendance.getId()));
-        message.append(String.format("👤 <b>Employee:</b> %s\n",
-                attendance.getUser().getFullName() != null ? attendance.getUser().getFullName() : "N/A"));
-        message.append(String.format("🆔 <b>ID Card:</b> %s\n", attendance.getUser().getUsername()));
-        message.append(String.format("📝 <b>Type:</b> %s\n", typeFormatted));
-        message.append(String.format("⏰ <b>Leave Type:</b> %s\n", leaveTypeFormatted));
-        message.append(String.format("📅 <b>Period:</b> %s to %s\n",
-                attendance.getStartDate().format(DATE_FORMATTER),
-                attendance.getEndDate().format(DATE_FORMATTER)));
-        message.append(String.format("⏱ <b>Duration:</b> %s day(s)\n", formatDays(attendance.getTotalDays())));
-
-        if (attendance.getApprovedBy() != null) {
-            message.append(String.format("👨‍💼 <b>Approved By:</b> %s\n",
-                    attendance.getApprovedBy().getFullName() != null ?
-                            attendance.getApprovedBy().getFullName() : attendance.getApprovedBy().getUsername()));
-        }
-
-        if (attendance.getApprovedAt() != null) {
-            message.append(String.format("🕐 <b>Approved At:</b> %s\n",
-                    attendance.getApprovedAt().format(DATETIME_FORMATTER)));
-        }
-
-        if (attendance.getApprovalNotes() != null && !attendance.getApprovalNotes().trim().isEmpty()) {
-            message.append(String.format("💬 <b>Notes:</b> %s\n", attendance.getApprovalNotes()));
-        }
+        message.append("✅ <b>Attendance Request APPROVED</b>\n\n")
+                .append(String.format("📋 <b>Request ID:</b> #%d\n", attendance.getId()))
+                .append(String.format("👤 <b>Employee:</b> %s\n", nullToNA(attendance.getUser().getFullName())))
+                .append(String.format("🆔 <b>ID Card:</b> %s\n", nullToNA(attendance.getUser().getUsername())))
+                .append(String.format("📝 <b>Type:</b> %s\n", nullToNA(typeFormatted)))
+                .append(String.format("⏰ <b>Leave Type:</b> %s\n", nullToNA(leaveTypeFormatted)))
+                .append(String.format("📅 <b>Period:</b> %s to %s\n",
+                        formatDate(attendance.getStartDate()), formatDate(attendance.getEndDate())))
+                .append(String.format("⏱ <b>Duration:</b> %s day(s)\n", formatDays(attendance.getTotalDays())))
+                .append(String.format("👨‍💼 <b>Approved By:</b> %s\n",
+                        attendance.getApprovedBy() != null
+                                ? nullToNA(attendance.getApprovedBy().getFullName())
+                                : "N/A"))
+                .append(String.format("🕐 <b>Approved At:</b> %s\n", formatDateTime(attendance.getApprovedAt())))
+                .append(String.format("💬 <b>Notes:</b> %s\n", nullToNA(attendance.getApprovalNotes())));
 
         return message.toString();
     }
 
+    // ✅ Rejection message
     private String buildRejectionMessage(AttendanceEntity attendance) {
         String typeFormatted = formatAttendanceType(attendance.getType().name());
         String leaveTypeFormatted = formatLeaveRequest(attendance.getLeaveRequest().name());
 
         StringBuilder message = new StringBuilder();
-        message.append("❌ <b>Attendance Request REJECTED</b>\n\n");
-        message.append(String.format("📋 <b>Request ID:</b> #%d\n", attendance.getId()));
-        message.append(String.format("👤 <b>Employee:</b> %s\n",
-                attendance.getUser().getFullName() != null ? attendance.getUser().getFullName() : "N/A"));
-        message.append(String.format("🆔 <b>ID Card:</b> %s\n", attendance.getUser().getUsername()));
-        message.append(String.format("📝 <b>Type:</b> %s\n", typeFormatted));
-        message.append(String.format("⏰ <b>Leave Type:</b> %s\n", leaveTypeFormatted));
-        message.append(String.format("📅 <b>Period:</b> %s to %s\n",
-                attendance.getStartDate().format(DATE_FORMATTER),
-                attendance.getEndDate().format(DATE_FORMATTER)));
-        message.append(String.format("⏱ <b>Duration:</b> %s day(s)\n", formatDays(attendance.getTotalDays())));
-
-        if (attendance.getApprovedBy() != null) {
-            message.append(String.format("👨‍💼 <b>Rejected By:</b> %s\n",
-                    attendance.getApprovedBy().getFullName() != null ?
-                            attendance.getApprovedBy().getFullName() : attendance.getApprovedBy().getUsername()));
-        }
-
-        if (attendance.getApprovedAt() != null) {
-            message.append(String.format("🕐 <b>Rejected At:</b> %s\n",
-                    attendance.getApprovedAt().format(DATETIME_FORMATTER)));
-        }
-
-        if (attendance.getApprovalNotes() != null && !attendance.getApprovalNotes().trim().isEmpty()) {
-            message.append(String.format("💬 <b>Reason:</b> %s\n", attendance.getApprovalNotes()));
-        }
+        message.append("❌ <b>Attendance Request REJECTED</b>\n\n")
+                .append(String.format("📋 <b>Request ID:</b> #%d\n", attendance.getId()))
+                .append(String.format("👤 <b>Employee:</b> %s\n", nullToNA(attendance.getUser().getFullName())))
+                .append(String.format("🆔 <b>ID Card:</b> %s\n", nullToNA(attendance.getUser().getUsername())))
+                .append(String.format("📝 <b>Type:</b> %s\n", nullToNA(typeFormatted)))
+                .append(String.format("⏰ <b>Leave Type:</b> %s\n", nullToNA(leaveTypeFormatted)))
+                .append(String.format("📅 <b>Period:</b> %s to %s\n",
+                        formatDate(attendance.getStartDate()), formatDate(attendance.getEndDate())))
+                .append(String.format("⏱ <b>Duration:</b> %s day(s)\n", formatDays(attendance.getTotalDays())))
+                .append(String.format("👨‍💼 <b>Rejected By:</b> %s\n",
+                        attendance.getApprovedBy() != null
+                                ? nullToNA(attendance.getApprovedBy().getFullName())
+                                : "N/A"))
+                .append(String.format("🕐 <b>Rejected At:</b> %s\n", formatDateTime(attendance.getApprovedAt())))
+                .append(String.format("💬 <b>Reason:</b> %s\n", nullToNA(attendance.getApprovalNotes())));
 
         return message.toString();
     }
 
+    // ✅ Helpers
+    private String nullToNA(String value) {
+        return (value == null || value.trim().isEmpty()) ? "N/A" : value.trim();
+    }
+
+    private String formatDateTime(LocalDateTime utcDateTime) {
+        if (utcDateTime == null) return "N/A";
+        return utcDateTime.atOffset(ZoneOffset.UTC)
+                .atZoneSameInstant(PHNOM_PENH)
+                .format(DATETIME_FORMATTER);
+    }
+
+    private String formatDate(LocalDate date) {
+        return date != null ? DATE_FORMATTER.format(date) : "N/A";
+    }
+
     private String formatAttendanceType(String type) {
+        if (type == null) return "N/A";
         String[] words = type.replace("_", " ").toLowerCase().split(" ");
         StringBuilder result = new StringBuilder();
-
         for (String word : words) {
-            if (word.length() > 0) {
-                result.append(Character.toUpperCase(word.charAt(0)))
-                        .append(word.substring(1))
-                        .append(" ");
-            }
+            if (word.length() > 0)
+                result.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
         }
-
         return result.toString().trim();
     }
 
     private String formatLeaveRequest(String leaveRequest) {
+        if (leaveRequest == null) return "N/A";
         switch (leaveRequest) {
-            case "MORNING":
-                return "Morning (Half Day)";
-            case "AFTERNOON":
-                return "Afternoon (Half Day)";
-            case "FULL_DAY":
-                return "Full Day";
-            default:
-                return formatAttendanceType(leaveRequest);
+            case "MORNING": return "Morning (Half Day)";
+            case "AFTERNOON": return "Afternoon (Half Day)";
+            case "FULL_DAY": return "Full Day";
+            default: return formatAttendanceType(leaveRequest);
         }
     }
 
-    /**
-     * Format days to display properly (e.g., 0.5, 1.0, 2.5)
-     */
     private String formatDays(Double days) {
-        if (days == null) {
-            return "0";
-        }
-        // If it's a whole number, show without decimal
-        if (days % 1 == 0) {
-            return String.valueOf(days.intValue());
-        }
-        // Otherwise show with decimal
-        return String.format("%.1f", days);
+        if (days == null) return "N/A";
+        return (days % 1 == 0) ? String.valueOf(days.intValue()) : String.format("%.1f", days);
     }
 }
