@@ -5,9 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -16,48 +13,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import javax.validation.ConstraintViolationException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
-        log.warn("Authentication failed: {}", ex.getMessage());
-        
-        return buildErrorResponse(
-            HttpStatus.UNAUTHORIZED, 
-            "Invalid username or password"
-        );
-    }
-
-
-    @ExceptionHandler(StaffNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleStaffNotFound(StaffNotFoundException ex) {
-        Map<String, String> body = new HashMap<>();
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-    }
-
-    @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleUserNotFound(UsernameNotFoundException ex) {
-        Map<String, String> body = new HashMap<>();
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-    }
-
-    @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleAuthenticationCredentialsNotFound(AuthenticationCredentialsNotFoundException ex) {
-        log.warn("Authentication credentials not found: {}", ex.getMessage());
-        
-        return buildErrorResponse(
-            HttpStatus.UNAUTHORIZED, 
-            "Authentication required"
-        );
-    }
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException ex) {

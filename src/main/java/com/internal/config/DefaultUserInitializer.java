@@ -70,8 +70,8 @@ public class DefaultUserInitializer implements CommandLineRunner {
             return;
         }
 
-        Role role = roleRepository.findByName(RoleEnum.SUPER)
-                .orElseThrow(() -> new RuntimeException("SUPER role not found"));
+        Role role = roleRepository.findByName(RoleEnum.DEVELOPER)
+                .orElseThrow(() -> new RuntimeException("DEVELOPER role not found"));
 
         UserEntity user = new UserEntity();
         user.setUsername(superCard);

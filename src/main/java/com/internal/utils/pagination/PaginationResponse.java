@@ -1,5 +1,6 @@
 package com.internal.utils.pagination;
 
+import com.internal.feature.master_data.dto.response.ClsCommuneDto;
 import lombok.Data;
 
 import java.util.List;
@@ -12,4 +13,12 @@ public class PaginationResponse<T> {
     private long totalElements;
     private int totalPages;
     private int totalCount;
+
+    public PaginationResponse(List<T> content, int pageNo, int pageSize, long totalElements) {
+        this.content = content;
+        this.pageNo = pageNo;
+        this.pageSize = pageSize;
+        this.totalElements = totalElements;
+        this.totalPages = (int) Math.ceil((double) totalElements / pageSize);
+    }
 }

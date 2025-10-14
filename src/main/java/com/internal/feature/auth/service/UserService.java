@@ -1,12 +1,11 @@
 package com.internal.feature.auth.service;
 
-import com.internal.enumation.StatusData;
 import com.internal.feature.auth.dto.request.ChangePasswordByAdminRequestDto;
 import com.internal.feature.auth.dto.request.ChangePasswordRequestDto;
 import com.internal.feature.auth.dto.request.GetAllUserRequestDto;
 import com.internal.feature.auth.dto.request.UpdateUserRequestDto;
-import com.internal.feature.auth.dto.response.UserResponseDto;
 import com.internal.feature.auth.dto.response.AllUserResponseDto;
+import com.internal.feature.auth.dto.response.UserResponseDto;
 
 public interface UserService {
     AllUserResponseDto getAllUser(GetAllUserRequestDto requestDto);

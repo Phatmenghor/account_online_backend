@@ -1,7 +1,7 @@
 # application.yaml
 
 server:
-  port: 8888
+  port: 8080
   servlet:
     context-path: /
   compression:
@@ -9,9 +9,12 @@ server:
   connection-timeout: 300000
 
 spring:
-  profiles: prod
   application:
-    name: internal-dev-api
+    name: account_online
+  security:
+    user:
+      name: apiuser
+      password: apipass
 
   main:
     allow-bean-definition-overriding: true
@@ -20,7 +23,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
       naming:
         physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
     show-sql: false
@@ -41,7 +44,7 @@ spring:
 
   # Primary Database (PostgreSQL)
   datasource:
-    url: jdbc:postgresql://192.168.103.106:5432/internal_dev
+    url: jdbc:postgresql://192.168.103.106:5432/account_online
     #    url: jdbc:postgresql://192.168.103.106:5432/internal_dev_uat
     username: postgres
     password: 123cp!@#
@@ -56,6 +59,13 @@ spring:
       pool-name: PostgreSQL-Pool
       auto-commit: false
 
+oracle:
+  datasource:
+    url: jdbc:oracle:thin:@//192.168.102.5:1521/dwh
+    username: dwh
+    password: Bnk$$444
+    driver-class-name: oracle.jdbc.OracleDriver
+
   # Task Execution for Async Telegram notifications
   task:
     execution:
@@ -65,13 +75,6 @@ spring:
         queue-capacity: 100
         thread-name-prefix: async-telegram-
 
-# JWT Configuration
-jwt:
-  secret:
-    key: f7e8d9c6b5a4938271605f4de3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a001
-  expiration-min: 525600
-  issuer: internal-dev-api
-
 # Telegram Bot Configuration
 telegram:
   bot:
@@ -79,24 +82,8 @@ telegram:
     chat-id: "-4816130196"
     enabled: true
 
-# TraineeReport Configuration
-app:
-  default-users:
-    create: true
-  super:
-    idCard: phatmenghor19@gmail.com
-    password: 88889999
-    email: phatmenghor19@gmail.com
 
-  data-load:
-    batch-size: 1000
-    max-retries: 1
-    timeout-hours: 5
-    connection-timeout-minutes: 5
-    query-timeout-hours: 4
-    network-timeout-hours: 5
-    progress-log-interval-minutes: 10
-    heartbeat-interval-minutes: 5
+
 
 # Logging Configuration
 logging:
@@ -116,7 +103,7 @@ logging:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{20} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:
-    name: logs/internal-dev-api.log
+    name: logs/account_online.log
     max-size: 100MB
     max-history: 10
 
@@ -149,24 +136,4 @@ management:
       simple:
         enabled: true
 
-  mail:
-    host: 10.18.1.204
-    port: 25
-    username: ithelpdesk@cambodiapostbank.com.kh
-    password:
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: false
-    smtp:
-      ssl:
-        trust: '*'
-    default-encoding: UTF-8
 
-  level:
-    org:
-      springframework:
-        mail: DEBUG
-        mail.javamail: DEBUG

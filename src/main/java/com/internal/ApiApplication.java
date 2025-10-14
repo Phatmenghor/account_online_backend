@@ -19,8 +19,8 @@ import java.util.TimeZone;
 public class ApiApplication {
 
     public static void main(String[] args) {
-        log.info("Starting Internal CBC API TraineeReport...");
+        log.info("Starting Account Online API...");
         SpringApplication.run(ApiApplication.class, args);
-        log.info("Internal CBC API TraineeReport started successfully");
+        log.info("Account Online API started successfully");
     }
 }

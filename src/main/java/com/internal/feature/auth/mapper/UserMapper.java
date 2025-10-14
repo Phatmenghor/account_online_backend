@@ -1,10 +1,12 @@
 package com.internal.feature.auth.mapper;
 
 
-import com.internal.feature.auth.dto.response.UserResponseDto;
 import com.internal.feature.auth.dto.response.AllUserResponseDto;
+import com.internal.feature.auth.dto.response.UserResponseDto;
 import com.internal.feature.auth.models.UserEntity;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.springframework.data.domain.Page;
 
 import java.util.List;

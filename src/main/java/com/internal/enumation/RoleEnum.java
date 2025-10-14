@@ -8,7 +8,8 @@ import lombok.Getter;
 @Getter
 public enum RoleEnum {
     ADMIN("System Administrator", "Full system access"),
-    SUPER("Super admin", "Technical access for all full system");
+    SUPER("Super admin", "Technical access for all full system"),
+    DEVELOPER("Developer", "Full system access");
 
     /**
      * -- GETTER --
