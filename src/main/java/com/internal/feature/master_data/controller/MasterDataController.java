@@ -11,10 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/master-data")
+@RequestMapping("/api/v1/public/master-data")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Master Data Management")
+@Tag(name = "Master Data Management (public)")
 public class MasterDataController {
 
     private final MasterDataService masterDataService;
