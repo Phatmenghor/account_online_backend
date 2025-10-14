@@ -1,8 +1,8 @@
-package com.internal.utils;
+package com.internal.utils.pagination;
 
+import com.internal.exceptions.error.NotFoundException;
 import com.internal.feature.auth.models.UserEntity;
 import com.internal.feature.auth.repository.UserRepository;
-import com.internal.exceptions.error.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
