@@ -14,10 +14,13 @@
     <artifactId>account-online-backend</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
-    <name>CBC Internal API</name>
-    <description>Internal CBC Data Management API</description>
+    <name>Account Online API</name>
+    <description>Account Online Management API</description>
 
     <properties>
+        <app.version>1.0.0</app.version>
+        <app.name>account-online</app.name>
+
         <java.version>1.8</java.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <jwt.version>0.11.5</jwt.version>
@@ -48,9 +51,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-
-        <!-- JWT Dependencies -->
-
 
         <!-- Database Dependencies -->
         <dependency>
@@ -169,6 +169,6 @@
                 </configuration>
             </plugin>
         </plugins>
-        <finalName>internal_dev</finalName>
+        <finalName>${app.name}</finalName>
     </build>
 </project>

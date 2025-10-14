@@ -1,8 +1,10 @@
 package com.internal.feature.auth.mapper;
 
 
+import com.internal.enumation.StatusData;
 import com.internal.feature.auth.dto.response.AllUserResponseDto;
 import com.internal.feature.auth.dto.response.UserResponseDto;
+import com.internal.feature.auth.models.Role;
 import com.internal.feature.auth.models.UserEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -38,12 +40,12 @@ public interface UserMapper {
     }
 
     @Named("mapStatus")
-    default String mapStatus(com.internal.enumation.StatusData status) {
+    default String mapStatus(StatusData status) {
         return status != null ? status.name() : null;
     }
 
     @Named("mapRoles")
-    default String mapRoles(List<com.internal.feature.auth.models.Role> roles) {
+    default String mapRoles(List<Role> roles) {
         if (roles == null || roles.isEmpty()) {
             return null;
         }
