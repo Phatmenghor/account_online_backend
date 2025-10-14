@@ -1,8 +1,9 @@
 package com.internal.feature.master_data.controller;
 
 import com.internal.exceptions.response.ApiResponse;
+import com.internal.feature.master_data.dto.request.AllMasterDataRequest;
 import com.internal.feature.master_data.dto.response.*;
-import com.internal.feature.master_data.service.masterService.MasterDataService;
+import com.internal.feature.master_data.service.MasterDataService;
 import com.internal.utils.pagination.PaginationResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,48 +22,44 @@ public class MasterDataController {
 
     @PostMapping("/province")
     public ResponseEntity<ApiResponse<PaginationResponse<ClsProvinceDto>>> getProvinces(
-            @RequestParam(defaultValue = "1") int pageNo,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestBody AllMasterDataRequest request) {
 
-        PaginationResponse<ClsProvinceDto> response = masterDataService.getProvince(pageNo, pageSize);
-        return ResponseEntity.ok(
-                new ApiResponse<>("success", "Provinces retrieved successfully!", response)
-        );
+        PaginationResponse<ClsProvinceDto> response = masterDataService.getProvince(request);
+        return ResponseEntity.ok(ApiResponse.success("Provinces retrieved successfully!", response));
     }
 
     @PostMapping("/district/{provinceCode}")
-    public ResponseEntity<ApiResponse<PaginationResponse<ClsDistrictDto>>> getDistrict(
+    public ResponseEntity<ApiResponse<PaginationResponse<ClsDistrictDto>>> getDistricts(
             @PathVariable String provinceCode,
-            @RequestParam(defaultValue = "1") int pageNo,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestBody AllMasterDataRequest request) {
 
-        PaginationResponse<ClsDistrictDto> response = masterDataService.getDistrict(provinceCode, pageNo, pageSize);
-        return ResponseEntity.ok(
-                new ApiResponse<>("success", "Districts retrieved successfully!", response)
-        );
+        PaginationResponse<ClsDistrictDto> response = masterDataService.getDistrict(request, provinceCode);
+        return ResponseEntity.ok(ApiResponse.success("Districts retrieved successfully!", response));
     }
 
     @PostMapping("/commune/{districtCode}")
     public ResponseEntity<ApiResponse<PaginationResponse<ClsCommuneDto>>> getCommunes(
             @PathVariable String districtCode,
-            @RequestParam(defaultValue = "1") int pageNo,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestBody AllMasterDataRequest request) {
 
-        PaginationResponse<ClsCommuneDto> response = masterDataService.getCommune(districtCode, pageNo, pageSize);
-        return ResponseEntity.ok(
-                new ApiResponse<>("success", "Communes retrieved successfully!", response)
-        );
+        PaginationResponse<ClsCommuneDto> response = masterDataService.getCommune(request, districtCode);
+        return ResponseEntity.ok(ApiResponse.success("Communes retrieved successfully!", response));
     }
 
     @PostMapping("/village/{communeCode}")
     public ResponseEntity<ApiResponse<PaginationResponse<ClsVillageDto>>> getVillages(
             @PathVariable String communeCode,
-            @RequestParam(defaultValue = "1") int pageNo,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestBody AllMasterDataRequest request) {
 
-        PaginationResponse<ClsVillageDto> response = masterDataService.getVillage(communeCode, pageNo, pageSize);
-        return ResponseEntity.ok(
-                new ApiResponse<>("success", "Villages retrieved successfully!", response)
-        );
+        PaginationResponse<ClsVillageDto> response = masterDataService.getVillage(request, communeCode);
+        return ResponseEntity.ok(ApiResponse.success("Villages retrieved successfully!", response));
+    }
+
+    @PostMapping("/branch")
+    public ResponseEntity<ApiResponse<PaginationResponse<ClsBranchDto>>> getBranches(
+            @RequestBody AllMasterDataRequest request) {
+
+        PaginationResponse<ClsBranchDto> response = masterDataService.getBranch(request);
+        return ResponseEntity.ok(ApiResponse.success("Branches retrieved successfully!", response));
     }
 }
