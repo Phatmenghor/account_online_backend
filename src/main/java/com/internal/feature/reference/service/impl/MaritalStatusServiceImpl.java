@@ -1,5 +1,6 @@
 package com.internal.feature.reference.service.impl;
 
+import com.internal.enumation.LanguageEnum;
 import com.internal.exceptions.error.DuplicateNameException;
 import com.internal.exceptions.error.NotFoundException;
 import com.internal.feature.reference.dto.request.GetAllMaritalStatusRequest;
@@ -42,13 +43,13 @@ public class MaritalStatusServiceImpl implements MaritalStatusService {
                     MaritalStatusDto dto = new MaritalStatusDto();
                     dto.setId(status.getId());
 
-                    if ("en".equalsIgnoreCase(request.getLanguage())) {
+                    LanguageEnum lang = request.getLanguage(); // Now an enum
+
+                    if (LanguageEnum.EN.equals(lang)) {
                         dto.setNameEn(status.getNameEn());
-                        dto.setNameKh(null);
-                    } else if ("kh".equalsIgnoreCase(request.getLanguage())) {
-                        dto.setNameEn(null);
+                    } else if (LanguageEnum.KH.equals(lang)) {
                         dto.setNameKh(status.getNameKh());
-                    } else {
+                    } else { // null or unspecified
                         dto.setNameEn(status.getNameEn());
                         dto.setNameKh(status.getNameKh());
                     }
@@ -58,6 +59,7 @@ public class MaritalStatusServiceImpl implements MaritalStatusService {
                 })
                 .collect(Collectors.toList());
     }
+
 
 
     @Override

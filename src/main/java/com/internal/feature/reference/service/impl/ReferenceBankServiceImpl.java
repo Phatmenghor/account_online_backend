@@ -1,5 +1,6 @@
 package com.internal.feature.reference.service.impl;
 
+import com.internal.enumation.LanguageEnum;
 import com.internal.exceptions.error.DuplicateNameException;
 import com.internal.exceptions.error.NotFoundException;
 import com.internal.feature.reference.dto.request.GetAllReferenceBankRequest;
@@ -31,22 +32,24 @@ public class ReferenceBankServiceImpl implements ReferenceBankService {
     @Override
     public List<ReferenceBankDto> getAll(GetAllReferenceBankRequest request) {
         return repository.findAll().stream()
+                // Filter by status if provided
                 .filter(bank -> request.getStatus() == null || bank.getStatus() == request.getStatus())
+                // Filter by search if provided
                 .filter(bank -> request.getSearch() == null ||
                         bank.getNameEn().toLowerCase().contains(request.getSearch().toLowerCase()) ||
                         bank.getNameKh().toLowerCase().contains(request.getSearch().toLowerCase()))
+                // Map to DTO considering language filter
                 .map(bank -> {
                     ReferenceBankDto dto = new ReferenceBankDto();
                     dto.setId(bank.getId());
 
-                    // Apply language filter
-                    if ("en".equalsIgnoreCase(request.getLanguage())) {
+                    LanguageEnum lang = request.getLanguage(); // Language enum
+
+                    if (LanguageEnum.EN.equals(lang)) {
                         dto.setNameEn(bank.getNameEn());
-                        dto.setNameKh(null);
-                    } else if ("kh".equalsIgnoreCase(request.getLanguage())) {
-                        dto.setNameEn(null);
+                    } else if (LanguageEnum.KH.equals(lang)) {
                         dto.setNameKh(bank.getNameKh());
-                    } else {
+                    } else { // null or unspecified
                         dto.setNameEn(bank.getNameEn());
                         dto.setNameKh(bank.getNameKh());
                     }

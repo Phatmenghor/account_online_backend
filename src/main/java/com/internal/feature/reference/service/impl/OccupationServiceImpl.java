@@ -1,5 +1,6 @@
 package com.internal.feature.reference.service.impl;
 
+import com.internal.enumation.LanguageEnum;
 import com.internal.exceptions.error.DuplicateNameException;
 import com.internal.exceptions.error.NotFoundException;
 import com.internal.feature.reference.dto.request.GetAllOccupationRequest;
@@ -31,29 +32,34 @@ public class OccupationServiceImpl implements OccupationService {
     @Override
     public List<OccupationDto> getAllOccupations(GetAllOccupationRequest request) {
         return repository.findAll().stream()
+                // Filter by status if provided
                 .filter(occ -> request.getStatus() == null || occ.getStatus() == request.getStatus())
+                // Filter by search if provided
                 .filter(occ -> request.getSearch() == null ||
                         occ.getNameEn().toLowerCase().contains(request.getSearch().toLowerCase()) ||
                         occ.getNameKh().toLowerCase().contains(request.getSearch().toLowerCase()))
+                // Map to DTO considering language filter
                 .map(occ -> {
                     OccupationDto dto = new OccupationDto();
                     dto.setId(occ.getId());
-                    // Decide which name field(s) to return
-                    if ("en".equalsIgnoreCase(request.getLanguage())) {
+
+                    LanguageEnum lang = request.getLanguage(); // Now using enum
+
+                    if (LanguageEnum.EN.equals(lang)) {
                         dto.setNameEn(occ.getNameEn());
-                        dto.setNameKh(null);
-                    } else if ("kh".equalsIgnoreCase(request.getLanguage())) {
-                        dto.setNameEn(null);
+                    } else if (LanguageEnum.KH.equals(lang)) {
                         dto.setNameKh(occ.getNameKh());
-                    } else {
+                    } else { // null or unspecified
                         dto.setNameEn(occ.getNameEn());
                         dto.setNameKh(occ.getNameKh());
                     }
+
                     dto.setStatus(occ.getStatus());
                     return dto;
                 })
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public OccupationDto createOccupation(OccupationCreateRequestDto requestDto) {
