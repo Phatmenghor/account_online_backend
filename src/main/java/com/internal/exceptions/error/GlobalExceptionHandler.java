@@ -27,6 +27,30 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
+    @ExceptionHandler(MasterDataServiceException.class)
+    public ResponseEntity<ErrorResponse> handleMasterDataException(MasterDataServiceException ex) {
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .message(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+
+    @ExceptionHandler(ValidateServiceException.class)
+    public ResponseEntity<ErrorResponse> handleValidateServiceException(ValidateServiceException ex) {
+        log.error("ValidateServiceException: {}", ex.getMessage(), ex);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .message(ex.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
     @ExceptionHandler(DuplicateNameException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateNameException(DuplicateNameException ex) {
         log.warn("Duplicate resource: {}", ex.getMessage());

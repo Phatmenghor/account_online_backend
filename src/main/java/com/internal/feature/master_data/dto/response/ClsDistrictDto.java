@@ -1,15 +1,13 @@
 package com.internal.feature.master_data.dto.response;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
 public class ClsDistrictDto {
-    private String DistrictCode;
-    private String DistrictDesc;
-    private String DistrictDesc2;
-    private String ParentCode;
+    private String districtCode;
+    private String districtDesc;
+    private String districtDesc2;
+    private String parentCode;
 }
