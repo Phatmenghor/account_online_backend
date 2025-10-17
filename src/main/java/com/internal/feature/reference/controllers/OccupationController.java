@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/reference/occupation")
+@RequestMapping("/api/v1/occupation")
 @RequiredArgsConstructor
 @CrossOrigin
 @Slf4j
@@ -57,10 +57,10 @@ public class OccupationController {
     }
 
     @PostMapping("/delete/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<OccupationDto>> delete(@PathVariable Long id) {
         log.info("Deleting occupation with ID: {}", id);
-        service.deleteOccupation(id);
+        OccupationDto occupationDto = service.deleteOccupation(id);
         log.info("Successfully deleted occupation with ID: {}", id);
-        return ResponseEntity.ok(ApiResponse.success("Occupation deleted successfully", null));
+        return ResponseEntity.ok(ApiResponse.success("Occupation deleted successfully", occupationDto));
     }
 }

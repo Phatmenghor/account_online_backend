@@ -11,5 +11,5 @@ public interface OccupationService {
     AllOccupationResponseDto getAllOccupations(GetAllOccupationRequest request);
     OccupationDto createOccupation(OccupationCreateRequestDto requestDto);
     OccupationDto updateOccupation(Long id, OccupationUpdateRequestDto requestDto);
-    void deleteOccupation(Long id);
+    OccupationDto deleteOccupation(Long id);
 }

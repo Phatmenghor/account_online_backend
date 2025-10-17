@@ -11,5 +11,5 @@ public interface MaritalStatusService {
     AllMaritalStatusResponseDto getAll(GetAllMaritalStatusRequest request);
     MaritalStatusDto create(MaritalStatusCreateRequestDto request);
     MaritalStatusDto update(Long id, MaritalStatusUpdateRequestDto request);
-    void delete(Long id);
+    MaritalStatusDto delete(Long id);
 }

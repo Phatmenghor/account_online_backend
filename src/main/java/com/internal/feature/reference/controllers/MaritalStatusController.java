@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/reference/marital-status")
+@RequestMapping("/api/v1/marital-status")
 @RequiredArgsConstructor
 @CrossOrigin
 @Slf4j
@@ -57,10 +57,10 @@ public class MaritalStatusController {
     }
 
     @PostMapping("/delete/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<MaritalStatusDto>> delete(@PathVariable Long id) {
         log.info("Deleting marital status with ID: {}", id);
-        service.delete(id);
+        MaritalStatusDto maritalStatusDto = service.delete(id);
         log.info("Successfully deleted marital status with ID: {}", id);
-        return ResponseEntity.ok(ApiResponse.success("Marital status deleted successfully", null));
+        return ResponseEntity.ok(ApiResponse.success("Marital status deleted successfully", maritalStatusDto));
     }
 }

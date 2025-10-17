@@ -10,7 +10,7 @@ import javax.validation.constraints.NotBlank;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReferenceBankCreateRequestDto {
+public class ReferenceCreateRequestDto {
     @NotBlank(message = "English name must not be blank")
     private String nameEn;
 

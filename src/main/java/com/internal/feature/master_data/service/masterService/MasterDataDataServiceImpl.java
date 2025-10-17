@@ -29,19 +29,19 @@ public class MasterDataDataServiceImpl implements MasterDataService {
      */
     private <T> PaginationResponse<T> executePaginatedQuery(
             String baseSql,
+            Object[] baseParams,
             String countSql,
-            Object[] params,
+            Object[] countParams,
             RowMapper<T> rowMapper,
             int pageNo,
             int pageSize,
             String entityName
     ) {
         try {
-            long total = oracleJdbcTemplate.queryForObject(countSql, Long.class, params);
-            List<T> content = oracleJdbcTemplate.query(baseSql, rowMapper, params);
+            long total = oracleJdbcTemplate.queryForObject(countSql, countParams, Long.class);
+            List<T> content = oracleJdbcTemplate.query(baseSql, baseParams, rowMapper);
             return new PaginationResponse<>(content, pageNo, pageSize, total);
         } catch (Exception ex) {
-            // Log full stack trace and throw custom exception
             log.error("Error fetching {}: {}", entityName, ex.getMessage(), ex);
             throw new MasterDataServiceException("Failed to fetch " + entityName, ex);
         }
@@ -53,25 +53,23 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         int pageNo = request.getPageNo();
         int pageSize = request.getPageSize();
 
-        // Build count query
-        String countSql = "SELECT COUNT(*) FROM D_CBS_ADDRESS_PROVINCE";
+        String countSql = "SELECT COUNT(*) FROM STG.D_CBS_ADDRESS_PROVINCE";
         Object[] countParams = new Object[]{};
+        String baseSql;
+        Object[] baseParams;
+
         if (search != null && !search.isEmpty()) {
             countSql += " WHERE PROVINCE_CODE LIKE ? OR PROVINCE_DESC LIKE ?";
             countParams = new Object[]{"%" + search + "%", "%" + search + "%"};
+            baseSql = "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM STG.D_CBS_ADDRESS_PROVINCE a " +
+                    "WHERE (PROVINCE_CODE LIKE ? OR PROVINCE_DESC LIKE ?) AND ROWNUM <= ?) WHERE rnum > ?";
+            baseParams = new Object[]{"%" + search + "%", "%" + search + "%", pageNo * pageSize, (pageNo - 1) * pageSize};
+        } else {
+            baseSql = "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM STG.D_CBS_ADDRESS_PROVINCE a WHERE ROWNUM <= ?) WHERE rnum > ?";
+            baseParams = new Object[]{pageNo * pageSize, (pageNo - 1) * pageSize};
         }
 
-        // Build pagination query
-        String baseSql = search != null && !search.isEmpty()
-                ? "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM D_CBS_ADDRESS_PROVINCE a " +
-                "WHERE (PROVINCE_CODE LIKE ? OR PROVINCE_DESC LIKE ?) AND ROWNUM <= ? ) WHERE rnum > ?"
-                : "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM D_CBS_ADDRESS_PROVINCE a " +
-                "WHERE ROWNUM <= ? ) WHERE rnum > ?";
-        Object[] sqlParams = search != null && !search.isEmpty()
-                ? new Object[]{"%" + search + "%", "%" + search + "%", pageNo * pageSize, (pageNo - 1) * pageSize}
-                : new Object[]{pageNo * pageSize, (pageNo - 1) * pageSize};
-
-        return executePaginatedQuery(baseSql, countSql, sqlParams, new ProvinceRowMapper(), pageNo, pageSize, "provinces");
+        return executePaginatedQuery(baseSql, baseParams, countSql, countParams, new ProvinceRowMapper(), pageNo, pageSize, "provinces");
     }
 
     @Override
@@ -80,22 +78,25 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         int pageNo = request.getPageNo();
         int pageSize = request.getPageSize();
 
-        String countSql = "SELECT COUNT(*) FROM D_CBS_ADDRESS_DISTRICT WHERE PARENT_CODE = ?" +
-                (search != null && !search.isEmpty() ? " AND (DISTRICT_CODE LIKE ? OR DISTRICT_DESC LIKE ?)" : "");
-        Object[] countParams = search != null && !search.isEmpty()
-                ? new Object[]{provinceCode, "%" + search + "%", "%" + search + "%"}
-                : new Object[]{provinceCode};
+        String countSql = "SELECT COUNT(*) FROM STG.D_CBS_ADDRESS_DISTRICT WHERE PARENT_CODE = ?";
+        Object[] countParams;
+        String baseSql;
+        Object[] baseParams;
 
-        String baseSql = search != null && !search.isEmpty()
-                ? "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM D_CBS_ADDRESS_DISTRICT a " +
-                "WHERE PARENT_CODE = ? AND (DISTRICT_CODE LIKE ? OR DISTRICT_DESC LIKE ?) AND ROWNUM <= ?) WHERE rnum > ?"
-                : "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM D_CBS_ADDRESS_DISTRICT a " +
-                "WHERE PARENT_CODE = ? AND ROWNUM <= ?) WHERE rnum > ?";
-        Object[] sqlParams = search != null && !search.isEmpty()
-                ? new Object[]{provinceCode, "%" + search + "%", "%" + search + "%", pageNo * pageSize, (pageNo - 1) * pageSize}
-                : new Object[]{provinceCode, pageNo * pageSize, (pageNo - 1) * pageSize};
+        if (search != null && !search.isEmpty()) {
+            countSql += " AND (DISTRICT_CODE LIKE ? OR DISTRICT_DESC LIKE ?)";
+            countParams = new Object[]{provinceCode, "%" + search + "%", "%" + search + "%"};
+            baseSql = "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM STG.D_CBS_ADDRESS_DISTRICT a " +
+                    "WHERE PARENT_CODE = ? AND (DISTRICT_CODE LIKE ? OR DISTRICT_DESC LIKE ?) AND ROWNUM <= ?) WHERE rnum > ?";
+            baseParams = new Object[]{provinceCode, "%" + search + "%", "%" + search + "%", pageNo * pageSize, (pageNo - 1) * pageSize};
+        } else {
+            countParams = new Object[]{provinceCode};
+            baseSql = "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM STG.D_CBS_ADDRESS_DISTRICT a " +
+                    "WHERE PARENT_CODE = ? AND ROWNUM <= ?) WHERE rnum > ?";
+            baseParams = new Object[]{provinceCode, pageNo * pageSize, (pageNo - 1) * pageSize};
+        }
 
-        return executePaginatedQuery(baseSql, countSql, sqlParams, new DistrictRowMapper(), pageNo, pageSize, "districts");
+        return executePaginatedQuery(baseSql, baseParams, countSql, countParams, new DistrictRowMapper(), pageNo, pageSize, "districts");
     }
 
     @Override
@@ -104,22 +105,25 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         int pageNo = request.getPageNo();
         int pageSize = request.getPageSize();
 
-        String countSql = "SELECT COUNT(*) FROM D_CBS_ADDRESS_COMMUNE WHERE PARENT_CODE = ?" +
-                (search != null && !search.isEmpty() ? " AND (COMMUNE_CODE LIKE ? OR COMMUNE_DESC LIKE ?)" : "");
-        Object[] countParams = search != null && !search.isEmpty()
-                ? new Object[]{districtCode, "%" + search + "%", "%" + search + "%"}
-                : new Object[]{districtCode};
+        String countSql = "SELECT COUNT(*) FROM STG.D_CBS_ADDRESS_COMMUNE WHERE PARENT_CODE = ?";
+        Object[] countParams;
+        String baseSql;
+        Object[] baseParams;
 
-        String baseSql = search != null && !search.isEmpty()
-                ? "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM D_CBS_ADDRESS_COMMUNE a " +
-                "WHERE PARENT_CODE = ? AND (COMMUNE_CODE LIKE ? OR COMMUNE_DESC LIKE ?) AND ROWNUM <= ?) WHERE rnum > ?"
-                : "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM D_CBS_ADDRESS_COMMUNE a " +
-                "WHERE PARENT_CODE = ? AND ROWNUM <= ?) WHERE rnum > ?";
-        Object[] sqlParams = search != null && !search.isEmpty()
-                ? new Object[]{districtCode, "%" + search + "%", "%" + search + "%", pageNo * pageSize, (pageNo - 1) * pageSize}
-                : new Object[]{districtCode, pageNo * pageSize, (pageNo - 1) * pageSize};
+        if (search != null && !search.isEmpty()) {
+            countSql += " AND (COMMUNE_CODE LIKE ? OR COMMUNE_DESC LIKE ?)";
+            countParams = new Object[]{districtCode, "%" + search + "%", "%" + search + "%"};
+            baseSql = "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM STG.D_CBS_ADDRESS_COMMUNE a " +
+                    "WHERE PARENT_CODE = ? AND (COMMUNE_CODE LIKE ? OR COMMUNE_DESC LIKE ?) AND ROWNUM <= ?) WHERE rnum > ?";
+            baseParams = new Object[]{districtCode, "%" + search + "%", "%" + search + "%", pageNo * pageSize, (pageNo - 1) * pageSize};
+        } else {
+            countParams = new Object[]{districtCode};
+            baseSql = "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM STG.D_CBS_ADDRESS_COMMUNE a " +
+                    "WHERE PARENT_CODE = ? AND ROWNUM <= ?) WHERE rnum > ?";
+            baseParams = new Object[]{districtCode, pageNo * pageSize, (pageNo - 1) * pageSize};
+        }
 
-        return executePaginatedQuery(baseSql, countSql, sqlParams, new CommuneRowMapper(), pageNo, pageSize, "communes");
+        return executePaginatedQuery(baseSql, baseParams, countSql, countParams, new CommuneRowMapper(), pageNo, pageSize, "communes");
     }
 
     @Override
@@ -128,22 +132,25 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         int pageNo = request.getPageNo();
         int pageSize = request.getPageSize();
 
-        String countSql = "SELECT COUNT(*) FROM D_CBS_ADDRESS_VILLAGE WHERE PARENT_CODE = ?" +
-                (search != null && !search.isEmpty() ? " AND (VILLAGE_CODE LIKE ? OR VILLAGE_DESC LIKE ?)" : "");
-        Object[] countParams = search != null && !search.isEmpty()
-                ? new Object[]{communeCode, "%" + search + "%", "%" + search + "%"}
-                : new Object[]{communeCode};
+        String countSql = "SELECT COUNT(*) FROM STG.D_CBS_ADDRESS_VILLAGE WHERE PARENT_CODE = ?";
+        Object[] countParams;
+        String baseSql;
+        Object[] baseParams;
 
-        String baseSql = search != null && !search.isEmpty()
-                ? "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM D_CBS_ADDRESS_VILLAGE a " +
-                "WHERE PARENT_CODE = ? AND (VILLAGE_CODE LIKE ? OR VILLAGE_DESC LIKE ?) AND ROWNUM <= ?) WHERE rnum > ?"
-                : "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM D_CBS_ADDRESS_VILLAGE a " +
-                "WHERE PARENT_CODE = ? AND ROWNUM <= ?) WHERE rnum > ?";
-        Object[] sqlParams = search != null && !search.isEmpty()
-                ? new Object[]{communeCode, "%" + search + "%", "%" + search + "%", pageNo * pageSize, (pageNo - 1) * pageSize}
-                : new Object[]{communeCode, pageNo * pageSize, (pageNo - 1) * pageSize};
+        if (search != null && !search.isEmpty()) {
+            countSql += " AND (VILLAGE_CODE LIKE ? OR VILLAGE_DESC LIKE ?)";
+            countParams = new Object[]{communeCode, "%" + search + "%", "%" + search + "%"};
+            baseSql = "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM STG.D_CBS_ADDRESS_VILLAGE a " +
+                    "WHERE PARENT_CODE = ? AND (VILLAGE_CODE LIKE ? OR VILLAGE_DESC LIKE ?) AND ROWNUM <= ?) WHERE rnum > ?";
+            baseParams = new Object[]{communeCode, "%" + search + "%", "%" + search + "%", pageNo * pageSize, (pageNo - 1) * pageSize};
+        } else {
+            countParams = new Object[]{communeCode};
+            baseSql = "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM STG.D_CBS_ADDRESS_VILLAGE a " +
+                    "WHERE PARENT_CODE = ? AND ROWNUM <= ?) WHERE rnum > ?";
+            baseParams = new Object[]{communeCode, pageNo * pageSize, (pageNo - 1) * pageSize};
+        }
 
-        return executePaginatedQuery(baseSql, countSql, sqlParams, new VillageRowMapper(), pageNo, pageSize, "villages");
+        return executePaginatedQuery(baseSql, baseParams, countSql, countParams, new VillageRowMapper(), pageNo, pageSize, "villages");
     }
 
     @Override
@@ -152,25 +159,29 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         int pageNo = request.getPageNo();
         int pageSize = request.getPageSize();
 
-        String countSql = "SELECT COUNT(*) FROM Branchs WHERE BranchID NOT IN ('HQ','KH0011110')" +
-                (search != null && !search.isEmpty() ? " AND (BranchID LIKE ? OR Branchkh LIKE ?)" : "");
-        Object[] countParams = search != null && !search.isEmpty()
-                ? new Object[]{"%" + search + "%", "%" + search + "%"}
-                : new Object[]{};
+        String countSql = "SELECT COUNT(*) FROM Branchs WHERE BranchID NOT IN ('HQ','KH0011110')";
+        Object[] countParams;
+        String baseSql;
+        Object[] baseParams;
 
-        int startRow = (pageNo - 1) * pageSize + 1;
-        int endRow = pageNo * pageSize;
+        if (search != null && !search.isEmpty()) {
+            countSql += " AND (BranchID LIKE ? OR Branchkh LIKE ?)";
+            countParams = new Object[]{"%" + search + "%", "%" + search + "%"};
+            int startRow = (pageNo - 1) * pageSize + 1;
+            int endRow = pageNo * pageSize;
+            baseSql = "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM (SELECT * FROM Branchs WHERE BranchID NOT IN ('HQ','KH0011110') " +
+                    "AND (BranchID LIKE ? OR Branchkh LIKE ?) ORDER BY BranchID) a WHERE ROWNUM <= ?) WHERE rnum >= ?";
+            baseParams = new Object[]{"%" + search + "%", "%" + search + "%", endRow, startRow};
+        } else {
+            countParams = new Object[]{};
+            int startRow = (pageNo - 1) * pageSize + 1;
+            int endRow = pageNo * pageSize;
+            baseSql = "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM (SELECT * FROM Branchs WHERE BranchID NOT IN ('HQ','KH0011110') " +
+                    "ORDER BY BranchID) a WHERE ROWNUM <= ?) WHERE rnum >= ?";
+            baseParams = new Object[]{endRow, startRow};
+        }
 
-        String baseSql = search != null && !search.isEmpty()
-                ? "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM (SELECT * FROM Branchs WHERE BranchID NOT IN ('HQ','KH0011110') " +
-                "AND (BranchID LIKE ? OR Branchkh LIKE ?) ORDER BY BranchID) a WHERE ROWNUM <= ?) WHERE rnum >= ?"
-                : "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM (SELECT * FROM Branchs WHERE BranchID NOT IN ('HQ','KH0011110') " +
-                "ORDER BY BranchID) a WHERE ROWNUM <= ?) WHERE rnum >= ?";
-        Object[] sqlParams = search != null && !search.isEmpty()
-                ? new Object[]{"%" + search + "%", "%" + search + "%", endRow, startRow}
-                : new Object[]{endRow, startRow};
-
-        return executePaginatedQuery(baseSql, countSql, sqlParams, new BranchRowMapper(), pageNo, pageSize, "branches");
+        return executePaginatedQuery(baseSql, baseParams, countSql, countParams, new BranchRowMapper(), pageNo, pageSize, "branches");
     }
 
     // ---------------- RowMappers ----------------

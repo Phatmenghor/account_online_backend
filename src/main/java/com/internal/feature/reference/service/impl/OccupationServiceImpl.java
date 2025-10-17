@@ -11,7 +11,10 @@ import com.internal.feature.reference.mapper.OccupationMapper;
 import com.internal.feature.reference.models.Occupation;
 import com.internal.feature.reference.repository.OccupationRepository;
 import com.internal.feature.reference.service.OccupationService;
+import com.internal.utils.reference.OccupationSpec;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OccupationServiceImpl implements OccupationService {
 
     private final OccupationRepository repository;
@@ -31,29 +35,27 @@ public class OccupationServiceImpl implements OccupationService {
     public OccupationDto getOccupationById(Long id) {
         Occupation occupation = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Occupation not found"));
-        return mapper.toDto(occupation, null);
+        return mapper.toDto(occupation);
     }
+
 
     @Override
     public AllOccupationResponseDto getAllOccupations(GetAllOccupationRequest request) {
-        // Create Pageable
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
 
-        // Fetch paginated data
-        Page<Occupation> page = repository.findAll(pageable);
+        // Build specification dynamically
+        var spec = OccupationSpec.hasStatus(request.getStatus())
+                .and(OccupationSpec.searchByName(request.getSearch()));
 
-        // Apply filters and map to DTOs
+        Page<Occupation> page = repository.findAll(spec, pageable);
+
         List<OccupationDto> content = page.stream()
-                .filter(occ -> request.getStatus() == null || occ.getStatus() == request.getStatus())
-                .filter(occ -> request.getSearch() == null ||
-                        occ.getNameEn().toLowerCase().contains(request.getSearch().toLowerCase()) ||
-                        occ.getNameKh().toLowerCase().contains(request.getSearch().toLowerCase()))
-                .map(occ -> mapper.toDto(occ, request.getLanguage()))
+                .map(mapper::toDto)
                 .collect(Collectors.toList());
 
-        // Map to response DTO with pagination metadata
         return mapper.mapToListDto(content, page);
     }
+
 
     @Override
     public OccupationDto createOccupation(OccupationCreateRequestDto requestDto) {
@@ -66,7 +68,7 @@ public class OccupationServiceImpl implements OccupationService {
 
         Occupation occupation = mapper.fromCreateDto(requestDto);
         repository.save(occupation);
-        return mapper.toDto(occupation, null);
+        return mapper.toDto(occupation);
     }
 
     @Override
@@ -77,11 +79,17 @@ public class OccupationServiceImpl implements OccupationService {
         mapper.updateFromDto(requestDto, occupation);
 
         repository.save(occupation);
-        return mapper.toDto(occupation, null);
+        return mapper.toDto(occupation);
     }
 
     @Override
-    public void deleteOccupation(Long id) {
+    public OccupationDto deleteOccupation(Long id) {
+        log.info("Deleting occupation with id: {}", id);
+
+        Occupation occupation = repository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User id " + id + " could not be found"));
+
         repository.deleteById(id);
+        return mapper.toDto(occupation);
     }
 }

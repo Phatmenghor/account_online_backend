@@ -5,6 +5,7 @@ import com.internal.feature.master_data.dto.request.AllMasterDataRequest;
 import com.internal.feature.master_data.dto.response.*;
 import com.internal.feature.master_data.service.MasterDataService;
 import com.internal.utils.pagination.PaginationResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ public class MasterDataController {
     private final MasterDataService masterDataService;
 
     @PostMapping("/province")
+    @Operation(summary = "(Not Ready)")
     public ResponseEntity<ApiResponse<PaginationResponse<ClsProvinceDto>>> getProvinces(
             @RequestBody AllMasterDataRequest request) {
 
@@ -29,6 +31,7 @@ public class MasterDataController {
     }
 
     @PostMapping("/district/{provinceCode}")
+    @Operation(summary = "(Not Ready)")
     public ResponseEntity<ApiResponse<PaginationResponse<ClsDistrictDto>>> getDistricts(
             @PathVariable String provinceCode,
             @RequestBody AllMasterDataRequest request) {
@@ -38,6 +41,7 @@ public class MasterDataController {
     }
 
     @PostMapping("/commune/{districtCode}")
+    @Operation(summary = "(Not Ready)")
     public ResponseEntity<ApiResponse<PaginationResponse<ClsCommuneDto>>> getCommunes(
             @PathVariable String districtCode,
             @RequestBody AllMasterDataRequest request) {
@@ -47,6 +51,7 @@ public class MasterDataController {
     }
 
     @PostMapping("/village/{communeCode}")
+    @Operation(summary = "(Not Ready)")
     public ResponseEntity<ApiResponse<PaginationResponse<ClsVillageDto>>> getVillages(
             @PathVariable String communeCode,
             @RequestBody AllMasterDataRequest request) {
@@ -56,6 +61,7 @@ public class MasterDataController {
     }
 
     @PostMapping("/branch")
+    @Operation(summary = "(Not Ready)")
     public ResponseEntity<ApiResponse<PaginationResponse<ClsBranchDto>>> getBranches(
             @RequestBody AllMasterDataRequest request) {
 

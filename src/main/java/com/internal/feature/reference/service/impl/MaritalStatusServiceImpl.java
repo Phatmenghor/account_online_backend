@@ -11,7 +11,10 @@ import com.internal.feature.reference.mapper.MaritalStatusMapper;
 import com.internal.feature.reference.models.MaritalStatus;
 import com.internal.feature.reference.repository.MaritalStatusRepository;
 import com.internal.feature.reference.service.MaritalStatusService;
+import com.internal.utils.reference.MaritalStatusSpec;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MaritalStatusServiceImpl implements MaritalStatusService {
 
     private final MaritalStatusRepository repository;
@@ -31,26 +35,26 @@ public class MaritalStatusServiceImpl implements MaritalStatusService {
     public MaritalStatusDto getById(Long id) {
         MaritalStatus status = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Marital status not found"));
-        return mapper.toDto(status, null); // null = return both languages
+        return mapper.toDto(status); // null = return both languages
     }
 
     @Override
     public AllMaritalStatusResponseDto getAll(GetAllMaritalStatusRequest request) {
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
 
-        Page<MaritalStatus> page = repository.findAll(pageable);
+        // Build specification dynamically
+        var spec = MaritalStatusSpec.hasStatus(request.getStatus())
+                .and(MaritalStatusSpec.searchByName(request.getSearch()));
 
-        // Optional filtering: status + search
+        Page<MaritalStatus> page = repository.findAll(spec, pageable);
+
         List<MaritalStatusDto> content = page.stream()
-                .filter(status -> request.getStatus() == null || status.getStatus() == request.getStatus())
-                .filter(status -> request.getSearch() == null ||
-                        status.getNameEn().toLowerCase().contains(request.getSearch().toLowerCase()) ||
-                        status.getNameKh().toLowerCase().contains(request.getSearch().toLowerCase()))
-                .map(status -> mapper.toDto(status, request.getLanguage()))
+                .map(mapper::toDto)
                 .collect(Collectors.toList());
 
         return mapper.mapToListDto(content, page);
     }
+
 
     @Override
     public MaritalStatusDto create(MaritalStatusCreateRequestDto request) {
@@ -63,7 +67,7 @@ public class MaritalStatusServiceImpl implements MaritalStatusService {
 
         MaritalStatus status = mapper.fromCreateDto(request);
         repository.save(status);
-        return mapper.toDto(status, null);
+        return mapper.toDto(status);
     }
 
     @Override
@@ -74,11 +78,18 @@ public class MaritalStatusServiceImpl implements MaritalStatusService {
         mapper.updateFromDto(request, status);
 
         repository.save(status);
-        return mapper.toDto(status, null);
+        return mapper.toDto(status);
     }
 
     @Override
-    public void delete(Long id) {
+    public MaritalStatusDto delete(Long id) {
+        log.info("Deleting Marital status with id: {}", id);
+
+        MaritalStatus maritalStatus = repository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Marital status id " + id + " could not be found"));
+
         repository.deleteById(id);
+
+        return mapper.toDto(maritalStatus);
     }
 }

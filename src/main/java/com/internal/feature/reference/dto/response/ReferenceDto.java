@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ReferenceBankDto {
+public class ReferenceDto {
     private Long id;
     private String nameEn;
     private String nameKh;

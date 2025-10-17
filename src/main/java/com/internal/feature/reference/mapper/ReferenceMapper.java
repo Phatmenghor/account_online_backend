@@ -1,11 +1,10 @@
 package com.internal.feature.reference.mapper;
 
-import com.internal.enumation.LanguageEnum;
-import com.internal.feature.reference.dto.request.ReferenceBankCreateRequestDto;
-import com.internal.feature.reference.dto.request.ReferenceBankUpdateRequestDto;
-import com.internal.feature.reference.dto.response.AllReferenceBankResponseDto;
-import com.internal.feature.reference.dto.response.ReferenceBankDto;
-import com.internal.feature.reference.models.ReferenceBank;
+import com.internal.feature.reference.dto.request.ReferenceCreateRequestDto;
+import com.internal.feature.reference.dto.request.ReferenceUpdateRequestDto;
+import com.internal.feature.reference.dto.response.AllReferenceResponseDto;
+import com.internal.feature.reference.dto.response.ReferenceDto;
+import com.internal.feature.reference.models.Reference;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
@@ -15,33 +14,26 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
-public interface ReferenceBankMapper {
+public interface ReferenceMapper {
 
-    ReferenceBankMapper INSTANCE = Mappers.getMapper(ReferenceBankMapper.class);
+    ReferenceMapper INSTANCE = Mappers.getMapper(ReferenceMapper.class);
 
     /** Entity → DTO with optional language filter */
-    default ReferenceBankDto toDto(ReferenceBank bank, LanguageEnum language) {
+    default ReferenceDto toDto(Reference bank) {
         if (bank == null) return null;
 
-        ReferenceBankDto dto = new ReferenceBankDto();
+        ReferenceDto dto = new ReferenceDto();
         dto.setId(bank.getId());
         dto.setStatus(bank.getStatus());
-
-        if (LanguageEnum.EN.equals(language)) {
-            dto.setNameEn(bank.getNameEn());
-        } else if (LanguageEnum.KH.equals(language)) {
-            dto.setNameKh(bank.getNameKh());
-        } else {
             dto.setNameEn(bank.getNameEn());
             dto.setNameKh(bank.getNameKh());
-        }
 
         return dto;
     }
 
     @Named("mapToListDto")
-    default AllReferenceBankResponseDto mapToListDto(List<ReferenceBankDto> content, Page<ReferenceBank> referenceBank) {
-        AllReferenceBankResponseDto referenceBankList = new AllReferenceBankResponseDto();
+    default AllReferenceResponseDto mapToListDto(List<ReferenceDto> content, Page<Reference> referenceBank) {
+        AllReferenceResponseDto referenceBankList = new AllReferenceResponseDto();
         referenceBankList.setContent(content);
         referenceBankList.setPageNo(referenceBank.getNumber() + 1);
         referenceBankList.setPageSize(referenceBank.getSize());
@@ -52,9 +44,9 @@ public interface ReferenceBankMapper {
     }
 
     /** Create request → entity */
-    default ReferenceBank fromCreateDto(ReferenceBankCreateRequestDto request) {
+    default Reference fromCreateDto(ReferenceCreateRequestDto request) {
         if (request == null) return null;
-        ReferenceBank bank = new ReferenceBank();
+        Reference bank = new Reference();
         bank.setNameEn(request.getNameEn());
         bank.setNameKh(request.getNameKh());
         bank.setStatus(request.getStatus());
@@ -62,7 +54,7 @@ public interface ReferenceBankMapper {
     }
 
     /** Update entity from update request (partial update supported) */
-    default void updateFromDto(ReferenceBankUpdateRequestDto request, @MappingTarget ReferenceBank bank) {
+    default void updateFromDto(ReferenceUpdateRequestDto request, @MappingTarget Reference bank) {
         if (request == null || bank == null) return;
 
         if (request.getNameEn() != null) {

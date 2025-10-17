@@ -9,8 +9,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AllReferenceBankResponseDto {
-    private List<ReferenceBankDto> content;
+public class AllReferenceResponseDto {
+    private List<ReferenceDto> content;
     private int pageNo;
     private int pageSize;
     private long totalElements;

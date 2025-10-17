@@ -12,7 +12,7 @@ import javax.persistence.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReferenceBank {
+public class Reference {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

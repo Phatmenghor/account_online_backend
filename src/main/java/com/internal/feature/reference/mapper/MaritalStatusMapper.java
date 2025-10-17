@@ -1,6 +1,5 @@
 package com.internal.feature.reference.mapper;
 
-import com.internal.enumation.LanguageEnum;
 import com.internal.feature.reference.dto.request.MaritalStatusCreateRequestDto;
 import com.internal.feature.reference.dto.request.MaritalStatusUpdateRequestDto;
 import com.internal.feature.reference.dto.response.AllMaritalStatusResponseDto;
@@ -16,22 +15,14 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface MaritalStatusMapper {
 
-    default MaritalStatusDto toDto(MaritalStatus status, LanguageEnum language) {
+    default MaritalStatusDto toDto(MaritalStatus status) {
         if (status == null) return null;
 
         MaritalStatusDto dto = new MaritalStatusDto();
         dto.setId(status.getId());
         dto.setStatus(status.getStatus());
-
-        if (LanguageEnum.EN.equals(language)) {
-            dto.setNameEn(status.getNameEn());
-        } else if (LanguageEnum.KH.equals(language)) {
-            dto.setNameKh(status.getNameKh());
-        } else {
             dto.setNameEn(status.getNameEn());
             dto.setNameKh(status.getNameKh());
-        }
-
         return dto;
     }
 
