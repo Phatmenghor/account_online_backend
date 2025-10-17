@@ -1,16 +1,20 @@
 package com.internal.feature.reference.service.impl;
 
-import com.internal.enumation.LanguageEnum;
 import com.internal.exceptions.error.DuplicateNameException;
 import com.internal.exceptions.error.NotFoundException;
 import com.internal.feature.reference.dto.request.GetAllMaritalStatusRequest;
 import com.internal.feature.reference.dto.request.MaritalStatusCreateRequestDto;
 import com.internal.feature.reference.dto.request.MaritalStatusUpdateRequestDto;
+import com.internal.feature.reference.dto.response.AllMaritalStatusResponseDto;
 import com.internal.feature.reference.dto.response.MaritalStatusDto;
+import com.internal.feature.reference.mapper.MaritalStatusMapper;
 import com.internal.feature.reference.models.MaritalStatus;
 import com.internal.feature.reference.repository.MaritalStatusRepository;
 import com.internal.feature.reference.service.MaritalStatusService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,50 +25,35 @@ import java.util.stream.Collectors;
 public class MaritalStatusServiceImpl implements MaritalStatusService {
 
     private final MaritalStatusRepository repository;
+    private final MaritalStatusMapper mapper;
 
     @Override
     public MaritalStatusDto getById(Long id) {
         MaritalStatus status = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Marital status not found"));
-        return toDto(status);
+        return mapper.toDto(status, null); // null = return both languages
     }
 
     @Override
-    public List<MaritalStatusDto> getAll(GetAllMaritalStatusRequest request) {
-        return repository.findAll().stream()
-                // Filter by status if provided
+    public AllMaritalStatusResponseDto getAll(GetAllMaritalStatusRequest request) {
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
+
+        Page<MaritalStatus> page = repository.findAll(pageable);
+
+        // Optional filtering: status + search
+        List<MaritalStatusDto> content = page.stream()
                 .filter(status -> request.getStatus() == null || status.getStatus() == request.getStatus())
-                // Filter by search if provided
                 .filter(status -> request.getSearch() == null ||
                         status.getNameEn().toLowerCase().contains(request.getSearch().toLowerCase()) ||
                         status.getNameKh().toLowerCase().contains(request.getSearch().toLowerCase()))
-                // Map to DTO considering language filter
-                .map(status -> {
-                    MaritalStatusDto dto = new MaritalStatusDto();
-                    dto.setId(status.getId());
-
-                    LanguageEnum lang = request.getLanguage(); // Now an enum
-
-                    if (LanguageEnum.EN.equals(lang)) {
-                        dto.setNameEn(status.getNameEn());
-                    } else if (LanguageEnum.KH.equals(lang)) {
-                        dto.setNameKh(status.getNameKh());
-                    } else { // null or unspecified
-                        dto.setNameEn(status.getNameEn());
-                        dto.setNameKh(status.getNameKh());
-                    }
-
-                    dto.setStatus(status.getStatus());
-                    return dto;
-                })
+                .map(status -> mapper.toDto(status, request.getLanguage()))
                 .collect(Collectors.toList());
+
+        return mapper.mapToListDto(content, page);
     }
-
-
 
     @Override
     public MaritalStatusDto create(MaritalStatusCreateRequestDto request) {
-        // Check for duplicate names
         if (repository.existsByNameEn(request.getNameEn())) {
             throw new DuplicateNameException("Marital status with English name '" + request.getNameEn() + "' already exists");
         }
@@ -72,13 +61,9 @@ public class MaritalStatusServiceImpl implements MaritalStatusService {
             throw new DuplicateNameException("Marital status with Khmer name '" + request.getNameKh() + "' already exists");
         }
 
-        MaritalStatus status = new MaritalStatus();
-        status.setNameEn(request.getNameEn());
-        status.setNameKh(request.getNameKh());
-        status.setStatus(request.getStatus());
+        MaritalStatus status = mapper.fromCreateDto(request);
         repository.save(status);
-
-        return toDto(status);
+        return mapper.toDto(status, null);
     }
 
     @Override
@@ -86,40 +71,14 @@ public class MaritalStatusServiceImpl implements MaritalStatusService {
         MaritalStatus status = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Marital status not found"));
 
-        // Update only if the field is provided in the request
-        if (request.getNameEn() != null && !request.getNameEn().equals(status.getNameEn())) {
-            if (repository.existsByNameEn(request.getNameEn())) {
-                throw new DuplicateNameException("Marital status with English name '" + request.getNameEn() + "' already exists");
-            }
-            status.setNameEn(request.getNameEn());
-        }
-
-        if (request.getNameKh() != null && !request.getNameKh().equals(status.getNameKh())) {
-            if (repository.existsByNameKh(request.getNameKh())) {
-                throw new DuplicateNameException("Marital status with Khmer name '" + request.getNameKh() + "' already exists");
-            }
-            status.setNameKh(request.getNameKh());
-        }
-
-        if (request.getStatus() != null) {
-            status.setStatus(request.getStatus());
-        }
+        mapper.updateFromDto(request, status);
 
         repository.save(status);
-        return toDto(status);
+        return mapper.toDto(status, null);
     }
 
     @Override
     public void delete(Long id) {
         repository.deleteById(id);
-    }
-
-    private MaritalStatusDto toDto(MaritalStatus status) {
-        return new MaritalStatusDto(
-                status.getId(),
-                status.getNameEn(),
-                status.getNameKh(),
-                status.getStatus()
-        );
     }
 }

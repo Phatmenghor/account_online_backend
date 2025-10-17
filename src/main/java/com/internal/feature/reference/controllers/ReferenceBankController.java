@@ -4,6 +4,7 @@ import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.reference.dto.request.GetAllReferenceBankRequest;
 import com.internal.feature.reference.dto.request.ReferenceBankCreateRequestDto;
 import com.internal.feature.reference.dto.request.ReferenceBankUpdateRequestDto;
+import com.internal.feature.reference.dto.response.AllReferenceBankResponseDto;
 import com.internal.feature.reference.dto.response.ReferenceBankDto;
 import com.internal.feature.reference.service.ReferenceBankService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/reference/banks")
@@ -33,10 +32,10 @@ public class ReferenceBankController {
     }
 
     @PostMapping("/all")
-    public ResponseEntity<ApiResponse<List<ReferenceBankDto>>> getAll(@RequestBody GetAllReferenceBankRequest request) {
+    public ResponseEntity<ApiResponse<AllReferenceBankResponseDto>> getAll(@RequestBody GetAllReferenceBankRequest request) {
         log.info("Fetching all banks");
-        List<ReferenceBankDto> list = service.getAll(request);
-        log.info("Successfully retrieved {} banks", list.size());
+        AllReferenceBankResponseDto list = service.getAll(request);
+        log.info("Successfully retrieved {} banks", list.getContent().size());
         return ResponseEntity.ok(ApiResponse.success("All banks retrieved successfully", list));
     }
 

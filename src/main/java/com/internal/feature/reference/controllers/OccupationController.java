@@ -4,6 +4,7 @@ import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.reference.dto.request.GetAllOccupationRequest;
 import com.internal.feature.reference.dto.request.OccupationCreateRequestDto;
 import com.internal.feature.reference.dto.request.OccupationUpdateRequestDto;
+import com.internal.feature.reference.dto.response.AllOccupationResponseDto;
 import com.internal.feature.reference.dto.response.OccupationDto;
 import com.internal.feature.reference.service.OccupationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/reference/occupation")
@@ -33,10 +32,10 @@ public class OccupationController {
     }
 
     @PostMapping("/all")
-    public ResponseEntity<ApiResponse<List<OccupationDto>>> getAll(@RequestBody GetAllOccupationRequest request) {
+    public ResponseEntity<ApiResponse<AllOccupationResponseDto>> getAll(@RequestBody GetAllOccupationRequest request) {
         log.info("Fetching all occupations");
-        List<OccupationDto> list = service.getAllOccupations(request);
-        log.info("Successfully retrieved {} occupations", list.size());
+        AllOccupationResponseDto list = service.getAllOccupations(request);
+        log.info("Successfully retrieved {} occupations", list.getContent().size());
         return ResponseEntity.ok(ApiResponse.success("All occupations retrieved successfully", list));
     }
 

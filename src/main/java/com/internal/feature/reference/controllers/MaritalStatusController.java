@@ -4,6 +4,7 @@ import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.reference.dto.request.GetAllMaritalStatusRequest;
 import com.internal.feature.reference.dto.request.MaritalStatusCreateRequestDto;
 import com.internal.feature.reference.dto.request.MaritalStatusUpdateRequestDto;
+import com.internal.feature.reference.dto.response.AllMaritalStatusResponseDto;
 import com.internal.feature.reference.dto.response.MaritalStatusDto;
 import com.internal.feature.reference.service.MaritalStatusService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/reference/marital-status")
@@ -33,10 +32,10 @@ public class MaritalStatusController {
     }
 
     @PostMapping("/all")
-    public ResponseEntity<ApiResponse<List<MaritalStatusDto>>> getAll(@RequestBody GetAllMaritalStatusRequest request) {
+    public ResponseEntity<ApiResponse<AllMaritalStatusResponseDto>> getAll(@RequestBody GetAllMaritalStatusRequest request) {
         log.info("Fetching all marital statuses");
-        List<MaritalStatusDto> list = service.getAll(request);
-        log.info("Successfully retrieved {} marital statuses", list.size());
+        AllMaritalStatusResponseDto list = service.getAll(request);
+        log.info("Successfully retrieved {} marital statuses", list.getContent().size());
         return ResponseEntity.ok(ApiResponse.success("All marital statuses retrieved successfully", list));
     }
 

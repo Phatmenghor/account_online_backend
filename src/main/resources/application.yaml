@@ -136,9 +136,6 @@ telegram:
     chat-id: "-4816130196"
     enabled: true
 
-
-
-
 # Logging Configuration
 logging:
   level:
