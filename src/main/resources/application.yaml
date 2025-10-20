@@ -152,7 +152,7 @@ app:
 telegram:
   bot:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
-    chat-id: "-4816130196"
+    chat-id: "-1002740302492"
     enabled: true
 
 # Logging Configuration
