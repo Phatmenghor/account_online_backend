@@ -1,5 +1,6 @@
 package com.internal.exceptions.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,4 +16,7 @@ public class ErrorResponse {
     private LocalDateTime timestamp;
     private int status;
     private String message;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Object details;
 }

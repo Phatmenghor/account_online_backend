@@ -73,6 +73,9 @@ oracle:
     driver-class-name: oracle.jdbc.OracleDriver
 
 cpb:
+
+  environment: development
+
   camdx:
     url: http://192.168.103.106:8099/api/v1/
     auth:
@@ -94,6 +97,9 @@ cpb:
     cooldownSeconds: 60
     maxAttempts: 3
     lockMinutes: 5
+    expiryMinutes: 5
+    message: "Your OTP code is:"
+
   validate:
     nid: validate-nid
     faceApiRoute: validate-nid-face

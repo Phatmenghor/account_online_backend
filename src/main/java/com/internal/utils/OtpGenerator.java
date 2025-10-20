@@ -1,20 +1,39 @@
 package com.internal.utils;
 
+import com.internal.config.CpbProperties;
+import com.internal.utils.constants.AppConstants;
 import org.springframework.stereotype.Component;
 
-import java.util.Random;
+import java.security.SecureRandom;
 
 @Component
 public class OtpGenerator {
 
     private static final String DIGITS = "0123456789";
+    private final SecureRandom random = new SecureRandom();
+    private final CpbProperties cpbProperties;
 
-    public String generate(int length) {
-        StringBuilder otp = new StringBuilder();
-        Random rnd = new Random();
-        while (otp.length() < length) {
-            char c = DIGITS.charAt(rnd.nextInt(DIGITS.length()));
-            if (otp.indexOf(String.valueOf(c)) == -1) otp.append(c);
+    public OtpGenerator(CpbProperties cpbProperties) {
+        this.cpbProperties = cpbProperties;
+    }
+
+    /**
+     * Generate a 6-digit OTP code
+     * @return 6-digit OTP string
+     */
+    public String generate() {
+        String environment = cpbProperties.getEnvironment();
+        if (AppConstants.ENV_DEVELOPMENT.equalsIgnoreCase(environment)) {
+            return "123456";
+        }
+
+        int otpLength = cpbProperties.getOtp().getLength() > 0
+                ? cpbProperties.getOtp().getLength()
+                : 6;
+
+        StringBuilder otp = new StringBuilder(otpLength);
+        for (int i = 0; i < otpLength; i++) {
+            otp.append(DIGITS.charAt(random.nextInt(DIGITS.length())));
         }
         return otp.toString();
     }

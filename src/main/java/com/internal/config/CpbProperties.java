@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "cpb")
 public class CpbProperties {
 
+    private String environment;
     private Camdx camdx;
     private Validate validate;
     private Ocr ocr;
@@ -51,5 +52,7 @@ public class CpbProperties {
         private int cooldownSeconds;
         private int maxAttempts;
         private int lockMinutes;
+        private int expiryMinutes;
+        private String message;
     }
 }
