@@ -1,6 +1,6 @@
-package com.internal.feature.openAcc.repository;
+package com.internal.feature.sms_otp.repository;
 
-import com.internal.feature.openAcc.models.OtpSms;
+import com.internal.feature.sms_otp.models.OtpSms;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

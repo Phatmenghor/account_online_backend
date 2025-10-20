@@ -1,12 +1,11 @@
-package com.internal.feature.openAcc.controller;
+package com.internal.feature.sms_otp.controller;
 
 import com.internal.exceptions.response.ApiResponse;
-import com.internal.feature.openAcc.dto.request.SendOtpRequest;
-import com.internal.feature.openAcc.dto.request.VerifyOtpRequest;
-import com.internal.feature.openAcc.dto.response.SendOtpResponse;
-import com.internal.feature.openAcc.dto.response.VerifyOtpResponse;
-import com.internal.feature.openAcc.service.OtpService;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.internal.feature.sms_otp.dto.request.SendOtpRequest;
+import com.internal.feature.sms_otp.dto.request.VerifyOtpRequest;
+import com.internal.feature.sms_otp.dto.response.SendOtpResponse;
+import com.internal.feature.sms_otp.dto.response.VerifyOtpResponse;
+import com.internal.feature.sms_otp.service.OtpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

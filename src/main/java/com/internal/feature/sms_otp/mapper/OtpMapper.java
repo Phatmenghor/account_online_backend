@@ -1,8 +1,8 @@
-package com.internal.feature.openAcc.mapper;
+package com.internal.feature.sms_otp.mapper;
 
-import com.internal.feature.openAcc.dto.response.SendOtpResponse;
-import com.internal.feature.openAcc.dto.response.VerifyOtpResponse;
-import com.internal.feature.openAcc.models.OtpSms;
+import com.internal.feature.sms_otp.dto.response.SendOtpResponse;
+import com.internal.feature.sms_otp.dto.response.VerifyOtpResponse;
+import com.internal.feature.sms_otp.models.OtpSms;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;

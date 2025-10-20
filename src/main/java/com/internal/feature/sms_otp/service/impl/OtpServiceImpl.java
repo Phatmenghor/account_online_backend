@@ -1,15 +1,15 @@
-package com.internal.feature.openAcc.service.impl;
+package com.internal.feature.sms_otp.service.impl;
 
 import com.internal.config.CpbProperties;
 import com.internal.exceptions.error.otp.*;
-import com.internal.feature.openAcc.dto.request.SendOtpRequest;
-import com.internal.feature.openAcc.dto.request.VerifyOtpRequest;
-import com.internal.feature.openAcc.dto.response.SendOtpResponse;
-import com.internal.feature.openAcc.dto.response.VerifyOtpResponse;
-import com.internal.feature.openAcc.mapper.OtpMapper;
-import com.internal.feature.openAcc.models.OtpSms;
-import com.internal.feature.openAcc.repository.OtpRepository;
-import com.internal.feature.openAcc.service.OtpService;
+import com.internal.feature.sms_otp.dto.request.SendOtpRequest;
+import com.internal.feature.sms_otp.dto.request.VerifyOtpRequest;
+import com.internal.feature.sms_otp.dto.response.SendOtpResponse;
+import com.internal.feature.sms_otp.dto.response.VerifyOtpResponse;
+import com.internal.feature.sms_otp.mapper.OtpMapper;
+import com.internal.feature.sms_otp.models.OtpSms;
+import com.internal.feature.sms_otp.repository.OtpRepository;
+import com.internal.feature.sms_otp.service.OtpService;
 import com.internal.utils.OtpGenerator;
 import com.internal.utils.constants.AppConstants;
 import com.internal.utils.service.HttpClientUtil;

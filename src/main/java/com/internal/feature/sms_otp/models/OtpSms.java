@@ -1,4 +1,4 @@
-package com.internal.feature.openAcc.models;
+package com.internal.feature.sms_otp.models;
 
 import com.internal.feature.auth.models.BaseEntity;
 import lombok.*;
