@@ -1,4 +1,4 @@
-package com.internal.feature.camdx.dto.request;
+package com.internal.feature.camdx.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

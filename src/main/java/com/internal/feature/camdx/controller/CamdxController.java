@@ -2,9 +2,9 @@ package com.internal.feature.camdx.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.internal.exceptions.response.ApiResponse;
-import com.internal.feature.camdx.dto.request.CamdxFaceRequest;
-import com.internal.feature.camdx.dto.request.CamdxRequest;
-import com.internal.feature.camdx.dto.request.CamdxValidateNidRequest;
+import com.internal.feature.camdx.dto.CamdxFaceRequest;
+import com.internal.feature.camdx.dto.CamdxRequest;
+import com.internal.feature.camdx.dto.CamdxValidateNidRequest;
 import com.internal.feature.camdx.service.CamdxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
