@@ -1,10 +1,7 @@
 package com.internal.feature.openAcc.service.impl;
 
 import com.internal.config.CpbProperties;
-import com.internal.exceptions.error.otp.OtpAttemptsExceededException;
-import com.internal.exceptions.error.otp.OtpCooldownException;
-import com.internal.exceptions.error.otp.OtpInvalidException;
-import com.internal.exceptions.error.otp.OtpNotFoundException;
+import com.internal.exceptions.error.otp.*;
 import com.internal.feature.openAcc.dto.request.SendOtpRequest;
 import com.internal.feature.openAcc.dto.request.VerifyOtpRequest;
 import com.internal.feature.openAcc.dto.response.SendOtpResponse;
@@ -15,11 +12,11 @@ import com.internal.feature.openAcc.repository.OtpRepository;
 import com.internal.feature.openAcc.service.OtpService;
 import com.internal.utils.OtpGenerator;
 import com.internal.utils.constants.AppConstants;
+import com.internal.utils.service.HttpClientUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -36,8 +33,7 @@ public class OtpServiceImpl implements OtpService {
     private final OtpGenerator otpGenerator;
     private final OtpMapper otpMapper;
     private final CpbProperties cpbProperties;
-    private final RestTemplate restTemplate;
-
+    private final HttpClientUtil httpClient;
 
     @Override
     @Transactional
@@ -70,8 +66,15 @@ public class OtpServiceImpl implements OtpService {
         otpSms = otpRepository.save(otpSms);
         log.info("OTP created successfully - ID: {}, Phone: {}", otpSms.getId(), phone);
 
-        // 6. Send SMS
-        sendSmsToUser(phone, otpCode);
+        // 6. Send SMS (don't let SMS failure block the flow)
+        try {
+            sendSmsToUser(phone, otpCode);
+        } catch (Exception e) {
+            log.error("SMS sending failed but OTP was saved - Phone: {}, OTP ID: {}", phone, otpSms.getId(), e);
+            // Consider: Do you want to throw exception here or just log and continue?
+            // If SMS is critical, uncomment the next line:
+            // throw new SmsDeliveryException("Failed to send OTP via SMS", e);
+        }
 
         return otpMapper.toSendOtpResponse(otpSms);
     }
@@ -89,13 +92,14 @@ public class OtpServiceImpl implements OtpService {
         );
 
         if (!otpOpt.isPresent()) {
-            // 2. Increment attempt counter for failed verification
-            incrementFailedAttempt(phone);
-
-            // 3. Get remaining attempts
+            // 2. Get latest OTP first to avoid redundant queries
             OtpSms latestOtp = otpRepository.findLatestActiveOtpByPhone(phone)
                     .orElseThrow(() -> new OtpNotFoundException(phone));
 
+            // 3. Increment attempt counter for failed verification
+            incrementFailedAttempt(latestOtp);
+
+            // 4. Calculate remaining attempts
             int remainingAttempts = AppConstants.MAX_ATTEMPTS - latestOtp.getAttempt();
 
             if (remainingAttempts <= 0) {
@@ -109,7 +113,7 @@ public class OtpServiceImpl implements OtpService {
 
         OtpSms otpSms = otpOpt.get();
 
-        // 4. Mark as verified (keeps record in history)
+        // 5. Mark as verified (keeps record in history)
         otpSms.setStatus(1); // 1 = verified
         otpSms.setVerifiedAt(LocalDateTime.now());
         otpRepository.save(otpSms);
@@ -134,18 +138,26 @@ public class OtpServiceImpl implements OtpService {
                 ).toMinutes();
 
                 if (minutesSinceLastAttempt < AppConstants.LOCKOUT_MINUTES) {
+                    long remainingMinutes = AppConstants.LOCKOUT_MINUTES - minutesSinceLastAttempt;
                     log.warn("User locked out - Phone: {}, Minutes remaining: {}",
-                            phone, AppConstants.LOCKOUT_MINUTES - minutesSinceLastAttempt);
+                            phone, remainingMinutes);
                     throw new OtpAttemptsExceededException(AppConstants.LOCKOUT_MINUTES);
                 } else {
                     // Reset attempts after lockout period expired
-                    otp.setAttempt(0);
-                    otp.setLastAttempt(null);
-                    otpRepository.save(otp);
-                    log.info("Lockout period expired, reset attempts for phone: {}", phone);
+                    log.info("Lockout period expired, resetting attempts for phone: {}", phone);
+                    resetLockout(otp);
                 }
             }
         }
+    }
+
+    /**
+     * Reset lockout after cooldown period
+     */
+    private void resetLockout(OtpSms otp) {
+        otp.setAttempt(0);
+        otp.setLastAttempt(null);
+        otpRepository.save(otp);
     }
 
     /**
@@ -169,43 +181,37 @@ public class OtpServiceImpl implements OtpService {
     /**
      * Increment failed verification attempt counter
      */
-    private void incrementFailedAttempt(String phone) {
-        Optional<OtpSms> otpOpt = otpRepository.findLatestActiveOtpByPhone(phone);
-
-        if (otpOpt.isPresent()) {
-            OtpSms otp = otpOpt.get();
-            otp.setAttempt(otp.getAttempt() + 1);
-            otp.setLastAttempt(LocalDateTime.now());
-            otpRepository.save(otp);
-            log.info("Failed attempt recorded - Phone: {}, Total attempts: {}", phone, otp.getAttempt());
-        }
+    private void incrementFailedAttempt(OtpSms otp) {
+        otp.setAttempt(otp.getAttempt() + 1);
+        otp.setLastAttempt(LocalDateTime.now());
+        otpRepository.save(otp);
+        log.info("Failed attempt recorded - Phone: {}, Total attempts: {}",
+                otp.getPhone(), otp.getAttempt());
     }
 
     /**
-     * Send SMS via external gateway
+     * Send SMS via external gateway using HttpClientUtil
      */
     private void sendSmsToUser(String phone, String otpCode) {
-
-        if (AppConstants.ENV_PRODUCTION.equalsIgnoreCase(cpbProperties.getEnvironment())) {
-            String otpUrl = cpbProperties.getMb().getOtpUrl();
-            String message = cpbProperties.getOtp().getMessage() + " " + otpCode;
-
-            try {
-                log.info("Sending SMS - Phone: {}, OTP: {}", phone, otpCode);
-
-                // Create SMS request payload
-                Map<String, String> smsRequest = new HashMap<>();
-                smsRequest.put("phone", phone);
-                smsRequest.put("message", message);
-
-                // Send via RestTemplate
-                restTemplate.postForObject(otpUrl, smsRequest, String.class);
-
-                log.info("SMS sent successfully to: {}", phone);
-            } catch (Exception e) {
-                log.error("Failed to send SMS - Phone: {}, Error: {}", phone, e.getMessage(), e);
-            }
+        // Skip in non-production environments
+        if (!AppConstants.ENV_PRODUCTION.equalsIgnoreCase(cpbProperties.getEnvironment())) {
+            log.info("Skipping SMS send (non-production) - Phone: {}, OTP: {}", phone, otpCode);
+            return;
         }
 
+        String otpUrl = cpbProperties.getMb().getOtpUrl();
+        String message = cpbProperties.getOtp().getMessage() + " " + otpCode;
+
+        log.info("Sending SMS via gateway - Phone: {}", phone);
+
+        // Create SMS request payload
+        Map<String, String> smsRequest = new HashMap<>();
+        smsRequest.put("phone", phone);
+        smsRequest.put("message", message);
+
+        // Send via HttpClientUtil with proper error handling
+        httpClient.post(otpUrl, smsRequest, "SMS Gateway");
+
+        log.info("SMS sent successfully to: {}", phone);
     }
 }

@@ -1,0 +1,200 @@
+package com.internal.utils.service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.internal.exceptions.error.ValidateServiceException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.*;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class HttpClientUtil {
+
+    private final RestTemplate restTemplate;
+
+    /**
+     * Make a POST request returning JsonNode
+     *
+     * @param url      The target URL
+     * @param request  The request body
+     * @param headers  Optional custom headers
+     * @param apiName  API name for logging
+     * @return JsonNode response
+     */
+    public <T> JsonNode post(String url, T request, Map<String, String> headers, String apiName) {
+        return executeRequest(url, HttpMethod.POST, request, headers, apiName, JsonNode.class);
+    }
+
+    /**
+     * Make a POST request with just URL and request body
+     */
+    public <T> JsonNode post(String url, T request, String apiName) {
+        return post(url, request, null, apiName);
+    }
+
+    /**
+     * Make a GET request returning JsonNode
+     */
+    public JsonNode get(String url, Map<String, String> headers, String apiName) {
+        return executeRequest(url, HttpMethod.GET, null, headers, apiName, JsonNode.class);
+    }
+
+    /**
+     * Make a GET request without custom headers
+     */
+    public JsonNode get(String url, String apiName) {
+        return get(url, null, apiName);
+    }
+
+    /**
+     * Make a POST request returning a specific type
+     */
+    public <T, R> R post(String url, T request, Map<String, String> headers, String apiName, Class<R> responseType) {
+        return executeRequest(url, HttpMethod.POST, request, headers, apiName, responseType);
+    }
+
+    /**
+     * Core method to execute HTTP requests
+     */
+    private <T, R> R executeRequest(
+            String url,
+            HttpMethod method,
+            T request,
+            Map<String, String> customHeaders,
+            String apiName,
+            Class<R> responseType
+    ) {
+        long startTime = System.currentTimeMillis();
+
+        try {
+            // Build headers
+            HttpHeaders headers = buildHeaders(customHeaders);
+
+            // Create entity
+            HttpEntity<T> entity = new HttpEntity<>(request, headers);
+
+            // Log request
+            log.debug("{} API Request - Method: {}, URL: {}", apiName, method, url);
+
+            // Make API call
+            ResponseEntity<R> response = restTemplate.exchange(
+                    url,
+                    method,
+                    entity,
+                    responseType
+            );
+
+            // Validate response
+            R body = response.getBody();
+            if (body == null) {
+                log.error("{} API returned null response body", apiName);
+                throw new ValidateServiceException(apiName + " API returned empty response");
+            }
+
+            // Log success
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("{} API call successful - Duration: {}ms, Status: {}",
+                    apiName, duration, response.getStatusCode());
+
+            return body;
+
+        } catch (HttpClientErrorException.Unauthorized ex) {
+            return handleUnauthorized(ex, apiName, startTime);
+
+        } catch (HttpClientErrorException.Forbidden ex) {
+            return handleForbidden(ex, apiName, startTime);
+
+        } catch (HttpClientErrorException.BadRequest ex) {
+            return handleBadRequest(ex, apiName, startTime);
+
+        } catch (HttpClientErrorException ex) {
+            return handleHttpClientError(ex, apiName, startTime);
+
+        } catch (ResourceAccessException ex) {
+            return handleResourceAccessError(ex, apiName, startTime);
+
+        } catch (Exception ex) {
+            return handleUnexpectedError(ex, apiName, startTime);
+        }
+    }
+
+    /**
+     * Build HTTP headers with optional custom headers
+     */
+    private HttpHeaders buildHeaders(Map<String, String> customHeaders) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Add custom headers if provided
+        if (customHeaders != null && !customHeaders.isEmpty()) {
+            customHeaders.forEach(headers::set);
+        }
+
+        return headers;
+    }
+
+    // Error handling methods
+    private <R> R handleUnauthorized(HttpClientErrorException.Unauthorized ex, String apiName, long startTime) {
+        log.error("{} API Unauthorized (401) - Duration: {}ms",
+                apiName, System.currentTimeMillis() - startTime);
+        log.debug("Response body: {}", ex.getResponseBodyAsString());
+        throw new ValidateServiceException(
+                String.format("%s API authentication failed", apiName),
+                ex
+        );
+    }
+
+    private <R> R handleForbidden(HttpClientErrorException.Forbidden ex, String apiName, long startTime) {
+        log.error("{} API Forbidden (403) - Duration: {}ms",
+                apiName, System.currentTimeMillis() - startTime);
+        log.debug("Response body: {}", ex.getResponseBodyAsString());
+        throw new ValidateServiceException(
+                String.format("%s API access denied", apiName),
+                ex
+        );
+    }
+
+    private <R> R handleBadRequest(HttpClientErrorException.BadRequest ex, String apiName, long startTime) {
+        log.error("{} API Bad Request (400) - Duration: {}ms, Response: {}",
+                apiName, System.currentTimeMillis() - startTime, ex.getResponseBodyAsString());
+        throw new ValidateServiceException(
+                String.format("%s API invalid request: %s", apiName, ex.getResponseBodyAsString()),
+                ex
+        );
+    }
+
+    private <R> R handleHttpClientError(HttpClientErrorException ex, String apiName, long startTime) {
+        log.error("{} API HTTP error ({}) - Duration: {}ms, Response: {}",
+                apiName, ex.getStatusCode(), System.currentTimeMillis() - startTime,
+                ex.getResponseBodyAsString());
+        throw new ValidateServiceException(
+                String.format("%s API failed with status %s", apiName, ex.getStatusCode()),
+                ex
+        );
+    }
+
+    private <R> R handleResourceAccessError(ResourceAccessException ex, String apiName, long startTime) {
+        log.error("{} API connection failed - Duration: {}ms, Error: {}",
+                apiName, System.currentTimeMillis() - startTime, ex.getMessage());
+        throw new ValidateServiceException(
+                String.format("%s API connection error (timeout or network issue)", apiName),
+                ex
+        );
+    }
+
+    private <R> R handleUnexpectedError(Exception ex, String apiName, long startTime) {
+        log.error("{} API unexpected error - Duration: {}ms, Error: {}",
+                apiName, System.currentTimeMillis() - startTime, ex.getMessage(), ex);
+        throw new ValidateServiceException(
+                String.format("%s API internal error: %s", apiName, ex.getMessage()),
+                ex
+        );
+    }
+}
