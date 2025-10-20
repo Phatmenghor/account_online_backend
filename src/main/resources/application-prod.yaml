@@ -11,10 +11,6 @@ server:
 spring:
   application:
     name: account_online
-  security:
-    user:
-      name: apiuser
-      password: apipass
 
   main:
     allow-bean-definition-overriding: true
@@ -23,7 +19,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
       naming:
         physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
     show-sql: false
@@ -59,12 +55,67 @@ spring:
       pool-name: PostgreSQL-Pool
       auto-commit: false
 
+#PROD
+#oracle:
+#  datasource:
+#    url: jdbc:oracle:thin:@//192.168.102.5:1521/dwh
+#    username: dwh
+#    password: Bnk$$444
+#    driver-class-name: oracle.jdbc.OracleDriver
+#
+
+#UAT
 oracle:
   datasource:
-    url: jdbc:oracle:thin:@//192.168.102.5:1521/dwh
-    username: dwh
+    url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
+    username: stg
     password: Bnk$$444
     driver-class-name: oracle.jdbc.OracleDriver
+
+cpb:
+
+  environment: development
+
+  camdx:
+    url: http://192.168.103.106:8099/api/v1/
+    auth:
+      token: d8a7f9e2-3c4b-4f10-9d75-1c9f2b84a7ec
+      tokenHeaderName: X-CPB-CamDx-Auth
+  aml:
+    token: d8a7f9e2-3c4b-4f10-9d75-1c9f2b84a7ec
+    url: https://data-intuition.cambodiapostbank.com.kh/api/v1/f4a10790-2f67-457a-ac0f-04f3f10ac583/dataSets/5c464510-2087-4bb2-b91e-ae04c080ddc2/documents?runStrategy=true&includeDetail=true
+  t24:
+    url: http://192.168.127.31:7003
+    username: SODA.KROES
+    password: sodaIT@168
+  mb:
+    otpUrl: http://10.18.1.47:15004/CPBBank/services/CPBMobile?wsdl
+    registerCodeUrl: http://10.18.1.48:8090/API/RegisterCustomerMB/
+    secretKey: cpbsmsgw@!@#974203
+  otp:
+    length: 6
+    cooldownSeconds: 60
+    maxAttempts: 3
+    lockMinutes: 5
+    expiryMinutes: 5
+    message: "Your OTP code is:"
+
+  validate:
+    nid: validate-nid
+    faceApiRoute: validate-nid-face
+  ocr:
+    apiRoute: ocr-idcard
+  xml:
+    createCustomer: C:\inetpub\wwwroot\cpbAccountOnlineApi\Xml\CREATE_CUSTOMER.xml
+    openAcctByCustomer: C:\inetpub\wwwroot\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_CUSTOMER.xml
+    openAcctByStaff: C:\inetpub\wwwroot\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_STAFF.xml
+
+# JWT Configuration
+jwt:
+  secret:
+    key: f7e8d9c6b5a4938271605f4de3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a001
+  expiration-min: 525600
+  issuer: internal-dev-api
 
   # Task Execution for Async Telegram notifications
   task:
@@ -75,15 +126,31 @@ oracle:
         queue-capacity: 100
         thread-name-prefix: async-telegram-
 
+# TraineeReport Configuration
+app:
+  default-users:
+    create: true
+  super:
+    idCard: phatmenghor19@gmail.com
+    password: 88889999
+    email: phatmenghor19@gmail.com
+
+  data-load:
+    batch-size: 1000
+    max-retries: 1
+    timeout-hours: 5
+    connection-timeout-minutes: 5
+    query-timeout-hours: 4
+    network-timeout-hours: 5
+    progress-log-interval-minutes: 10
+    heartbeat-interval-minutes: 5
+
 # Telegram Bot Configuration
 telegram:
   bot:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
     chat-id: "-4816130196"
     enabled: true
-
-
-
 
 # Logging Configuration
 logging:
