@@ -24,12 +24,12 @@ public class OtpGenerator {
     public String generate() {
         String environment = cpbProperties.getEnvironment();
         if (AppConstants.ENV_DEVELOPMENT.equalsIgnoreCase(environment)) {
-            return "123456";
+            return AppConstants.DEFAULT_DEV_OTP;
         }
 
         int otpLength = cpbProperties.getOtp().getLength() > 0
                 ? cpbProperties.getOtp().getLength()
-                : 6;
+                : AppConstants.DEFAULT_OTP_LENGTH;
 
         StringBuilder otp = new StringBuilder(otpLength);
         for (int i = 0; i < otpLength; i++) {
