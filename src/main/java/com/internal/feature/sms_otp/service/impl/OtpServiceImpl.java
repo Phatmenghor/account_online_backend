@@ -1,12 +1,15 @@
 package com.internal.feature.sms_otp.service.impl;
 
 import com.internal.config.CpbProperties;
-import com.internal.exceptions.error.otp.*;
+import com.internal.exceptions.error.otp.OtpAttemptsExceededException;
+import com.internal.exceptions.error.otp.OtpCooldownException;
+import com.internal.exceptions.error.otp.OtpInvalidException;
+import com.internal.exceptions.error.otp.OtpNotFoundException;
 import com.internal.feature.sms_otp.dto.request.SendOtpRequest;
 import com.internal.feature.sms_otp.dto.request.VerifyOtpRequest;
 import com.internal.feature.sms_otp.dto.response.SendOtpResponse;
 import com.internal.feature.sms_otp.dto.response.VerifyOtpResponse;
-import com.internal.feature.sms_otp.mapper.OtpMapper;
+import com.internal.feature.sms_otp.mapper.SmsOtpMapper;
 import com.internal.feature.sms_otp.models.OtpSms;
 import com.internal.feature.sms_otp.repository.OtpRepository;
 import com.internal.feature.sms_otp.service.OtpService;
@@ -31,7 +34,7 @@ public class OtpServiceImpl implements OtpService {
 
     private final OtpRepository otpRepository;
     private final OtpGenerator otpGenerator;
-    private final OtpMapper otpMapper;
+    private final SmsOtpMapper otpMapper;
     private final CpbProperties cpbProperties;
     private final HttpClientUtil httpClient;
 

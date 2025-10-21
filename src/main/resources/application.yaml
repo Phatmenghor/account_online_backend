@@ -63,7 +63,6 @@ oracle:
     password: Bnk$$444
     driver-class-name: oracle.jdbc.OracleDriver
 
-
 #UAT
 #oracle:
 #  datasource:
