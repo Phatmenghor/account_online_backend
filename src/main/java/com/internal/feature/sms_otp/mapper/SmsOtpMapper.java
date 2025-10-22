@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
-public interface OtpMapper {
+public interface SmsOtpMapper {
 
     @Mapping(target = "message", expression = "java(\"OTP sent successfully to \" + otpSms.getPhone())")
     SendOtpResponse toSendOtpResponse(OtpSms otpSms);

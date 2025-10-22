@@ -56,21 +56,23 @@ spring:
       auto-commit: false
 
 #PROD
-#oracle:
-#  datasource:
-#    url: jdbc:oracle:thin:@//192.168.102.5:1521/dwh
-#    username: dwh
-#    password: Bnk$$444
-#    driver-class-name: oracle.jdbc.OracleDriver
-#
-
-#UAT
 oracle:
   datasource:
-    url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
-    username: stg
+    url: jdbc:oracle:thin:@//192.168.102.5:1521/dwh
+    username: dwh
     password: Bnk$$444
     driver-class-name: oracle.jdbc.OracleDriver
+
+#UAT
+#oracle:
+#  datasource:
+#    url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
+#    username: stg
+#    password: Bnk$$444
+#    driver-class-name: oracle.jdbc.OracleDriver
+
+masterdata:
+  schema: DWH
 
 cpb:
 
@@ -149,7 +151,7 @@ app:
 telegram:
   bot:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
-    chat-id: "-4816130196"
+    chat-id: "-1002740302492"
     enabled: true
 
 # Logging Configuration
