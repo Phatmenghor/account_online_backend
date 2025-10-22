@@ -17,7 +17,6 @@ public class GetAllReferenceDocRequest {
 
     @Builder.Default
     private int pageSize = 10;
-    private LanguageEnum language;
     private String search;
     private StatusData status = StatusData.ACTIVE;
 }
