@@ -1,6 +1,5 @@
 package com.internal.feature.reference.dto.request;
 
-import com.internal.enumation.LanguageEnum;
 import com.internal.enumation.StatusData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
