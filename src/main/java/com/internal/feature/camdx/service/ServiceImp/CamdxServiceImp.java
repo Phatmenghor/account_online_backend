@@ -52,7 +52,12 @@ public class CamdxServiceImp implements CamdxService {
             log.error("NID Validation API error: {}", rawBody);
 
             // 🔥 Push immediately to Telegram
-            errorCheckService.sendInfraErrorAlertFromException(request, rawBody);
+            try {
+                errorCheckService.sendInfraErrorAlertFromException(request, rawBody);
+            } catch (Exception e) {
+                log.error("Failed to send Telegram notification, but logs was created: {}",
+                        e.getMessage());
+            }
 
             // then rethrow or wrap
             throw ex;

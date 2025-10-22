@@ -2,7 +2,11 @@ package com.internal.feature.telegram_alerts.service.serviceImpl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.internal.config.telegram.TelegramService;
+import com.internal.enumation.OpenAccStatusEnum;
 import com.internal.feature.camdx.dto.CamdxValidateNidRequest;
+import com.internal.feature.logs_report.model.NidValidationFailureLogs;
+import com.internal.feature.logs_report.repository.NidValidationFailureLogsRepository;
 import com.internal.feature.telegram_alerts.service.ErrorAlertsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +24,7 @@ public class CamdxErrorCheckService implements ErrorAlertsService {
 
     private final TelegramService telegramService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final NidValidationFailureLogsRepository failureLogsRepository;
 
     @Override
     public void checkValidationResponse(JsonNode response, CamdxValidateNidRequest request) {
@@ -28,7 +33,7 @@ public class CamdxErrorCheckService implements ErrorAlertsService {
 
         try {
             if (response == null || response.isEmpty()) {
-                log.warn("Empty CAMDX response. Nothing to check.");
+                log.warn("Empty CAMDX response. Nothing to check for ID {}", idNumber);
                 return;
             }
 
@@ -50,32 +55,83 @@ public class CamdxErrorCheckService implements ErrorAlertsService {
                     objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)
             );
 
-            boolean shouldAlert = score < 1 || (incorrectFields != null && !incorrectFields.isEmpty());
-
-            if (shouldAlert) {
-                log.warn("Validation issue detected for ID {} (score={}, incorrectFields={})", idNumber, score, incorrectFields);
-                sendErrorAlert(request, message, errorCode, score, incorrectFields);
-            } else {
-                log.info("Validation passed successfully for ID {} ✅", idNumber);
-            }
+            sendTelegram(response, request, score, incorrectFields, idNumber, message, errorCode);
 
         } catch (Exception e) {
-            log.error("Error while checking CAMDX response", e);
+            log.error("Error while checking CAMDX response for ID {}", idNumber, e);
             telegramService.sendMarkdownMessage("⚠️ Error parsing CAMDX response: " + escapeMarkdown(e.getMessage()));
         }
     }
 
+    private void sendTelegram(JsonNode response, CamdxValidateNidRequest request, double score, List<String> incorrectFields, String idNumber, String message, int errorCode) {
+        boolean shouldAlert = score < 1 || (incorrectFields != null && !incorrectFields.isEmpty());
+
+        if (shouldAlert) {
+            log.warn("Validation issue detected for ID {} (score={}, incorrectFields={})", idNumber, score, incorrectFields);
+
+            saveFailureLogs(request, response, OpenAccStatusEnum.FAILURE);
+
+            try {
+                sendErrorAlert(request, message, errorCode, score, incorrectFields);
+            } catch (Exception e) {
+                log.error("Failed to send Telegram notification, but logs was created: {}",
+                        e.getMessage());
+            }
+
+        } else {
+            log.info("Validation passed successfully for ID {} ✅", idNumber);
+        }
+    }
+
+    /**
+     * Flexible method: saves both JSON responses and raw string errors
+     */
+    private void saveFailureLogs(CamdxValidateNidRequest request, Object responseBody, OpenAccStatusEnum status) {
+        String responseString;
+
+        if (responseBody == null) {
+            responseString = null;
+        } else if (responseBody instanceof JsonNode) {
+            responseString = responseBody.toString();  // JSON response
+        } else {
+            responseString = responseBody.toString();  // raw string or anything else
+        }
+
+        NidValidationFailureLogs failureLogs = NidValidationFailureLogs.builder()
+                .request(convertObjectToJson(request)) // serialize request to JSON
+                .response(responseString)
+                .status(status)
+                .idNumber(request.getIdNumber())
+                .build();
+
+        failureLogsRepository.save(failureLogs);
+    }
+
+    /**
+     * Serialize object to JSON string
+     */
+    private String convertObjectToJson(Object obj) {
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (Exception e) {
+            log.warn("Failed to serialize request to JSON", e);
+            return obj.toString();
+        }
+    }
+
+    /**
+     * Handles middleware/infra failures
+     */
     public void sendInfraErrorAlertFromException(CamdxValidateNidRequest request, String rawMessage) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        saveFailureLogs(request, rawMessage, OpenAccStatusEnum.FAILURE);
 
         String errorCode = "Unknown";
         String errorMessage = "Unknown";
 
-        // Try to extract inner JSON if present
         try {
             String jsonString = rawMessage;
 
-            // If the message contains JSON inside quotes, extract it
             int firstBrace = rawMessage.indexOf("{");
             int lastBrace = rawMessage.lastIndexOf("}");
             if (firstBrace >= 0 && lastBrace > firstBrace) {
@@ -86,40 +142,43 @@ public class CamdxErrorCheckService implements ErrorAlertsService {
             errorCode = json.path("error").isMissingNode() ? "Unknown" : json.path("error").asText();
             errorMessage = json.path("message").isMissingNode() ? "Unknown" : json.path("message").asText();
         } catch (Exception e) {
-            // If parsing fails, fallback to raw message
             errorMessage = rawMessage;
         }
 
-        // Escape Markdown for Telegram
         errorMessage = escapeMarkdown(errorMessage);
 
         String nidText = (request.getIdNumber() != null && !request.getIdNumber().isEmpty())
-                ? "`" + escapeMarkdown(request.getIdNumber()) + "`  ← tap to copy"
+                ? "`" + escapeMarkdown(request.getIdNumber())
                 : "Missing";
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("🚨 *CAMDX / MIDDLEWARE FAILURE*").append("\n");
-        sb.append("━━━━━━━━━━━━━━━━━━━━").append("\n");
-        sb.append("📬 *Error Code:* ").append(errorCode).append("\n");
-        sb.append("📬 *Error Message:* ").append(errorMessage).append("\n\n");
-        sb.append("🪪 *NID:* ").append(nidText).append("\n");
-        sb.append("⚙️ *App:* ").append(request.getApplicationName() != null ? escapeMarkdown(request.getApplicationName()) : "Unknown").append("\n");
-        sb.append("━━━━━━━━━━━━━━━━━━━━").append("\n");
-        sb.append("🕒 *Time:* ").append(LocalDateTime.now().format(formatter)).append("\n");
-        sb.append("🔍 *Issue:* MOI / CAMDX unreachable or infrastructure failure.");
+        StringBuilder sb = buildTelegramInfo(request, errorCode, errorMessage, nidText, formatter);
 
         telegramService.sendMarkdownMessage(sb.toString());
+    }
+
+    private StringBuilder buildTelegramInfo(CamdxValidateNidRequest request, String errorCode, String errorMessage, String nidText, DateTimeFormatter formatter) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("🚨 *CAMDX / MIDDLEWARE FAILURE*").append("\n")
+                .append("━━━━━━━━━━━━━━━━━━━━").append("\n")
+                .append("📬 *Error Code:* ").append(errorCode).append("\n")
+                .append("📬 *Error Message:* ").append(errorMessage).append("\n\n")
+                .append("🪪 *NID:* ").append(nidText).append("\n")
+                .append("⚙️ *App:* ").append(request.getApplicationName() != null ? escapeMarkdown(request.getApplicationName()) : "Unknown").append("\n")
+                .append("━━━━━━━━━━━━━━━━━━━━").append("\n")
+                .append("🕒 *Time:* ").append(LocalDateTime.now().format(formatter)).append("\n")
+                .append("🔍 *Issue:* MOI / CAMDX unreachable or infrastructure failure.");
+        return sb;
     }
 
     /** Escape Markdown special characters for Telegram */
     private String escapeMarkdown(String text) {
         if (text == null) return "";
-        return text.replace("_", "\\_")
+        return text.replace("\\", "\\\\")
+                .replace("_", "\\_")
                 .replace("*", "\\*")
                 .replace("[", "\\[")
                 .replace("`", "\\`");
     }
-
 
     private boolean shouldIgnoreError(String message) {
         if (message == null || message.isEmpty()) return false;
@@ -131,46 +190,59 @@ public class CamdxErrorCheckService implements ErrorAlertsService {
         ignoreList.add("invalid id");
         ignoreList.add("no data found");
 
-
         String lower = message.toLowerCase();
         return ignoreList.stream().anyMatch(lower::contains);
     }
+
 
     private void sendErrorAlert(CamdxValidateNidRequest request, String message,
                                 int errorCode, Double score, List<String> incorrectFields) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-        // Incorrect fields shown as plain text (not copyable)
-        String formattedIncorrect = (incorrectFields != null && !incorrectFields.isEmpty())
-                ? String.join(", ", incorrectFields)  // just plain text
-                : "None";
+        //Format incorrect field i.e - dob
+        String formattedIncorrect = getFormattedIncorrect(incorrectFields);
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("🚨 *CAMDX VALIDATION ERROR*").append("\n");
-        sb.append("━━━━━━━━━━━━━━━━━━").append("\n");
-
-        sb.append("📬 *Error:* ").append(escapeMarkdown(message)).append("\n\n");
-
-        // Only NID is copyable
-        sb.append("🪪 *NID:* `").append(escapeMarkdown(request.getIdNumber())).append("`  ← (tap to copy)\n");
-        sb.append("⚙️ *App:* ").append(escapeMarkdown(request.getApplicationName())).append("\n");
-        sb.append("📉 *Score:* `").append(String.format("%.2f", score)).append("`\n");
-        sb.append("❗ *Incorrect Fields:* ").append(escapeMarkdown(formattedIncorrect)).append("\n"); // plain text
-        sb.append("━━━━━━━━━━━━━━━━━━").append("\n");
-
-        sb.append("📋 *Request Info*\n");
-        sb.append("• KH: ").append(escapeMarkdown(request.getLastNameKh())).append(" ").append(escapeMarkdown(request.getFirstNameKh())).append("\n");
-        sb.append("• EN: ").append(escapeMarkdown(request.getLastNameEn())).append(" ").append(escapeMarkdown(request.getFirstNameEn())).append("\n");
-        sb.append("• DOB: ").append(escapeMarkdown(request.getDob())).append("\n");
-        sb.append("• Gender: ").append(escapeMarkdown(request.getGender())).append("\n");
-        sb.append("• Issued: ").append(escapeMarkdown(request.getIssuedDate())).append("\n");
-        sb.append("• Expired: ").append(escapeMarkdown(request.getExpiredDate())).append("\n");
-        sb.append("━━━━━━━━━━━━━━━━━━").append("\n");
-
-        sb.append("🕒 ").append(LocalDateTime.now().format(formatter)).append("\n");
-        sb.append("🔍 Please recheck NID / submission.");
+        StringBuilder sb = buildTelegramErrorAlertInfo(request, message, score, formattedIncorrect, formatter);
 
         telegramService.sendMarkdownMessage(sb.toString());
+    }
+
+    private StringBuilder buildTelegramErrorAlertInfo(CamdxValidateNidRequest request, String message, Double score, String formattedIncorrect, DateTimeFormatter formatter) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("🚨 *CAMDX VALIDATION ERROR*").append("\n")
+                .append("━━━━━━━━━━━━━━━━━━").append("\n")
+                .append("📬 *Status:* ").append(escapeMarkdown(message)).append("\n\n")
+                .append("🪪 *NID:* `").append(escapeMarkdown(request.getIdNumber())).append("`\n")
+                .append("⚙️ *App:* ").append(escapeMarkdown(request.getApplicationName())).append("\n")
+                .append("📉 *Score:* `").append(String.format("%.2f", score)).append("`\n")
+                .append("❗ *Incorrect Fields:*\n").append(formattedIncorrect).append("\n")
+                .append("━━━━━━━━━━━━━━━━━━").append("\n")
+                .append("📋 *Request Info*\n")
+                .append("• KH: ").append(escapeMarkdown(request.getLastNameKh())).append(" ").append(escapeMarkdown(request.getFirstNameKh())).append("\n")
+                .append("• EN: ").append(escapeMarkdown(request.getLastNameEn())).append(" ").append(escapeMarkdown(request.getFirstNameEn())).append("\n")
+                .append("• DOB: ").append(escapeMarkdown(request.getDob())).append("\n")
+                .append("• Gender: ").append(escapeMarkdown(request.getGender())).append("\n")
+                .append("• Issued: ").append(escapeMarkdown(request.getIssuedDate())).append("\n")
+                .append("• Expired: ").append(escapeMarkdown(request.getExpiredDate())).append("\n")
+                .append("━━━━━━━━━━━━━━━━━━").append("\n")
+                .append("🕒 ").append(LocalDateTime.now().format(formatter)).append("\n")
+                .append("🔍 Please recheck NID / submission.");
+        return sb;
+    }
+
+    private static String getFormattedIncorrect(List<String> incorrectFields) {
+        // Format incorrect fields as a bullet list
+        String formattedIncorrect;
+        if (incorrectFields != null && !incorrectFields.isEmpty()) {
+            StringBuilder sbIncorrect = new StringBuilder();
+            for (String field : incorrectFields) {
+                sbIncorrect.append("- ").append(field).append("\n");
+            }
+            formattedIncorrect = sbIncorrect.toString().trim(); // remove last newline
+        } else {
+            formattedIncorrect = "None";
+        }
+        return formattedIncorrect;
     }
 }

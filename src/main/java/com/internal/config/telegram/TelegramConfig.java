@@ -1,4 +1,4 @@
-package com.internal.config;
+package com.internal.config.telegram;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
