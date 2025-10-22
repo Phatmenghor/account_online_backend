@@ -3,6 +3,7 @@ package com.internal.feature.logs_report.service.serviceImpl;
 import com.internal.feature.logs_report.dob.request.FilterNidValidationLogsDto;
 import com.internal.feature.logs_report.model.NidValidationFailureLogs;
 import com.internal.feature.logs_report.repository.NidValidationFailureLogsRepository;
+import com.internal.feature.logs_report.service.NidValidationExcelService;
 import com.internal.utils.specification.nidValidation.NidValidationLogsSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class NidValidationExcelService {
+public class NidValidationExcelServiceImpl implements NidValidationExcelService {
 
     private final NidValidationFailureLogsRepository repository;
 

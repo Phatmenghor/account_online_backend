@@ -1,4 +1,4 @@
-package com.internal.utils.reference;
+package com.internal.utils.specification.reference;
 
 import com.internal.enumation.StatusData;
 import com.internal.feature.reference.models.Occupation;

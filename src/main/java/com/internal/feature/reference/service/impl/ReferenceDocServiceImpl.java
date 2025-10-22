@@ -11,7 +11,7 @@ import com.internal.feature.reference.mapper.ReferenceDocMapper;
 import com.internal.feature.reference.models.ReferenceDoc;
 import com.internal.feature.reference.repository.ReferenceDocRepository;
 import com.internal.feature.reference.service.ReferenceDocService;
-import com.internal.utils.reference.ReferenceDocSpec;
+import com.internal.utils.specification.reference.ReferenceDocSpec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;

@@ -6,7 +6,7 @@ import com.internal.feature.camdx.dto.CamdxFaceRequest;
 import com.internal.feature.camdx.dto.CamdxRequest;
 import com.internal.feature.camdx.dto.CamdxValidateNidRequest;
 import com.internal.feature.camdx.service.CamdxService;
-import com.internal.feature.telegram_alerts.service.serviceImpl.CamdxErrorCheckService;
+import com.internal.feature.telegram_alerts.service.serviceImpl.CamdxErrorCheckServiceImpl;
 import com.internal.utils.service.HttpClientUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ import java.util.Map;
 @Slf4j
 public class CamdxServiceImp implements CamdxService {
 
-    private final CamdxErrorCheckService errorCheckService;
+    private final CamdxErrorCheckServiceImpl errorCheckService;
     private final CpbProperties cpbProperties;
     private final HttpClientUtil httpClient;
 

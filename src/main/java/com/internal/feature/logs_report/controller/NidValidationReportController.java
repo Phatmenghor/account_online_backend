@@ -1,7 +1,7 @@
 package com.internal.feature.logs_report.controller;
 
 import com.internal.feature.logs_report.dob.request.FilterNidValidationLogsDto;
-import com.internal.feature.logs_report.service.serviceImpl.NidValidationExcelService;
+import com.internal.feature.logs_report.service.serviceImpl.NidValidationExcelServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class NidValidationReportController {
 
-    private final NidValidationExcelService excelService;
+    private final NidValidationExcelServiceImpl excelService;
 
     @PostMapping(value = "/excel", produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     public ResponseEntity<byte[]> downloadExcel(@RequestBody FilterNidValidationLogsDto filterDto) {

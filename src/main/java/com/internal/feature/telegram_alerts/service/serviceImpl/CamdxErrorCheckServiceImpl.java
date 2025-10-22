@@ -11,7 +11,6 @@ import com.internal.feature.telegram_alerts.service.ErrorAlertsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -20,7 +19,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CamdxErrorCheckService implements ErrorAlertsService {
+public class CamdxErrorCheckServiceImpl implements ErrorAlertsService {
 
     private final TelegramService telegramService;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -122,6 +121,7 @@ public class CamdxErrorCheckService implements ErrorAlertsService {
     /**
      * Handles middleware/infra failures
      */
+    @Override
     public void sendInfraErrorAlertFromException(CamdxValidateNidRequest request, String rawMessage) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         saveFailureLogs(request, rawMessage, OpenAccStatusEnum.FAILURE);
