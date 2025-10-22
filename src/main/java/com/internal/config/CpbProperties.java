@@ -11,10 +11,13 @@ public class CpbProperties {
 
     private String environment;
     private Camdx camdx;
-    private Validate validate;
-    private Ocr ocr;
+    private Aml aml;
+    private T24 t24;
     private Mb mb;
     private Otp otp;
+    private Validate validate;
+    private Ocr ocr;
+    private Xml xml;
 
     @Data
     public static class Camdx {
@@ -29,6 +32,36 @@ public class CpbProperties {
     }
 
     @Data
+    public static class Aml {
+        private String token;
+        private String url;
+    }
+
+    @Data
+    public static class T24 {
+        private String url;
+        private String username;
+        private String password;
+    }
+
+    @Data
+    public static class Mb {
+        private String otpUrl;
+        private String registerCodeUrl;
+        private String secretKey;
+    }
+
+    @Data
+    public static class Otp {
+        private int length;
+        private int cooldownSeconds;
+        private int maxAttempts;
+        private int lockMinutes;
+        private int expiryMinutes;
+        private String message;
+    }
+
+    @Data
     public static class Validate {
         private String nid;
         private String faceApiRoute;
@@ -40,19 +73,9 @@ public class CpbProperties {
     }
 
     @Data
-    public static class Mb {
-        private String otpUrl;
-        private String registerCodeUrl;
-        private String secretKey; // Add this to YAML as cpb.mb.secretKey
-    }
-
-    @Data
-    public static class Otp {
-        private int length;
-        private int cooldownSeconds;
-        private int maxAttempts;
-        private int lockMinutes;
-        private int expiryMinutes;
-        private String message;
+    public static class Xml {
+        private String createCustomer;
+        private String openAcctByCustomer;
+        private String openAcctByStaff;
     }
 }
