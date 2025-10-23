@@ -97,7 +97,7 @@ oracle:
 
   stg:
     datasource:
-      url: jdbc:oracle:thin:@//192.168.102.5:1521/stg
+      url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
       username: stg
       password: Bnk$$444
       driver-class-name: oracle.jdbc.OracleDriver

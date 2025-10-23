@@ -20,7 +20,7 @@ public class ValidationService {
 
     public void checkDatabaseConnections() {
         try {
-            customerInfoRepository.testConnection();
+            customerInfoRepository.testAllConnections();
             log.debug("Database connection check successful");
         } catch (DataAccessException e) {
             log.error("Database connection failed: {}", e.getMessage());

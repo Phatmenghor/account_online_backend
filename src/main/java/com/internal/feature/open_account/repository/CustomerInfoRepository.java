@@ -15,8 +15,13 @@ import java.util.Map;
 @Slf4j
 public class CustomerInfoRepository {
 
-    @Qualifier("oracleJdbcTemplate")
-    private final JdbcTemplate oracleJdbcTemplate;
+    // Inject DWH database connection
+    @Qualifier("dwhJdbcTemplate")
+    private final JdbcTemplate dwhJdbcTemplate;
+
+    // Inject STG database connection
+    @Qualifier("stgJdbcTemplate")
+    private final JdbcTemplate stgJdbcTemplate;
 
     public Map<String, String> findByLegalId(String legalId) {
         try {
@@ -24,7 +29,7 @@ public class CustomerInfoRepository {
 
             String sql = "SELECT ACCT, CUSTOMERCIF, CUSTOMER_RATING FROM V_CBS_OAO_CUST_CHECK_RATING WHERE legal_id = ?";
 
-            Map<String, String> result = oracleJdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+            Map<String, String> result = stgJdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
                 Map<String, String> map = new HashMap<>();
                 map.put("ACCT", rs.getString("ACCT"));
                 map.put("CIF", rs.getString("CUSTOMERCIF"));
@@ -44,14 +49,39 @@ public class CustomerInfoRepository {
         }
     }
 
-    public void testConnection() {
+    /**
+     * Test DWH database connection
+     */
+    public void testDwhConnection() {
         try {
-            log.debug("Testing Oracle database connection...");
-            Integer result = oracleJdbcTemplate.queryForObject("SELECT 1 FROM DUAL", Integer.class);
-            log.info("✅ Oracle connection test successful, result: {}", result);
+            log.debug("Testing DWH Oracle database connection...");
+            Integer result = dwhJdbcTemplate.queryForObject("SELECT 1 FROM DUAL", Integer.class);
+            log.info("✅ DWH Oracle connection test successful, result: {}", result);
         } catch (Exception e) {
-            log.error("❌ Oracle connection test failed: {}", e.getMessage());
+            log.error("❌ DWH Oracle connection test failed: {}", e.getMessage());
             throw e;
         }
+    }
+
+    /**
+     * Test STG database connection
+     */
+    public void testStgConnection() {
+        try {
+            log.debug("Testing STG Oracle database connection...");
+            Integer result = stgJdbcTemplate.queryForObject("SELECT 1 FROM DUAL", Integer.class);
+            log.info("✅ STG Oracle connection test successful, result: {}", result);
+        } catch (Exception e) {
+            log.error("❌ STG Oracle connection test failed: {}", e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * Test both database connections
+     */
+    public void testAllConnections() {
+        testDwhConnection();
+        testStgConnection();
     }
 }

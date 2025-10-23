@@ -22,7 +22,7 @@ import java.util.List;
 @Slf4j
 public class MasterDataDataServiceImpl implements MasterDataService {
 
-    @Qualifier("oracleJdbcTemplate")
+    @Qualifier("dwhJdbcTemplate")
     private final JdbcTemplate oracleJdbcTemplate;
 
     @Value("${masterdata.schema:STG}") // Default to STG if not specified
