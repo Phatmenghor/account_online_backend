@@ -4,6 +4,7 @@ import com.internal.exceptions.error.MasterDataServiceException;
 import com.internal.feature.master_data.dto.request.AllMasterDataRequest;
 import com.internal.feature.master_data.dto.response.*;
 import com.internal.feature.master_data.service.MasterDataService;
+import com.internal.utils.constants.HelperUtils;
 import com.internal.utils.pagination.PaginationResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,8 +29,10 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     @Qualifier("stgJdbcTemplate")
     private final JdbcTemplate stgJdbcTemplate;
 
-    @Value("${masterdata.schema:STG}") // Default schema
+    @Value("${masterdata.schema:STG}") // Default schema for STG/DWH fallback
     private String masterDataSchema;
+
+    private final HelperUtils helperUtils;
 
     /**
      * Centralized method to execute paginated queries for any datasource.
@@ -55,13 +58,13 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         }
     }
 
-    // ---------------------- Province (DWH) ----------------------
+    // ---------------------- Province (DWH only) ----------------------
     @Override
     public PaginationResponse<ClsProvinceDto> getProvince(AllMasterDataRequest request) {
         return getPaginatedData(
-                dwhJdbcTemplate, // ✅ Province uses DWH
+                dwhJdbcTemplate,
                 request,
-                masterDataSchema + ".D_CBS_ADDRESS_PROVINCE",
+                "DWH.D_CBS_ADDRESS_PROVINCE",
                 new ProvinceRowMapper(),
                 "PROVINCE_CODE",
                 "PROVINCE_DESC",
@@ -70,11 +73,11 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         );
     }
 
-    // ---------------------- District (STG) ----------------------
+    // ---------------------- District ----------------------
     @Override
     public PaginationResponse<ClsDistrictDto> getDistrict(AllMasterDataRequest request, String provinceCode) {
         return getPaginatedData(
-                stgJdbcTemplate,
+                stgJdbcTemplate, // choose either stgJdbcTemplate or dwhJdbcTemplate
                 request,
                 masterDataSchema + ".D_CBS_ADDRESS_DISTRICT",
                 new DistrictRowMapper(),
@@ -85,11 +88,11 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         );
     }
 
-    // ---------------------- Commune (STG) ----------------------
+    // ---------------------- Commune ----------------------
     @Override
     public PaginationResponse<ClsCommuneDto> getCommune(AllMasterDataRequest request, String districtCode) {
         return getPaginatedData(
-                stgJdbcTemplate,
+                stgJdbcTemplate, // choose either stgJdbcTemplate or dwhJdbcTemplate
                 request,
                 masterDataSchema + ".D_CBS_ADDRESS_COMMUNE",
                 new CommuneRowMapper(),
@@ -100,11 +103,11 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         );
     }
 
-    // ---------------------- Village (STG) ----------------------
+    // ---------------------- Village ----------------------
     @Override
     public PaginationResponse<ClsVillageDto> getVillage(AllMasterDataRequest request, String communeCode) {
         return getPaginatedData(
-                stgJdbcTemplate,
+                stgJdbcTemplate, // choose either stgJdbcTemplate or dwhJdbcTemplate
                 request,
                 masterDataSchema + ".D_CBS_ADDRESS_VILLAGE",
                 new VillageRowMapper(),
@@ -115,7 +118,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         );
     }
 
-    // ---------------------- Branch (STG) ----------------------
+    // ---------------------- Branch ----------------------
     @Override
     public PaginationResponse<ClsBranchDto> getBranch(AllMasterDataRequest request) {
         String search = request.getSearch();
@@ -144,7 +147,10 @@ public class MasterDataDataServiceImpl implements MasterDataService {
             baseParams = new Object[]{endRow, startRow};
         }
 
-        return executePaginatedQuery(stgJdbcTemplate, baseSql, baseParams, countSql, countParams, new BranchRowMapper(), pageNo, pageSize, "branches");
+        return executePaginatedQuery(
+                stgJdbcTemplate, baseSql, baseParams, countSql, countParams,
+                new BranchRowMapper(), pageNo, pageSize, "branches"
+        );
     }
 
     /**
@@ -182,7 +188,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
                         "AND ROWNUM <= ?) WHERE rnum > ?";
                 baseParams = new Object[]{parentCode, "%" + search + "%", "%" + search + "%", pageNo * pageSize, (pageNo - 1) * pageSize};
             } else {
-                countSql += " WHERE " + codeColumn + " LIKE ? OR " + descColumn + " LIKE ?";
+                countSql += " WHERE (" + codeColumn + " LIKE ? OR " + descColumn + " LIKE ?)";
                 countParams = new Object[]{"%" + search + "%", "%" + search + "%"};
                 baseSql = "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM " + tableName + " a " +
                         "WHERE (" + codeColumn + " LIKE ? OR " + descColumn + " LIKE ?) AND ROWNUM <= ?) WHERE rnum > ?";
@@ -205,7 +211,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         @Override
         public ClsProvinceDto mapRow(ResultSet rs, int rowNum) throws SQLException {
             return ClsProvinceDto.builder()
-                    .provinceCode(rs.getString("PROVINCE_CODE"))
+                    .provinceCode(HelperUtils.formatCodeWithLeadingZero(rs.getString("PROVINCE_CODE"),2))
                     .provinceDesc(rs.getString("PROVINCE_DESC"))
                     .provinceDesc2(rs.getString("PROVINCE_DESC2"))
                     .parentCode(rs.getString("PARENT_CODE"))
@@ -217,7 +223,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         @Override
         public ClsDistrictDto mapRow(ResultSet rs, int rowNum) throws SQLException {
             return ClsDistrictDto.builder()
-                    .districtCode(rs.getString("DISTRICT_CODE"))
+                    .districtCode(HelperUtils.formatCodeWithLeadingZero(rs.getString("DISTRICT_CODE"),2))
                     .districtDesc(rs.getString("DISTRICT_DESC"))
                     .districtDesc2(rs.getString("DISTRICT_DESC2"))
                     .parentCode(rs.getString("PARENT_CODE"))
@@ -229,7 +235,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         @Override
         public ClsCommuneDto mapRow(ResultSet rs, int rowNum) throws SQLException {
             return ClsCommuneDto.builder()
-                    .communeCode(rs.getString("COMMUNE_CODE"))
+                    .communeCode(HelperUtils.formatCodeWithLeadingZero(rs.getString("COMMUNE_CODE"),2))
                     .communeDesc(rs.getString("COMMUNE_DESC"))
                     .communeDesc2(rs.getString("COMMUNE_DESC2"))
                     .parentCode(rs.getString("PARENT_CODE"))
@@ -241,7 +247,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         @Override
         public ClsVillageDto mapRow(ResultSet rs, int rowNum) throws SQLException {
             return ClsVillageDto.builder()
-                    .villageCode(rs.getString("VILLAGE_CODE"))
+                    .villageCode(HelperUtils.formatCodeWithLeadingZero(rs.getString("VILLAGE_CODE"),2))
                     .villageDesc(rs.getString("VILLAGE_DESC"))
                     .villageDesc2(rs.getString("VILLAGE_DESC2"))
                     .parentCode(rs.getString("PARENT_CODE"))

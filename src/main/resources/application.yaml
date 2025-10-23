@@ -56,37 +56,11 @@ spring:
       auto-commit: false
 
 #PROD - Dual Oracle Database Configuration
-#oracle:
-#  dwh:
-#    datasource:
-#      url: jdbc:oracle:thin:@//192.168.102.5:1521/dwh
-#      username: dwh
-#      password: Bnk$$444
-#      driver-class-name: oracle.jdbc.OracleDriver
-#      hikari:
-#        connection-test-query: SELECT 1 FROM DUAL
-#        maximum-pool-size: 10
-#        minimum-idle: 5
-#        connection-timeout: 30000
-#
-#  stg:
-#    datasource:
-#      url: jdbc:oracle:thin:@//192.168.102.5:1521/stg
-#      username: stg
-#      password: Bnk$$444
-#      driver-class-name: oracle.jdbc.OracleDriver
-#      hikari:
-#        connection-test-query: SELECT 1 FROM DUAL
-#        maximum-pool-size: 10
-#        minimum-idle: 5
-#        connection-timeout: 30000
-
-#UAT
 oracle:
   dwh:
     datasource:
-      url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
-      username: stg
+      url: jdbc:oracle:thin:@//192.168.102.5:1521/dwh
+      username: dwh
       password: Bnk$$444
       driver-class-name: oracle.jdbc.OracleDriver
       hikari:
@@ -97,7 +71,7 @@ oracle:
 
   stg:
     datasource:
-      url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
+      url: jdbc:oracle:thin:@//192.168.102.5:1521/stg
       username: stg
       password: Bnk$$444
       driver-class-name: oracle.jdbc.OracleDriver
@@ -106,6 +80,32 @@ oracle:
         maximum-pool-size: 10
         minimum-idle: 5
         connection-timeout: 30000
+
+#UAT
+#oracle:
+#  dwh:
+#    datasource:
+#      url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
+#      username: stg
+#      password: Bnk$$444
+#      driver-class-name: oracle.jdbc.OracleDriver
+#      hikari:
+#        connection-test-query: SELECT 1 FROM DUAL
+#        maximum-pool-size: 10
+#        minimum-idle: 5
+#        connection-timeout: 30000
+#
+#  stg:
+#    datasource:
+#      url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
+#      username: stg
+#      password: Bnk$$444
+#      driver-class-name: oracle.jdbc.OracleDriver
+#      hikari:
+#        connection-test-query: SELECT 1 FROM DUAL
+#        maximum-pool-size: 10
+#        minimum-idle: 5
+#        connection-timeout: 30000
 
 masterdata:
   schema: DWH

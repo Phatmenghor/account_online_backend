@@ -31,3 +31,4 @@ public abstract class BaseEntity {
     @Column(nullable = true, length = 100)
     private String updatedBy;
 }
+
