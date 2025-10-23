@@ -11,7 +11,7 @@ import com.internal.feature.reference.mapper.MaritalStatusMapper;
 import com.internal.feature.reference.models.MaritalStatus;
 import com.internal.feature.reference.repository.MaritalStatusRepository;
 import com.internal.feature.reference.service.MaritalStatusService;
-import com.internal.utils.reference.MaritalStatusSpec;
+import com.internal.utils.specification.reference.MaritalStatusSpec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;

@@ -6,7 +6,7 @@ import com.internal.feature.camdx.dto.CamdxFaceRequest;
 import com.internal.feature.camdx.dto.CamdxRequest;
 import com.internal.feature.camdx.dto.CamdxValidateNidRequest;
 import com.internal.feature.camdx.service.CamdxService;
-import com.internal.feature.telegram_alerts.service.serviceImpl.CamdxErrorCheckService;
+import com.internal.feature.telegram_alerts.service.serviceImpl.CamdxErrorCheckServiceImpl;
 import com.internal.utils.service.HttpClientUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ import java.util.Map;
 @Slf4j
 public class CamdxServiceImp implements CamdxService {
 
-    private final CamdxErrorCheckService errorCheckService;
+    private final CamdxErrorCheckServiceImpl errorCheckService;
     private final CpbProperties cpbProperties;
     private final HttpClientUtil httpClient;
 
@@ -52,7 +52,12 @@ public class CamdxServiceImp implements CamdxService {
             log.error("NID Validation API error: {}", rawBody);
 
             // 🔥 Push immediately to Telegram
-            errorCheckService.sendInfraErrorAlertFromException(request, rawBody);
+            try {
+                errorCheckService.sendInfraErrorAlertFromException(request, rawBody);
+            } catch (Exception e) {
+                log.error("Failed to send Telegram notification, but logs was created: {}",
+                        e.getMessage());
+            }
 
             // then rethrow or wrap
             throw ex;

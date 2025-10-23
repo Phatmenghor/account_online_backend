@@ -5,4 +5,5 @@ import com.internal.feature.camdx.dto.CamdxValidateNidRequest;
 
 public interface ErrorAlertsService {
     void checkValidationResponse(JsonNode response, CamdxValidateNidRequest request);
+    void sendInfraErrorAlertFromException(CamdxValidateNidRequest request, String rawMessage);
 }

@@ -10,3 +10,4 @@ public class ErrorObject {
     private String message;
     private Date timestamp;
 }
+

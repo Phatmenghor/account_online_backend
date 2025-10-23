@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
 
 @Data
 public class CamdxValidateNidRequest {
@@ -14,6 +13,7 @@ public class CamdxValidateNidRequest {
     private String applicationName;
 
     @JsonProperty("idNumber")
+    @NotBlank(message = "IdNumber is required")
     private String idNumber;
 
     @JsonProperty("lastNameKh")

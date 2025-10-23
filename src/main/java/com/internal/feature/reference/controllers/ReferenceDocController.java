@@ -4,6 +4,7 @@ import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.reference.dto.request.*;
 import com.internal.feature.reference.dto.response.AllReferenceDocResponseDto;
 import com.internal.feature.reference.dto.response.ReferenceDocDto;
+import com.internal.feature.reference.dto.response.ReferenceDto;
 import com.internal.feature.reference.service.ReferenceDocService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,7 @@ public class ReferenceDocController {
     @PostMapping("/all")
     public ResponseEntity<ApiResponse<AllReferenceDocResponseDto>> getAll(@RequestBody GetAllReferenceDocRequest request) {
         log.info("Fetching all doc reference");
-        AllReferenceDocResponseDto list = service.getAll(request);
+        AllReferenceDocResponseDto list = service.getAllReferenceDoc(request);
         log.info("Successfully retrieved {} doc reference", list.getContent().size());
         return ResponseEntity.ok(ApiResponse.success("All doc reference retrieved successfully", list));
     }
@@ -46,18 +47,18 @@ public class ReferenceDocController {
     @PostMapping("/update/{id}")
     public ResponseEntity<ApiResponse<ReferenceDocDto>> update(@PathVariable Long id,
                                                                 @RequestBody ReferenceDocUpdateRequestDto request) {
-        log.info("Updating bank with ID: {} with data: {}", id, request);
+        log.info("Updating doc reference with ID: {} with data: {}", id, request);
         ReferenceDocDto dto = service.update(id, request);
         log.info("Successfully updated doc reference with ID: {}", id);
         return ResponseEntity.ok(ApiResponse.success("Doc reference updated successfully", dto));
     }
 
     @PostMapping("/delete/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<ReferenceDocDto>> delete(@PathVariable Long id) {
         log.info("Deleting doc reference with ID: {}", id);
-        service.delete(id);
+        ReferenceDocDto referenceDocDto = service.delete(id);
         log.info("Successfully deleted doc reference with ID: {}", id);
-        return ResponseEntity.ok(ApiResponse.success("Doc reference deleted successfully", null));
+        return ResponseEntity.ok(ApiResponse.success("Doc reference deleted successfully", referenceDocDto));
     }
 
 }

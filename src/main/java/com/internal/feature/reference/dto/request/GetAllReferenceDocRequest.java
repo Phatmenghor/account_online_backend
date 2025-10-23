@@ -1,6 +1,5 @@
 package com.internal.feature.reference.dto.request;
 
-import com.internal.enumation.LanguageEnum;
 import com.internal.enumation.StatusData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +16,6 @@ public class GetAllReferenceDocRequest {
 
     @Builder.Default
     private int pageSize = 10;
-    private LanguageEnum language;
     private String search;
     private StatusData status = StatusData.ACTIVE;
 }

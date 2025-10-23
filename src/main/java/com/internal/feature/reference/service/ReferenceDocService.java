@@ -6,9 +6,9 @@ import com.internal.feature.reference.dto.response.ReferenceDocDto;
 
 public interface ReferenceDocService {
     ReferenceDocDto getById(Long id);
-    AllReferenceDocResponseDto getAll(GetAllReferenceDocRequest request);
+    AllReferenceDocResponseDto getAllReferenceDoc(GetAllReferenceDocRequest request);
     ReferenceDocDto create(ReferenceDocCreateRequestDto request);
     ReferenceDocDto update(Long id, ReferenceDocUpdateRequestDto request);
-    void delete(Long id);
+    ReferenceDocDto delete(Long id);
 
 }
