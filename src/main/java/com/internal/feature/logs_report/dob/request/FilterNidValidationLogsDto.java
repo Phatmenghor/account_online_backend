@@ -20,5 +20,8 @@ public class FilterNidValidationLogsDto {
     @NotNull(message = "To Date is required")
     private LocalDate toDate;
 
+    @NotNull(message = "Password is required")
+    private String password;
+
     private List<OpenAccStatusEnum> status;
 }

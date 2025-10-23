@@ -98,7 +98,6 @@ public class AuthServiceImpl implements AuthService {
         // 2. Update fields
         updateUserFields(user, requestDto);
 
-
         // 3. Save updated user entity
         UserEntity updatedUser = userRepository.save(user);
 

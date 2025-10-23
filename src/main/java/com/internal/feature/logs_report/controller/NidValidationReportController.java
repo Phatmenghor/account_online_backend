@@ -25,7 +25,6 @@ public class NidValidationReportController {
             return ResponseEntity.ok()
                     .header("Content-Disposition", "attachment; filename=nid-validation-report.xlsx")
                     .body(excelData);
-
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
