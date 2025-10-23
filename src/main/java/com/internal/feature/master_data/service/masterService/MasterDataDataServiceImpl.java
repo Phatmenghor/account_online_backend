@@ -23,15 +23,19 @@ import java.util.List;
 public class MasterDataDataServiceImpl implements MasterDataService {
 
     @Qualifier("dwhJdbcTemplate")
-    private final JdbcTemplate oracleJdbcTemplate;
+    private final JdbcTemplate dwhJdbcTemplate;
 
-    @Value("${masterdata.schema:STG}") // Default to STG if not specified
+    @Qualifier("stgJdbcTemplate")
+    private final JdbcTemplate stgJdbcTemplate;
+
+    @Value("${masterdata.schema:STG}") // Default schema
     private String masterDataSchema;
 
     /**
-     * Centralized method to execute paginated queries
+     * Centralized method to execute paginated queries for any datasource.
      */
     private <T> PaginationResponse<T> executePaginatedQuery(
+            JdbcTemplate jdbcTemplate,
             String baseSql,
             Object[] baseParams,
             String countSql,
@@ -42,8 +46,8 @@ public class MasterDataDataServiceImpl implements MasterDataService {
             String entityName
     ) {
         try {
-            long total = oracleJdbcTemplate.queryForObject(countSql, countParams, Long.class);
-            List<T> content = oracleJdbcTemplate.query(baseSql, baseParams, rowMapper);
+            long total = jdbcTemplate.queryForObject(countSql, countParams, Long.class);
+            List<T> content = jdbcTemplate.query(baseSql, baseParams, rowMapper);
             return new PaginationResponse<>(content, pageNo, pageSize, total);
         } catch (Exception ex) {
             log.error("Error fetching {}: {}", entityName, ex.getMessage(), ex);
@@ -51,9 +55,11 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         }
     }
 
+    // ---------------------- Province (DWH) ----------------------
     @Override
     public PaginationResponse<ClsProvinceDto> getProvince(AllMasterDataRequest request) {
         return getPaginatedData(
+                dwhJdbcTemplate, // ✅ Province uses DWH
                 request,
                 masterDataSchema + ".D_CBS_ADDRESS_PROVINCE",
                 new ProvinceRowMapper(),
@@ -64,9 +70,11 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         );
     }
 
+    // ---------------------- District (STG) ----------------------
     @Override
     public PaginationResponse<ClsDistrictDto> getDistrict(AllMasterDataRequest request, String provinceCode) {
         return getPaginatedData(
+                stgJdbcTemplate,
                 request,
                 masterDataSchema + ".D_CBS_ADDRESS_DISTRICT",
                 new DistrictRowMapper(),
@@ -77,9 +85,11 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         );
     }
 
+    // ---------------------- Commune (STG) ----------------------
     @Override
     public PaginationResponse<ClsCommuneDto> getCommune(AllMasterDataRequest request, String districtCode) {
         return getPaginatedData(
+                stgJdbcTemplate,
                 request,
                 masterDataSchema + ".D_CBS_ADDRESS_COMMUNE",
                 new CommuneRowMapper(),
@@ -90,9 +100,11 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         );
     }
 
+    // ---------------------- Village (STG) ----------------------
     @Override
     public PaginationResponse<ClsVillageDto> getVillage(AllMasterDataRequest request, String communeCode) {
         return getPaginatedData(
+                stgJdbcTemplate,
                 request,
                 masterDataSchema + ".D_CBS_ADDRESS_VILLAGE",
                 new VillageRowMapper(),
@@ -103,6 +115,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         );
     }
 
+    // ---------------------- Branch (STG) ----------------------
     @Override
     public PaginationResponse<ClsBranchDto> getBranch(AllMasterDataRequest request) {
         String search = request.getSearch();
@@ -131,13 +144,14 @@ public class MasterDataDataServiceImpl implements MasterDataService {
             baseParams = new Object[]{endRow, startRow};
         }
 
-        return executePaginatedQuery(baseSql, baseParams, countSql, countParams, new BranchRowMapper(), pageNo, pageSize, "branches");
+        return executePaginatedQuery(stgJdbcTemplate, baseSql, baseParams, countSql, countParams, new BranchRowMapper(), pageNo, pageSize, "branches");
     }
 
     /**
-     * Generic method for paginated address entities
+     * Generic method for paginated address entities with dynamic datasource.
      */
     private <T> PaginationResponse<T> getPaginatedData(
+            JdbcTemplate jdbcTemplate,
             AllMasterDataRequest request,
             String tableName,
             RowMapper<T> rowMapper,
@@ -171,17 +185,19 @@ public class MasterDataDataServiceImpl implements MasterDataService {
                 countSql += " WHERE " + codeColumn + " LIKE ? OR " + descColumn + " LIKE ?";
                 countParams = new Object[]{"%" + search + "%", "%" + search + "%"};
                 baseSql = "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM " + tableName + " a " +
-                        "WHERE " + codeColumn + " LIKE ? OR " + descColumn + " LIKE ? AND ROWNUM <= ?) WHERE rnum > ?";
+                        "WHERE (" + codeColumn + " LIKE ? OR " + descColumn + " LIKE ?) AND ROWNUM <= ?) WHERE rnum > ?";
                 baseParams = new Object[]{"%" + search + "%", "%" + search + "%", pageNo * pageSize, (pageNo - 1) * pageSize};
             }
         } else {
             baseSql = parentCode != null
                     ? "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM " + tableName + " a WHERE PARENT_CODE = ? AND ROWNUM <= ?) WHERE rnum > ?"
                     : "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM " + tableName + " a WHERE ROWNUM <= ?) WHERE rnum > ?";
-            baseParams = parentCode != null ? new Object[]{parentCode, pageNo * pageSize, (pageNo - 1) * pageSize} : new Object[]{pageNo * pageSize, (pageNo - 1) * pageSize};
+            baseParams = parentCode != null
+                    ? new Object[]{parentCode, pageNo * pageSize, (pageNo - 1) * pageSize}
+                    : new Object[]{pageNo * pageSize, (pageNo - 1) * pageSize};
         }
 
-        return executePaginatedQuery(baseSql, baseParams, countSql, countParams, rowMapper, pageNo, pageSize, entityName);
+        return executePaginatedQuery(jdbcTemplate, baseSql, baseParams, countSql, countParams, rowMapper, pageNo, pageSize, entityName);
     }
 
     // ---------------- RowMappers ----------------
