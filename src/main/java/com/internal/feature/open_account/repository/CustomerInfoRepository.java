@@ -1,13 +1,12 @@
-
 package com.internal.feature.open_account.repository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,28 +15,43 @@ import java.util.Map;
 @Slf4j
 public class CustomerInfoRepository {
 
-    private final DataSource oracleDataSource;
+    @Qualifier("oracleJdbcTemplate")
+    private final JdbcTemplate oracleJdbcTemplate;
 
     public Map<String, String> findByLegalId(String legalId) {
         try {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(oracleDataSource);
+            log.debug("Querying customer info for Legal ID: {}", legalId);
+
             String sql = "SELECT ACCT, CUSTOMERCIF, CUSTOMER_RATING FROM V_CBS_OAO_CUST_CHECK_RATING WHERE legal_id = ?";
-            
-            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
-                Map<String, String> result = new HashMap<>();
-                result.put("ACCT", rs.getString("ACCT"));
-                result.put("CIF", rs.getString("CUSTOMERCIF"));
-                result.put("RATING", rs.getString("CUSTOMER_RATING"));
-                return result;
+
+            Map<String, String> result = oracleJdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+                Map<String, String> map = new HashMap<>();
+                map.put("ACCT", rs.getString("ACCT"));
+                map.put("CIF", rs.getString("CUSTOMERCIF"));
+                map.put("RATING", rs.getString("CUSTOMER_RATING"));
+                return map;
             }, legalId);
-            
+
+            log.debug("Customer info found - CIF: {}, Rating: {}", result.get("CIF"), result.get("RATING"));
+            return result;
+
         } catch (EmptyResultDataAccessException e) {
+            log.debug("No customer found for Legal ID: {}", legalId);
             return new HashMap<>();
+        } catch (Exception e) {
+            log.error("Error querying customer info for Legal ID {}: {}", legalId, e.getMessage());
+            throw e;
         }
     }
 
     public void testConnection() {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(oracleDataSource);
-        jdbcTemplate.queryForObject("SELECT 1 FROM DUAL", Integer.class);
+        try {
+            log.debug("Testing Oracle database connection...");
+            Integer result = oracleJdbcTemplate.queryForObject("SELECT 1 FROM DUAL", Integer.class);
+            log.info("✅ Oracle connection test successful, result: {}", result);
+        } catch (Exception e) {
+            log.error("❌ Oracle connection test failed: {}", e.getMessage());
+            throw e;
+        }
     }
 }

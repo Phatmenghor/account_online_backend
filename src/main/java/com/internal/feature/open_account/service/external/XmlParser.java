@@ -1,4 +1,4 @@
-package com.internal.feature.open_account.service;
+package com.internal.feature.open_account.service.external;
 
 import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Document;

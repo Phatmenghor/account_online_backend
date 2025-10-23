@@ -1,5 +1,5 @@
 
-package com.internal.feature.open_account.service;
+package com.internal.feature.open_account.service.external;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.internal.config.CpbProperties;

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("/api/v1/open-account")
+@RequestMapping("/api/v1/public/open-account")
 @RequiredArgsConstructor
 @Slf4j
 public class OpenAccountController {
@@ -28,10 +28,5 @@ public class OpenAccountController {
         log.info("Account opening completed - Status: {}, CIF: {}", response.getStatus(), response.getCif());
         
         return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/health")
-    public ResponseEntity<String> healthCheck() {
-        return ResponseEntity.ok("Open Account Service is running");
     }
 }

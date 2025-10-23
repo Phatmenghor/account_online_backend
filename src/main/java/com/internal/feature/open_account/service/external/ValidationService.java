@@ -1,4 +1,4 @@
-package com.internal.feature.open_account.service;
+package com.internal.feature.open_account.service.external;
 
 import com.internal.exceptions.error.openaccount.AccountExistsException;
 import com.internal.exceptions.error.openaccount.DatabaseConnectionException;
