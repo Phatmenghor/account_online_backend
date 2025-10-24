@@ -1,16 +1,15 @@
-package com.internal.utils.specification.reference;
+package com.internal.feature.master_data.specification;
 
 import com.internal.enumation.StatusData;
-import com.internal.feature.reference.models.Occupation;
+import com.internal.feature.reference.models.ReferenceDoc;
 import org.springframework.data.jpa.domain.Specification;
 
-public class OccupationSpec {
-
-    public static Specification<Occupation> hasStatus(StatusData status) {
+public class ReferenceDocSpec {
+    public static Specification<ReferenceDoc> hasStatus(StatusData status) {
         return (root, query, cb) -> status == null ? cb.conjunction() : cb.equal(root.get("status"), status);
     }
 
-    public static Specification<Occupation> searchByName(String search) {
+    public static Specification<ReferenceDoc> searchByName(String search) {
         return (root, query, cb) -> {
             if (search == null || search.trim().isEmpty()) {
                 return cb.conjunction();

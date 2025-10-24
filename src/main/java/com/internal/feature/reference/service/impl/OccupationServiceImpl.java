@@ -11,7 +11,7 @@ import com.internal.feature.reference.mapper.OccupationMapper;
 import com.internal.feature.reference.models.Occupation;
 import com.internal.feature.reference.repository.OccupationRepository;
 import com.internal.feature.reference.service.OccupationService;
-import com.internal.utils.specification.reference.OccupationSpec;
+import com.internal.feature.master_data.specification.OccupationSpec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;

@@ -98,7 +98,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         return getPaginatedData(
                 jdbcTemplate,
                 request,
-                "branchs",       // replace with your branch table name
+                "acc_online_branch",       // replace with your branch table name
                 new BranchRowMapper(),
                 "branch_code",          // branch code column
                 null,            // branch name English column

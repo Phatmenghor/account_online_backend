@@ -23,6 +23,9 @@ public class Occupation {
     @Column(name = "name_kh", nullable = false, length = 100)
     private String nameKh;
 
+    @Column(name = "occupation_code", nullable = true)
+    private String occupationCode;
+
     @Column(name = "status", nullable = false)
     private StatusData status;
 }

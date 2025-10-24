@@ -17,5 +17,8 @@ public class OccupationCreateRequestDto {
     @NotBlank(message = "Khmer name must not be blank")
     private String nameKh;
 
+    @NotBlank(message = "occupation code is required")
+    private String occupationCode;
+
     private StatusData status = StatusData.ACTIVE;
 }

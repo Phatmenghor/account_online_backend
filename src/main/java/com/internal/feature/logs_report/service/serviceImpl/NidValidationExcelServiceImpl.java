@@ -4,7 +4,7 @@ import com.internal.feature.logs_report.dob.request.FilterNidValidationLogsDto;
 import com.internal.feature.logs_report.model.NidValidationFailureLogs;
 import com.internal.feature.logs_report.repository.NidValidationFailureLogsRepository;
 import com.internal.feature.logs_report.service.NidValidationExcelService;
-import com.internal.utils.specification.nidValidation.NidValidationLogsSpecification;
+import com.internal.feature.logs_report.specification.NidValidationLogsSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;

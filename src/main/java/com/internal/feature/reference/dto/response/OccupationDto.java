@@ -14,5 +14,6 @@ public class OccupationDto {
     private Long id;
     private String nameEn;
     private String nameKh;
+    private String occupationCode;
     private StatusData status;
 }
