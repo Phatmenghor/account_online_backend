@@ -1,4 +1,4 @@
-package com.internal.config;
+package com.internal.config.entity;
 
 import lombok.Data;
 import org.springframework.data.annotation.CreatedBy;

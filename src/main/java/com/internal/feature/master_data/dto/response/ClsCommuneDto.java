@@ -7,7 +7,7 @@ import lombok.Data;
 @Builder
 public class ClsCommuneDto {
     private String communeCode;
-    private String communeDesc;
-    private String communeDesc2;
-    private String parentCode; // district code
+    private String communeEn;
+    private String communeKh;
+    private String districtCode; // district code
 }

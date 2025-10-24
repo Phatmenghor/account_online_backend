@@ -1,6 +1,6 @@
 package com.internal.feature.logs_report.model;
 
-import com.internal.config.BaseEntity;
+import com.internal.config.entity.BaseEntity;
 import com.internal.enumation.OpenAccStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +12,7 @@ import javax.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "nid_validation_failure_logs")
+@Table(name = "acc_online_report_log")
 @Data
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
@@ -36,4 +36,6 @@ public class NidValidationFailureLogs extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private OpenAccStatusEnum status;
+
+    private String remark;
 }
