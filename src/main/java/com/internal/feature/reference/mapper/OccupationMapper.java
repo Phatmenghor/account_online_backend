@@ -27,6 +27,7 @@ public interface OccupationMapper {
         dto.setStatus(occupation.getStatus());
             dto.setNameEn(occupation.getNameEn());
             dto.setNameKh(occupation.getNameKh());
+            dto.setOccupationCode(occupation.getOccupationCode());
         return dto;
     }
 
@@ -49,6 +50,7 @@ public interface OccupationMapper {
         occupation.setNameEn(request.getNameEn());
         occupation.setNameKh(request.getNameKh());
         occupation.setStatus(request.getStatus());
+        occupation.setOccupationCode(request.getOccupationCode());
         return occupation;
     }
 
@@ -62,6 +64,10 @@ public interface OccupationMapper {
 
         if (request.getNameKh() != null) {
             occupation.setNameKh(request.getNameKh());
+        }
+
+        if (request.getOccupationCode() != null) {
+            occupation.setOccupationCode(request.getOccupationCode());
         }
 
         if (request.getStatus() != null) {

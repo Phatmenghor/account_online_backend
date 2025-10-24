@@ -1,28 +1,24 @@
 package com.internal.feature.logs_report.model;
 
+import com.internal.config.entity.BaseEntity;
 import com.internal.enumation.OpenAccStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "nid_validation_failure_logs")
+@Table(name = "acc_online_report_log")
 @Data
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class NidValidationFailureLogs {
+public class NidValidationFailureLogs extends BaseEntity {
 
     @Id
     @GeneratedValue
@@ -41,19 +37,5 @@ public class NidValidationFailureLogs {
     @Enumerated(EnumType.STRING)
     private OpenAccStatusEnum status;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
-
-    @CreatedBy
-    @Column(nullable = true, updatable = false, length = 100)
-    private String createdBy;
-
-    @LastModifiedBy
-    @Column(nullable = true, length = 100)
-    private String updatedBy;
+    private String remark;
 }

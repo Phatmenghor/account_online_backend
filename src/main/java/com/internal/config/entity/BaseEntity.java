@@ -1,4 +1,4 @@
-package com.internal.config;
+package com.internal.config.entity;
 
 import lombok.Data;
 import org.springframework.data.annotation.CreatedBy;
@@ -31,3 +31,4 @@ public abstract class BaseEntity {
     @Column(nullable = true, length = 100)
     private String updatedBy;
 }
+

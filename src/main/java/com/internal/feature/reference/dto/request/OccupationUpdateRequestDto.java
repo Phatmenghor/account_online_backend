@@ -11,5 +11,6 @@ import lombok.NoArgsConstructor;
 public class OccupationUpdateRequestDto {
     private String nameEn;
     private String nameKh;
+    private String occupationCode;
     private StatusData status;
 }

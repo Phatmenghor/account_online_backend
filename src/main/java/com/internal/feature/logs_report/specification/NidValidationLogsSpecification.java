@@ -1,4 +1,4 @@
-package com.internal.utils.specification.nidValidation;
+package com.internal.feature.logs_report.specification;
 
 import com.internal.feature.logs_report.dob.request.FilterNidValidationLogsDto;
 import com.internal.feature.logs_report.model.NidValidationFailureLogs;
