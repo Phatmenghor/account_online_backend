@@ -1,6 +1,7 @@
 package com.internal.config.datasource;
 
 import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +20,7 @@ public class PostgresDataSourceConfig {
     }
 
     @Primary
-    @Bean
+    @Bean(name = "postgresDataSource")
     @ConfigurationProperties("spring.datasource.hikari")
     public HikariDataSource dataSource() {
         return postgresDataSourceProperties()
@@ -29,8 +30,9 @@ public class PostgresDataSourceConfig {
     }
 
     @Primary
-    @Bean
-    public JdbcTemplate jdbcTemplate(HikariDataSource dataSource) {
+    @Bean(name = "postgresJdbcTemplate")
+    public JdbcTemplate jdbcTemplate(
+            @Qualifier("postgresDataSource") HikariDataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 }

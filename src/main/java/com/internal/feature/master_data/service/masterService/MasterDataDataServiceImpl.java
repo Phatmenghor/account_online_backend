@@ -26,7 +26,8 @@ import java.util.List;
 public class MasterDataDataServiceImpl implements MasterDataService {
 
     private final HelperUtils helperUtils;
-    @Qualifier("jdbcTemplate")
+
+    @Qualifier("postgresJdbcTemplate")
     private final JdbcTemplate jdbcTemplate;
 
     // ---------------------- Province ----------------------
