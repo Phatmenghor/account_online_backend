@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.internal.config.telegram.TelegramService;
 import com.internal.enumation.OpenAccStatusEnum;
 import com.internal.feature.camdx.dto.CamdxValidateNidRequest;
-import com.internal.feature.logs_report.model.NidValidationFailureLogs;
-import com.internal.feature.logs_report.repository.NidValidationFailureLogsRepository;
+import com.internal.feature.logs_report.model.AccountOnlineReportLog;
+import com.internal.feature.logs_report.repository.AccountOnlineReportLogRepository;
+import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
 import com.internal.feature.telegram_alerts.service.ErrorAlertsService;
+import com.internal.utils.constants.ErrorMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +25,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsService {
 
     private final TelegramService telegramService;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final NidValidationFailureLogsRepository failureLogsRepository;
+    private final AccountOnlineReportLogService saveLogReport;
 
     @Override
     public void checkValidationResponse(JsonNode response, CamdxValidateNidRequest request) {
@@ -40,7 +42,6 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsService {
             String message = response.path("message").asText("Unknown");
 
             log.info("CAMDX response message: '{}' (error code: {})", message, errorCode);
-
             if (shouldIgnoreError(message)) {
                 log.info("Ignoring non-critical message: {}", message);
                 return;
@@ -68,7 +69,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsService {
         if (shouldAlert) {
             log.warn("Validation issue detected for ID {} (score={}, incorrectFields={})", idNumber, score, incorrectFields);
 
-            saveFailureLogs(request, response, OpenAccStatusEnum.FAILURE);
+            saveLogReport.saveLogReport(idNumber, OpenAccStatusEnum.FAILURE, ErrorMessage.CAMDX_VALIDATE);
 
             try {
                 sendErrorAlert(request, message, errorCode, score, incorrectFields);
@@ -80,30 +81,6 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsService {
         } else {
             log.info("Validation passed successfully for ID {} ✅", idNumber);
         }
-    }
-
-    /**
-     * Flexible method: saves both JSON responses and raw string errors
-     */
-    private void saveFailureLogs(CamdxValidateNidRequest request, Object responseBody, OpenAccStatusEnum status) {
-        String responseString;
-
-        if (responseBody == null) {
-            responseString = null;
-        } else if (responseBody instanceof JsonNode) {
-            responseString = responseBody.toString();  // JSON response
-        } else {
-            responseString = responseBody.toString();  // raw string or anything else
-        }
-
-        NidValidationFailureLogs failureLogs = NidValidationFailureLogs.builder()
-                .request(convertObjectToJson(request)) // serialize request to JSON
-                .response(responseString)
-                .status(status)
-                .idNumber(request.getIdNumber())
-                .build();
-
-        failureLogsRepository.save(failureLogs);
     }
 
     /**
@@ -124,7 +101,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsService {
     @Override
     public void sendInfraErrorAlertFromException(CamdxValidateNidRequest request, String rawMessage) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        saveFailureLogs(request, rawMessage, OpenAccStatusEnum.FAILURE);
+        saveLogReport.saveLogReport(request.getIdNumber(), OpenAccStatusEnum.FAILURE,ErrorMessage.CAMDX_VALIDATE);
 
         String errorCode = "Unknown";
         String errorMessage = "Unknown";

@@ -1,16 +1,16 @@
 package com.internal.feature.logs_report.specification;
 
-import com.internal.feature.logs_report.dob.request.FilterNidValidationLogsDto;
-import com.internal.feature.logs_report.model.NidValidationFailureLogs;
+import com.internal.feature.logs_report.dob.request.AccountOnlineReportLogDto;
+import com.internal.feature.logs_report.model.AccountOnlineReportLog;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NidValidationLogsSpecification {
+public class AccountOnlineReportLogSpecification {
 
-    public static Specification<NidValidationFailureLogs> filter(FilterNidValidationLogsDto dto) {
+    public static Specification<AccountOnlineReportLog> filter(AccountOnlineReportLogDto dto) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 

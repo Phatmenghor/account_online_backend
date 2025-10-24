@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class FilterNidValidationLogsDto {
+public class AccountOnlineReportLogDto {
 
     @NotNull(message = "From Date is required")
     private LocalDate fromDate;

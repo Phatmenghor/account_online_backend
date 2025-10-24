@@ -9,6 +9,9 @@ public final class ErrorMessage {
         // Prevent instantiation
     }
 
+    public static final String CAMDX_VALIDATE = "CAMDX_VALIDATE";
+
+
     public static final String LAST_NAME_EN = "Last Name is required or invalid";
     public static final String FIRST_NAME_EN = "First Name is required or invalid";
     public static final String GENDER = "Gender is required or invalid";

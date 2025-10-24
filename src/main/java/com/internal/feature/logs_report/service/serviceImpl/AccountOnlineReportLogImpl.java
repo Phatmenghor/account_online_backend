@@ -1,10 +1,11 @@
 package com.internal.feature.logs_report.service.serviceImpl;
 
-import com.internal.feature.logs_report.dob.request.FilterNidValidationLogsDto;
-import com.internal.feature.logs_report.model.NidValidationFailureLogs;
-import com.internal.feature.logs_report.repository.NidValidationFailureLogsRepository;
-import com.internal.feature.logs_report.service.NidValidationExcelService;
-import com.internal.feature.logs_report.specification.NidValidationLogsSpecification;
+import com.internal.enumation.OpenAccStatusEnum;
+import com.internal.feature.logs_report.dob.request.AccountOnlineReportLogDto;
+import com.internal.feature.logs_report.model.AccountOnlineReportLog;
+import com.internal.feature.logs_report.repository.AccountOnlineReportLogRepository;
+import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
+import com.internal.feature.logs_report.specification.AccountOnlineReportLogSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -25,16 +26,29 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class NidValidationExcelServiceImpl implements NidValidationExcelService {
+public class AccountOnlineReportLogImpl implements AccountOnlineReportLogService {
 
-    private final NidValidationFailureLogsRepository repository;
+    private final AccountOnlineReportLogRepository repository;
     private boolean passwordProtectionEnabled = false; // set true in future
 
     @Override
-    public byte[] generateExcel(FilterNidValidationLogsDto filterDto) throws Exception {
+    public AccountOnlineReportLog saveLogReport(String idNumber, OpenAccStatusEnum status, String remark) {
+        log.info("Saving account online report log - ID number: {}, Status: {}", idNumber, status);
 
-        List<NidValidationFailureLogs> logs = repository.findAll(
-                NidValidationLogsSpecification.filter(filterDto),
+        AccountOnlineReportLog logEntry = AccountOnlineReportLog.builder()
+                .idNumber(idNumber)
+                .status(status)
+                .remark(remark)
+                .build();
+
+        return repository.save(logEntry);
+    }
+
+    @Override
+    public byte[] generateExcel(AccountOnlineReportLogDto filterDto) throws Exception {
+
+        List<AccountOnlineReportLog> logs = repository.findAll(
+                AccountOnlineReportLogSpecification.filter(filterDto),
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
@@ -108,7 +122,7 @@ public class NidValidationExcelServiceImpl implements NidValidationExcelService 
         return currentRow;
     }
 
-    private static int generateMetadataRow(Sheet sheet, int currentRow, List<NidValidationFailureLogs> logs, CellStyle dataStyle) {
+    private static int generateMetadataRow(Sheet sheet, int currentRow, List<AccountOnlineReportLog> logs, CellStyle dataStyle) {
         Row metadataRow = sheet.createRow(currentRow++);
         Cell metadataCell = metadataRow.createCell(0);
         metadataCell.setCellValue("Generated on: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + " | Total Records: " + logs.size());
@@ -116,9 +130,9 @@ public class NidValidationExcelServiceImpl implements NidValidationExcelService 
         return currentRow;
     }
 
-    private void generateDateRow(List<NidValidationFailureLogs> logs, Sheet sheet, int currentRow, CellStyle dataStyle, Workbook workbook, CellStyle statusSuccessStyle, CellStyle statusFailureStyle, DateTimeFormatter dtf, CellStyle dateStyle) {
+    private void generateDateRow(List<AccountOnlineReportLog> logs, Sheet sheet, int currentRow, CellStyle dataStyle, Workbook workbook, CellStyle statusSuccessStyle, CellStyle statusFailureStyle, DateTimeFormatter dtf, CellStyle dateStyle) {
         for (int i = 0; i < logs.size(); i++) {
-            NidValidationFailureLogs log = logs.get(i);
+            AccountOnlineReportLog log = logs.get(i);
             Row row = sheet.createRow(currentRow++);
             row.setHeightInPoints(20);
 
@@ -126,8 +140,6 @@ public class NidValidationExcelServiceImpl implements NidValidationExcelService 
 
             createStyledCell(row, 0, log.getId().toString(), rowStyle);
             createStyledCell(row, 1, log.getIdNumber(), rowStyle);
-            createStyledCell(row, 2, log.getRequest(), rowStyle);
-            createStyledCell(row, 3, log.getResponse(), rowStyle);
 
             Cell statusCell = row.createCell(4);
             String statusValue = log.getStatus() != null ? log.getStatus().name() : "";
@@ -147,7 +159,7 @@ public class NidValidationExcelServiceImpl implements NidValidationExcelService 
         }
     }
 
-    private byte[] returnExcelResult(FilterNidValidationLogsDto filterDto, ByteArrayOutputStream tempOut) throws IOException {
+    private byte[] returnExcelResult(AccountOnlineReportLogDto filterDto, ByteArrayOutputStream tempOut) throws IOException {
         if (passwordProtectionEnabled && filterDto.getPassword() != null && !filterDto.getPassword().isEmpty()) {
             POIFSFileSystem fs = new POIFSFileSystem();
             EncryptionInfo info = new EncryptionInfo(EncryptionMode.standard);
