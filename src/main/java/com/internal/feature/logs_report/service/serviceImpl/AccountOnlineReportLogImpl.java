@@ -16,6 +16,7 @@ import org.apache.poi.poifs.crypt.EncryptionMode;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -29,10 +30,10 @@ import java.util.List;
 public class AccountOnlineReportLogImpl implements AccountOnlineReportLogService {
 
     private final AccountOnlineReportLogRepository repository;
-    private boolean passwordProtectionEnabled = false; // set true in future
+    private final boolean passwordProtectionEnabled = false; // set true in future
 
     @Override
-    public AccountOnlineReportLog saveLogReport(String idNumber, OpenAccStatusEnum status, String remark) {
+    public void saveLogReport(String idNumber, OpenAccStatusEnum status, String remark) {
         log.info("Saving account online report log - ID number: {}, Status: {}", idNumber, status);
 
         AccountOnlineReportLog logEntry = AccountOnlineReportLog.builder()
@@ -41,7 +42,26 @@ public class AccountOnlineReportLogImpl implements AccountOnlineReportLogService
                 .remark(remark)
                 .build();
 
-        return repository.save(logEntry);
+        repository.save(logEntry);
+    }
+
+    @Override
+    public void createAccountOpeningLog(String idNumber, OpenAccStatusEnum status, String stepInfo, Exception exception) {
+        log.info("Creating account opening log - ID: {}, Status: {}, Step: {}", idNumber, status, stepInfo);
+
+        StringBuilder remarkBuilder = new StringBuilder();
+        remarkBuilder.append("Step: ").append(stepInfo);
+
+        if (exception != null) {
+            remarkBuilder.append(" | Error: ").append(exception.getClass().getSimpleName());
+            remarkBuilder.append(" | Message: ").append(exception.getMessage());
+        }
+
+        AccountOnlineReportLog.builder()
+                .idNumber(idNumber)
+                .status(status)
+                .remark(remarkBuilder.toString())
+                .build();
     }
 
     @Override

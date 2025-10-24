@@ -34,7 +34,7 @@ public class ValidationService {
 
     public void validateCustomerRating(Map<String, String> customerInfo) {
         String rating = customerInfo.get("RATING");
-        if (rating != null && ("3".equals(rating) || "4".equals(rating))) {
+        if (("3".equals(rating) || "4".equals(rating))) {
             log.warn("High-risk customer detected with rating: {}", rating);
             throw new HighRiskCustomerException(rating);
         }

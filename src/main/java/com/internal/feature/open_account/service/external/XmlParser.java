@@ -157,11 +157,7 @@ public class XmlParser {
             }
             
             NodeList faultNodes = document.getElementsByTagName("faultstring");
-            if (faultNodes.getLength() > 0) {
-                return true;
-            }
-            
-            return false;
+            return faultNodes.getLength() > 0;
         } catch (Exception e) {
             log.error("Error checking for XML errors: {}", e.getMessage());
             return false;

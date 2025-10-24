@@ -5,6 +5,7 @@ import com.internal.feature.logs_report.dob.request.AccountOnlineReportLogDto;
 import com.internal.feature.logs_report.model.AccountOnlineReportLog;
 
 public interface AccountOnlineReportLogService {
-    AccountOnlineReportLog saveLogReport(String idNumber, OpenAccStatusEnum status, String remark);
+    void saveLogReport(String idNumber, OpenAccStatusEnum status, String remark);
+    void createAccountOpeningLog(String idNumber, OpenAccStatusEnum status, String stepInfo, Exception exception);
     byte[] generateExcel(AccountOnlineReportLogDto filterDto) throws Exception;
 }
