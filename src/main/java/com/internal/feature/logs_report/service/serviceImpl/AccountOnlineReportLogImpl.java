@@ -57,11 +57,13 @@ public class AccountOnlineReportLogImpl implements AccountOnlineReportLogService
             remarkBuilder.append(" | Message: ").append(exception.getMessage());
         }
 
-        AccountOnlineReportLog.builder()
+        AccountOnlineReportLog onlineReportLog = AccountOnlineReportLog.builder()
                 .idNumber(idNumber)
                 .status(status)
                 .remark(remarkBuilder.toString())
                 .build();
+
+        repository.save(onlineReportLog);
     }
 
     @Override

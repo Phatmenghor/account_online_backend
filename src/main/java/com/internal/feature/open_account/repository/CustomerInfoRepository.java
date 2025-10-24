@@ -11,17 +11,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Repository
-@RequiredArgsConstructor
 @Slf4j
 public class CustomerInfoRepository {
 
-    // Inject DWH database connection
-//    @Qualifier("dwhJdbcTemplate")
-//    private final JdbcTemplate dwhJdbcTemplate;
-
-    // Inject STG database connection
-    @Qualifier("stgJdbcTemplate")
     private final JdbcTemplate stgJdbcTemplate;
+
+    public CustomerInfoRepository(@Qualifier("stgJdbcTemplate") JdbcTemplate stgJdbcTemplate) {
+        this.stgJdbcTemplate = stgJdbcTemplate;  // ✅ New way
+    }
 
     public Map<String, String> findByLegalId(String legalId) {
         try {
