@@ -34,7 +34,7 @@ public class ReferenceServiceImpl implements ReferenceService {
     @Override
     public ReferenceDto getById(Long id) {
         Reference bank = repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Bank not found"));
+                .orElseThrow(() -> new NotFoundException("Reference not found"));
         return mapper.toDto(bank);
     }
 

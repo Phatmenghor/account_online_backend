@@ -1,6 +1,6 @@
 package com.internal.feature.logs_report.model;
 
-import com.internal.config.entity.BaseEntity;
+import com.internal.config.entity.BaseNoIdEntity;
 import com.internal.enumation.OpenAccStatusEnum;
 import lombok.*;
 
@@ -14,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AccountOnlineReportLog extends BaseEntity {
+public class AccountOnlineReportLog extends BaseNoIdEntity {
 
     @Id
     @GeneratedValue

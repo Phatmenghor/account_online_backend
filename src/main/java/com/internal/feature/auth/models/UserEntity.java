@@ -1,5 +1,6 @@
 package com.internal.feature.auth.models;
 
+import com.internal.config.entity.BaseEntity;
 import com.internal.enumation.StatusData;
 import com.internal.enumation.UserPermission;
 import lombok.Data;

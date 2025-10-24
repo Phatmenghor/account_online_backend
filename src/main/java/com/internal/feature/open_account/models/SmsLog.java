@@ -1,15 +1,13 @@
 
 package com.internal.feature.open_account.models;
 
-import com.internal.feature.auth.models.BaseEntity;
+import com.internal.config.entity.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tbl_sms_log")
