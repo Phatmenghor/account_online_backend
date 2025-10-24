@@ -2,6 +2,7 @@ package com.internal.exceptions.error;
 
 import com.internal.exceptions.error.openaccount.*;
 import com.internal.exceptions.response.ErrorResponse;
+import com.internal.utils.constants.AppConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -29,7 +30,7 @@ public class OpenAccountExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_GATEWAY.value())
-                .message("មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ប្រព័ន្ធ សូមព្យាយាមម្តងទៀត")
+                .message(AppConstants.SYSTEM_ERROR)
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_GATEWAY);
@@ -45,7 +46,7 @@ public class OpenAccountExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.FORBIDDEN.value())
-                .message("សំណើរបស់អ្នកមិនអាចដំណើរការបានទេ ពីព្រោះការវាយតម្លៃអតិថិជនមានការហានិភ័យ")
+                .message(AppConstants.ACCOUNT_RISK)
                 .details(details)
                 .build();
 
@@ -62,24 +63,11 @@ public class OpenAccountExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.CONFLICT.value())
-                .message("លោកអ្នកមានគណនីជាមួយធនាគាររួចហើយ។ សូមប្រើប្រាស់ជាមួយគណនីរបស់លោកអ្នក។")
+                .message(AppConstants.ACCOUNT_ALREADY_EXIST)
                 .details(details)
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler(CustomerCreationException.class)
-    public ResponseEntity<ErrorResponse> handleCustomerCreationException(CustomerCreationException ex) {
-        log.error("Customer creation failed: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .message("ការស្នើសុំរបស់លោកអ្នកមិនអាចដំណើរការបានទេ។ សូមព្យាយាមម្តងទៀត")
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(AccountCreationException.class)
@@ -89,7 +77,7 @@ public class OpenAccountExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .message("ការស្នើសុំរបស់លោកអ្នកមិនអាចដំណើរការបានទេ។ សូមព្យាយាមម្តងទៀត")
+                .message(AppConstants.ACCOUNT_CREATE_FAIL)
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -102,7 +90,7 @@ public class OpenAccountExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_GATEWAY.value())
-                .message("មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ប្រព័ន្ធធនាគារ សូមព្យាយាមម្តងទៀត")
+                .message(AppConstants.SYSTEM_ERROR)
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_GATEWAY);

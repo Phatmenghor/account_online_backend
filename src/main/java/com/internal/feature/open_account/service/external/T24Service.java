@@ -50,16 +50,16 @@ public class T24Service {
             String branchCode = request.getBranchCode() != null ? request.getBranchCode() : "KH0012011";
             String fullNameEn = request.getFamilyName() + " " + request.getGivenName();
             String fullNameKh = request.getLastNameKh() + " " + request.getFirstNameKh();
-            
+
             return template
                 .replace("{{BRANCH_CODE}}", branchCode)
                 .replace("{{T24_PASSWORD}}", properties.getT24().getPassword())
                 .replace("{{T24_USERNAME}}", properties.getT24().getUsername())
-                .replace("{{CUS_SHORT_NAME}}", request.getShortName() != null ? request.getShortName() : fullNameEn)
+                .replace("{{CUS_SHORT_NAME}}", request.getGivenName() != null ? request.getGivenName() : "")
                 .replace("{{CUS_FULL_NAME_EN}}", fullNameEn)
                 .replace("{{CUS_FULL_NAME_KH}}", fullNameKh)
                 .replace("{{CUS_FAMILY_NAME}}", request.getFamilyName())
-                .replace("{{CUS_GIVEN_NAME}}", request.getGivenName())
+                .replace("{{CUS_GIVEN_NAME}}", request.getGivenName() != null ? request.getGivenName() : "")
                 .replace("{{CUS_SECTOR}}", "6010")
                 .replace("{{CUS_INDUSTRY}}", "1000")
                 .replace("{{CUS_TARGET}}", "1")
@@ -71,16 +71,16 @@ public class T24Service {
                 .replace("{{CUS_GENDER}}", request.getGender())
                 .replace("{{CUS_DATE_OF_BIRTH}}", request.getDateOfBirth())
                 .replace("{{CUS_MARITAL_STATUS}}", request.getMaritalStatus() != null ? request.getMaritalStatus() : "")
-                .replace("{{CUS_PHONE}}", request.getSms())
-                .replace("{{CUS_SMS}}", request.getSms())
-                .replace("{{CUS_PROVINCE}}", request.getCustProvince() != null ? request.getCustProvince() : "")
-                .replace("{{CUS_DISTRICT}}", request.getCustDistrict() != null ? request.getCustDistrict() : "")
-                .replace("{{CUS_COMMUNE}}", request.getCustCommune() != null ? request.getCustCommune() : "")
-                .replace("{{CUS_VILLAGE}}", request.getCustVillage() != null ? request.getCustVillage() : "")
+                .replace("{{CUS_PHONE}}", request.getPhoneNumber())
+                .replace("{{CUS_SMS}}", request.getPhoneNumber())
+                .replace("{{CUS_PROVINCE}}", request.getCustomerProvince() != null ? request.getCustomerProvince() : "")
+                .replace("{{CUS_DISTRICT}}", request.getCustomerDistrict() != null ? request.getCustomerDistrict() : "")
+                .replace("{{CUS_COMMUNE}}", request.getCustomerCommune() != null ? request.getCustomerCommune() : "")
+                .replace("{{CUS_VILLAGE}}", request.getCustomerVillage() != null ? request.getCustomerVillage() : "")
                 .replace("{{CUS_RELEASED_BY}}", request.getReleasedBy() != null ? request.getReleasedBy() : "")
                 .replace("{{CUS_OCCUPATION}}", request.getOccupation() != null ? request.getOccupation() : "")
                 .replace("{{CUS_PLACE_OF_BIRTH}}", request.getPlaceOfBirth() != null ? request.getPlaceOfBirth() : "")
-                .replace("{{CUS_ADDRESS}}", request.getAddress() != null ? request.getAddress() : "");
+                .replace("{{CUS_ADDRESS}}", request.getLegalAddress() != null ? request.getLegalAddress() : "");
                 
         } catch (Exception e) {
             log.error("Failed to build customer creation XML: {}", e.getMessage());

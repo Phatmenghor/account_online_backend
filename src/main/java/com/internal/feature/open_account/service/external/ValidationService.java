@@ -38,6 +38,7 @@ public class ValidationService {
             log.warn("High-risk customer detected with rating: {}", rating);
             throw new HighRiskCustomerException(rating);
         }
+        log.info("Customer rating {} is good", rating);
     }
 
     public void validateExistingAccounts(Map<String, String> customerInfo) {
@@ -46,14 +47,15 @@ public class ValidationService {
             String[] accountArray = accounts.split("#");
             boolean hasKHR = false;
             boolean hasUSD = false;
-            
+
             for (String account : accountArray) {
                 if ("KHR".equals(account)) hasKHR = true;
                 if ("USD".equals(account)) hasUSD = true;
             }
-            
-            if (hasKHR && hasUSD) {
-                String cif = customerInfo.get("CIF");
+
+            String cif = customerInfo.get("CIF");
+
+            if (hasKHR && hasUSD && cif != null && !cif.isEmpty()) {
                 log.warn("Customer already has both accounts. CIF: {}", cif);
                 throw new AccountExistsException(cif);
             }

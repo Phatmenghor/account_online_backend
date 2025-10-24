@@ -59,6 +59,42 @@ public class XmlParser {
         }
     }
 
+    public static String extractMnemonic(Document document) {
+        try {
+            // Try with namespace first
+            NodeList mnemonicNodes = document.getElementsByTagNameNS(
+                    "http://temenos.com/CUSTOMER",
+                    "MNEMONIC"
+            );
+
+            if (mnemonicNodes != null && mnemonicNodes.getLength() > 0) {
+                String mnemonic = mnemonicNodes.item(0).getTextContent();
+                if (mnemonic != null && !mnemonic.trim().isEmpty()) {
+                    log.info("Extracted MNEMONIC: {}", mnemonic);
+                    return mnemonic.trim();
+                }
+            }
+
+            // Try without namespace as fallback
+            mnemonicNodes = document.getElementsByTagName("MNEMONIC");
+            if (mnemonicNodes != null && mnemonicNodes.getLength() > 0) {
+                String mnemonic = mnemonicNodes.item(0).getTextContent();
+                if (mnemonic != null && !mnemonic.trim().isEmpty()) {
+                    log.info("Extracted MNEMONIC (no namespace): {}", mnemonic);
+                    return mnemonic.trim();
+                }
+            }
+
+            log.warn("No MNEMONIC found in response");
+            return null;
+
+        } catch (Exception e) {
+            log.error("Failed to extract MNEMONIC: {}", e.getMessage());
+            return null;
+        }
+    }
+
+
     /**
      * Extract account number from T24 account creation response
      * Looks for <Status><transactionId>KH0012011123456789</transactionId></Status>

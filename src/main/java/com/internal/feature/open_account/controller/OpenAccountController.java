@@ -1,6 +1,6 @@
-
 package com.internal.feature.open_account.controller;
 
+import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.response.CustomerResponse;
 import com.internal.feature.open_account.service.OpenAccountService;
@@ -20,13 +20,13 @@ public class OpenAccountController {
     private final OpenAccountService openAccountService;
 
     @PostMapping
-    public ResponseEntity<CustomerResponse> openAccount(@Valid @RequestBody CustomerRequest request) {
+    public ResponseEntity<ApiResponse<CustomerResponse>> openAccount(@Valid @RequestBody CustomerRequest request) {
         log.info("Received account opening request for Legal ID: {}", request.getLegalId());
-        
+
         CustomerResponse response = openAccountService.openAccount(request);
-        
-        log.info("Account opening completed - Status: {}, CIF: {}", response.getStatus(), response.getCif());
-        
-        return ResponseEntity.ok(response);
+
+        log.info("Account opening completed - , CIF: {}", response.getCif());
+
+        return ResponseEntity.ok(ApiResponse.success("Account created successfully!", response));
     }
 }

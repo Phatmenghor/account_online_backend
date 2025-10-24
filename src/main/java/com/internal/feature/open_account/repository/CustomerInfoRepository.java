@@ -16,8 +16,8 @@ import java.util.Map;
 public class CustomerInfoRepository {
 
     // Inject DWH database connection
-    @Qualifier("dwhJdbcTemplate")
-    private final JdbcTemplate dwhJdbcTemplate;
+//    @Qualifier("dwhJdbcTemplate")
+//    private final JdbcTemplate dwhJdbcTemplate;
 
     // Inject STG database connection
     @Qualifier("stgJdbcTemplate")
@@ -27,11 +27,12 @@ public class CustomerInfoRepository {
         try {
             log.debug("Querying customer info for Legal ID: {}", legalId);
 
-            String sql = "SELECT ACCT, CUSTOMERCIF, CUSTOMER_RATING FROM V_CBS_OAO_CUST_CHECK_RATING WHERE legal_id = ?";
+            String sql = "SELECT ACCT, MNEMONIC ,CUSTOMERCIF, CUSTOMER_RATING FROM V_CBS_OAO_CUST_CHECK_RATING WHERE legal_id = ?";
 
             Map<String, String> result = stgJdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
                 Map<String, String> map = new HashMap<>();
                 map.put("ACCT", rs.getString("ACCT"));
+                map.put("MNEMONIC", rs.getString("MNEMONIC"));
                 map.put("CIF", rs.getString("CUSTOMERCIF"));
                 map.put("RATING", rs.getString("CUSTOMER_RATING"));
                 return map;
@@ -52,16 +53,16 @@ public class CustomerInfoRepository {
     /**
      * Test DWH database connection
      */
-    public void testDwhConnection() {
-        try {
-            log.debug("Testing DWH Oracle database connection...");
-            Integer result = dwhJdbcTemplate.queryForObject("SELECT 1 FROM DUAL", Integer.class);
-            log.info("✅ DWH Oracle connection test successful, result: {}", result);
-        } catch (Exception e) {
-            log.error("❌ DWH Oracle connection test failed: {}", e.getMessage());
-            throw e;
-        }
-    }
+//    public void testDwhConnection() {
+//        try {
+//            log.debug("Testing DWH Oracle database connection...");
+//            Integer result = dwhJdbcTemplate.queryForObject("SELECT 1 FROM DUAL", Integer.class);
+//            log.info("✅ DWH Oracle connection test successful, result: {}", result);
+//        } catch (Exception e) {
+//            log.error("❌ DWH Oracle connection test failed: {}", e.getMessage());
+//            throw e;
+//        }
+//    }
 
     /**
      * Test STG database connection
@@ -81,7 +82,7 @@ public class CustomerInfoRepository {
      * Test both database connections
      */
     public void testAllConnections() {
-        testDwhConnection();
+//        testDwhConnection();
         testStgConnection();
     }
 }

@@ -48,7 +48,7 @@ public class MobileBankingService {
     private MobileBankingRequest buildRequest(CustomerRequest request, String cif,
                                               String khrAccount, String usdAccount) {
         String formattedDob = formatDateOfBirth(request.getDateOfBirth());
-        String signData = generateSignature(cif, request.getSms());
+        String signData = generateSignature(cif, request.getPhoneNumber());
         String branchCode = request.getBranchCode() != null ? request.getBranchCode() : "KH0012011";
         String accountNumber = usdAccount != null ? usdAccount : khrAccount;
         String currency = usdAccount != null ? "USD" : "KHR";
@@ -64,7 +64,7 @@ public class MobileBankingService {
             .posCodeCreatedUser("POS01")
             .createdUser(request.getGivenName())
             .dateOfBirth(formattedDob)
-            .telephone(request.getSms())
+            .telephone(request.getPhoneNumber())
             .cifBranchCode(branchCode)
             .gender(request.getGender())
             .residence("1")
@@ -73,7 +73,7 @@ public class MobileBankingService {
             .currency(currency)
             .branchCode(branchCode)
             .packageCode("BASIC")
-            .telephoneOtp(request.getSms())
+            .telephoneOtp(request.getPhoneNumber())
             .staffCode("123")
             .signData(signData)
             .build();
@@ -106,11 +106,11 @@ public class MobileBankingService {
             
             SmsLog smsLog = SmsLog.builder()
                 .cif(cif)
-                .name(request.getShortName())
+                .name(request.getGivenName())
                 .acctIdKhr(khrAccount)
                 .acctIdUsd(usdAccount)
                 .nid(request.getLegalId())
-                .phone(request.getSms())
+                .phone(request.getPhoneNumber())
                 .activatorPayload(requestJson)
                 .activatorResponse(responseJson)
                 .build();
