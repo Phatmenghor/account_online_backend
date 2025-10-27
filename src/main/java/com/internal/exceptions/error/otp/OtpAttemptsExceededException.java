@@ -1,19 +1,13 @@
-
 package com.internal.exceptions.error.otp;
 
-import java.util.HashMap;
-import java.util.Map;
+import lombok.Getter;
 
-public class OtpAttemptsExceededException extends OtpException {
-    public OtpAttemptsExceededException(Integer cooldownMinutes) {
-        super("Maximum OTP attempts exceeded. Please try again after " + cooldownMinutes + " minutes", 
-              "OTP_ATTEMPTS_EXCEEDED", 
-              buildData(cooldownMinutes));
-    }
+@Getter
+public class OtpAttemptsExceededException extends RuntimeException {
+    private final Long lockoutMinutes; // Actually stores seconds for backward compatibility
 
-    private static Map<String, Object> buildData(Integer cooldownMinutes) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("lockoutMinutes", cooldownMinutes);
-        return data;
+    public OtpAttemptsExceededException(Long lockoutSeconds) {
+        super("Maximum OTP verification attempts exceeded");
+        this.lockoutMinutes = lockoutSeconds; // Field name kept for compatibility
     }
 }

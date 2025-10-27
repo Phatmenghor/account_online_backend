@@ -16,16 +16,18 @@ public interface OtpRepository extends JpaRepository<OtpSms, Long> {
     /**
      * Find the latest active OTP for a phone number
      * Status 0 = active, ordered by newest first
+     * FIXED: Added LIMIT 1 to prevent NonUniqueResultException
      */
-    @Query("SELECT o FROM OtpSms o WHERE o.phone = :phone AND o.status = 0 ORDER BY o.createdAt DESC")
+    @Query(value = "SELECT * FROM otp_sms o WHERE o.phone = :phone AND o.status = 0 ORDER BY o.created_at DESC LIMIT 1", nativeQuery = true)
     Optional<OtpSms> findLatestActiveOtpByPhone(@Param("phone") String phone);
 
     /**
      * Find valid OTP by phone and code
      * Must be active (status=0) and not expired
+     * FIXED: Added LIMIT 1 to prevent NonUniqueResultException
      */
-    @Query("SELECT o FROM OtpSms o WHERE o.phone = :phone AND o.otpCode = :otpCode " +
-           "AND o.status = 0 AND o.expiresAt > :now ORDER BY o.createdAt DESC")
+    @Query(value = "SELECT * FROM otp_sms o WHERE o.phone = :phone AND o.otp_code = :otpCode " +
+            "AND o.status = 0 AND o.expires_at > :now ORDER BY o.created_at DESC LIMIT 1", nativeQuery = true)
     Optional<OtpSms> findValidOtpByPhoneAndCode(
             @Param("phone") String phone,
             @Param("otpCode") String otpCode,
@@ -35,8 +37,9 @@ public interface OtpRepository extends JpaRepository<OtpSms, Long> {
     /**
      * Get the creation time of the last OTP sent to a phone
      * Used for cooldown checking
+     * FIXED: Already has LIMIT 1 (native query)
      */
-    @Query("SELECT o.createdAt FROM OtpSms o WHERE o.phone = :phone ORDER BY o.createdAt DESC")
+    @Query(value = "SELECT o.created_at FROM otp_sms o WHERE o.phone = :phone ORDER BY o.created_at DESC LIMIT 1", nativeQuery = true)
     Optional<LocalDateTime> findLastOtpCreationTime(@Param("phone") String phone);
 
     /**

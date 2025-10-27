@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -37,6 +38,7 @@ public class OtpServiceImpl implements OtpService {
     private final SmsOtpMapper otpMapper;
     private final CpbProperties cpbProperties;
     private final HttpClientUtil httpClient;
+    private final EntityManager entityManager;
 
     @Override
     @Transactional
@@ -44,11 +46,11 @@ public class OtpServiceImpl implements OtpService {
         String phone = request.getPhone();
         log.info("Processing OTP request for phone: {}", phone);
 
-        // 1. Check for recent attempts and lockout
-        checkAttemptLockout(phone);
-
-        // 2. Check cooldown period
+        // 1. Check cooldown period FIRST (before lockout check)
         checkCooldownPeriod(phone);
+
+        // 2. Check for recent attempts and lockout
+        checkAttemptLockout(phone);
 
         // 3. Expire all previous active OTPs for this phone (keeps history)
         otpRepository.expireAllActiveOtpsByPhone(phone);
@@ -83,111 +85,150 @@ public class OtpServiceImpl implements OtpService {
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = {OtpInvalidException.class, OtpAttemptsExceededException.class})
     public VerifyOtpResponse verifyOtp(VerifyOtpRequest request) {
         String phone = request.getPhone();
         String otpCode = request.getOtpCode();
         log.info("Processing OTP verification for phone: {}", phone);
 
-        // 1. Find the latest active OTP
-        Optional<OtpSms> otpOpt = otpRepository.findValidOtpByPhoneAndCode(
-                phone, otpCode, LocalDateTime.now()
-        );
+        // 1. Get the latest active OTP first (single query)
+        OtpSms latestOtp = otpRepository.findLatestActiveOtpByPhone(phone)
+                .orElseThrow(() -> new OtpNotFoundException(phone));
 
-        if (!otpOpt.isPresent()) {
-            // 2. Get latest OTP first to avoid redundant queries
-            OtpSms latestOtp = otpRepository.findLatestActiveOtpByPhone(phone)
-                    .orElseThrow(() -> new OtpNotFoundException(phone));
+        log.info("DEBUG - Found OTP - ID: {}, Code: {}, Current attempts: {}, Status: {}",
+                latestOtp.getId(), latestOtp.getOtpCode(), latestOtp.getAttempt(), latestOtp.getStatus());
 
-            // 3. Increment attempt counter for failed verification
-            incrementFailedAttempt(latestOtp);
+        // 2. Check if code matches and OTP is not expired
+        boolean isValid = latestOtp.getOtpCode().equals(otpCode)
+                && latestOtp.getExpiresAt().isAfter(LocalDateTime.now());
 
-            // 4. Calculate remaining attempts
+        if (!isValid) {
+            // 3. Calculate remaining attempts BEFORE incrementing
             int remainingAttempts = AppConstants.MAX_ATTEMPTS - latestOtp.getAttempt();
 
             if (remainingAttempts <= 0) {
-                log.warn("Max OTP attempts exceeded for phone: {}", phone);
-                throw new OtpAttemptsExceededException(AppConstants.LOCKOUT_MINUTES);
+                // User is already locked out, calculate remaining time
+                long secondsSinceLastAttempt = Duration.between(
+                        latestOtp.getLastAttempt(), LocalDateTime.now()
+                ).getSeconds();
+                long lockoutSeconds = AppConstants.LOCKOUT_MINUTES * 60;
+                long remainingSeconds = Math.max(0, lockoutSeconds - secondsSinceLastAttempt);
+
+                log.warn("Max OTP attempts exceeded for phone: {}, remaining: {}s", phone, remainingSeconds);
+                throw new OtpAttemptsExceededException(remainingSeconds);
+            }
+
+            // 4. Increment attempt counter for failed verification (only if not locked out)
+            incrementFailedAttempt(latestOtp);
+
+            // Recalculate after increment
+            remainingAttempts = AppConstants.MAX_ATTEMPTS - latestOtp.getAttempt();
+
+            if (remainingAttempts <= 0) {
+                // Just hit max attempts now, full lockout period applies
+                long lockoutSeconds = AppConstants.LOCKOUT_MINUTES * 60;
+                log.warn("Max OTP attempts just exceeded for phone: {}", phone);
+                throw new OtpAttemptsExceededException(lockoutSeconds);
             }
 
             log.warn("Invalid OTP for phone: {}, remaining attempts: {}", phone, remainingAttempts);
             throw new OtpInvalidException(remainingAttempts);
         }
 
-        OtpSms otpSms = otpOpt.get();
-
         // 5. Mark as verified (keeps record in history)
-        otpSms.setStatus(1); // 1 = verified
-        otpSms.setVerifiedAt(LocalDateTime.now());
-        otpRepository.save(otpSms);
+        latestOtp.setStatus(1); // 1 = verified
+        latestOtp.setVerifiedAt(LocalDateTime.now());
+        otpRepository.save(latestOtp);
 
-        log.info("OTP verified successfully - ID: {}, Phone: {}", otpSms.getId(), phone);
+        log.info("OTP verified successfully - ID: {}, Phone: {}", latestOtp.getId(), phone);
 
-        return otpMapper.toVerifyOtpResponse(otpSms);
+        return otpMapper.toVerifyOtpResponse(latestOtp);
     }
 
     /**
      * Check if user is locked out due to too many failed attempts
+     * FIXED: Only check lockout if attempts >= MAX_ATTEMPTS
      */
     private void checkAttemptLockout(String phone) {
         Optional<OtpSms> latestOtp = otpRepository.findLatestActiveOtpByPhone(phone);
 
-        if (latestOtp.isPresent()) {
-            OtpSms otp = latestOtp.get();
+        if (!latestOtp.isPresent()) {
+            // No previous OTP, no lockout
+            return;
+        }
 
-            if (otp.getAttempt() >= AppConstants.MAX_ATTEMPTS && otp.getLastAttempt() != null) {
-                long minutesSinceLastAttempt = Duration.between(
-                        otp.getLastAttempt(), LocalDateTime.now()
-                ).toMinutes();
+        OtpSms otp = latestOtp.get();
 
-                if (minutesSinceLastAttempt < AppConstants.LOCKOUT_MINUTES) {
-                    long remainingMinutes = AppConstants.LOCKOUT_MINUTES - minutesSinceLastAttempt;
-                    log.warn("User locked out - Phone: {}, Minutes remaining: {}",
-                            phone, remainingMinutes);
-                    throw new OtpAttemptsExceededException(AppConstants.LOCKOUT_MINUTES);
-                } else {
-                    // Reset attempts after lockout period expired
-                    log.info("Lockout period expired, resetting attempts for phone: {}", phone);
-                    resetLockout(otp);
-                }
+        // CRITICAL FIX: Only apply lockout if max attempts reached AND lastAttempt exists
+        if (otp.getAttempt() >= AppConstants.MAX_ATTEMPTS && otp.getLastAttempt() != null) {
+            long secondsSinceLastAttempt = Duration.between(
+                    otp.getLastAttempt(), LocalDateTime.now()
+            ).getSeconds();
+
+            long lockoutSeconds = AppConstants.LOCKOUT_MINUTES * 60;
+
+            if (secondsSinceLastAttempt < lockoutSeconds) {
+                long remainingSeconds = lockoutSeconds - secondsSinceLastAttempt;
+                long remainingMinutes = remainingSeconds / 60;
+                long remainingSecondsOnly = remainingSeconds % 60;
+
+                log.warn("User locked out - Phone: {}, Remaining: {}m {}s",
+                        phone, remainingMinutes, remainingSecondsOnly);
+
+                // Pass remaining seconds to exception for better UX
+                throw new OtpAttemptsExceededException(remainingSeconds);
+            } else {
+                // Lockout period expired, will be reset when old OTP is expired
+                log.info("Lockout period expired for phone: {}", phone);
+                // Don't need to manually reset here as expireAllActiveOtpsByPhone will handle it
             }
         }
-    }
-
-    /**
-     * Reset lockout after cooldown period
-     */
-    private void resetLockout(OtpSms otp) {
-        otp.setAttempt(0);
-        otp.setLastAttempt(null);
-        otpRepository.save(otp);
+        // If attempts < MAX_ATTEMPTS, user is not locked out, allow new OTP
     }
 
     /**
      * Check if cooldown period has elapsed since last OTP
+     * FIXED: Check creation time from ANY OTP, not just active ones
      */
     private void checkCooldownPeriod(String phone) {
+        // Note: Repository query should use .findFirstByPhoneOrderByCreatedAtDesc()
+        // or add LIMIT 1 in the @Query to avoid NonUniqueResultException
         Optional<LocalDateTime> lastOtpTime = otpRepository.findLastOtpCreationTime(phone);
 
-        if (lastOtpTime.isPresent()) {
-            long elapsedSeconds = Duration.between(lastOtpTime.get(), LocalDateTime.now()).getSeconds();
-            long cooldownSeconds = cpbProperties.getOtp().getCooldownSeconds();
+        if (!lastOtpTime.isPresent()) {
+            // No previous OTP, no cooldown
+            return;
+        }
 
-            if (elapsedSeconds < cooldownSeconds) {
-                int remainingSeconds = (int) (cooldownSeconds - elapsedSeconds);
-                log.warn("Cooldown active - Phone: {}, Remaining: {}s", phone, remainingSeconds);
-                throw new OtpCooldownException(remainingSeconds);
-            }
+        long elapsedSeconds = Duration.between(lastOtpTime.get(), LocalDateTime.now()).getSeconds();
+        long cooldownSeconds = cpbProperties.getOtp().getCooldownSeconds();
+
+        if (elapsedSeconds < cooldownSeconds) {
+            int remainingSeconds = (int) (cooldownSeconds - elapsedSeconds);
+            log.warn("Cooldown active - Phone: {}, Remaining: {}s", phone, remainingSeconds);
+            throw new OtpCooldownException(remainingSeconds);
         }
     }
 
     /**
      * Increment failed verification attempt counter
+     * FIXED: Clear cache and detach entity to force fresh fetch next time
      */
     private void incrementFailedAttempt(OtpSms otp) {
-        otp.setAttempt(otp.getAttempt() + 1);
+        int newAttemptCount = otp.getAttempt() + 1;
+        log.info("DEBUG - Before increment - ID: {}, Old attempts: {}, New attempts: {}",
+                otp.getId(), otp.getAttempt(), newAttemptCount);
+
+        otp.setAttempt(newAttemptCount);
         otp.setLastAttempt(LocalDateTime.now());
-        otpRepository.save(otp);
+        OtpSms saved = otpRepository.saveAndFlush(otp);
+
+        // CRITICAL: Clear the persistence context to force fresh DB reads
+        entityManager.clear();
+
+        log.info("DEBUG - After save - ID: {}, Saved attempts: {}",
+                saved.getId(), saved.getAttempt());
+
         log.info("Failed attempt recorded - Phone: {}, Total attempts: {}",
                 otp.getPhone(), otp.getAttempt());
     }
