@@ -1,4 +1,4 @@
-package com.internal.config.telegram;
+package com.internal.feature.telegram_alerts.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

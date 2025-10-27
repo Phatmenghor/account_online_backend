@@ -1,6 +1,6 @@
 package com.internal.feature.logs_report.controller;
 
-import com.internal.feature.logs_report.dob.request.AccountOnlineReportLogDto;
+import com.internal.feature.logs_report.dto.request.AccountOnlineReportLogDto;
 import com.internal.feature.logs_report.service.serviceImpl.AccountOnlineReportLogImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

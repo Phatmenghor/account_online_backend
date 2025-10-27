@@ -55,7 +55,6 @@ public class ReferenceServiceImpl implements ReferenceService {
         return mapper.mapToListDto(content, page);
     }
 
-
     @Override
     public ReferenceDto create(ReferenceCreateRequestDto request) {
         if (repository.existsByNameEn(request.getNameEn())) {

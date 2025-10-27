@@ -1,7 +1,7 @@
 package com.internal.feature.logs_report.service.serviceImpl;
 
 import com.internal.enumation.OpenAccStatusEnum;
-import com.internal.feature.logs_report.dob.request.AccountOnlineReportLogDto;
+import com.internal.feature.logs_report.dto.request.AccountOnlineReportLogDto;
 import com.internal.feature.logs_report.model.AccountOnlineReportLog;
 import com.internal.feature.logs_report.repository.AccountOnlineReportLogRepository;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;

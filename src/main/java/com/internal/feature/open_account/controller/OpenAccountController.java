@@ -29,4 +29,12 @@ public class OpenAccountController {
 
         return ResponseEntity.ok(ApiResponse.success("Account created successfully!", response));
     }
+
+    @PostMapping("/test-aml")
+    public ResponseEntity<ApiResponse<CustomerResponse>> testAmlFull(@RequestBody CustomerRequest request) {
+        log.info("Triggering full AML test flow for Legal ID: {}", request.getLegalId());
+        CustomerResponse response = openAccountService.testAmlFlow(request);
+        return ResponseEntity.ok(ApiResponse.success("AML full test flow executed successfully", response));
+    }
+
 }

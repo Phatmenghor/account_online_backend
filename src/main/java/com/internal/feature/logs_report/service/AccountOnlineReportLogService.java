@@ -1,8 +1,7 @@
 package com.internal.feature.logs_report.service;
 
 import com.internal.enumation.OpenAccStatusEnum;
-import com.internal.feature.logs_report.dob.request.AccountOnlineReportLogDto;
-import com.internal.feature.logs_report.model.AccountOnlineReportLog;
+import com.internal.feature.logs_report.dto.request.AccountOnlineReportLogDto;
 
 public interface AccountOnlineReportLogService {
     void saveLogReport(String idNumber, OpenAccStatusEnum status, String remark);

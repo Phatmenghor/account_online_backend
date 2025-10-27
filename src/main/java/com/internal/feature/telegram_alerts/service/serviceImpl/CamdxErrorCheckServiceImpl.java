@@ -2,7 +2,7 @@ package com.internal.feature.telegram_alerts.service.serviceImpl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.internal.config.telegram.TelegramService;
+import com.internal.feature.telegram_alerts.config.TelegramService;
 import com.internal.enumation.OpenAccStatusEnum;
 import com.internal.feature.camdx.dto.CamdxValidateNidRequest;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;

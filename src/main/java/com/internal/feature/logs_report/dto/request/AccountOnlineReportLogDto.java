@@ -1,4 +1,4 @@
-package com.internal.feature.logs_report.dob.request;
+package com.internal.feature.logs_report.dto.request;
 
 import com.internal.enumation.OpenAccStatusEnum;
 import lombok.AllArgsConstructor;

@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 public class ReferenceDocServiceImpl implements ReferenceDocService {
     private final ReferenceDocRepository repository;
     private final ReferenceDocMapper mapper;
+
     @Override
     public ReferenceDocDto getById(Long id) {
         ReferenceDoc doc = repository.findById(id)
@@ -69,7 +70,7 @@ public class ReferenceDocServiceImpl implements ReferenceDocService {
     @Override
     public ReferenceDocDto update(Long id, ReferenceDocUpdateRequestDto request) {
         ReferenceDoc doc = repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Doc reference with ID "+id+" not found"));
+                .orElseThrow(() -> new NotFoundException("Doc reference with ID " + id + " not found"));
 
         mapper.updateFromDto(request, doc);
 

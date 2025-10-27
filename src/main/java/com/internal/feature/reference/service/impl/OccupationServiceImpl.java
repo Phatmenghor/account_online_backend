@@ -38,7 +38,6 @@ public class OccupationServiceImpl implements OccupationService {
         return mapper.toDto(occupation);
     }
 
-
     @Override
     public AllOccupationResponseDto getAllOccupations(GetAllOccupationRequest request) {
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
@@ -55,7 +54,6 @@ public class OccupationServiceImpl implements OccupationService {
 
         return mapper.mapToListDto(content, page);
     }
-
 
     @Override
     public OccupationDto createOccupation(OccupationCreateRequestDto requestDto) {

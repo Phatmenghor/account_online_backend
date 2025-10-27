@@ -1,6 +1,6 @@
 package com.internal.feature.logs_report.specification;
 
-import com.internal.feature.logs_report.dob.request.AccountOnlineReportLogDto;
+import com.internal.feature.logs_report.dto.request.AccountOnlineReportLogDto;
 import com.internal.feature.logs_report.model.AccountOnlineReportLog;
 import org.springframework.data.jpa.domain.Specification;
 

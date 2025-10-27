@@ -1,4 +1,4 @@
-package com.internal.config.telegram;
+package com.internal.feature.telegram_alerts.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;

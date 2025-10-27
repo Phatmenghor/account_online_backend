@@ -1,11 +1,15 @@
 package com.internal.feature.open_account.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.internal.enumation.AmlStatusEnum;
 import com.internal.enumation.OpenAccStatusEnum;
 import com.internal.exceptions.error.openaccount.AccountCreationException;
+import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
+import com.internal.feature.aml.service.AmlService;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.response.CustomerResponse;
-import com.internal.feature.open_account.service.*;
+import com.internal.feature.open_account.service.OpenAccountService;
 import com.internal.feature.open_account.service.external.MobileBankingService;
 import com.internal.feature.open_account.service.external.T24Service;
 import com.internal.feature.open_account.service.external.ValidationService;
@@ -13,6 +17,7 @@ import com.internal.feature.open_account.service.external.XmlParser;
 import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
@@ -29,6 +34,8 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private final T24Service t24Service;
     private final MobileBankingService mobileBankingService;
     private final AccountOnlineReportLogService reportLogService;
+    private final ObjectMapper objectMapper;
+    private final AmlService amlService;
 
     @Override
     @Transactional
@@ -41,12 +48,29 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         String khrAccount = null;
         String usdAccount = null;
 
+        Map<String, Object> responseMap = new HashMap<>();
+        responseMap.put("KHR", khrAccount);
+        responseMap.put("USD", usdAccount);
+
         try {
             // Step 1: Check database connections
             currentStep = "CHECK_DATABASE_CONNECTIONS";
             validationService.checkDatabaseConnections();
             log.info("Database connections verified for Legal ID: {}", request.getLegalId());
 
+            // Step: Create AML record (PENDING)
+            currentStep = "CREATE_AML_PENDING";
+            try {
+                CreateAmlRequestDto amlRequest = CreateAmlRequestDto.builder()
+                        .originalRequest(objectMapper.writeValueAsString(request))
+                        .originalResponse(objectMapper.writeValueAsString(responseMap))
+                        .status(AmlStatusEnum.PENDING)
+                        .build();
+                amlService.createAmlStatus(amlRequest);
+                log.info("AML record created in PENDING status for Legal ID: {}", request.getLegalId());
+            } catch (Exception e) {
+                log.error("Failed to create AML record for Legal ID {}: {}", request.getLegalId(), e.getMessage());
+            }
 
             // Step 2: Get customer info
             currentStep = "GET_CUSTOMER_INFO";
@@ -134,7 +158,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             );
             log.info("Account opening completed successfully for Legal ID: {}", request.getLegalId());
 
-
             // Step 11: Return success response
             return CustomerResponse.builder()
                     .cif(cif)
@@ -158,6 +181,37 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             throw e;
         }
     }
+
+    @Override
+    @Transactional
+    public CustomerResponse testAmlFlow(CustomerRequest request) {
+        log.info("Starting AML full test flow for Legal ID: {}", request.getLegalId());
+
+        try {
+            // Step 1: Create AML in PENDING status
+            CreateAmlRequestDto pendingRequest = CreateAmlRequestDto.builder()
+                    .originalRequest(objectMapper.writeValueAsString(request))
+                    .originalResponse(null)
+                    .status(AmlStatusEnum.PENDING)
+                    .build();
+
+            var amlPending = amlService.createAmlStatus(pendingRequest);
+            log.info("AML record created in PENDING status. ID: {}", amlPending.getId());
+
+            // Step 2: Return dummy response for frontend display
+            return CustomerResponse.builder()
+                    .cif("TEST_CIF")
+                    .khrAccount(null)
+                    .usdAccount(null)
+                    .mnemonic("AML_TEST")
+                    .build();
+
+        } catch (Exception e) {
+            log.error("AML full test flow failed for Legal ID: {} - Error: {}", request.getLegalId(), e.getMessage());
+            throw new RuntimeException("AML full test flow failed", e);
+        }
+    }
+
 
     private Map<String, String> createCustomer(CustomerRequest request) {
         log.info("Creating new customer for Legal ID: {}", request.getLegalId());
