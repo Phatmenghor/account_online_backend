@@ -40,6 +40,17 @@ public class OtpExceptionHandler {
         log.warn("OTP attempts exceeded - Message: {}", ex.getMessage());
 
         // Get remaining seconds from exception
+        final String timeMessage = getString(ex);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.TOO_MANY_REQUESTS.value());
+        response.put("message", String.format("Too many failed attempts. Please try again in %s.", timeMessage));
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(response);
+    }
+
+    private static String getString(OtpAttemptsExceededException ex) {
         long remainingSeconds = ex.getLockoutMinutes();
         long minutes = remainingSeconds / 60;
         long seconds = remainingSeconds % 60;
@@ -55,13 +66,7 @@ public class OtpExceptionHandler {
         } else {
             timeMessage = String.format("%d second%s", seconds, seconds == 1 ? "" : "s");
         }
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.TOO_MANY_REQUESTS.value());
-        response.put("message", String.format("Too many failed attempts. Please try again in %s.", timeMessage));
-
-        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(response);
+        return timeMessage;
     }
 
     @ExceptionHandler(OtpCooldownException.class)
