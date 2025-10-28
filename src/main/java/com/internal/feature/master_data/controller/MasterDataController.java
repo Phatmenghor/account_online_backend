@@ -21,7 +21,7 @@ public class MasterDataController {
 
     private final MasterDataService masterDataService;
 
-    @PostMapping("/init-address")
+    @PostMapping("/init/address")
     public ResponseEntity<ApiResponse<LocationCodesDto>> initAddress(
             @RequestBody AddressRequestDto address) {
 
@@ -29,7 +29,7 @@ public class MasterDataController {
         return ResponseEntity.ok(ApiResponse.success("Address init successfully!", response));
     }
 
-    @PostMapping("/init-pob")
+    @PostMapping("/init/place-of-birth")
     public ResponseEntity<ApiResponse<LocationCodesDto>> initPob(
             @RequestBody AddressRequestDto address) {
 
