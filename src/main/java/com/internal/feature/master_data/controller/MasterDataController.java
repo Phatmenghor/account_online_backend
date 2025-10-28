@@ -20,6 +20,22 @@ public class MasterDataController {
 
     private final MasterDataService masterDataService;
 
+    @PostMapping("/init-address")
+    public ResponseEntity<ApiResponse<LocationCodesDto>> initAddress(
+            @RequestBody String address) {
+
+        LocationCodesDto response = masterDataService.initAddress(address);
+        return ResponseEntity.ok(ApiResponse.success("Address init successfully!", response));
+    }
+
+    @PostMapping("/init-pob")
+    public ResponseEntity<ApiResponse<LocationCodesDto>> initPob(
+            @RequestBody String address) {
+
+        LocationCodesDto response = masterDataService.initPob(address);
+        return ResponseEntity.ok(ApiResponse.success("Pob init successfully!", response));
+    }
+
     @PostMapping("/province")
     public ResponseEntity<ApiResponse<PaginationResponse<ClsProvinceDto>>> getProvinces(
             @RequestBody AllMasterDataRequest request) {

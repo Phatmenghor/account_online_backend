@@ -6,6 +6,7 @@ import com.internal.feature.logs_report.model.AccountOnlineReportLog;
 import com.internal.feature.logs_report.repository.AccountOnlineReportLogRepository;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
 import com.internal.feature.logs_report.specification.AccountOnlineReportLogSpecification;
+import com.internal.feature.telegram_alerts.service.AlertsOpenAccOnlineService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -30,6 +31,7 @@ import java.util.List;
 public class AccountOnlineReportLogImpl implements AccountOnlineReportLogService {
 
     private final AccountOnlineReportLogRepository repository;
+    private final AlertsOpenAccOnlineService accountOnlineErrorService;
     private final boolean passwordProtectionEnabled = false; // set true in future
 
     @Override
@@ -62,6 +64,14 @@ public class AccountOnlineReportLogImpl implements AccountOnlineReportLogService
                 .status(status)
                 .remark(remarkBuilder.toString())
                 .build();
+
+        //push tele ACL internal
+        try {
+            accountOnlineErrorService.sendTelegramAccountOnlineError(idNumber,status,remarkBuilder);
+        } catch (Exception e) {
+            log.error("Failed to send Telegram notification, but logs was created: {}",
+                    e.getMessage());
+        }
 
         repository.save(onlineReportLog);
     }

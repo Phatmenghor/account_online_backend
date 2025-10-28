@@ -12,10 +12,21 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class CreateAmlRequestDto {
+
     private String originalRequest;
     private String originalResponse;
     private AmlStatusEnum status;
     private UserResponseDto approvedBy;
     private UserResponseDto rejectedBy;
+
+    private String idDisplay;
+    private String familyName;
+    private String givenName;
+    private String firstNameKh;
+    private String lastNameKh;
+    private String dateOfBirth;
+    private String gender;
+    private String nationality;
+    private String legalAddress;
 }
 

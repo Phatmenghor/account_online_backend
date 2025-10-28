@@ -28,4 +28,16 @@ public class AmlStatus extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rejected_by")
     private UserEntity rejectedBy;
+
+    //customer info
+    private String idDisplay;
+    private String familyName;
+    private String givenName;
+    private String firstNameKh;
+    private String lastNameKh;
+    private String dateOfBirth;
+    private String gender;
+    private String nationality;
+    private String legalAddress;
+
 }

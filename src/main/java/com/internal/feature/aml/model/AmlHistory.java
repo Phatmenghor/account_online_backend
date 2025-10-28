@@ -24,6 +24,18 @@ public class AmlHistory extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private AmlStatusEnum newStatus;
 
+
+    //customer info
+    private String idDisplay;
+    private String familyName;
+    private String givenName;
+    private String firstNameKh;
+    private String lastNameKh;
+    private String dateOfBirth;
+    private String gender;
+    private String nationality;
+    private String legalAddress;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "changed_by")
     private UserEntity changedBy;

@@ -8,5 +8,5 @@ public interface OpenAccountService {
     CustomerResponse openAccount(CustomerRequest request);
 
     @Transactional
-    CustomerResponse testAmlFlow(CustomerRequest request);
+    CustomerResponse testAmlFlow();
 }

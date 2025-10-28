@@ -161,7 +161,8 @@ app:
 telegram:
   bot:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
-    chat-id: "-1002740302492"
+    chat-id: "-1002740302492" #ACL Internal Dev UAT monitor
+    uat-monitor-chat-id: "-1003115792160" #account online uat monitor
     enabled: true
 
 # Logging Configuration

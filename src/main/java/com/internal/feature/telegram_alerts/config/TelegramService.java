@@ -18,6 +18,9 @@ public class TelegramService {
     @Value("${telegram.bot.chat-id}")
     private String chatId;
 
+    @Value("${telegram.bot.uat-monitor-chat-id}")
+    private String chatId_uat_monitor;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     public void sendMarkdownMessage(String message) {
@@ -29,6 +32,26 @@ public class TelegramService {
 
             MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
             body.add("chat_id", chatId);
+            body.add("text", message);
+            body.add("parse_mode", "Markdown");
+
+            HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
+
+            restTemplate.postForObject(url, requestEntity, String.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendMarkdownUATMonitorMessage(String message) {
+        try {
+            String url = String.format("https://api.telegram.org/bot%s/sendMessage", botToken);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+            body.add("chat_id", chatId_uat_monitor);
             body.add("text", message);
             body.add("parse_mode", "Markdown");
 

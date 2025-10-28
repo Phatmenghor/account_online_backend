@@ -15,4 +15,10 @@ public interface MasterDataService {
     PaginationResponse<ClsVillageDto> getVillage(AllMasterDataRequest request, String communeCode);
 
     PaginationResponse<ClsBranchDto> getBranch(AllMasterDataRequest request);
+
+    // ---------------------- Location Resolution by Names ----------------------
+    LocationCodesDto initAddress(String fullLocationString);
+
+    // ---------------------- POB Resolution (No Village) ----------------------
+    LocationCodesDto initPob(String pobString);
 }

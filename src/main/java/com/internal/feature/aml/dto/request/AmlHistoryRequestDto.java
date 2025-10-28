@@ -12,10 +12,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AmlHistoryRequestDto {
-
     private String originalRequest;
     private String originalResponse;
     private AmlStatusEnum oldStatus;
     private AmlStatusEnum newStatus;
     private UserResponseDto changedBy;
+
+    private String idDisplay;
+    private String familyName;
+    private String givenName;
+    private String firstNameKh;
+    private String lastNameKh;
+    private String dateOfBirth;
+    private String gender;
+    private String nationality;
+    private String legalAddress;
 }

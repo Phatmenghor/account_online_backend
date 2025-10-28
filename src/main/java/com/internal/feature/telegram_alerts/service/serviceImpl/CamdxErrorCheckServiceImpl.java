@@ -6,7 +6,7 @@ import com.internal.feature.telegram_alerts.config.TelegramService;
 import com.internal.enumation.OpenAccStatusEnum;
 import com.internal.feature.camdx.dto.CamdxValidateNidRequest;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
-import com.internal.feature.telegram_alerts.service.ErrorAlertsService;
+import com.internal.feature.telegram_alerts.service.ErrorAlertsCamdxService;
 import com.internal.utils.constants.ErrorMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CamdxErrorCheckServiceImpl implements ErrorAlertsService {
+public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
 
     private final TelegramService telegramService;
     private final ObjectMapper objectMapper = new ObjectMapper();

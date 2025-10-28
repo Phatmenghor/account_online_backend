@@ -1,6 +1,7 @@
 package com.internal.feature.aml.controller;
 
 import com.internal.exceptions.response.ApiResponse;
+import com.internal.feature.aml.dto.request.AllAmlHistoryRequestDto;
 import com.internal.feature.aml.dto.request.AllAmlRequestDto;
 import com.internal.feature.aml.dto.response.AllAmlHistoryResponseDto;
 import com.internal.feature.aml.dto.response.AllAmlResponseDto;
@@ -24,7 +25,7 @@ public class AmlController {
 
     /** Get all AML history */
     @PostMapping("/all-history")
-    public ResponseEntity<ApiResponse<AllAmlHistoryResponseDto>> getAllHistory(@RequestBody AllAmlRequestDto request) {
+    public ResponseEntity<ApiResponse<AllAmlHistoryResponseDto>> getAllHistory(@RequestBody AllAmlHistoryRequestDto request) {
         log.info("Fetching all AML history");
         AllAmlHistoryResponseDto list = service.getAllAmlHistory(request);
         log.info("Successfully retrieved {} AML history records", list.getContent().size());
