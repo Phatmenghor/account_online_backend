@@ -1,5 +1,6 @@
 package com.internal.feature.master_data.service;
 
+import com.internal.feature.master_data.dto.request.AddressRequestDto;
 import com.internal.feature.master_data.dto.request.AllMasterDataRequest;
 import com.internal.feature.master_data.dto.response.*;
 import com.internal.utils.pagination.PaginationResponse;
@@ -17,8 +18,8 @@ public interface MasterDataService {
     PaginationResponse<ClsBranchDto> getBranch(AllMasterDataRequest request);
 
     // ---------------------- Location Resolution by Names ----------------------
-    LocationCodesDto initAddress(String fullLocationString);
+    LocationCodesDto initAddress(AddressRequestDto fullLocationString);
 
     // ---------------------- POB Resolution (No Village) ----------------------
-    LocationCodesDto initPob(String pobString);
+    LocationCodesDto initPob(AddressRequestDto pobString);
 }

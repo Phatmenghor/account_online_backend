@@ -1,6 +1,7 @@
 package com.internal.feature.master_data.service.masterService;
 
 import com.internal.exceptions.error.MasterDataServiceException;
+import com.internal.feature.master_data.dto.request.AddressRequestDto;
 import com.internal.feature.master_data.dto.request.AllMasterDataRequest;
 import com.internal.feature.master_data.dto.request.LocationFilter;
 import com.internal.feature.master_data.dto.response.*;
@@ -13,7 +14,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -110,55 +110,94 @@ public class MasterDataDataServiceImpl implements MasterDataService {
 
     // ---------------------- Location Resolution by Names ----------------------
     @Override
-    public LocationCodesDto initAddress(String fullLocationString) {
-        if (fullLocationString == null || fullLocationString.trim().isEmpty()) {
+    public LocationCodesDto initAddress(AddressRequestDto requestDto) {
+        if (requestDto == null || requestDto.getAddress().trim().isEmpty()) {
             return null;
         }
 
         try {
-            // Parse the location string (format: "ភូមិក្រពើ ឃុំតំលោក ស្រុកពញាក្រែក តាកែវ")
-            String[] parts = fullLocationString.trim().split("\\s+");
+            // Parse the location string
+            String[] parts = requestDto.getAddress().trim().split("\\s+");
 
-            if (parts.length < 4) {
-                log.warn("Invalid location format: {}", fullLocationString);
+            if (parts.length < 1) {
+                log.warn("Invalid location format: {}", requestDto);
                 return null;
             }
 
-            // Extract names by removing Khmer prefixes
-            String villageName = removePrefix(parts[0], "ភូមិ");
-            String communeName = removePrefix(parts[1], "ឃុំ", "សង្កាត់");
-            String districtName = removePrefix(parts[2], "ស្រុក", "ក្រុង", "ខណ្ឌ");
-            String provinceName = parts[3]; // Province has no prefix
+            // Initialize variables
+            String villageName = null;
+            String communeName = null;
+            String districtName = null;
+            String provinceName = null;
+
+            // Parse backwards from the end (province is always last)
+            int index = parts.length - 1;
+
+            // Last part is always province (no prefix)
+            if (index >= 0) {
+                provinceName = parts[index--];
+            }
+
+            // Look for district (ស្រុក, ក្រុង, ខណ្ឌ)
+            if (index >= 0 && (parts[index].startsWith("ស្រុក") ||
+                    parts[index].startsWith("ក្រុង") ||
+                    parts[index].startsWith("ខណ្ឌ"))) {
+                districtName = removePrefix(parts[index--], "ស្រុក", "ក្រុង", "ខណ្ឌ");
+            }
+
+            // Look for commune (ឃុំ, សង្កាត់)
+            if (index >= 0 && (parts[index].startsWith("ឃុំ") ||
+                    parts[index].startsWith("សង្កាត់"))) {
+                communeName = removePrefix(parts[index--], "ឃុំ", "សង្កាត់");
+            }
+
+            // Look for village (ភូមិ)
+            if (index >= 0 && parts[index].startsWith("ភូមិ")) {
+                villageName = removePrefix(parts[index--], "ភូមិ");
+            }
 
             log.info("Resolving location - Province: {}, District: {}, Commune: {}, Village: {}",
                     provinceName, districtName, communeName, villageName);
 
-            // Step 1: Find Province
+            // Step 1: Find Province (required)
+            if (provinceName == null) {
+                log.warn("Province not found in address: {}", requestDto);
+                return null;
+            }
             ClsProvinceDto province = findProvince(provinceName);
             if (province == null) {
                 log.warn("Province not found: {}", provinceName);
                 return null;
             }
 
-            // Step 2: Find District
-            ClsDistrictDto district = findDistrict(province.getProvinceCode(), districtName);
-            if (district == null) {
-                log.warn("District not found: {} in province {}", districtName, provinceName);
-                return null;
+            // Step 2: Find District (optional)
+            ClsDistrictDto district = null;
+            if (districtName != null) {
+                district = findDistrict(province.getProvinceCode(), districtName);
+                if (district == null) {
+                    log.warn("District not found: {} in province {}", districtName, provinceName);
+                    // Don't return null, continue with what we have
+                }
             }
 
-            // Step 3: Find Commune
-            ClsCommuneDto commune = findCommune(district.getDistrictCode(), communeName);
-            if (commune == null) {
-                log.warn("Commune not found: {} in district {}", communeName, districtName);
-                return null;
+            // Step 3: Find Commune (optional, requires district)
+            ClsCommuneDto commune = null;
+            if (communeName != null && district != null) {
+                commune = findCommune(district.getDistrictCode(), communeName);
+                if (commune == null) {
+                    log.warn("Commune not found: {} in district {}", communeName, districtName);
+                    // Don't return null, continue with what we have
+                }
             }
 
-            // Step 4: Find Village
-            ClsVillageDto village = findVillage(commune.getCommuneCode(), villageName);
-            if (village == null) {
-                log.warn("Village not found: {} in commune {}", villageName, communeName);
-                return null;
+            // Step 4: Find Village (optional, requires commune)
+            ClsVillageDto village = null;
+            if (villageName != null && commune != null) {
+                village = findVillage(commune.getCommuneCode(), villageName);
+                if (village == null) {
+                    log.warn("Village not found: {} in commune {}", villageName, communeName);
+                    // Don't return null, continue with what we have
+                }
             }
 
             return LocationCodesDto.builder()
@@ -169,57 +208,88 @@ public class MasterDataDataServiceImpl implements MasterDataService {
                     .build();
 
         } catch (Exception ex) {
-            log.error("Error resolving location: {}", fullLocationString, ex);
+            log.error("Error resolving location: {}", requestDto, ex);
             return null;
         }
     }
 
     // ---------------------- POB Resolution (No Village) ----------------------
     @Override
-    public LocationCodesDto initPob(String pobString) {
-        if (pobString == null || pobString.trim().isEmpty()) {
+    public LocationCodesDto initPob(AddressRequestDto requestDto) {
+        if (requestDto == null || requestDto.getAddress().trim().isEmpty()) {
             return null;
         }
 
         try {
-            // Parse the POB string (format: "ឃុំតំលោក ស្រុកពញាក្រែក តាកែវ")
-            String[] parts = pobString.trim().split("\\s+");
+            // Parse the POB string
+            String[] parts = requestDto.getAddress().trim().split("\\s+");
 
-            if (parts.length < 3) {
-                log.warn("Invalid POB format: {}", pobString);
+            if (parts.length < 1) {
+                log.warn("Invalid POB format: {}", requestDto);
                 return null;
             }
 
-            // Extract names by removing Khmer prefixes
-            String communeName = removePrefix(parts[0], "ឃុំ", "សង្កាត់");
-            String districtName = removePrefix(parts[1], "ស្រុក", "ក្រុង", "ខណ្ឌ");
-            String provinceName = parts[2]; // Province has no prefix
+            // Initialize variables
+            String communeName = null;
+            String districtName = null;
+            String provinceName = null;
+
+            // Parse backwards from the end (province is always last)
+            int index = parts.length - 1;
+
+            // Last part is always province (no prefix)
+            if (index >= 0) {
+                provinceName = parts[index--];
+            }
+
+            // Look for district (ស្រុក, ក្រុង, ខណ្ឌ)
+            if (index >= 0 && (parts[index].startsWith("ស្រុក") ||
+                    parts[index].startsWith("ក្រុង") ||
+                    parts[index].startsWith("ខណ្ឌ"))) {
+                districtName = removePrefix(parts[index--], "ស្រុក", "ក្រុង", "ខណ្ឌ");
+            }
+
+            // Look for commune (ឃុំ, សង្កាត់)
+            if (index >= 0 && (parts[index].startsWith("ឃុំ") ||
+                    parts[index].startsWith("សង្កាត់"))) {
+                communeName = removePrefix(parts[index--], "ឃុំ", "សង្កាត់");
+            }
 
             log.info("Resolving POB - Province: {}, District: {}, Commune: {}",
                     provinceName, districtName, communeName);
 
-            // Step 1: Find Province
+            // Step 1: Find Province (required)
+            if (provinceName == null) {
+                log.warn("Province not found in POB: {}", requestDto);
+                return null;
+            }
             ClsProvinceDto province = findProvince(provinceName);
             if (province == null) {
                 log.warn("Province not found: {}", provinceName);
                 return null;
             }
 
-            // Step 2: Find District
-            ClsDistrictDto district = findDistrict(province.getProvinceCode(), districtName);
-            if (district == null) {
-                log.warn("District not found: {} in province {}", districtName, provinceName);
-                return null;
+            // Step 2: Find District (optional)
+            ClsDistrictDto district = null;
+            if (districtName != null) {
+                district = findDistrict(province.getProvinceCode(), districtName);
+                if (district == null) {
+                    log.warn("District not found: {} in province {}", districtName, provinceName);
+                    // Don't return null, continue with what we have
+                }
             }
 
-            // Step 3: Find Commune
-            ClsCommuneDto commune = findCommune(district.getDistrictCode(), communeName);
-            if (commune == null) {
-                log.warn("Commune not found: {} in district {}", communeName, districtName);
-                return null;
+            // Step 3: Find Commune (optional, requires district)
+            ClsCommuneDto commune = null;
+            if (communeName != null && district != null) {
+                commune = findCommune(district.getDistrictCode(), communeName);
+                if (commune == null) {
+                    log.warn("Commune not found: {} in district {}", communeName, districtName);
+                    // Don't return null, continue with what we have
+                }
             }
 
-            // POB doesn't have village, so return without it
+            // POB doesn't have village
             return LocationCodesDto.builder()
                     .province(province)
                     .district(district)
@@ -228,7 +298,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
                     .build();
 
         } catch (Exception ex) {
-            log.error("Error resolving POB location: {}", pobString, ex);
+            log.error("Error resolving POB location: {}", requestDto, ex);
             return null;
         }
     }

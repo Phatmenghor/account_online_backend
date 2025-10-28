@@ -1,6 +1,7 @@
 package com.internal.feature.master_data.controller;
 
 import com.internal.exceptions.response.ApiResponse;
+import com.internal.feature.master_data.dto.request.AddressRequestDto;
 import com.internal.feature.master_data.dto.request.AllMasterDataRequest;
 import com.internal.feature.master_data.dto.response.*;
 import com.internal.feature.master_data.service.MasterDataService;
@@ -22,7 +23,7 @@ public class MasterDataController {
 
     @PostMapping("/init-address")
     public ResponseEntity<ApiResponse<LocationCodesDto>> initAddress(
-            @RequestBody String address) {
+            @RequestBody AddressRequestDto address) {
 
         LocationCodesDto response = masterDataService.initAddress(address);
         return ResponseEntity.ok(ApiResponse.success("Address init successfully!", response));
@@ -30,7 +31,7 @@ public class MasterDataController {
 
     @PostMapping("/init-pob")
     public ResponseEntity<ApiResponse<LocationCodesDto>> initPob(
-            @RequestBody String address) {
+            @RequestBody AddressRequestDto address) {
 
         LocationCodesDto response = masterDataService.initPob(address);
         return ResponseEntity.ok(ApiResponse.success("Pob init successfully!", response));
