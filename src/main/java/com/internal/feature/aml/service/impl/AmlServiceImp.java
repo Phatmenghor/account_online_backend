@@ -4,6 +4,7 @@ import com.internal.enumation.AmlStatusEnum;
 import com.internal.feature.aml.dto.request.AllAmlHistoryRequestDto;
 import com.internal.feature.aml.dto.request.AllAmlRequestDto;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
+import com.internal.feature.aml.dto.request.UpdateAmlStatusDto;
 import com.internal.feature.aml.dto.response.AllAmlHistoryResponseDto;
 import com.internal.feature.aml.dto.response.AllAmlResponseDto;
 import com.internal.feature.aml.dto.response.AmlHistoryDto;
@@ -49,18 +50,16 @@ public class AmlServiceImp implements AmlService {
     @Override
     @Transactional
     public AmlStatusDto createAmlStatus(CreateAmlRequestDto requestDto) {
-
         AmlStatus status = amlStatusMapper.fromCreateDto(requestDto);
         status.setRejectedBy(null);
         status = amlStatusRepository.save(status);
 
-        // Create history for PENDING
+        // Create initial history (PENDING)
         AmlHistory history = amlHistoryMapper.createHistoryFromStatusChange(status, null, null);
         amlHistoryRepository.save(history);
 
         AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status);
 
-        // Send Telegram notification for PENDING
         try {
             alertTelegramService.sendTelegramAmlProcess(amlDto);
         } catch (Exception e) {
@@ -71,11 +70,11 @@ public class AmlServiceImp implements AmlService {
     }
 
     // -------------------------------
-    // APPROVE AML STATUS
+    // UPDATE AML STATUS (APPROVE / REJECT / FUTURE)
     // -------------------------------
-    @Transactional
     @Override
-    public AmlStatusDto approveAmlStatus(Long id) {
+    @Transactional
+    public AmlStatusDto updateAmlStatus(Long id, UpdateAmlStatusDto req) {
         UserEntity currentUser = securityUtils.getCurrentUser();
 
         AmlStatus status = amlStatusRepository.findById(id)
@@ -83,43 +82,21 @@ public class AmlServiceImp implements AmlService {
 
         AmlStatusEnum oldStatus = status.getStatus();
 
-        status.setStatus(AmlStatusEnum.APPROVE);
-        status.setApprovedBy(currentUser);
-        status.setRejectedBy(null);
-        status = amlStatusRepository.save(status);
+        // Update status based on enum
+        status.setStatus(req.getStatus());
 
-        // Create history
-        AmlHistory history = amlHistoryMapper.createHistoryFromStatusChange(status, oldStatus, currentUser);
-        amlHistoryRepository.save(history);
-
-        AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status);
-
-        // Send Telegram notification
-        try {
-            alertTelegramService.sendTelegramAmlProcess(amlDto);
-        } catch (Exception e) {
-            log.error("Failed to send AML APPROVE Telegram notification: {}", e.getMessage());
+        if (req.getStatus() == AmlStatusEnum.APPROVE) {
+            status.setApprovedBy(currentUser);
+            status.setRejectedBy(null);
+        } else if (req.getStatus() == AmlStatusEnum.REJECT) {
+            status.setRejectedBy(currentUser);
+            status.setApprovedBy(null);
+        } else {
+            // For any other statuses, clear both fields
+            status.setApprovedBy(null);
+            status.setRejectedBy(null);
         }
 
-        return amlDto;
-    }
-
-    // -------------------------------
-    // REJECT AML STATUS
-    // -------------------------------
-    @Transactional
-    @Override
-    public AmlStatusDto rejectAmlStatus(Long id) {
-        UserEntity currentUser = securityUtils.getCurrentUser();
-
-        AmlStatus status = amlStatusRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("AML Status not found"));
-
-        AmlStatusEnum oldStatus = status.getStatus();
-
-        status.setStatus(AmlStatusEnum.REJECT);
-        status.setRejectedBy(currentUser);
-        status.setApprovedBy(null);
         status = amlStatusRepository.save(status);
 
         // Create history
@@ -132,7 +109,7 @@ public class AmlServiceImp implements AmlService {
         try {
             alertTelegramService.sendTelegramAmlProcess(amlDto);
         } catch (Exception e) {
-            log.error("Failed to send AML REJECT Telegram notification: {}", e.getMessage());
+            log.error("Failed to send AML {} Telegram notification: {}", req.getStatus(), e.getMessage());
         }
 
         return amlDto;

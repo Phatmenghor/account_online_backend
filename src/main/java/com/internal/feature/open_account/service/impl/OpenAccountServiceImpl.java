@@ -285,8 +285,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     @Transactional
     public CustomerResponse testAmlFlow() {
         try {
-
-            // Step 1: Generate dynamic customer info
+            // Step 1: Generate dynamic mock customer info
             String randomId = "LEGAL_" + System.currentTimeMillis();
             String familyName = "Family" + (int) (Math.random() * 1000);
             String givenName = "Given" + (int) (Math.random() * 1000);
@@ -299,10 +298,10 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             String phoneNumber = "0" + (10000000 + (int) (Math.random() * 89999999));
             String recId = "REC_" + System.currentTimeMillis();
 
-            log.info("Starting AML full test flow for Legal ID: {}", randomId);
+            log.info("🚀 Starting AML full test flow for Legal ID: {}", randomId);
 
-            // ✅ Step 2: Load mock images from resources (Java 8–compatible)
-            ClassPathResource nidResource = new ClassPathResource("mock/mock_nid.png");
+            // Step 2: Load mock images with fallback support
+            ClassPathResource nidResource = new ClassPathResource("mock/mock_nid.jpg");
             byte[] nidBytes;
             try (InputStream in = nidResource.getInputStream();
                  ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
@@ -312,29 +311,49 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                     buffer.write(data, 0, nRead);
                 }
                 nidBytes = buffer.toByteArray();
+                log.info("✅ Mock NID image loaded successfully ({} bytes)", nidBytes.length);
             }
-            String dummyNidBase64 = "data:image/png;base64," +
-                    java.util.Base64.getEncoder().encodeToString(nidBytes);
 
-            // ✅ Load selfie mock (reuse NID image if mock_selfie.png not present)
-            byte[] selfieBytes;
-            try {
-                ClassPathResource selfieResource = new ClassPathResource("mock/mock_selfie.png");
-                try (InputStream in = selfieResource.getInputStream();
-                     ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
-                    int nRead;
-                    byte[] data = new byte[1024];
-                    while ((nRead = in.read(data, 0, data.length)) != -1) {
-                        buffer.write(data, 0, nRead);
+            // Try loading selfie image with multiple fallbacks
+            byte[] selfieBytes = null;
+            String[] selfieAttempts = {"mock/mock_selfie.jpg", "mock/mock_selfie.png", "mock/mock_nid.jpg"};
+
+            for (String path : selfieAttempts) {
+                try {
+                    ClassPathResource selfieResource = new ClassPathResource(path);
+                    try (InputStream in = selfieResource.getInputStream();
+                         ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+                        int nRead;
+                        byte[] data = new byte[1024];
+                        while ((nRead = in.read(data, 0, data.length)) != -1) {
+                            buffer.write(data, 0, nRead);
+                        }
+                        selfieBytes = buffer.toByteArray();
+                        log.info("✅ Mock selfie image loaded from: {} ({} bytes)", path, selfieBytes.length);
+                        break;
                     }
-                    selfieBytes = buffer.toByteArray();
+                } catch (Exception e) {
+                    log.debug("⚠️ Could not load from {}: {}", path, e.getMessage());
                 }
-            } catch (Exception e) {
-                log.warn("mock_selfie.png not found, reusing mock_nid.png as selfie");
-                selfieBytes = nidBytes;
             }
-            String dummySelfieBase64 = "data:image/png;base64," +
+
+            // Fallback to NID if selfie not found
+            if (selfieBytes == null) {
+                selfieBytes = nidBytes;
+                log.warn("⚠️ Using NID image as selfie fallback");
+            }
+
+            // Convert to base64 with proper MIME type detection
+            String nidMimeType = "image/jpeg";
+            String selfieMimeType = "image/jpeg";
+
+            String dummyNidBase64 = "data:" + nidMimeType + ";base64," +
+                    java.util.Base64.getEncoder().encodeToString(nidBytes);
+            String dummySelfieBase64 = "data:" + selfieMimeType + ";base64," +
                     java.util.Base64.getEncoder().encodeToString(selfieBytes);
+
+            log.info("📸 Base64 images prepared - NID: {} bytes, Selfie: {} bytes",
+                    nidBytes.length, selfieBytes.length);
 
             // Step 3: Build dummy customer request
             CustomerRequest request = CustomerRequest.builder()
@@ -353,7 +372,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                     .selfieImage(dummySelfieBase64)
                     .build();
 
-            // Step 4: Prepare AML request object
+            // Step 4: Prepare AML request and response
             CustomerAmlDto customerAmlDto = CustomerAmlDto.builder()
                     .givenName(givenName)
                     .idDisplay(randomId)
@@ -401,38 +420,66 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                     .customerInfo(customerAmlDto)
                     .build();
 
-            // Step 5: Create AML in PENDING status
+            // Step 5: Create AML record in PENDING status
             var amlPending = amlService.createAmlStatus(pendingRequest);
-            log.info("AML record created in PENDING status. ID: {}", amlPending.getId());
+            log.info("✅ AML record created in PENDING status. ID: {}", amlPending.getId());
 
-            // Step 6: Save customer images
-            CustomerFileUploadRequestDto fileRequest = CustomerFileUploadRequestDto.builder()
-                    .legal_id(request.getLegalId())
-                    .NidImage(request.getNidImage())
-                    .SelfieImage(request.getSelfieImage())
-                    .build();
+            // Step 6: Save mock customer images (locally and via service)
+            CustomerImageUploadResponseDto imagePaths = null;
+            try {
+                // Save locally under /mock_images/
+                java.nio.file.Path mockDir = java.nio.file.Paths.get("mock_images");
+                java.nio.file.Files.createDirectories(mockDir);
 
-            CustomerImageUploadResponseDto imagePaths = customerImageService.saveCustomerImages(fileRequest);
-            log.info("Customer images saved: NID={}, Selfie={}",
-                    imagePaths.getNidImagePath(), imagePaths.getSelfieImagePath());
+                String nidFileName = randomId + "_nid.jpg";
+                String selfieFileName = randomId + "_selfie.jpg";
 
-            // Step 7: Save success log
-            accountOnlineOpenSuccessService.saveSuccessLog(request, imagePaths);
-            log.info("Success log saved for Legal ID: {}", request.getLegalId());
+                java.nio.file.Files.write(mockDir.resolve(nidFileName), nidBytes);
+                java.nio.file.Files.write(mockDir.resolve(selfieFileName), selfieBytes);
+
+                log.info("💾 Mock images saved locally:");
+                log.info("   - NID: {}", mockDir.resolve(nidFileName).toAbsolutePath());
+                log.info("   - Selfie: {}", mockDir.resolve(selfieFileName).toAbsolutePath());
+
+                // Save through image service (base64 upload)
+                CustomerFileUploadRequestDto fileRequest = CustomerFileUploadRequestDto.builder()
+                        .legal_id(request.getLegalId())
+                        .NidImage(request.getNidImage())
+                        .SelfieImage(request.getSelfieImage())
+                        .build();
+
+                imagePaths = customerImageService.saveCustomerImages(fileRequest);
+                log.info("✅ Customer images saved via service:");
+                log.info("   - NID Path: {}", imagePaths.getNidImagePath());
+                log.info("   - Selfie Path: {}", imagePaths.getSelfieImagePath());
+
+            } catch (Exception e) {
+                log.error("⚠️ Failed to save mock images for test AML flow (Legal ID: {}): {}",
+                        request.getLegalId(), e.getMessage(), e);
+            }
+
+            // Step 7: Save success log safely
+            try {
+                accountOnlineOpenSuccessService.saveSuccessLog(request, imagePaths);
+                log.info("✅ Success log saved for Legal ID: {}", request.getLegalId());
+            } catch (Exception e) {
+                log.warn("⚠️ Failed to save success log for Legal ID {}: {}", request.getLegalId(), e.getMessage());
+            }
 
             // Step 8: Send AML status email asynchronously
             try {
                 mailService.sendAmlStatusNotification(amlStatusDto);
-                log.info("AML status notification email sent for test flow");
+                log.info("📧 AML status notification email sent for test flow");
             } catch (Exception e) {
-                log.warn("Failed to send AML status email for ID {}: {}", randomId, e.getMessage());
+                log.warn("⚠️ Failed to send AML status email for ID {}: {}", randomId, e.getMessage());
             }
 
             // Step 9: Return dummy response
+            log.info("✅ Test AML flow completed successfully for Legal ID: {}", randomId);
             return dummyResponse;
 
         } catch (Exception e) {
-            log.error("AML full test flow failed - Error: {}", e.getMessage(), e);
+            log.error("❌ AML full test flow failed - Error: {}", e.getMessage(), e);
             throw new RuntimeException("AML full test flow failed", e);
         }
     }

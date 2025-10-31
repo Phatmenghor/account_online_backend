@@ -130,8 +130,10 @@ cpb:
     username: MENGHOR.PHAT
     password: HouR$100
   mb:
+#   otpUrl: http://10.18.1.47:15004/CPBBank/services/CPBMobile?wsdl PRODUCTION
     otpUrl: http://192.168.103.11:15004/CPBBank/services/CPBMobile?wsdl
     registerCodeUrl: http://192.168.103.13:8090/API/RegisterCustomerMB/
+#   registerCodeUrl: http:// 10.18.1.48:8090/API/RegisterCustomerMB/ PRODUCTION
     secretKey: cpbsmsgw@!@#974203
   otp:
     length: 6
