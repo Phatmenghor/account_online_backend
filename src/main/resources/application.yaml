@@ -9,7 +9,6 @@ server:
 spring:
   application:
     name: account_online
-
   main:
     allow-bean-definition-overriding: true
 
@@ -36,7 +35,6 @@ spring:
         cache:
           use_second_level_cache: false
 
-  # Primary Database (PostgreSQL)
   datasource:
     url: jdbc:postgresql://192.168.103.106:5432/account_online
     username: postgres
@@ -51,6 +49,38 @@ spring:
       leak-detection-threshold: 1800000
       pool-name: PostgreSQL-Pool
       auto-commit: false
+
+  # Mail configuration
+  mail:
+    host: 10.18.1.204
+    port: 25
+    username: ithelpdesk@cambodiapostbank.com.kh
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: false
+          ssl:
+            trust: "*"
+    default-encoding: UTF-8
+
+  # Thymeleaf configuration
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+
+email:
+  sender:
+    address: ithelpdesk@cambodiapostbank.com.kh
+
+#FILE UPLOAD DIR
+file:
+  upload:
+    directory: /app/customer-image
 
 # Oracle Database Configuration (UAT)
 oracle:
@@ -87,7 +117,6 @@ masterdata:
 
 cpb:
   environment: development
-
   camdx:
     url: http://192.168.103.106:8099/api/v1/
     auth:
@@ -102,9 +131,6 @@ cpb:
     password: HouR$100
   mb:
     otpUrl: http://192.168.103.11:15004/CPBBank/services/CPBMobile?wsdl
-    #PRODUCTION
-#    otpUrl: http://10.18.1.47:15004/CPBBank/services/CPBMobile?wsdl
-#    registerCodeUrl: http://10.18.1.48:8090/API/RegisterCustomerMB/
     registerCodeUrl: http://192.168.103.13:8090/API/RegisterCustomerMB/
     secretKey: cpbsmsgw@!@#974203
   otp:
@@ -114,7 +140,6 @@ cpb:
     lockMinutes: 5
     expiryMinutes: 5
     message: "Your OTP code is:"
-
   validate:
     nid: validate-nid
     faceApiRoute: validate-nid-face
@@ -131,8 +156,6 @@ jwt:
     key: f7e8d9c6b5a4938271605f4de3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a001
   expiration-min: 525600
   issuer: internal-dev-api
-
-  # Task Execution for Async Telegram notifications
   task:
     execution:
       pool:
@@ -141,7 +164,7 @@ jwt:
         queue-capacity: 100
         thread-name-prefix: async-telegram-
 
-# TraineeReport Configuration
+# App Configuration
 app:
   default-users:
     create: true
@@ -149,7 +172,6 @@ app:
     idCard: phatmenghor19@gmail.com
     password: 88889999
     email: phatmenghor19@gmail.com
-
   data-load:
     batch-size: 1000
     max-retries: 1
@@ -160,28 +182,22 @@ app:
     progress-log-interval-minutes: 10
     heartbeat-interval-minutes: 5
 
-# Telegram Bot Configuration
+# Telegram Bot
 telegram:
   bot:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
-    chat-id: "-1002740302492" #ACL Internal Dev UAT monitor
-    uat-monitor-chat-id: "-1003115792160" #account online uat monitor
+    chat-id: "-1002740302492"
+    uat-monitor-chat-id: "-1003115792160"
     enabled: true
 
-# Logging Configuration
+# Logging
 logging:
   level:
     root: INFO
     com.internal: INFO
-    com.internal.feature.report_staging: INFO
-    org.springframework.security: WARN
-    org.springframework.web: WARN
-    org.springframework.data.jpa: WARN
+    org.springframework: WARN
     org.hibernate: WARN
-    org.hibernate.SQL: WARN
-    org.hibernate.type.descriptor.sql.BasicBinder: WARN
     com.zaxxer.hikari: INFO
-    org.postgresql: WARN
   pattern:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{20} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

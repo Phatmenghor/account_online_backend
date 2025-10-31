@@ -57,7 +57,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
 
         } catch (Exception e) {
             log.error("Error while checking CAMDX response for ID {}", idNumber, e);
-            telegramService.sendMarkdownMessage("⚠️ Error parsing CAMDX response: " + escapeMarkdown(e.getMessage()));
+            telegramService.sendMarkdownMessage("Error parsing CAMDX response: " + escapeMarkdown(e.getMessage()));
         }
     }
 
@@ -72,18 +72,14 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
             try {
                 sendErrorAlert(request, message, errorCode, score, incorrectFields);
             } catch (Exception e) {
-                log.error("Failed to send Telegram notification, but logs was created: {}",
-                        e.getMessage());
+                log.error("Failed to send Telegram notification, but logs were created: {}", e.getMessage());
             }
 
         } else {
-            log.info("Validation passed successfully for ID {} ✅", idNumber);
+            log.info("Validation passed successfully for ID {}", idNumber);
         }
     }
 
-    /**
-     * Serialize object to JSON string
-     */
     private String convertObjectToJson(Object obj) {
         try {
             return objectMapper.writeValueAsString(obj);
@@ -93,13 +89,10 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
         }
     }
 
-    /**
-     * Handles middleware/infra failures
-     */
     @Override
     public void sendInfraErrorAlertFromException(CamdxValidateNidRequest request, String rawMessage) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        accountOnlineReportLogService.saveLogReport(request.getIdNumber(), OpenAccStatusEnum.FAILURE,ErrorMessage.CAMDX_VALIDATE);
+        accountOnlineReportLogService.saveLogReport(request.getIdNumber(), OpenAccStatusEnum.FAILURE, ErrorMessage.CAMDX_VALIDATE);
 
         String errorCode = "Unknown";
         String errorMessage = "Unknown";
@@ -133,19 +126,18 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
 
     private StringBuilder buildTelegramInfo(CamdxValidateNidRequest request, String errorCode, String errorMessage, String nidText, DateTimeFormatter formatter) {
         StringBuilder sb = new StringBuilder();
-        sb.append("🚨 *CAMDX / MIDDLEWARE FAILURE*").append("\n")
-                .append("━━━━━━━━━━━━━━━━━━━━").append("\n")
-                .append("📬 *Error Code:* ").append(errorCode).append("\n")
-                .append("📬 *Error Message:* ").append(errorMessage).append("\n\n")
-                .append("🪪 *NID:* ").append(nidText).append("\n")
-                .append("⚙️ *App:* ").append(request.getApplicationName() != null ? escapeMarkdown(request.getApplicationName()) : "Unknown").append("\n")
-                .append("━━━━━━━━━━━━━━━━━━━━").append("\n")
-                .append("🕒 *Time:* ").append(LocalDateTime.now().format(formatter)).append("\n")
-                .append("🔍 *Issue:* MOI / CAMDX unreachable or infrastructure failure.");
+        sb.append("*CAMDX / MIDDLEWARE FAILURE*").append("\n")
+                .append("--------------------").append("\n")
+                .append("Error Code: ").append(errorCode).append("\n")
+                .append("Error Message: ").append(errorMessage).append("\n\n")
+                .append("NID: ").append(nidText).append("\n")
+                .append("App: ").append(request.getApplicationName() != null ? escapeMarkdown(request.getApplicationName()) : "Unknown").append("\n")
+                .append("--------------------").append("\n")
+                .append("Time: ").append(LocalDateTime.now().format(formatter)).append("\n")
+                .append("Issue: MOI / CAMDX unreachable or infrastructure failure.");
         return sb;
     }
 
-    /** Escape Markdown special characters for Telegram */
     private String escapeMarkdown(String text) {
         if (text == null) return "";
         return text.replace("\\", "\\\\")
@@ -169,15 +161,11 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
         return ignoreList.stream().anyMatch(lower::contains);
     }
 
-
     private void sendErrorAlert(CamdxValidateNidRequest request, String message,
                                 int errorCode, Double score, List<String> incorrectFields) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-        //Format incorrect field i.e - dob
         String formattedIncorrect = getFormattedIncorrect(incorrectFields);
-
         StringBuilder sb = buildTelegramErrorAlertInfo(request, message, score, formattedIncorrect, formatter);
 
         telegramService.sendMarkdownMessage(sb.toString());
@@ -185,39 +173,36 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
 
     private StringBuilder buildTelegramErrorAlertInfo(CamdxValidateNidRequest request, String message, Double score, String formattedIncorrect, DateTimeFormatter formatter) {
         StringBuilder sb = new StringBuilder();
-        sb.append("🚨 *CAMDX VALIDATION ERROR*").append("\n")
-                .append("━━━━━━━━━━━━━━━━━━").append("\n")
-                .append("📬 *Status:* ").append(escapeMarkdown(message)).append("\n\n")
-                .append("🪪 *NID:* `").append(escapeMarkdown(request.getIdNumber())).append("`\n")
-                .append("⚙️ *App:* ").append(escapeMarkdown(request.getApplicationName())).append("\n")
-                .append("📉 *Score:* `").append(String.format("%.2f", score)).append("`\n")
-                .append("❗ *Incorrect Fields:*\n").append(formattedIncorrect).append("\n")
-                .append("━━━━━━━━━━━━━━━━━━").append("\n")
-                .append("📋 *Request Info*\n")
+        sb.append("*CAMDX VALIDATION ERROR*").append("\n")
+                .append("--------------------").append("\n")
+                .append("Status: ").append(escapeMarkdown(message)).append("\n\n")
+                .append("NID: `").append(escapeMarkdown(request.getIdNumber())).append("`\n")
+                .append("App: ").append(escapeMarkdown(request.getApplicationName())).append("\n")
+                .append("Score: `").append(String.format("%.2f", score)).append("`\n")
+                .append("Incorrect Fields:\n").append(formattedIncorrect).append("\n")
+                .append("--------------------").append("\n")
+                .append("Request Info\n")
                 .append("• KH: ").append(escapeMarkdown(request.getLastNameKh())).append(" ").append(escapeMarkdown(request.getFirstNameKh())).append("\n")
                 .append("• EN: ").append(escapeMarkdown(request.getLastNameEn())).append(" ").append(escapeMarkdown(request.getFirstNameEn())).append("\n")
                 .append("• DOB: ").append(escapeMarkdown(request.getDob())).append("\n")
                 .append("• Gender: ").append(escapeMarkdown(request.getGender())).append("\n")
                 .append("• Issued: ").append(escapeMarkdown(request.getIssuedDate())).append("\n")
                 .append("• Expired: ").append(escapeMarkdown(request.getExpiredDate())).append("\n")
-                .append("━━━━━━━━━━━━━━━━━━").append("\n")
-                .append("🕒 ").append(LocalDateTime.now().format(formatter)).append("\n")
-                .append("🔍 Please recheck NID / submission.");
+                .append("--------------------").append("\n")
+                .append("Time: ").append(LocalDateTime.now().format(formatter)).append("\n")
+                .append("Please recheck NID / submission.");
         return sb;
     }
 
     private static String getFormattedIncorrect(List<String> incorrectFields) {
-        // Format incorrect fields as a bullet list
-        String formattedIncorrect;
         if (incorrectFields != null && !incorrectFields.isEmpty()) {
             StringBuilder sbIncorrect = new StringBuilder();
             for (String field : incorrectFields) {
                 sbIncorrect.append("- ").append(field).append("\n");
             }
-            formattedIncorrect = sbIncorrect.toString().trim(); // remove last newline
+            return sbIncorrect.toString().trim();
         } else {
-            formattedIncorrect = "None";
+            return "None";
         }
-        return formattedIncorrect;
     }
 }

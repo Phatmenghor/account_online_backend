@@ -2,15 +2,13 @@ package com.internal.feature.aml.mapper;
 
 import com.internal.enumation.AmlStatusEnum;
 import com.internal.feature.aml.dto.request.AmlHistoryRequestDto;
-import com.internal.feature.aml.dto.request.CustomerAmlDto;
 import com.internal.feature.aml.dto.response.AllAmlHistoryResponseDto;
 import com.internal.feature.aml.dto.response.AmlHistoryDto;
 import com.internal.feature.aml.model.AmlHistory;
 import com.internal.feature.aml.model.AmlStatus;
-import com.internal.feature.auth.dto.response.UserResponseDto;
 import com.internal.feature.auth.mapper.UserMapper;
-import com.internal.feature.auth.models.UserEntity;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.springframework.data.domain.Page;
 
@@ -19,84 +17,61 @@ import java.util.List;
 @Mapper(componentModel = "spring", uses = {UserMapper.class})
 public interface AmlHistoryMapper {
 
-    default AmlHistory fromCreateDto(AmlHistoryRequestDto request, UserMapper userMapper) {
-        if (request == null) return null;
+    // -------------------------------
+    // CREATE DTO → ENTITY
+    // -------------------------------
+    @Mapping(target = "changedBy", source = "changedBy")
+    @Mapping(target = "idDisplay", source = "idDisplay")
+    @Mapping(target = "familyName", source = "familyName")
+    @Mapping(target = "givenName", source = "givenName")
+    @Mapping(target = "firstNameKh", source = "firstNameKh")
+    @Mapping(target = "lastNameKh", source = "lastNameKh")
+    @Mapping(target = "dateOfBirth", source = "dateOfBirth")
+    @Mapping(target = "gender", source = "gender")
+    @Mapping(target = "nationality", source = "nationality")
+    @Mapping(target = "legalAddress", source = "legalAddress")
+    @Mapping(target = "oldStatus", source = "oldStatus")
+    @Mapping(target = "newStatus", source = "newStatus")
+    AmlHistory fromCreateDto(AmlHistoryRequestDto request);
 
-        AmlHistory history = new AmlHistory();
-        history.setOriginalRequest(request.getOriginalRequest());
-        history.setOriginalResponse(request.getOriginalResponse());
-        history.setOldStatus(request.getOldStatus());
-        history.setNewStatus(request.getNewStatus());
+    // -------------------------------
+    // ENTITY → DTO
+    // -------------------------------
+    @Mapping(target = "customerInfo.idDisplay", source = "idDisplay")
+    @Mapping(target = "customerInfo.familyName", source = "familyName")
+    @Mapping(target = "customerInfo.givenName", source = "givenName")
+    @Mapping(target = "customerInfo.firstNameKh", source = "firstNameKh")
+    @Mapping(target = "customerInfo.lastNameKh", source = "lastNameKh")
+    @Mapping(target = "customerInfo.dateOfBirth", source = "dateOfBirth")
+    @Mapping(target = "customerInfo.gender", source = "gender")
+    @Mapping(target = "customerInfo.nationality", source = "nationality")
+    @Mapping(target = "customerInfo.legalAddress", source = "legalAddress")
+    @Mapping(target = "changedBy", source = "changedBy")
+    @Mapping(target = "oldStatus", source = "oldStatus")
+    @Mapping(target = "newStatus", source = "newStatus")
+    AmlHistoryDto toDto(AmlHistory history);
 
-        if (request.getChangedBy() != null) {
-            history.setChangedBy(userMapper.mapToEntity(request.getChangedBy()));
-        }
-
-        return history;
-    }
-
-    default AmlHistory createHistoryFromStatus(
-            AmlHistoryRequestDto request, UserMapper userMapper
-    ) {
-        AmlHistory history = new AmlHistory();
-
-        history.setOriginalRequest(request.getOriginalRequest());
-        history.setOriginalResponse(request.getOriginalResponse());
-        history.setOldStatus(request.getOldStatus());
-        history.setNewStatus(request.getNewStatus());
-
-        if (request.getChangedBy() != null) {
-            history.setChangedBy(userMapper.mapToEntity(request.getChangedBy()));
-        }
-        // ✅ copy customer identification fields
-        history.setIdDisplay(request.getIdDisplay());
-        history.setGender(request.getGender());
-        history.setFamilyName(request.getFamilyName());
-        history.setGivenName(request.getGivenName());
-        history.setFirstNameKh(request.getFirstNameKh());
-        history.setLastNameKh(request.getLastNameKh());
-        history.setDateOfBirth(request.getDateOfBirth());
-        history.setNationality(request.getNationality());
-        history.setLegalAddress(request.getLegalAddress());
-
-        return history;
-    }
-
-    /**
-     * Create history entry from AmlStatus change
-     */
+    // -------------------------------
+    // HISTORY ENTRY FROM STATUS CHANGE
+    // -------------------------------
     default AmlHistory createHistoryFromStatusChange(
-            String originalRequest,
-            String originalResponse,
-            AmlStatusEnum oldStatus,
-            AmlStatusEnum newStatus,
-            UserEntity changedBy
-    ) {
-        AmlHistory history = new AmlHistory();
-        history.setOriginalRequest(originalRequest);
-        history.setOriginalResponse(originalResponse);
-        history.setOldStatus(oldStatus);
-        history.setNewStatus(newStatus);
-        history.setChangedBy(changedBy);
-        return history;
-    }
-
-    /**
-     * Create history entry from AmlStatus entity
-     */
-    default AmlHistory createHistoryFromStatus(
             AmlStatus status,
             AmlStatusEnum oldStatus,
-            UserEntity changedBy
+            Object changedBy  // MapStruct will ignore if not mapped; fallback to default method
     ) {
+        if (status == null) return null;
+
         AmlHistory history = new AmlHistory();
         history.setOriginalRequest(status.getOriginalRequest());
         history.setOriginalResponse(status.getOriginalResponse());
         history.setOldStatus(oldStatus);
         history.setNewStatus(status.getStatus());
-        history.setChangedBy(changedBy);
 
-        // ✅ copy customer identity fields from AmlStatus into AmlHistory
+        if (changedBy instanceof com.internal.feature.auth.models.UserEntity) {
+            history.setChangedBy((com.internal.feature.auth.models.UserEntity) changedBy);
+        }
+
+        // copy customer fields
         history.setIdDisplay(status.getIdDisplay());
         history.setGender(status.getGender());
         history.setFamilyName(status.getFamilyName());
@@ -110,37 +85,9 @@ public interface AmlHistoryMapper {
         return history;
     }
 
-    default AmlHistoryDto toDto(AmlHistory history, UserMapper userMapper) {
-        if (history == null) return null;
-
-        UserResponseDto userDto = null;
-        UserEntity changedBy = history.getChangedBy();
-        if (changedBy != null) {
-            userDto = userMapper.mapToDto(changedBy);
-        }
-
-        CustomerAmlDto customer = new CustomerAmlDto();
-        customer.setIdDisplay(history.getIdDisplay());
-        customer.setGender(history.getGender());
-        customer.setFamilyName(history.getFamilyName());
-        customer.setGivenName(history.getGivenName());
-        customer.setFirstNameKh(history.getFirstNameKh());
-        customer.setLastNameKh(history.getLastNameKh());
-        customer.setDateOfBirth(history.getDateOfBirth());
-        customer.setNationality(history.getNationality());
-        customer.setLegalAddress(history.getLegalAddress());
-
-        return AmlHistoryDto.builder()
-                .id(history.getId())
-                .originalRequest(history.getOriginalRequest())
-                .originalResponse(history.getOriginalResponse())
-                .oldStatus(history.getOldStatus())
-                .newStatus(history.getNewStatus())
-                .customerInfo(customer) // ✅ Correct: group inside CustomerAmlDto
-                .changedBy(userDto)
-                .build();
-    }
-
+    // -------------------------------
+    // PAGED RESPONSE
+    // -------------------------------
     @Named("mapToListDto")
     default AllAmlHistoryResponseDto mapToListDto(List<AmlHistoryDto> content, Page<AmlHistory> histories) {
         AllAmlHistoryResponseDto response = new AllAmlHistoryResponseDto();

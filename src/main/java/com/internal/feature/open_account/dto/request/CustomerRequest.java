@@ -1,12 +1,12 @@
 package com.internal.feature.open_account.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
 
 @Data
+@Builder
 public class CustomerRequest {
     
     @NotBlank(message = "Record ID is required")

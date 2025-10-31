@@ -5,11 +5,18 @@ import com.internal.enumation.AmlStatusEnum;
 import com.internal.enumation.OpenAccStatusEnum;
 import com.internal.exceptions.error.openaccount.AccountCreationException;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
+import com.internal.feature.aml.dto.request.CustomerAmlDto;
+import com.internal.feature.aml.dto.response.AmlStatusDto;
+import com.internal.feature.aml.mapper.AmlStatusMapper;
 import com.internal.feature.aml.service.AmlService;
+import com.internal.feature.logs_report.dto.request.CustomerFileUploadRequestDto;
+import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
+import com.internal.feature.logs_report.service.AccountOnlineOpenSuccessService;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
+import com.internal.feature.logs_report.service.CustomerImageService;
+import com.internal.feature.mail.service.MailService;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.response.CustomerResponse;
-import com.internal.feature.open_account.mapper.CustomerMapper;
 import com.internal.feature.open_account.service.OpenAccountService;
 import com.internal.feature.open_account.service.external.MobileBankingService;
 import com.internal.feature.open_account.service.external.T24Service;
@@ -19,10 +26,13 @@ import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,9 +45,12 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private final T24Service t24Service;
     private final MobileBankingService mobileBankingService;
     private final AccountOnlineReportLogService reportLogService;
-    private final ObjectMapper objectMapper;
     private final AmlService amlService;
-    private final CustomerMapper customerMapper;
+    private final MailService mailService;
+    private final CustomerImageService customerImageService;
+    private final AccountOnlineOpenSuccessService accountOnlineOpenSuccessService;
+    private final AmlStatusMapper amlStatusMapper;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -50,38 +63,12 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         String khrAccount = null;
         String usdAccount = null;
 
-        Map<String, Object> responseMap = new HashMap<>();
-        responseMap.put("KHR", khrAccount);
-        responseMap.put("USD", usdAccount);
 
         try {
             // Step 1: Check database connections
             currentStep = "CHECK_DATABASE_CONNECTIONS";
             validationService.checkDatabaseConnections();
             log.info("Database connections verified for Legal ID: {}", request.getLegalId());
-
-            // Step: Create AML record (PENDING)
-            currentStep = "CREATE_AML_PENDING";
-            try {
-                CreateAmlRequestDto amlRequest = CreateAmlRequestDto.builder()
-                        .originalRequest(objectMapper.writeValueAsString(request))
-                        .originalResponse(objectMapper.writeValueAsString(responseMap))
-                        .status(AmlStatusEnum.PENDING)
-                        .idDisplay(request.getLegalId())
-                        .familyName(request.getFamilyName())
-                        .givenName(request.getGivenName())
-                        .firstNameKh(request.getFirstNameKh())
-                        .lastNameKh(request.getLastNameKh())
-                        .dateOfBirth(request.getDateOfBirth())
-                        .gender(request.getGender())
-                        .nationality(request.getNationality())
-                        .legalAddress(request.getLegalAddress())
-                        .build();
-                amlService.createAmlStatus(amlRequest);
-                log.info("AML record created in PENDING status for Legal ID: {}", request.getLegalId());
-            } catch (Exception e) {
-                log.error("Failed to create AML record for Legal ID {}: {}", request.getLegalId(), e.getMessage());
-            }
 
             // Step 2: Get customer info
             currentStep = "GET_CUSTOMER_INFO";
@@ -141,14 +128,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                 throw new AccountCreationException(AppConstants.FAIL_CREATE_ANY_ACCOUNT);
             }
 
-            // Step 8: Validate at least one account created
-            currentStep = "VALIDATE_ACCOUNT_CREATION";
-            if (khrAccount == null && usdAccount == null &&
-                    !validationService.hasAccount(customerInfo, "KHR") &&
-                    !validationService.hasAccount(customerInfo, "USD")) {
-                throw new AccountCreationException(AppConstants.FAIL_CREATE_ANY_ACCOUNT);
-            }
-
             // Step 9: Activate mobile banking (non-blocking)
             currentStep = "ACTIVATE_MOBILE_BANKING";
             try {
@@ -158,7 +137,34 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                 log.error("Mobile banking activation failed (non-critical) for CIF {}: {}", cif, e.getMessage());
             }
 
-            // Step 10: Success - Log the successful completion
+            // Step 10: Create AML record in PENDING status and send notification
+            currentStep = "CREATE_AML_AND_NOTIFY";
+            try {
+                createAmlRecordAndNotify(request, cif, khrAccount, usdAccount, mnemonic);
+                log.info("AML record created and notification sent for Legal ID: {}", request.getLegalId());
+            } catch (Exception e) {
+                log.error("Failed to create AML record or send notification for Legal ID {}: {}",
+                        request.getLegalId(), e.getMessage());
+            }
+
+            // Step 11: Save customer images
+            currentStep = "SAVE_CUSTOMER_IMAGES";
+            CustomerFileUploadRequestDto fileRequest = CustomerFileUploadRequestDto.builder()
+                    .legal_id(request.getLegalId())
+                    .NidImage(request.getNidImage())
+                    .SelfieImage(request.getSelfieImage())
+                    .build();
+
+            CustomerImageUploadResponseDto imagePaths = customerImageService.saveCustomerImages(fileRequest);
+            log.info("Customer images saved: NID={}, Selfie={}",
+                    imagePaths.getNidImagePath(), imagePaths.getSelfieImagePath());
+
+            // Step 12: Save success log
+            currentStep = "SAVE_SUCCESS_LOG";
+            accountOnlineOpenSuccessService.saveSuccessLog(request, imagePaths);
+            log.info("Success log saved for Legal ID: {}", request.getLegalId());
+
+            // Step 13: Log the successful completion
             currentStep = "COMPLETED";
             String successRemark = buildSuccessRemark(cif, khrAccount, usdAccount, mnemonic);
             reportLogService.createAccountOpeningLog(
@@ -175,7 +181,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                     "Open account online Successfully"
             );
 
-            // Step 11: Return success response
+            // Step 14: Return success response
             return CustomerResponse.builder()
                     .cif(cif)
                     .khrAccount(khrAccount)
@@ -199,28 +205,181 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         }
     }
 
+    /**
+     * Creates AML record in PENDING status and sends email notification
+     */
+    private void createAmlRecordAndNotify(CustomerRequest request, String cif,
+                                          String khrAccount, String usdAccount, String mnemonic) {
+        try {
+            // Build CustomerAmlDto
+            CustomerAmlDto customerAmlDto = CustomerAmlDto.builder()
+                    .givenName(request.getGivenName())
+                    .idDisplay(request.getLegalId())
+                    .familyName(request.getFamilyName())
+                    .firstNameKh(request.getFirstNameKh())
+                    .lastNameKh(request.getLastNameKh())
+                    .dateOfBirth(request.getDateOfBirth())
+                    .gender(request.getGender())
+                    .nationality(request.getNationality())
+                    .legalAddress(request.getLegalAddress())
+                    .build();
+
+            String requestJson = objectMapper.writeValueAsString(customerAmlDto);
+
+            // Build response object
+            CustomerResponse response = CustomerResponse.builder()
+                    .cif(cif)
+                    .khrAccount(khrAccount)
+                    .usdAccount(usdAccount)
+                    .mnemonic(mnemonic)
+                    .build();
+
+            String responseJson = objectMapper.writeValueAsString(response);
+
+            // Create AML request
+            CreateAmlRequestDto amlRequest = CreateAmlRequestDto.builder()
+                    .originalRequest(requestJson)
+                    .originalResponse(responseJson)
+                    .status(AmlStatusEnum.PENDING)
+                    .idDisplay(request.getLegalId())
+                    .familyName(request.getFamilyName())
+                    .givenName(request.getGivenName())
+                    .firstNameKh(request.getFirstNameKh())
+                    .lastNameKh(request.getLastNameKh())
+                    .dateOfBirth(request.getDateOfBirth())
+                    .gender(request.getGender())
+                    .nationality(request.getNationality())
+                    .legalAddress(request.getLegalAddress())
+                    .build();
+
+            // Create AML status record
+            var amlStatus = amlService.createAmlStatus(amlRequest);
+            log.info("AML record created in PENDING status. ID: {}", amlStatus.getId());
+
+            // Build AML status DTO for email
+            AmlStatusDto amlStatusDto = AmlStatusDto.builder()
+                    .status(AmlStatusEnum.PENDING)
+                    .approvedBy(null)
+                    .rejectedBy(null)
+                    .originalRequest(requestJson)
+                    .originalResponse(responseJson)
+                    .customerInfo(customerAmlDto)
+                    .build();
+
+            // Send email notification (asynchronous - non-blocking)
+            try {
+                mailService.sendAmlStatusNotification(amlStatusDto);
+                log.info("AML status notification email sent for Legal ID: {}", request.getLegalId());
+            } catch (Exception e) {
+                log.warn("Failed to send AML status email for Legal ID {}: {}",
+                        request.getLegalId(), e.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("Error in createAmlRecordAndNotify for Legal ID {}: {}",
+                    request.getLegalId(), e.getMessage());
+            throw new RuntimeException("Failed to create AML record and send notification", e);
+        }
+    }
+
     @Override
     @Transactional
     public CustomerResponse testAmlFlow() {
         try {
+
             // Step 1: Generate dynamic customer info
             String randomId = "LEGAL_" + System.currentTimeMillis();
-            String familyName = "Family" + (int)(Math.random() * 1000);
-            String givenName = "Given" + (int)(Math.random() * 1000);
-            String firstNameKh = "ភា" + (int)(Math.random() * 1000);
-            String lastNameKh = "ន" + (int)(Math.random() * 1000);
-            String dateOfBirth = "1990-" + (1 + (int)(Math.random() * 12)) + "-" + (1 + (int)(Math.random() * 28));
+            String familyName = "Family" + (int) (Math.random() * 1000);
+            String givenName = "Given" + (int) (Math.random() * 1000);
+            String firstNameKh = "ភា" + (int) (Math.random() * 1000);
+            String lastNameKh = "ន" + (int) (Math.random() * 1000);
+            String dateOfBirth = "1990-" + (1 + (int) (Math.random() * 12)) + "-" + (1 + (int) (Math.random() * 28));
             String gender = Math.random() > 0.5 ? "Male" : "Female";
             String nationality = "Cambodian";
-            String legalAddress = "Street " + (int)(Math.random() * 200) + ", Phnom Penh";
+            String legalAddress = "Street " + (int) (Math.random() * 200) + ", Phnom Penh";
+            String phoneNumber = "0" + (10000000 + (int) (Math.random() * 89999999));
+            String recId = "REC_" + System.currentTimeMillis();
 
             log.info("Starting AML full test flow for Legal ID: {}", randomId);
-            log.info("Generated test AML customer: {} {} ({})", familyName, givenName, randomId);
 
-            // Step 2: Build AML request with dynamic customer info
+            // ✅ Step 2: Load mock images from resources (Java 8–compatible)
+            ClassPathResource nidResource = new ClassPathResource("mock/mock_nid.png");
+            byte[] nidBytes;
+            try (InputStream in = nidResource.getInputStream();
+                 ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+                int nRead;
+                byte[] data = new byte[1024];
+                while ((nRead = in.read(data, 0, data.length)) != -1) {
+                    buffer.write(data, 0, nRead);
+                }
+                nidBytes = buffer.toByteArray();
+            }
+            String dummyNidBase64 = "data:image/png;base64," +
+                    java.util.Base64.getEncoder().encodeToString(nidBytes);
+
+            // ✅ Load selfie mock (reuse NID image if mock_selfie.png not present)
+            byte[] selfieBytes;
+            try {
+                ClassPathResource selfieResource = new ClassPathResource("mock/mock_selfie.png");
+                try (InputStream in = selfieResource.getInputStream();
+                     ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+                    int nRead;
+                    byte[] data = new byte[1024];
+                    while ((nRead = in.read(data, 0, data.length)) != -1) {
+                        buffer.write(data, 0, nRead);
+                    }
+                    selfieBytes = buffer.toByteArray();
+                }
+            } catch (Exception e) {
+                log.warn("mock_selfie.png not found, reusing mock_nid.png as selfie");
+                selfieBytes = nidBytes;
+            }
+            String dummySelfieBase64 = "data:image/png;base64," +
+                    java.util.Base64.getEncoder().encodeToString(selfieBytes);
+
+            // Step 3: Build dummy customer request
+            CustomerRequest request = CustomerRequest.builder()
+                    .recId(recId)
+                    .legalId(randomId)
+                    .familyName(familyName)
+                    .givenName(givenName)
+                    .firstNameKh(firstNameKh)
+                    .lastNameKh(lastNameKh)
+                    .dateOfBirth(dateOfBirth)
+                    .gender(gender)
+                    .nationality(nationality)
+                    .legalAddress(legalAddress)
+                    .phoneNumber(phoneNumber)
+                    .nidImage(dummyNidBase64)
+                    .selfieImage(dummySelfieBase64)
+                    .build();
+
+            // Step 4: Prepare AML request object
+            CustomerAmlDto customerAmlDto = CustomerAmlDto.builder()
+                    .givenName(givenName)
+                    .idDisplay(randomId)
+                    .familyName(familyName)
+                    .firstNameKh(firstNameKh)
+                    .lastNameKh(lastNameKh)
+                    .dateOfBirth(dateOfBirth)
+                    .gender(gender)
+                    .nationality(nationality)
+                    .legalAddress(legalAddress)
+                    .build();
+
+            String requestJson = objectMapper.writeValueAsString(customerAmlDto);
+
+            CustomerResponse dummyResponse = CustomerResponse.builder()
+                    .cif("TEST_CIF_" + System.currentTimeMillis())
+                    .khrAccount(null)
+                    .usdAccount(null)
+                    .mnemonic("AML_TEST_" + System.currentTimeMillis())
+                    .build();
+
+            String responseJson = objectMapper.writeValueAsString(dummyResponse);
+
             CreateAmlRequestDto pendingRequest = CreateAmlRequestDto.builder()
-                    .originalRequest("{}") // no request body
-                    .originalResponse(null)
+                    .originalRequest(requestJson)
+                    .originalResponse(responseJson)
                     .status(AmlStatusEnum.PENDING)
                     .idDisplay(randomId)
                     .familyName(familyName)
@@ -233,17 +392,44 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                     .legalAddress(legalAddress)
                     .build();
 
-            // Step 3: Create AML in PENDING status
+            AmlStatusDto amlStatusDto = AmlStatusDto.builder()
+                    .status(AmlStatusEnum.PENDING)
+                    .approvedBy(null)
+                    .rejectedBy(null)
+                    .originalRequest(requestJson)
+                    .originalResponse(responseJson)
+                    .customerInfo(customerAmlDto)
+                    .build();
+
+            // Step 5: Create AML in PENDING status
             var amlPending = amlService.createAmlStatus(pendingRequest);
             log.info("AML record created in PENDING status. ID: {}", amlPending.getId());
 
-            // Step 4: Return dummy response for frontend display
-            return CustomerResponse.builder()
-                    .cif("TEST_CIF_" + System.currentTimeMillis())
-                    .khrAccount(null)
-                    .usdAccount(null)
-                    .mnemonic("AML_TEST_" + System.currentTimeMillis())
+            // Step 6: Save customer images
+            CustomerFileUploadRequestDto fileRequest = CustomerFileUploadRequestDto.builder()
+                    .legal_id(request.getLegalId())
+                    .NidImage(request.getNidImage())
+                    .SelfieImage(request.getSelfieImage())
                     .build();
+
+            CustomerImageUploadResponseDto imagePaths = customerImageService.saveCustomerImages(fileRequest);
+            log.info("Customer images saved: NID={}, Selfie={}",
+                    imagePaths.getNidImagePath(), imagePaths.getSelfieImagePath());
+
+            // Step 7: Save success log
+            accountOnlineOpenSuccessService.saveSuccessLog(request, imagePaths);
+            log.info("Success log saved for Legal ID: {}", request.getLegalId());
+
+            // Step 8: Send AML status email asynchronously
+            try {
+                mailService.sendAmlStatusNotification(amlStatusDto);
+                log.info("AML status notification email sent for test flow");
+            } catch (Exception e) {
+                log.warn("Failed to send AML status email for ID {}: {}", randomId, e.getMessage());
+            }
+
+            // Step 9: Return dummy response
+            return dummyResponse;
 
         } catch (Exception e) {
             log.error("AML full test flow failed - Error: {}", e.getMessage(), e);
@@ -270,7 +456,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
         log.info("Customer created - CIF: {}, MNEMONIC: {}", cif, mnemonic);
 
-        // Use HashMap instead of Map.of()
         Map<String, String> result = new HashMap<>();
         result.put("cif", cif);
         result.put("mnemonic", mnemonic != null ? mnemonic : "");

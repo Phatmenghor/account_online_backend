@@ -17,19 +17,17 @@ import com.internal.feature.aml.repository.AmlStatusRepository;
 import com.internal.feature.aml.service.AmlService;
 import com.internal.feature.aml.specification.AmlHistorySpecification;
 import com.internal.feature.aml.specification.AmlStatusSpecification;
-import com.internal.feature.auth.mapper.UserMapper;
 import com.internal.feature.auth.models.UserEntity;
 import com.internal.feature.telegram_alerts.service.serviceImpl.OpenAccountTelegramAlertServiceImpl;
 import com.internal.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,28 +41,24 @@ public class AmlServiceImp implements AmlService {
     private final AmlStatusMapper amlStatusMapper;
     private final AmlHistoryMapper amlHistoryMapper;
     private final SecurityUtils securityUtils;
-    private final UserMapper userMapper;
     private final OpenAccountTelegramAlertServiceImpl alertTelegramService;
 
+    // -------------------------------
+    // CREATE AML STATUS
+    // -------------------------------
     @Override
     @Transactional
     public AmlStatusDto createAmlStatus(CreateAmlRequestDto requestDto) {
 
-        AmlStatus status = amlStatusMapper.fromCreateDto(requestDto, userMapper);
+        AmlStatus status = amlStatusMapper.fromCreateDto(requestDto);
         status.setRejectedBy(null);
         status = amlStatusRepository.save(status);
 
         // Create history for PENDING
-        AmlHistory history = amlHistoryMapper.createHistoryFromStatusChange(
-                status.getOriginalRequest(),
-                status.getOriginalResponse(),
-                null,
-                status.getStatus(),
-                null
-        );
+        AmlHistory history = amlHistoryMapper.createHistoryFromStatusChange(status, null, null);
         amlHistoryRepository.save(history);
 
-        AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status, userMapper);
+        AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status);
 
         // Send Telegram notification for PENDING
         try {
@@ -76,6 +70,9 @@ public class AmlServiceImp implements AmlService {
         return amlDto;
     }
 
+    // -------------------------------
+    // APPROVE AML STATUS
+    // -------------------------------
     @Transactional
     @Override
     public AmlStatusDto approveAmlStatus(Long id) {
@@ -92,10 +89,10 @@ public class AmlServiceImp implements AmlService {
         status = amlStatusRepository.save(status);
 
         // Create history
-        AmlHistory history = amlHistoryMapper.createHistoryFromStatus(status, oldStatus, currentUser);
+        AmlHistory history = amlHistoryMapper.createHistoryFromStatusChange(status, oldStatus, currentUser);
         amlHistoryRepository.save(history);
 
-        AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status, userMapper);
+        AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status);
 
         // Send Telegram notification
         try {
@@ -107,6 +104,9 @@ public class AmlServiceImp implements AmlService {
         return amlDto;
     }
 
+    // -------------------------------
+    // REJECT AML STATUS
+    // -------------------------------
     @Transactional
     @Override
     public AmlStatusDto rejectAmlStatus(Long id) {
@@ -123,10 +123,10 @@ public class AmlServiceImp implements AmlService {
         status = amlStatusRepository.save(status);
 
         // Create history
-        AmlHistory history = amlHistoryMapper.createHistoryFromStatus(status, oldStatus, currentUser);
+        AmlHistory history = amlHistoryMapper.createHistoryFromStatusChange(status, oldStatus, currentUser);
         amlHistoryRepository.save(history);
 
-        AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status, userMapper);
+        AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status);
 
         // Send Telegram notification
         try {
@@ -138,33 +138,39 @@ public class AmlServiceImp implements AmlService {
         return amlDto;
     }
 
+    // -------------------------------
+    // GET ALL AML
+    // -------------------------------
     @Override
     public AllAmlResponseDto getAllAml(AllAmlRequestDto request) {
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
 
-        var spec = AmlStatusSpecification.hasStatus(request.getStatus())
+        Specification<AmlStatus> spec = AmlStatusSpecification.hasStatus(request.getStatus())
                 .and(AmlStatusSpecification.search(request.getSearch()));
 
         Page<AmlStatus> page = amlStatusRepository.findAll(spec, pageable);
 
         List<AmlStatusDto> content = page.stream()
-                .map(aml -> amlStatusMapper.toStatusDto(aml, userMapper))
+                .map(amlStatusMapper::toStatusDto)
                 .collect(Collectors.toList());
 
         return amlStatusMapper.mapToListDto(content, page);
     }
 
+    // -------------------------------
+    // GET ALL AML HISTORY
+    // -------------------------------
     @Override
     public AllAmlHistoryResponseDto getAllAmlHistory(AllAmlHistoryRequestDto request) {
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
 
-        var spec = AmlHistorySpecification.createdBetween(request.getStartDate(), request.getEndDate())
+        Specification<AmlHistory> spec = AmlHistorySpecification.createdBetween(request.getStartDate(), request.getEndDate())
                 .and(AmlHistorySpecification.search(request.getSearch()));
 
         Page<AmlHistory> page = amlHistoryRepository.findAll(spec, pageable);
 
         List<AmlHistoryDto> content = page.stream()
-                .map(history -> amlHistoryMapper.toDto(history, userMapper))
+                .map(amlHistoryMapper::toDto)
                 .collect(Collectors.toList());
 
         return amlHistoryMapper.mapToListDto(content, page);

@@ -9,7 +9,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 
 @Service
 @RequiredArgsConstructor
@@ -17,12 +20,12 @@ import java.time.LocalDateTime;
 public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineService {
 
     private final TelegramService telegramService;
-    private static final String SEPARATOR = "━━━━━━━━━━━━━━━━━━";
+    private static final String SEPARATOR = "--------------------";
 
     @Override
     public void sendTelegramAccountOnlineError(String idNumber, OpenAccStatusEnum status, StringBuilder remarkBuilder) {
         try {
-            String body = String.format("🪪 NID: %s\n⚙️ Remark: %s",
+            String body = String.format("NID: %s\nRemark: %s",
                     escapeMarkdown(idNumber), escapeMarkdown(remarkBuilder.toString()));
 
             String message = buildStandardMessage("Account Online Error", body, status.name(), "-");
@@ -40,42 +43,61 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
         }
 
         CustomerAmlDto c = amlDto.getCustomerInfo();
-
-        // Header
-        String header = "📢 *AML Account Online*";
-
-        // Determine customer display name
+        String header = "*AML Account Online*";
         String customerName = getCustomerDisplayName(c, amlDto.getStatus());
 
-        // Body
+        // Format DOB reliably, support single-digit month/day
+        String dobFormatted = formatDob(c.getDateOfBirth());
+
         String body = String.format(
-                "👤 Customer: %s\n🪪 ID: %s\n📅 DOB: %s\n🌍 Nationality: %s\n🏠 Address: %s",
-                escapeMarkdown(customerName),
-                escapeMarkdown(c.getIdDisplay()),
-                escapeMarkdown(c.getDateOfBirth()),
-                escapeMarkdown(c.getNationality()),
-                escapeMarkdown(c.getLegalAddress())
+                "Name: %s\nID: %s\nDOB: %s\nNationality: %s\nAddress: %s",
+                escapeMarkdown(getOrNA(customerName)),
+                escapeMarkdown(getOrNA(c.getIdDisplay())),
+                escapeMarkdown(getOrNA(dobFormatted)),
+                escapeMarkdown(getOrNA(c.getNationality())),
+                escapeMarkdown(getOrNA(c.getLegalAddress()))
         );
 
-        // Footer
-        String statusText = amlDto.getStatus() != null ? amlDto.getStatus().name() : "-";
+        String statusText = amlDto.getStatus() != null ? amlDto.getStatus().name() : "N/A";
         String byUser = getProcessedUserName(amlDto);
 
-        String footer = String.format("📎 Status: %s\n🧑‍⚖️ By: %s\n⏰ Time: %s",
-                statusText, byUser, LocalDateTime.now().toString());
+        // Use AML record creation time if available, else fallback to now
+        String timeFormatted;
+        if (amlDto.getCreatedAt() != null) {
+            timeFormatted = amlDto.getUpdatedAt()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        } else {
+            timeFormatted = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        }
 
-        // Assemble message with separator
+        String footer = String.format("Status: %s\nBy: %s\nTime: %s",
+                escapeMarkdown(statusText), escapeMarkdown(getOrNA(byUser)), escapeMarkdown(timeFormatted));
+
         String message = header + "\n" + SEPARATOR + "\n" + body + "\n" + SEPARATOR + "\n" + footer;
 
         telegramService.sendMarkdownUATMonitorMessage(message);
     }
 
-    /**
-     * Returns the customer display name:
-     * - Full name if exists
-     * - Fallback to ID if no full name
-     * - If PENDING, return first initial only
-     */
+    private String formatDob(String dob) {
+        if (dob == null || dob.isEmpty()) return "N/A";
+        try {
+            // Accepts both single-digit and double-digit months/days
+            DateTimeFormatter inputFormatter = new DateTimeFormatterBuilder()
+                    .appendPattern("yyyy-M-d")
+                    .parseStrict()
+                    .toFormatter();
+            LocalDate date = LocalDate.parse(dob, inputFormatter);
+            return date.format(DateTimeFormatter.ofPattern("dd MMM yyyy"));
+        } catch (Exception e) {
+            log.warn("Failed to parse DOB '{}': {}", dob, e.getMessage());
+            return dob; // fallback to original string
+        }
+    }
+
+    private String getOrNA(String text) {
+        return (text == null || text.isEmpty()) ? "N/A" : text;
+    }
+
     private String getCustomerDisplayName(CustomerAmlDto customer, com.internal.enumation.AmlStatusEnum status) {
         String name = joinNonNull(customer.getGivenName(), customer.getFamilyName());
         if (name.isEmpty()) {
@@ -83,59 +105,65 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
         }
 
         if (status == com.internal.enumation.AmlStatusEnum.PENDING && name.length() > 0) {
-            name = name.substring(0, 1); // first initial only
+            name = name.substring(0, 1);
         }
         return name;
     }
 
-    /**
-     * Returns the "By" user for the footer:
-     * - PENDING: "-"
-     * - APPROVE: approvedBy full name
-     * - REJECT: rejectedBy full name
-     */
     private String getProcessedUserName(AmlStatusDto amlDto) {
-        if (amlDto == null || amlDto.getStatus() == null) return "-";
+        if (amlDto == null || amlDto.getStatus() == null) return "N/A";
 
         switch (amlDto.getStatus()) {
             case PENDING:
-                return "-";
+                return "N/A";
             case APPROVE:
-                if (amlDto.getApprovedBy() != null && amlDto.getApprovedBy().getFullName() != null) {
-                    return escapeMarkdown(amlDto.getApprovedBy().getFullName());
-                } else {
-                    assert amlDto.getApprovedBy() != null;
-                    return escapeMarkdown(amlDto.getApprovedBy().getIdCard());
+                if (amlDto.getApprovedBy() != null) {
+                    if (amlDto.getApprovedBy().getFullName() != null && !amlDto.getApprovedBy().getFullName().isEmpty()) {
+                        return amlDto.getApprovedBy().getFullName();
+                    } else if (amlDto.getApprovedBy().getIdCard() != null && !amlDto.getApprovedBy().getIdCard().isEmpty()) {
+                        return amlDto.getApprovedBy().getIdCard();
+                    }
                 }
+                return "N/A"; // If no user info, fallback to N/A
             case REJECT:
-                return amlDto.getRejectedBy() != null && amlDto.getRejectedBy().getFullName() != null
-                        ? escapeMarkdown(amlDto.getRejectedBy().getFullName()) : escapeMarkdown(amlDto.getApprovedBy().getIdCard());
+                if (amlDto.getRejectedBy() != null) {
+                    if (amlDto.getRejectedBy().getFullName() != null && !amlDto.getRejectedBy().getFullName().isEmpty()) {
+                        return amlDto.getRejectedBy().getFullName();
+                    } else if (amlDto.getRejectedBy().getIdCard() != null && !amlDto.getRejectedBy().getIdCard().isEmpty()) {
+                        return amlDto.getRejectedBy().getIdCard();
+                    }
+                }
+                return "N/A"; // If no user info, fallback to N/A
             default:
-                log.warn("Unsupported AML status: {}", amlDto.getStatus());
-                return "-";
+                return "N/A";
         }
     }
 
+
     private String buildStandardMessage(String header, String body, String status, String user) {
-        String now = LocalDateTime.now().toString();
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         return new StringBuilder()
-                .append("📢 *").append(escapeMarkdown(header)).append("*\n")
+                .append("*").append(escapeMarkdown(header)).append("*\n")
                 .append(SEPARATOR).append("\n")
                 .append(body).append("\n")
                 .append(SEPARATOR).append("\n")
-                .append("📎 Status: ").append(escapeMarkdown(status)).append("\n")
-                .append("🧑‍⚖️ By: ").append(escapeMarkdown(user)).append("\n")
-                .append("⏰ Time: ").append(now)
+                .append("Status: ").append(escapeMarkdown(status)).append("\n")
+                .append("By: ").append(escapeMarkdown(user)).append("\n")
+                .append("Time: ").append(now)
                 .toString();
     }
 
     private String escapeMarkdown(String text) {
         if (text == null) return "";
-        return text.replace("\\", "\\\\").replace("_", "\\_").replace("*", "\\*")
-                .replace("[", "\\[").replace("]", "\\]").replace("(", "\\(")
-                .replace(")", "\\)").replace("~", "\\~").replace("`", "\\`")
-                .replace(">", "\\>").replace("#", "\\#").replace("+", "\\+")
-                .replace("-", "\\-").replace("=", "\\=").replace("|", "\\|")
+        return text.replace("\\", "\\\\")
+                .replace("_", "\\_")
+                .replace("*", "\\*")
+                .replace("[", "\\[").replace("]", "\\]")
+                .replace("(", "\\(").replace(")", "\\)")
+                .replace("~", "\\~").replace("`", "\\`")
+                .replace(">", "\\>").replace("#", "\\#")
+                .replace("+", "\\+")
+                .replace("=", "\\=").replace("|", "\\|")
                 .replace("{", "\\{").replace("}", "\\}").replace(".", "\\.")
                 .replace("!", "\\!");
     }

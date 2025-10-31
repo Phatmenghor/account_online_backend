@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -20,4 +22,6 @@ public class AmlStatusDto {
     private AmlStatusEnum status;
     private UserResponseDto approvedBy;
     private UserResponseDto rejectedBy;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
