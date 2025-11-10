@@ -30,7 +30,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
-
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -62,7 +61,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         String mnemonic = null;
         String khrAccount = null;
         String usdAccount = null;
-
 
         try {
             // Step 1: Check database connections
@@ -201,6 +199,97 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
             log.error("Account opening failed at step {} for Legal ID: {} - Error: {}",
                     currentStep, request.getLegalId(), e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    @Transactional
+    public CustomerResponse openAccountMock(CustomerRequest request) {
+        log.info("[MOCK] Processing account opening for Legal ID: {}", request.getLegalId());
+
+        String currentStep = "START";
+        String cif = null;
+        String mnemonic = null;
+        String khrAccount = null;
+        String usdAccount = null;
+
+        try {
+            // Optional validations still run but do not call T24
+            currentStep = "CHECK_DATABASE_CONNECTIONS";
+            try { validationService.checkDatabaseConnections(); } catch (Exception e) { log.warn("[MOCK] DB check warning: {}", e.getMessage()); }
+
+            currentStep = "GET_CUSTOMER_INFO";
+            Map<String, String> customerInfo = new HashMap<>();
+
+            // Generate MOCK data
+            currentStep = "CREATE_CUSTOMER";
+            cif = "MOCKCIF_" + System.currentTimeMillis();
+            mnemonic = "MOCKMN_" + (int)(Math.random() * 100000);
+
+            // Create MOCK accounts
+            currentStep = "CREATE_KHR_ACCOUNT";
+            khrAccount = "MOCK-KHR-" + (10000000 + (int)(Math.random() * 89999999));
+
+            currentStep = "CREATE_USD_ACCOUNT";
+            usdAccount = "MOCK-USD-" + (10000000 + (int)(Math.random() * 89999999));
+
+            // Non-blocking mock mobile banking activation
+            currentStep = "ACTIVATE_MOBILE_BANKING";
+            try { mobileBankingService.activate(request, cif, khrAccount, usdAccount); } catch (Exception e) { log.warn("[MOCK] Mobile banking skipped: {}", e.getMessage()); }
+
+            // Create AML record and notify (real persistence + email)
+            currentStep = "CREATE_AML_AND_NOTIFY";
+            try { createAmlRecordAndNotify(request, cif, khrAccount, usdAccount, mnemonic); } catch (Exception e) { log.warn("[MOCK] AML notify warning: {}", e.getMessage()); }
+
+            // Save customer images using provided base64
+            currentStep = "SAVE_CUSTOMER_IMAGES";
+            CustomerImageUploadResponseDto imagePaths = null;
+            try {
+                CustomerFileUploadRequestDto fileRequest = CustomerFileUploadRequestDto.builder()
+                        .legal_id(request.getLegalId())
+                        .NidImage(request.getNidImage())
+                        .SelfieImage(request.getSelfieImage())
+                        .build();
+                imagePaths = customerImageService.saveCustomerImages(fileRequest);
+            } catch (Exception e) { log.warn("[MOCK] Save images warning: {}", e.getMessage()); }
+
+            // Save success log (real)
+            currentStep = "SAVE_SUCCESS_LOG";
+            try { accountOnlineOpenSuccessService.saveSuccessLog(request, imagePaths); } catch (Exception e) { log.warn("[MOCK] Save success log warning: {}", e.getMessage()); }
+
+            // Report logs (real)
+            currentStep = "COMPLETED";
+            String successRemark = buildSuccessRemark(cif, khrAccount, usdAccount, mnemonic);
+            try {
+                reportLogService.createAccountOpeningLog(
+                        request.getLegalId(),
+                        OpenAccStatusEnum.SUCCESS,
+                        successRemark,
+                        null
+                );
+                reportLogService.saveLogReport(request.getLegalId(), OpenAccStatusEnum.SUCCESS, "Open account online Successfully (MOCK)");
+            } catch (Exception e) {
+                log.warn("[MOCK] Save report log warning: {}", e.getMessage());
+            }
+
+            return CustomerResponse.builder()
+                    .cif(cif)
+                    .khrAccount(khrAccount)
+                    .usdAccount(usdAccount)
+                    .mnemonic(mnemonic)
+                    .build();
+
+        } catch (Exception e) {
+            String failureRemark = buildFailureRemark(currentStep, cif, khrAccount, usdAccount);
+            try {
+                reportLogService.createAccountOpeningLog(
+                        request.getLegalId(),
+                        OpenAccStatusEnum.FAILURE,
+                        failureRemark,
+                        e
+                );
+            } catch (Exception ex) { log.warn("[MOCK] Failed to save failure log: {}", ex.getMessage()); }
             throw e;
         }
     }

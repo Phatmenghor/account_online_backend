@@ -44,8 +44,8 @@ public class AccountOnlineOpenSuccessServiceImpl implements AccountOnlineOpenSuc
                     .customerCommune(request.getCustomerCommune())
                     .customerVillage(request.getCustomerVillage())
                     .phoneNumber(request.getPhoneNumber())
-                    .nidImage(imagePaths.getNidImagePath())
-                    .selfieImage(imagePaths.getSelfieImagePath())
+                    .nidImage(imagePaths != null ? imagePaths.getNidImagePath() : null)
+                    .selfieImage(imagePaths != null ? imagePaths.getSelfieImagePath() : null)
                     .build();
 
             accountOnlineSuccessLogRepository.save(successLog);

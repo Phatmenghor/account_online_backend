@@ -8,7 +8,6 @@ import com.internal.feature.telegram_alerts.service.AlertsOpenAccOnlineService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -29,7 +28,7 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
                     escapeMarkdown(idNumber), escapeMarkdown(remarkBuilder.toString()));
 
             String message = buildStandardMessage("Account Online Error", body, status.name(), "-");
-            telegramService.sendMarkdownUATMonitorMessage(message);
+            telegramService.sendMarkdownMessage(message);
         } catch (Exception e) {
             log.error("Telegram alert sending failed: {}", e.getMessage(), e);
         }
@@ -139,18 +138,15 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
         }
     }
 
-
     private String buildStandardMessage(String header, String body, String status, String user) {
         String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        return new StringBuilder()
-                .append("*").append(escapeMarkdown(header)).append("*\n")
-                .append(SEPARATOR).append("\n")
-                .append(body).append("\n")
-                .append(SEPARATOR).append("\n")
-                .append("Status: ").append(escapeMarkdown(status)).append("\n")
-                .append("By: ").append(escapeMarkdown(user)).append("\n")
-                .append("Time: ").append(now)
-                .toString();
+        return "*" + escapeMarkdown(header) + "*\n" +
+                SEPARATOR + "\n" +
+                body + "\n" +
+                SEPARATOR + "\n" +
+                "Status: " + escapeMarkdown(status) + "\n" +
+                "By: " + getOrNA(user) + "\n" +
+                "Time: " + now;
     }
 
     private String escapeMarkdown(String text) {

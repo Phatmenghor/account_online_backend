@@ -180,6 +180,27 @@ public class CustomerImageServiceImpl implements CustomerImageService {
         }
     }
 
+    @Override
+    public byte[] getSelfieImageBytes(String customerId) {
+        try {
+            String selfieFileName = customerId + ".jpg";
+            Path selfieFilePath = Paths.get(uploadDir, "selfie", selfieFileName);
+
+            if (!Files.exists(selfieFilePath)) {
+                log.warn("Selfie image not found for customer: {}", customerId);
+                return null;
+            }
+
+            byte[] imageBytes = Files.readAllBytes(selfieFilePath);
+            log.info("Retrieved Selfie image bytes for customer: {} (size: {} bytes)", customerId, imageBytes.length);
+            return imageBytes;
+
+        } catch (IOException e) {
+            log.error("Failed to read Selfie image bytes: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+
     /**
      * Check if NID image exists for a customer
      * @param customerId Customer ID or legal_id

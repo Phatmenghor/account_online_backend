@@ -124,7 +124,8 @@ cpb:
       tokenHeaderName: X-CPB-CamDx-Auth
   aml:
     token: d8a7f9e2-3c4b-4f10-9d75-1c9f2b84a7ec
-    url: https://data-intuition.cambodiapostbank.com.kh/api/v1/f4a10790-2f67-457a-ac0f-04f3f10ac583/dataSets/5c464510-2087-4bb2-b91e-ae04c080ddc2/documents?runStrategy=true&includeDetail=true
+#    url: https://data-intuition.cambodiapostbank.com.kh/api/v1/f4a10790-2f67-457a-ac0f-04f3f10ac583/dataSets/5c464510-2087-4bb2-b91e-ae04c080ddc2/documents?runStrategy=true&includeDetail=true
+    url: http://192.168.103.106:9095/api/aml-check
   t24:
     url: http://192.168.127.31:7003
     username: MENGHOR.PHAT
@@ -148,9 +149,9 @@ cpb:
   ocr:
     apiRoute: ocr-idcard
   xml:
-    createCustomer: C:\inetpub\wwwroot\cpbAccountOnlineApi\Xml\CREATE_CUSTOMER.xml
-    openAcctByCustomer: C:\inetpub\wwwroot\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_CUSTOMER.xml
-    openAcctByStaff: C:\inetpub\wwwroot\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_STAFF.xml
+    createCustomer: C:\Users\makkara.nob\cpbAccountOnlineApi\Xml\CREATE_CUSTOMER.xml
+    openAcctByCustomer: C:\Users\makkara.nob\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_CUSTOMER.xml
+    openAcctByStaff: C:\Users\makkara.nob\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_STAFF.xml
 
 # JWT Configuration
 jwt:

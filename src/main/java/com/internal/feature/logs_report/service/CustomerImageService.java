@@ -14,6 +14,7 @@ public interface CustomerImageService {
     byte[] getNidImageBytes(String customerId);
 
     Resource getSelfieImageResourceForEmail(String customerId);
+    byte[] getSelfieImageBytes(String customerId);
 
     boolean nidImageExists(String customerId);
 
