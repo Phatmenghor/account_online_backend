@@ -3,6 +3,7 @@ package com.internal.feature.aml.controller;
 import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.aml.dto.request.AllAmlHistoryRequestDto;
 import com.internal.feature.aml.dto.request.AllAmlRequestDto;
+import com.internal.feature.aml.dto.request.UpdateAmlStatusDto;
 import com.internal.feature.aml.dto.response.AllAmlHistoryResponseDto;
 import com.internal.feature.aml.dto.response.AllAmlResponseDto;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
@@ -41,21 +42,20 @@ public class AmlController {
         return ResponseEntity.ok(ApiResponse.success("All AML statuses retrieved successfully", list));
     }
 
-    /** Approve AML status */
-    @PostMapping("/approve/{id}")
-    public ResponseEntity<ApiResponse<AmlStatusDto>> approveAml(@PathVariable Long id) {
-        log.info("Approving AML status with ID: {}", id);
-        AmlStatusDto approvedStatus = service.approveAmlStatus(id);
-        log.info("AML status approved: {}", approvedStatus.getId());
-        return ResponseEntity.ok(ApiResponse.success("AML status approved successfully", approvedStatus));
-    }
-
-    /** Reject AML status */
-    @PostMapping("/reject/{id}")
-    public ResponseEntity<ApiResponse<AmlStatusDto>> rejectAml(@PathVariable Long id) {
-        log.info("Rejecting AML status with ID: {}", id);
-        AmlStatusDto rejectedStatus = service.rejectAmlStatus(id);
-        log.info("AML status rejected: {}", rejectedStatus.getId());
-        return ResponseEntity.ok(ApiResponse.success("AML status rejected successfully", rejectedStatus));
+    /**
+     * Update AML status (approve, reject, etc.)
+     * Example request: PATCH /api/v1/aml/update-status/123?status=APPROVE
+     */
+    @PostMapping("/update/{id}")
+    public ResponseEntity<ApiResponse<AmlStatusDto>> updateAmlStatus(
+            @PathVariable Long id,
+            @RequestBody UpdateAmlStatusDto req
+            ) {
+        log.info("Updating AML status for ID: {} to {}", id, req.getStatus());
+        AmlStatusDto updatedStatus = service.updateAmlStatus(id, req);
+        log.info("AML status updated successfully: {}", updatedStatus.getId());
+        return ResponseEntity.ok(ApiResponse.success(
+                "AML status updated successfully to " + req.getStatus(), updatedStatus
+        ));
     }
 }

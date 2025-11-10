@@ -24,7 +24,6 @@ public class AmlHistory extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private AmlStatusEnum newStatus;
 
-
     //customer info
     private String idDisplay;
     private String familyName;

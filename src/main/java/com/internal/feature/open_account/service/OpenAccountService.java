@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface OpenAccountService {
     CustomerResponse openAccount(CustomerRequest request);
+    CustomerResponse openAccountMock(CustomerRequest request);
 
     @Transactional
     CustomerResponse testAmlFlow();
