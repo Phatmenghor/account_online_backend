@@ -20,7 +20,6 @@ public class AccountOnlineOpenSuccessServiceImpl implements AccountOnlineOpenSuc
     public AccountOnlineSuccessLog saveSuccessLog(CustomerRequest request, CustomerImageUploadResponseDto imagePaths) {
         try {
             AccountOnlineSuccessLog successLog = AccountOnlineSuccessLog.builder()
-                    .recId(request.getRecId())
                     .legalId(request.getLegalId())
                     .familyName(request.getFamilyName())
                     .givenName(request.getGivenName())

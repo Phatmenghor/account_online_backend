@@ -8,9 +8,6 @@ import javax.validation.constraints.NotBlank;
 @Data
 @Builder
 public class CustomerRequest {
-    
-    @NotBlank(message = "Record ID is required")
-    private String recId;
 
     @NotBlank(message = "Legal ID is required")
     private String legalId;
@@ -53,6 +50,8 @@ public class CustomerRequest {
     private String customerDistrict;
     private String customerCommune;
     private String customerVillage;
+
+    private String legalIssueDate;
 
     @NotBlank(message = "Phone number is required")
     private String phoneNumber;
