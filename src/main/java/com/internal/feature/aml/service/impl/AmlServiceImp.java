@@ -30,6 +30,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,6 +44,11 @@ public class AmlServiceImp implements AmlService {
     private final AmlHistoryMapper amlHistoryMapper;
     private final SecurityUtils securityUtils;
     private final OpenAccountTelegramAlertServiceImpl alertTelegramService;
+
+    @Override
+    public Optional<AmlStatus> findByLegalId(String legalId) {
+        return amlStatusRepository.findByLegalId(legalId);
+    }
 
     // -------------------------------
     // CREATE AML STATUS

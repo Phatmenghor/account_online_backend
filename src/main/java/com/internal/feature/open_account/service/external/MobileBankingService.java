@@ -1,13 +1,10 @@
 
 package com.internal.feature.open_account.service.external;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.internal.config.CpbProperties;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.request.MobileBankingRequest;
 import com.internal.feature.open_account.dto.response.MobileBankingResponse;
-import com.internal.feature.open_account.models.SmsLog;
-import com.internal.feature.open_account.repository.SmsLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -26,8 +23,6 @@ public class MobileBankingService {
 
     private final CpbProperties properties;
     private final RestTemplate restTemplate;
-    private final SmsLogRepository smsLogRepository;
-    private final ObjectMapper objectMapper;
 
     public void activate(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
         try {
@@ -37,9 +32,8 @@ public class MobileBankingService {
             }
             
             MobileBankingRequest mbRequest = buildRequest(request, cif, khrAccount, usdAccount);
-            MobileBankingResponse response = callActivatorApi(mbRequest);
-            logActivation(request, cif, khrAccount, usdAccount, mbRequest, response);
-            
+            callActivatorApi(mbRequest);
+
         } catch (Exception e) {
             log.error("Mobile banking activation failed (non-critical): {}", e.getMessage());
         }
@@ -97,29 +91,6 @@ public class MobileBankingService {
         return response.getBody();
     }
 
-    private void logActivation(CustomerRequest request, String cif, String khrAccount, 
-                               String usdAccount, MobileBankingRequest mbRequest, 
-                               MobileBankingResponse response) {
-        try {
-            String requestJson = objectMapper.writeValueAsString(mbRequest);
-            String responseJson = objectMapper.writeValueAsString(response);
-            
-            SmsLog smsLog = SmsLog.builder()
-                .cif(cif)
-                .name(request.getGivenName())
-                .acctIdKhr(khrAccount)
-                .acctIdUsd(usdAccount)
-                .nid(request.getLegalId())
-                .phone(request.getPhoneNumber())
-                .activatorPayload(requestJson)
-                .activatorResponse(responseJson)
-                .build();
-            
-            smsLogRepository.save(smsLog);
-        } catch (Exception e) {
-            log.error("Failed to log mobile banking activation: {}", e.getMessage());
-        }
-    }
 
     private String formatDateOfBirth(String dob) {
         try {

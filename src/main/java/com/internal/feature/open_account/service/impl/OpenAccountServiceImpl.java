@@ -7,6 +7,7 @@ import com.internal.exceptions.error.openaccount.AccountCreationException;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
 import com.internal.feature.aml.dto.request.CustomerAmlDto;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
+import com.internal.feature.aml.model.AmlStatus;
 import com.internal.feature.aml.service.AmlService;
 import com.internal.feature.logs_report.dto.request.CustomerFileUploadRequestDto;
 import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
@@ -69,11 +70,22 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             Map<String, String> customerInfo = validationService.getCustomerInfo(request.getLegalId());
             log.info("Customer info retrieved: {}", customerInfo != null ? "Found" : "Not found");
 
+            // Step 3 : Process AML
+            currentStep = "PROCESS_AML";
+            log.info(">>> Step 3: PROCESS_AML");
+            try {
+                createAmlRecordAndNotify(request, cif, khrAccount, usdAccount, mnemonic);
+                log.info("Step 3 SUCCESS: PROCESS AML SuccessFully");
+            } catch (Exception e) {
+                log.error("Step 3 WARNING: Failed to process AML: {}", e.getMessage());
+            }
+
             // Step 4: Validate existing accounts
             currentStep = "VALIDATE_EXISTING_ACCOUNTS";
             log.info(">>> Step 4: VALIDATE_EXISTING_ACCOUNTS");
             validationService.validateExistingAccounts(customerInfo);
             log.info("Existing accounts validation passed");
+
 
             // Step 5: Create customer if needed
             currentStep = "CREATE_CUSTOMER";
@@ -168,15 +180,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                 log.warn("Step 9 WARNING: Mobile banking activation failed (non-critical): {}", e.getMessage());
             }
 
-            // Step 10: Create AML record and send notification
-            currentStep = "CREATE_AML_AND_NOTIFY";
-            log.info(">>> Step 10: CREATE_AML_AND_NOTIFY");
-            try {
-                createAmlRecordAndNotify(request, cif, khrAccount, usdAccount, mnemonic);
-                log.info("Step 10 SUCCESS: AML record created and notification sent");
-            } catch (Exception e) {
-                log.error("Step 10 WARNING: Failed to create AML record or send notification: {}", e.getMessage());
-            }
 
             // Step 11: Save customer images
             currentStep = "SAVE_CUSTOMER_IMAGES";
@@ -252,11 +255,32 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     }
 
     /**
-     * Creates AML record in PENDING status and sends email notification
+     * process AML
      */
     private void createAmlRecordAndNotify(CustomerRequest request, String cif,
                                           String khrAccount, String usdAccount, String mnemonic) {
         try {
+            // Check if AML record already exists
+            var existingAml = amlService.findByLegalId(request.getLegalId());
+            if (existingAml.isPresent()) {
+                AmlStatus existing = existingAml.get();
+                AmlStatusEnum status = existing.getStatus();
+
+                switch (status) {
+                    case PENDING:
+                        throw new AccountCreationException("AML process already pending for this legal ID: " + request.getLegalId());
+                    case APPROVE:
+                        throw new AccountCreationException("AML already approved for this legal ID: " + request.getLegalId());
+                    case REJECT:
+                        throw new AccountCreationException("AML already rejected for this legal ID: " + request.getLegalId());
+                    default:
+                        throw new AccountCreationException("AML record already exists for this legal ID: " + request.getLegalId());
+                }
+            }
+
+
+
+
             // Build CustomerAmlDto
             CustomerAmlDto customerAmlDto = CustomerAmlDto.builder()
                     .givenName(request.getGivenName())
@@ -302,7 +326,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             var amlStatus = amlService.createAmlStatus(amlRequest);
             log.info("AML record created - ID: {}, Status: PENDING", amlStatus.getId());
 
-            // Build AML status DTO for email
+            // Send AML notification email
             AmlStatusDto amlStatusDto = AmlStatusDto.builder()
                     .status(AmlStatusEnum.PENDING)
                     .approvedBy(null)
@@ -312,18 +336,21 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                     .customerInfo(customerAmlDto)
                     .build();
 
-            // Send email notification (asynchronous)
             try {
                 mailService.sendAmlStatusNotification(amlStatusDto);
                 log.info("AML notification email sent");
             } catch (Exception e) {
                 log.warn("Failed to send AML notification email: {}", e.getMessage());
             }
+
+        } catch (AccountCreationException e) {
+            throw e; // rethrow directly
         } catch (Exception e) {
             log.error("Error in createAmlRecordAndNotify: {}", e.getMessage());
             throw new RuntimeException("Failed to create AML record and send notification", e);
         }
     }
+
 
     private String buildSuccessRemark(String cif, String khrAccount, String usdAccount, String mnemonic) {
         StringBuilder remark = new StringBuilder("Account opening completed successfully");

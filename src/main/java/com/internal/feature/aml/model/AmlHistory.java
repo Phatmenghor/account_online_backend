@@ -12,30 +12,105 @@ import javax.persistence.*;
 @Data
 public class AmlHistory extends BaseEntity {
 
-    @Column(name = "original_request")
-    private String originalRequest;
-
-    @Column(name = "original_response")
-    private String originalResponse;
-
     @Enumerated(EnumType.STRING)
-    private AmlStatusEnum oldStatus;
-
-    @Enumerated(EnumType.STRING)
-    private AmlStatusEnum newStatus;
-
-    //customer info
-    private String idDisplay;
-    private String familyName;
-    private String givenName;
-    private String firstNameKh;
-    private String lastNameKh;
-    private String dateOfBirth;
-    private String gender;
-    private String nationality;
-    private String legalAddress;
+    @Column(nullable = false)
+    private AmlStatusEnum status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "changed_by")
-    private UserEntity changedBy;
+    @JoinColumn(name = "approved_by")
+    private UserEntity approvedBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rejected_by")
+    private UserEntity rejectedBy;
+
+    // ============================================
+    // CUSTOMER IDENTIFICATION
+    // ============================================
+    @Column(name = "legal_id", nullable = false)
+    private String legalId; // ID / Customer Number
+
+    // ============================================
+    // CUSTOMER NAME (ENGLISH)
+    // ============================================
+    @Column(name = "family_name")
+    private String familyName; // Last Name (English)
+
+    @Column(name = "given_name")
+    private String givenName; // First Name (English)
+
+    // ============================================
+    // CUSTOMER NAME (KHMER)
+    // ============================================
+    @Column(name = "last_name_kh")
+    private String lastNameKh; // Last Name (Khmer)
+
+    @Column(name = "first_name_kh")
+    private String firstNameKh; // First Name (Khmer)
+
+    // ============================================
+    // PERSONAL INFORMATION
+    // ============================================
+    @Column(name = "date_of_birth")
+    private String dateOfBirth; // Date of Birth
+
+    @Column(name = "gender")
+    private String gender; // Gender
+
+    @Column(name = "nationality")
+    private String nationality; // Nationality
+
+    @Column(name = "phone_number")
+    private String phoneNumber; // Phone Number
+
+    @Column(name = "marital_status")
+    private String maritalStatus; // Marital Status
+
+    // ============================================
+    // DOCUMENT INFORMATION
+    // ============================================
+    @Column(name = "issued_date")
+    private String issuedDate; // Issued Date
+
+    @Column(name = "expired_date")
+    private String expiredDate; // Expired Date
+
+    // ============================================
+    // CURRENT ADDRESS
+    // ============================================
+    @Column(name = "current_address_code")
+    private String currentAddressCode; // Current Address Code
+
+    @Column(name = "current_address_name", columnDefinition = "TEXT")
+    private String currentAddressName; // Current Address Name (EN + KH)
+
+    // ============================================
+    // PLACE OF BIRTH
+    // ============================================
+    @Column(name = "place_of_birth_code")
+    private String placeOfBirthCode; // Place of Birth Address Code
+
+    @Column(name = "place_of_birth_name")
+    private String placeOfBirthName; // Place of Birth Address Name (EN + KH)
+
+    // ============================================
+    // OCCUPATION
+    // ============================================
+    @Column(name = "occupation_code")
+    private String occupationCode; // Occupation Code
+
+    @Column(name = "occupation_status")
+    private String occupationStatus; // Occupation Status
+
+    // ============================================
+    // AML SCREENING INFORMATION
+    // ============================================
+    @Column(name = "screening_result", columnDefinition = "TEXT")
+    private String screeningResult; // JSON result from AML service
+
+    // ============================================
+    // ADMIN REMARKS
+    // ============================================
+    @Column(name = "remarks", columnDefinition = "TEXT")
+    private String remarks;
 }
