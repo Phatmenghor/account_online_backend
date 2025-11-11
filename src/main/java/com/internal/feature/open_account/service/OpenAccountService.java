@@ -5,5 +5,4 @@ import com.internal.feature.open_account.dto.response.CustomerResponse;
 
 public interface OpenAccountService {
     CustomerResponse openAccount(CustomerRequest request);
-    CustomerResponse openAccountMock(CustomerRequest request);
 }

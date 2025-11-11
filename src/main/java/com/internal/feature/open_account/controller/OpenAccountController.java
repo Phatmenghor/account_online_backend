@@ -33,15 +33,4 @@ public class OpenAccountController {
 
         return ResponseEntity.ok(ApiResponse.success("Account created successfully!", response));
     }
-
-    @PostMapping("/mock")
-    public ResponseEntity<ApiResponse<CustomerResponse>> openAccountMock(@Valid @RequestBody CustomerRequest request) {
-        log.info("[MOCK] Received account opening request for Legal ID: {}", request.getLegalId());
-
-        CustomerResponse response = openAccountService.openAccountMock(request);
-
-        log.info("[MOCK] Account opening completed - CIF: {}", response.getCif());
-
-        return ResponseEntity.ok(ApiResponse.success("Account created successfully (MOCK)!", response));
-    }
 }

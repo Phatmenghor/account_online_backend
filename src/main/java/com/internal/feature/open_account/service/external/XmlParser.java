@@ -185,27 +185,4 @@ public class XmlParser {
             return "Error parsing response";
         }
     }
-
-    /**
-     * Pretty print XML document for debugging
-     */
-    public static String documentToString(Document document) {
-        try {
-            javax.xml.transform.TransformerFactory tf = javax.xml.transform.TransformerFactory.newInstance();
-            javax.xml.transform.Transformer transformer = tf.newTransformer();
-            transformer.setOutputProperty(javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION, "no");
-            transformer.setOutputProperty(javax.xml.transform.OutputKeys.METHOD, "xml");
-            transformer.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
-            transformer.setOutputProperty(javax.xml.transform.OutputKeys.ENCODING, "UTF-8");
-            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-
-            java.io.StringWriter writer = new java.io.StringWriter();
-            transformer.transform(new javax.xml.transform.dom.DOMSource(document), 
-                                new javax.xml.transform.stream.StreamResult(writer));
-            return writer.toString();
-        } catch (Exception e) {
-            log.error("Failed to convert document to string: {}", e.getMessage());
-            return document.toString();
-        }
-    }
 }
