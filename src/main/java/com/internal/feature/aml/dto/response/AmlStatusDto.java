@@ -20,6 +20,7 @@ public class AmlStatusDto {
     private String originalResponse;
     private CustomerAmlDto customerInfo;
     private AmlStatusEnum status;
+    private String screeningResult;
     private UserResponseDto approvedBy;
     private UserResponseDto rejectedBy;
     private LocalDateTime createdAt;

@@ -26,10 +26,10 @@ public class MobileBankingService {
 
     public void activate(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
         try {
-            if (!"production".equalsIgnoreCase(properties.getEnvironment())) {
-                log.info("Skipping mobile banking activation in non-production");
-                return;
-            }
+//            if (!"production".equalsIgnoreCase(properties.getEnvironment())) {
+//                log.info("Skipping mobile banking activation in non-production");
+//                return;
+//            }
             
             MobileBankingRequest mbRequest = buildRequest(request, cif, khrAccount, usdAccount);
             callActivatorApi(mbRequest);

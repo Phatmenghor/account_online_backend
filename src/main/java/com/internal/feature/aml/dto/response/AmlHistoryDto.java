@@ -1,7 +1,7 @@
 package com.internal.feature.aml.dto.response;
 
-import com.internal.enumation.AmlStatusEnum;
 import com.internal.feature.aml.dto.request.CustomerAmlDto;
+import com.internal.enumation.AmlStatusEnum;
 import com.internal.feature.auth.dto.response.UserResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,17 +14,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AmlHistoryDto {
 
-    private Long id;
+    private CustomerAmlDto customerInfo; // Nested DTO for customer details
 
-    private String originalRequest;
+    private UserResponseDto changedBy;   // Approved or rejected by
 
-    private String originalResponse;
+    private AmlStatusEnum status;        // AML status
 
-    private CustomerAmlDto customerInfo;
+    private String screeningResult;      // AML screening JSON result
 
-    private AmlStatusEnum oldStatus;
-
-    private AmlStatusEnum newStatus;
-
-    private UserResponseDto changedBy;
+    private String remarks;              // Admin remarks
 }

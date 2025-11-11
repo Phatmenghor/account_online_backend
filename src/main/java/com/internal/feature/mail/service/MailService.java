@@ -37,7 +37,7 @@ public class MailService {
      */
     public void sendAmlStatusNotification(AmlStatusDto amlStatus) {
         log.info("Preparing AML status notification email for customer: {}",
-                amlStatus.getCustomerInfo().getIdDisplay());
+                amlStatus.getCustomerInfo().getLegalId());
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -66,7 +66,7 @@ public class MailService {
 
             // Attach NID & Selfie images as files (better for Outlook)
             try {
-                String legalId = String.valueOf(amlStatus.getCustomerInfo().getIdDisplay());
+                String legalId = String.valueOf(amlStatus.getCustomerInfo().getLegalId());
                 if (customerImageService.nidImageExists(legalId)) {
                     var nidRes = customerImageService.getNidImageResourceForEmail(legalId);
                     if (nidRes != null) helper.addAttachment("NID_" + legalId + ".jpg", nidRes);
@@ -81,11 +81,11 @@ public class MailService {
 
             mailSender.send(message);
             log.info("AML status email sent successfully for customer: {}",
-                    amlStatus.getCustomerInfo().getIdDisplay());
+                    amlStatus.getCustomerInfo().getLegalId());
 
         } catch (MessagingException e) {
             log.error("Failed to send AML status email for customer: {}",
-                    amlStatus.getCustomerInfo().getIdDisplay(), e);
+                    amlStatus.getCustomerInfo().getLegalId(), e);
         }
     }
 
@@ -120,7 +120,7 @@ public class MailService {
         String status = amlStatus.getStatus() != null ? amlStatus.getStatus().name() : "UNKNOWN";
         return String.format("[AML %s] Customer: %s - %s",
                 status,
-                amlStatus.getCustomerInfo().getIdDisplay(),
+                amlStatus.getCustomerInfo().getLegalId(),
                 amlStatus.getCustomerInfo().getGivenName() + " " +
                 amlStatus.getCustomerInfo().getFamilyName());
     }

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:oaow="http://temenos.com/OAOWAR" xmlns:cus="http://temenos.com/CUSTOMERCPBCREATEOAO">
+    <soapenv:Header/>
+    <soapenv:Body>
+        <oaow:OAOCUSTOMERCREATION>
+            <WebRequestCommon>
+                <company>KH0011010</company>
+                <password>HouR$100</password>
+                <userName>MENGHOR.PHAT</userName>
+            </WebRequestCommon>
+            <OfsFunction/>
+            <CUSTOMERCPBCREATEOAOType id="">
+
+                <!-- Name fields -->
+                <cus:gSHORTNAME g="1">
+                    <cus:ShortName>VUTHY</cus:ShortName>
+                </cus:gSHORTNAME>
+                <cus:gNAME1 g="1">
+                    <cus:FullName>CHAN VUTHY</cus:FullName>
+                </cus:gNAME1>
+                <cus:gNAME2 g="1">
+                    <cus:FullName2>CHAN VUTHY</cus:FullName2>
+                </cus:gNAME2>
+                <cus:gSTREET g="1">
+                    <cus:STREET/>
+                </cus:gSTREET>
+
+                <!-- Hardcoded fields from backend -->
+                <cus:Sector>4501</cus:Sector>
+                <cus:CostCenter>1000</cus:CostCenter>
+                <cus:Industry>4500</cus:Industry>
+                <cus:Target>220</cus:Target>
+                <cus:Nationality>KH</cus:Nationality>
+                <cus:CustomerStatus>1</cus:CustomerStatus>
+                <cus:Residence>KH</cus:Residence>
+
+                <!-- Legal identification -->
+                <cus:gLEGALID g="1">
+                    <cus:mLEGALID m="1">
+                        <cus:LegalId>150852716</cus:LegalId>
+                        <cus:LegalDocName>NATIONAL.ID</cus:LegalDocName>
+                        <cus:LegalHolderName>NATIONAL.ID</cus:LegalHolderName>
+                        <cus:LegalIssAuth>VUTHY</cus:LegalIssAuth>
+                        <cus:LegalIssDate>20211103</cus:LegalIssDate>
+                    </cus:mLEGALID>
+                </cus:gLEGALID>
+
+                <!-- Language -->
+                <cus:Language>2</cus:Language>
+
+                <!-- Customer rating -->
+                <cus:gCUSTOMERRATING g="1">
+                    <cus:CustomerRating>1</cus:CustomerRating>
+                </cus:gCUSTOMERRATING>
+
+                <!-- Personal details -->
+                <cus:TITLE>MR</cus:TITLE>
+                <cus:GIVENNAMES>VUTHY</cus:GIVENNAMES>
+                <cus:FAMILYNAME>CHAN</cus:FAMILYNAME>
+                <cus:Gender>MALE</cus:Gender>
+                <cus:DateofBirth>19920101</cus:DateofBirth>
+                <cus:MaritalStatus>SINGLE</cus:MaritalStatus>
+
+                <!-- Phone details -->
+                <cus:gPHONE1 g="1">
+                    <cus:mPHONE1 m="1">
+                        <cus:PHONE1>012345678</cus:PHONE1>
+                        <cus:SMS1>012345678</cus:SMS1>
+                        <cus:EMAIL1/>
+                    </cus:mPHONE1>
+                </cus:gPHONE1>
+
+                <!-- Customer type -->
+                <cus:CustomerType>ACTIVE</cus:CustomerType>
+
+                <!-- Current address (codes) -->
+                <cus:CustProvince>12</cus:CustProvince>
+                <cus:CustDistrict>1201</cus:CustDistrict>
+                <cus:CustCommune>120106</cus:CustCommune>
+                <cus:CustVillage>12010602</cus:CustVillage>
+
+                <!-- Hardcoded ownership and staff fields -->
+                <cus:Ownership>304</cus:Ownership>
+                <cus:RelationManager/>
+                <cus:LoanOfficer/>
+                <cus:Staff/>
+                <cus:ReferralBy/>
+
+                <!-- Place of birth address (codes) -->
+                <cus:CUSTPROVINCEP>17</cus:CUSTPROVINCEP>
+                <cus:CUSTDISTRICTP>1707</cus:CUSTDISTRICTP>
+                <cus:CUSTCOMMUNEP>170710</cus:CUSTCOMMUNEP>
+                <cus:CUSTVILLAGEP>17071011</cus:CUSTVILLAGEP>
+            </CUSTOMERCPBCREATEOAOType>
+        </oaow:OAOCUSTOMERCREATION>
+    </soapenv:Body>
+</soapenv:Envelope>

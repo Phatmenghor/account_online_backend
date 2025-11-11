@@ -21,15 +21,14 @@ public interface AmlStatusMapper {
     // -------------------------------
     // CREATE DTO → ENTITY
     // -------------------------------
-    @Mapping(target = "approvedBy", source = "approvedBy")
-    @Mapping(target = "rejectedBy", source = "rejectedBy")
+    @Mapping(target = "legalId", source = "legalId")
     @Mapping(target = "status", expression = "java(request.getStatus() != null ? request.getStatus() : com.internal.enumation.AmlStatusEnum.PENDING)")
     AmlStatus fromCreateDto(CreateAmlRequestDto request);
 
     // -------------------------------
     // ENTITY → DTO
     // -------------------------------
-    @Mapping(target = "customerInfo.idDisplay", source = "idDisplay")
+    @Mapping(target = "customerInfo.legalId", source = "legalId")
     @Mapping(target = "customerInfo.familyName", source = "familyName")
     @Mapping(target = "customerInfo.givenName", source = "givenName")
     @Mapping(target = "customerInfo.firstNameKh", source = "firstNameKh")
@@ -37,9 +36,7 @@ public interface AmlStatusMapper {
     @Mapping(target = "customerInfo.dateOfBirth", source = "dateOfBirth")
     @Mapping(target = "customerInfo.gender", source = "gender")
     @Mapping(target = "customerInfo.nationality", source = "nationality")
-    @Mapping(target = "customerInfo.legalAddress", source = "legalAddress")
-    @Mapping(target = "approvedBy", source = "approvedBy")
-    @Mapping(target = "rejectedBy", source = "rejectedBy")
+    @Mapping(target = "customerInfo.legalAddress", source = "currentAddressName")
     AmlStatusDto toStatusDto(AmlStatus status);
 
     // -------------------------------
@@ -70,7 +67,7 @@ public interface AmlStatusMapper {
                     .originalRequest(requestJson)
                     .originalResponse(responseJson)
                     .status(AmlStatusEnum.PENDING)
-                    .idDisplay(request.getLegalId())
+                    .legalId(request.getLegalId())
                     .familyName(request.getFamilyName())
                     .givenName(request.getGivenName())
                     .firstNameKh(request.getFirstNameKh())

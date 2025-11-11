@@ -53,6 +53,8 @@ public class CustomerRequest {
 
     private String legalIssueDate;
 
+    private String legalExpireDate;
+
     @NotBlank(message = "Phone number is required")
     private String phoneNumber;
     

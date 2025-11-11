@@ -16,10 +16,11 @@ public class CreateAmlRequestDto {
     private String originalRequest;
     private String originalResponse;
     private AmlStatusEnum status;
+    private String screeningResult;
     private UserResponseDto approvedBy;
     private UserResponseDto rejectedBy;
 
-    private String idDisplay;
+    private String legalId;
     private String familyName;
     private String givenName;
     private String firstNameKh;

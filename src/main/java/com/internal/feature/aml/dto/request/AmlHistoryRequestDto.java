@@ -16,11 +16,10 @@ import java.time.LocalDateTime;
 public class AmlHistoryRequestDto {
     private String originalRequest;
     private String originalResponse;
-    private AmlStatusEnum oldStatus;
-    private AmlStatusEnum newStatus;
+    private AmlStatusEnum status;
     private UserResponseDto changedBy;
 
-    private String idDisplay;
+    private String legalId;
     private String familyName;
     private String givenName;
     private String firstNameKh;

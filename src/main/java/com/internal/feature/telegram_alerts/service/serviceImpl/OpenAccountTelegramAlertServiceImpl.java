@@ -51,7 +51,7 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
         String body = String.format(
                 "Name: %s\nID: %s\nDOB: %s\nNationality: %s\nAddress: %s",
                 escapeMarkdown(getOrNA(customerName)),
-                escapeMarkdown(getOrNA(c.getIdDisplay())),
+                escapeMarkdown(getOrNA(c.getLegalId())),
                 escapeMarkdown(getOrNA(dobFormatted)),
                 escapeMarkdown(getOrNA(c.getNationality())),
                 escapeMarkdown(getOrNA(c.getLegalAddress()))
@@ -100,7 +100,7 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
     private String getCustomerDisplayName(CustomerAmlDto customer, com.internal.enumation.AmlStatusEnum status) {
         String name = joinNonNull(customer.getGivenName(), customer.getFamilyName());
         if (name.isEmpty()) {
-            name = customer.getIdDisplay();
+            name = customer.getLegalId();
         }
 
         if (status == com.internal.enumation.AmlStatusEnum.PENDING && name.length() > 0) {

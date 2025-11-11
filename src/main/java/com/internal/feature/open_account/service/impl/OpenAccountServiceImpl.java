@@ -15,13 +15,12 @@ import com.internal.feature.logs_report.service.AccountOnlineOpenSuccessService;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
 import com.internal.feature.logs_report.service.CustomerImageService;
 import com.internal.feature.mail.service.MailService;
+import com.internal.feature.open_account.dto.request.CustomerAmlRequest;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
+import com.internal.feature.open_account.dto.response.AmlResponseDto;
 import com.internal.feature.open_account.dto.response.CustomerResponse;
 import com.internal.feature.open_account.service.OpenAccountService;
-import com.internal.feature.open_account.service.external.MobileBankingService;
-import com.internal.feature.open_account.service.external.T24Service;
-import com.internal.feature.open_account.service.external.ValidationService;
-import com.internal.feature.open_account.service.external.XmlParser;
+import com.internal.feature.open_account.service.external.*;
 import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +45,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private final CustomerImageService customerImageService;
     private final AccountOnlineOpenSuccessService accountOnlineOpenSuccessService;
     private final ObjectMapper objectMapper;
+    private final AmlMiddlewareService amlMiddlewareService;
 
     @Override
     @Transactional
@@ -180,7 +180,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                 log.warn("Step 9 WARNING: Mobile banking activation failed (non-critical): {}", e.getMessage());
             }
 
-
             // Step 11: Save customer images
             currentStep = "SAVE_CUSTOMER_IMAGES";
             log.info(">>> Step 11: SAVE_CUSTOMER_IMAGES");
@@ -200,15 +199,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             accountOnlineOpenSuccessService.saveSuccessLog(request, imagePaths);
             log.info("Step 12 SUCCESS: Success log saved");
 
-            // Step 13: Log the successful completion
-            currentStep = "COMPLETED";
-            String successRemark = buildSuccessRemark(cif, khrAccount, usdAccount, mnemonic);
-            reportLogService.createAccountOpeningLog(
-                    request.getLegalId(),
-                    OpenAccStatusEnum.SUCCESS,
-                    successRemark,
-                    null
-            );
 
             reportLogService.saveLogReport(
                     request.getLegalId(),
@@ -260,7 +250,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private void createAmlRecordAndNotify(CustomerRequest request, String cif,
                                           String khrAccount, String usdAccount, String mnemonic) {
         try {
-            // Check if AML record already exists
+            // 1. Check if AML record already exists
             var existingAml = amlService.findByLegalId(request.getLegalId());
             if (existingAml.isPresent()) {
                 AmlStatus existing = existingAml.get();
@@ -278,25 +268,41 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                 }
             }
 
-
-
-
-            // Build CustomerAmlDto
-            CustomerAmlDto customerAmlDto = CustomerAmlDto.builder()
+            // 2. Map CustomerRequest to CustomerAmlRequest
+            CustomerAmlRequest amlRequestDto = CustomerAmlRequest.builder()
+                    .customerId(request.getLegalId())
+                    .custCreateDate(request.getLegalIssueDate())
+                    .customerType("Active")
+                    .custName(request.getFamilyName() + request.getGivenName())
                     .givenName(request.getGivenName())
-                    .idDisplay(request.getLegalId())
                     .familyName(request.getFamilyName())
-                    .firstNameKh(request.getFirstNameKh())
-                    .lastNameKh(request.getLastNameKh())
-                    .dateOfBirth(request.getDateOfBirth())
                     .gender(request.getGender())
+                    .dateOfBirth(request.getDateOfBirth())
                     .nationality(request.getNationality())
                     .legalAddress(request.getLegalAddress())
+                    .custDistrict(request.getCustomerDistrict())
+                    .custProvince(request.getCustomerProvince())
+                    .phoneNumber(request.getPhoneNumber())
+                    .occupation(request.getOccupation())
+                    .legalId(request.getLegalId())
+                    .maritalStatus(request.getMaritalStatus())
+                    .target("220")
+                    .legalDocName(request.getLegalDocName())
+                    .legalExpDate(request.getLegalExpireDate())
+                    .nidImage(request.getNidImage())
+                    .selfieImage(request.getSelfieImage())
                     .build();
 
-            String requestJson = objectMapper.writeValueAsString(customerAmlDto);
+            // 3. Call AML middleware
+            AmlResponseDto amlResponse = amlMiddlewareService.CheckAml(amlRequestDto);
+            log.info("AML Middleware response: RiskLevel={}, TrxnID={}", amlResponse.getRiskLevel(), amlResponse.getTrxnID());
 
-            // Build response object
+            // 4. Check RiskLevel
+            if ("High".equalsIgnoreCase(amlResponse.getRiskLevel())) {
+                throw new AccountCreationException("AML risk level is HIGH. Manual review required for legal ID: " + request.getLegalId());
+            }
+
+            // 5. Build response for AML record
             CustomerResponse response = CustomerResponse.builder()
                     .cif(cif)
                     .khrAccount(khrAccount)
@@ -304,14 +310,12 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                     .mnemonic(mnemonic)
                     .build();
 
-            String responseJson = objectMapper.writeValueAsString(response);
-
-            // Create AML request
-            CreateAmlRequestDto amlRequest = CreateAmlRequestDto.builder()
-                    .originalRequest(requestJson)
-                    .originalResponse(responseJson)
+            // 6. Save AML request record
+            CreateAmlRequestDto createAmlRequest = CreateAmlRequestDto.builder()
+                    .originalRequest(objectMapper.writeValueAsString(amlRequestDto))
+                    .originalResponse(objectMapper.writeValueAsString(response))
                     .status(AmlStatusEnum.PENDING)
-                    .idDisplay(request.getLegalId())
+                    .legalId(request.getLegalId())
                     .familyName(request.getFamilyName())
                     .givenName(request.getGivenName())
                     .firstNameKh(request.getFirstNameKh())
@@ -320,20 +324,29 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                     .gender(request.getGender())
                     .nationality(request.getNationality())
                     .legalAddress(request.getLegalAddress())
+                    .screeningResult(objectMapper.writeValueAsString(amlResponse))
                     .build();
 
-            // Create AML status record
-            var amlStatus = amlService.createAmlStatus(amlRequest);
+            var amlStatus = amlService.createAmlStatus(createAmlRequest);
             log.info("AML record created - ID: {}, Status: PENDING", amlStatus.getId());
 
-            // Send AML notification email
+            // 7. Send AML notification email
             AmlStatusDto amlStatusDto = AmlStatusDto.builder()
                     .status(AmlStatusEnum.PENDING)
                     .approvedBy(null)
                     .rejectedBy(null)
-                    .originalRequest(requestJson)
-                    .originalResponse(responseJson)
-                    .customerInfo(customerAmlDto)
+                    .originalRequest(objectMapper.writeValueAsString(amlRequestDto))
+                    .originalResponse(objectMapper.writeValueAsString(response))
+                    .customerInfo(CustomerAmlDto.builder()
+                            .givenName(request.getGivenName())
+                            .familyName(request.getFamilyName())
+                            .firstNameKh(request.getFirstNameKh())
+                            .lastNameKh(request.getLastNameKh())
+                            .dateOfBirth(request.getDateOfBirth())
+                            .gender(request.getGender())
+                            .nationality(request.getNationality())
+                            .legalAddress(request.getLegalAddress())
+                            .build())
                     .build();
 
             try {
@@ -344,13 +357,12 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             }
 
         } catch (AccountCreationException e) {
-            throw e; // rethrow directly
+            throw e;
         } catch (Exception e) {
-            log.error("Error in createAmlRecordAndNotify: {}", e.getMessage());
+            log.error("Error in createAmlRecordAndNotify: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to create AML record and send notification", e);
         }
     }
-
 
     private String buildSuccessRemark(String cif, String khrAccount, String usdAccount, String mnemonic) {
         StringBuilder remark = new StringBuilder("Account opening completed successfully");

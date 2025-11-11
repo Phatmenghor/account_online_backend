@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope" xmlns:cpb="http://cpbmobile.vnpay.vn">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cpb:sendSmsNew>
+         <cpb:requestId>20251111133546001</cpb:requestId>
+         <cpb:keyword>CPBSMS</cpb:keyword>
+         <cpb:mobileNo>0885716301</cpb:mobileNo>
+         <cpb:content>Your OTP From accis 123456</cpb:content>
+         <cpb:requestTime>2025-11-11T13:35:46</cpb:requestTime>
+         <cpb:chargingFlag>1</cpb:chargingFlag>
+         <cpb:MOSeqNo>1</cpb:MOSeqNo>
+         <cpb:totalMessage>1</cpb:totalMessage>
+         <cpb:contentType>9</cpb:contentType>
+         <cpb:secretKey>cpbsmsgw@!@#974203</cpb:secretKey>
+      </cpb:sendSmsNew>
+   </soapenv:Body>
+</soapenv:Envelope>

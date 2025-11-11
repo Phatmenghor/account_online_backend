@@ -20,6 +20,25 @@ public class HttpClientUtil {
     private final RestTemplate restTemplate;
 
     /**
+     * Sends a raw POST request (useful for SOAP/XML endpoints)
+     * Returns the full response body as a plain String.
+     */
+    public String postForString(String url, String body, String contentType) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(contentType));
+
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
+        ResponseEntity<String> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                request,
+                String.class
+        );
+
+        return response.getBody();
+    }
+
+    /**
      * Make a POST request returning JsonNode
      *
      * @param url      The target URL

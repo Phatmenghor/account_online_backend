@@ -61,7 +61,7 @@ public class AmlServiceImp implements AmlService {
         status = amlStatusRepository.save(status);
 
         // Create initial history (PENDING)
-        AmlHistory history = amlHistoryMapper.createHistoryFromStatusChange(status, null, null);
+        AmlHistory history = amlHistoryMapper.createHistoryFromStatusChange(status, null);
         amlHistoryRepository.save(history);
 
         AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status);
@@ -86,8 +86,6 @@ public class AmlServiceImp implements AmlService {
         AmlStatus status = amlStatusRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("AML Status not found"));
 
-        AmlStatusEnum oldStatus = status.getStatus();
-
         // Update status based on enum
         status.setStatus(req.getStatus());
 
@@ -106,7 +104,7 @@ public class AmlServiceImp implements AmlService {
         status = amlStatusRepository.save(status);
 
         // Create history
-        AmlHistory history = amlHistoryMapper.createHistoryFromStatusChange(status, oldStatus, currentUser);
+        AmlHistory history = amlHistoryMapper.createHistoryFromStatusChange(status, currentUser);
         amlHistoryRepository.save(history);
 
         AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status);
