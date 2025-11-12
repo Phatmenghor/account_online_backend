@@ -35,5 +35,15 @@ public class CreateAmlRequestDto {
     private String gender;
     private String nationality;
     private String legalAddress;
+
+    private String customerCurrentProvince;
+    private String customerCurrentDistrict;
+    private String customerCurrentCommune;
+    private String customerCurrentVillage;
+
+    private String customerPobProvince;
+    private String customerPobDistrict;
+    private String customerPobCommune;
+    private String customerPobVillage;
 }
 

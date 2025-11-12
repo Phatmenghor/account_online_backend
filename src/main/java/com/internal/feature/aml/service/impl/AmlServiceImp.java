@@ -20,6 +20,9 @@ import com.internal.feature.aml.service.AmlService;
 import com.internal.feature.aml.specification.AmlHistorySpecification;
 import com.internal.feature.aml.specification.AmlStatusSpecification;
 import com.internal.feature.auth.models.UserEntity;
+import com.internal.feature.master_data.dto.request.AddressRequestDto;
+import com.internal.feature.master_data.dto.response.LocationCodesDto;
+import com.internal.feature.master_data.service.MasterDataService;
 import com.internal.feature.telegram_alerts.service.serviceImpl.OpenAccountTelegramAlertServiceImpl;
 import com.internal.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +33,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -45,7 +49,11 @@ public class AmlServiceImp implements AmlService {
     private final AmlHistoryMapper amlHistoryMapper;
     private final SecurityUtils securityUtils;
     private final OpenAccountTelegramAlertServiceImpl alertTelegramService;
+    private final MasterDataService masterDataService;
 
+    // -------------------------------
+    // FIND BY LEGAL ID
+    // -------------------------------
     @Override
     public Optional<AmlStatus> findByLegalId(String legalId) {
         return amlStatusRepository.findByLegalId(legalId);
@@ -59,24 +67,32 @@ public class AmlServiceImp implements AmlService {
     public AmlStatusDto createAmlStatus(CreateAmlRequestDto requestDto) throws JsonProcessingException {
         AmlStatus status = amlStatusMapper.fromCreateDto(requestDto);
         status.setRejectedBy(null);
+
+        // Populate address fields (new unified structure)
+        populateAddressFields(status, requestDto);
+
+        // Save AML record
         status = amlStatusRepository.save(status);
 
         // Create initial history (PENDING)
         AmlHistory history = amlHistoryMapper.createHistoryFromStatusChange(status, null);
         amlHistoryRepository.save(history);
 
+        // Prepare DTO
         AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status);
 
+        // Telegram notification
         try {
             alertTelegramService.sendTelegramAmlProcess(amlDto);
         } catch (Exception e) {
             log.error("Failed to send PENDING AML Telegram notification: {}", e.getMessage());
         }
+
         return amlDto;
     }
 
     // -------------------------------
-    // UPDATE AML STATUS (APPROVE / REJECT / FUTURE)
+    // UPDATE AML STATUS
     // -------------------------------
     @Override
     @Transactional
@@ -86,30 +102,18 @@ public class AmlServiceImp implements AmlService {
         AmlStatus status = amlStatusRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("AML Status not found"));
 
-        // Update status based on enum
-        status.setStatus(req.getStatus());
+        // Update based on new status
+        updateStatusByEnum(status, req.getStatus(), currentUser);
 
-        if (req.getStatus() == AmlStatusEnum.APPROVE) {
-            status.setApprovedBy(currentUser);
-            status.setRejectedBy(null);
-        } else if (req.getStatus() == AmlStatusEnum.REJECT) {
-            status.setRejectedBy(currentUser);
-            status.setApprovedBy(null);
-        } else {
-            // For any other statuses, clear both fields
-            status.setApprovedBy(null);
-            status.setRejectedBy(null);
-        }
-
+        // Save & record history
         status = amlStatusRepository.save(status);
-
-        // Create history
         AmlHistory history = amlHistoryMapper.createHistoryFromStatusChange(status, currentUser);
         amlHistoryRepository.save(history);
 
+        // Convert to DTO
         AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status);
 
-        // Send Telegram notification
+        // Telegram notification
         try {
             alertTelegramService.sendTelegramAmlProcess(amlDto);
         } catch (Exception e) {
@@ -120,12 +124,11 @@ public class AmlServiceImp implements AmlService {
     }
 
     // -------------------------------
-    // GET ALL AML
+    // GET ALL AML STATUS
     // -------------------------------
     @Override
     public AllAmlResponseDto getAllAml(AllAmlRequestDto request) {
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
-
         Specification<AmlStatus> spec = AmlStatusSpecification.hasStatus(request.getStatus())
                 .and(AmlStatusSpecification.search(request.getSearch()));
 
@@ -144,7 +147,6 @@ public class AmlServiceImp implements AmlService {
     @Override
     public AllAmlHistoryResponseDto getAllAmlHistory(AllAmlHistoryRequestDto request) {
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
-
         Specification<AmlHistory> spec = AmlHistorySpecification.createdBetween(request.getStartDate(), request.getEndDate())
                 .and(AmlHistorySpecification.search(request.getSearch()));
 
@@ -155,5 +157,83 @@ public class AmlServiceImp implements AmlService {
                 .collect(Collectors.toList());
 
         return amlHistoryMapper.mapToListDto(content, page);
+    }
+
+    // =====================================================
+    // PRIVATE METHODS (Refactored for Clean Maintainability)
+    // =====================================================
+
+    private void populateAddressFields(AmlStatus status, CreateAmlRequestDto requestDto) {
+        // Handle Current Address
+        if (requestDto.getLegalAddress() != null && !requestDto.getLegalAddress().isEmpty()) {
+            AddressRequestDto addressReq = new AddressRequestDto();
+            addressReq.setAddress(requestDto.getLegalAddress());
+
+            LocationCodesDto currentAddr = masterDataService.initAddress(addressReq);
+            if (currentAddr != null && currentAddr.getProvince() != null) {
+                status.setCurrentAddressName(buildFullAddressName(currentAddr));
+                status.setCurrentAddressCode(buildFullAddressCode(currentAddr));
+            }
+        }
+
+        // Handle Place of Birth
+        if (requestDto.getCustomerPobProvince() != null && !requestDto.getCustomerPobProvince().isEmpty()) {
+            AddressRequestDto pobReq = new AddressRequestDto();
+            pobReq.setAddress(buildPobAddressText(requestDto));
+
+            LocationCodesDto pobAddr = masterDataService.initPob(pobReq);
+            if (pobAddr != null && pobAddr.getProvince() != null) {
+                status.setPlaceOfBirthName(buildFullAddressName(pobAddr));
+                status.setPlaceOfBirthCode(buildFullAddressCode(pobAddr));
+            }
+        }
+    }
+
+    private String buildFullAddressName(LocationCodesDto loc) {
+        StringBuilder sb = new StringBuilder();
+        if (loc.getProvince() != null)
+            sb.append(loc.getProvince().getProvinceEn()).append(" (").append(loc.getProvince().getProvinceKh()).append(")");
+        if (loc.getDistrict() != null)
+            sb.append(", ").append(loc.getDistrict().getDistrictEn()).append(" (").append(loc.getDistrict().getDistrictKh()).append(")");
+        if (loc.getCommune() != null)
+            sb.append(", ").append(loc.getCommune().getCommuneEn()).append(" (").append(loc.getCommune().getCommuneKh()).append(")");
+        if (loc.getVillage() != null)
+            sb.append(", ").append(loc.getVillage().getVillageEn()).append(" (").append(loc.getVillage().getVillageKh()).append(")");
+        return sb.toString();
+    }
+
+    private String buildFullAddressCode(LocationCodesDto loc) {
+        return String.join("",
+                Optional.ofNullable(loc.getProvince()).map(p -> p.getProvinceCode()).orElse(""),
+                Optional.ofNullable(loc.getDistrict()).map(d -> d.getDistrictCode()).orElse(""),
+                Optional.ofNullable(loc.getCommune()).map(c -> c.getCommuneCode()).orElse(""),
+                Optional.ofNullable(loc.getVillage()).map(v -> v.getVillageCode()).orElse("")
+        );
+    }
+
+    private String buildPobAddressText(CreateAmlRequestDto req) {
+        return String.format("%s %s %s",
+                Optional.ofNullable(req.getCustomerPobCommune()).orElse(""),
+                Optional.ofNullable(req.getCustomerPobDistrict()).orElse(""),
+                Optional.ofNullable(req.getCustomerPobProvince()).orElse("")
+        ).trim();
+    }
+
+    private void updateStatusByEnum(AmlStatus status, AmlStatusEnum newStatus, UserEntity user) {
+        status.setStatus(newStatus);
+        switch (newStatus) {
+            case APPROVE:
+                status.setApprovedBy(user);
+                status.setRejectedBy(null);
+                break;
+            case REJECT:
+                status.setRejectedBy(user);
+                status.setApprovedBy(null);
+                break;
+            default:
+                status.setApprovedBy(null);
+                status.setRejectedBy(null);
+                break;
+        }
     }
 }

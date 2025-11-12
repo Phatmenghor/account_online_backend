@@ -18,7 +18,6 @@ public interface AmlStatusMapper {
     // -------------------------------
     // CREATE DTO → ENTITY
     // -------------------------------
-    @Mapping(target = "legalId", source = "legalId")
     @Mapping(target = "status", expression = "java(request.getStatus() != null ? request.getStatus() : com.internal.enumation.AmlStatusEnum.PENDING)")
     @Mapping(target = "screeningResult", source = "screeningResult")
     @Mapping(target = "amlExternalRiskLevel", source = "RiskLevel")

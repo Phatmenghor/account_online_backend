@@ -105,7 +105,7 @@ public class AccountOnlineFinalLog extends BaseNoIdEntity {
     @Column(name = "released_by")
     private String releasedBy;
 
-    //BRANCH
+    // === Branch Info ===
     @Column(name = "branch_code")
     private String branchCode;
 
@@ -115,47 +115,65 @@ public class AccountOnlineFinalLog extends BaseNoIdEntity {
     @Column(name = "branch_name_kh")
     private String branchNameKh;
 
-    // === Current Address Codes + Names (EN/KH) ===
+    // === Current Address Codes + Names ===
 
-    //PROVINCE
+    // Province
     @Column(name = "customer_province_code")
     private String customerProvinceCode;
 
-    @Column(name = "customer_province_en")
-    private String customerProvinceEn;
+    @Column(name = "customer_province")
+    private String customerProvince;
 
-    @Column(name = "customer_province_kh")
-    private String customerProvinceKh;
-
-    //DISTRICT
+    // District
     @Column(name = "customer_district_code")
     private String customerDistrictCode;
 
-    @Column(name = "customer_district_en")
-    private String customerDistrictEn;
+    @Column(name = "customer_district")
+    private String customerDistrict;
 
-    @Column(name = "customer_district_kh")
-    private String customerDistrictKh;
-
-    //COMMUNE
+    // Commune
     @Column(name = "customer_commune_code")
     private String customerCommuneCode;
 
-    @Column(name = "customer_commune_en")
-    private String customerCommuneEn;
+    @Column(name = "customer_commune")
+    private String customerCommune;
 
-    @Column(name = "customer_commune_kh")
-    private String customerCommuneKh;
-
-    //VILLAGE
+    // Village
     @Column(name = "customer_village_code")
     private String customerVillageCode;
 
-    @Column(name = "customer_village_en")
-    private String customerVillageEn;
+    @Column(name = "customer_village")
+    private String customerVillage;
 
-    @Column(name = "customer_village_kh")
-    private String customerVillageKh;
+    // === Place of Birth (POB) Codes + Names ===
+
+    // Province
+    @Column(name = "customer_pob_province_code")
+    private String customerPobProvinceCode;
+
+    @Column(name = "customer_pob_province")
+    private String customerPobProvince;
+
+    // District
+    @Column(name = "customer_pob_district_code")
+    private String customerPobDistrictCode;
+
+    @Column(name = "customer_pob_district")
+    private String customerPobDistrict;
+
+    // Commune
+    @Column(name = "customer_pob_commune_code")
+    private String customerPobCommuneCode;
+
+    @Column(name = "customer_pob_commune")
+    private String customerPobCommune;
+
+    // Village
+    @Column(name = "customer_pob_village_code")
+    private String customerPobVillageCode;
+
+    @Column(name = "customer_pob_village")
+    private String customerPobVillage;
 
     // === Contact ===
     @Column(name = "phone_number")
@@ -203,11 +221,4 @@ public class AccountOnlineFinalLog extends BaseNoIdEntity {
     @Lob
     @Column(name = "selfie_image", columnDefinition = "TEXT")
     private String selfieImage;
-
-    // === Optional Metadata for Audit / Tracking ===
-    @Column(name = "status")
-    private String status; // e.g., SUCCESS, REVIEWED
-
-    @Column(name = "source_system")
-    private String sourceSystem; // e.g., WEB, MOBILE
 }

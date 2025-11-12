@@ -122,7 +122,7 @@ public class AmlHistory extends BaseEntity {
     private String amlExternalServiceName;
 
     @Column(name = "aml_ext_total_rules_score")
-    private int amlExternalTotalRulesScore;
+    private Integer amlExternalTotalRulesScore;
 
     @Column(name = "aml_ext_trxn_id")
     private String amlExternalTrxnID;

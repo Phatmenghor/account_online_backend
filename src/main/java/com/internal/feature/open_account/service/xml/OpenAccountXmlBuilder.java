@@ -57,12 +57,12 @@ public class OpenAccountXmlBuilder {
         String branchCode = getOrDefault(request.getBranchCode(), DEFAULT_BRANCH_CODE);
         String maritalStatus = getOrDefault(request.getMaritalStatus(), "");
         String legalAddress = getOrDefault(request.getLegalAddress(), "");
-        String custProvince = getOrDefault(request.getCustomerProvince(), "");
-        String custDistrict = getOrDefault(request.getCustomerDistrict(), "");
-        String custCommune = getOrDefault(request.getCustomerCommune(), "");
-        String custVillage = getOrDefault(request.getCustomerVillage(), "");
+        String custProvince = getOrDefault(request.getCustomerCurrentProvince(), "");
+        String custDistrict = getOrDefault(request.getCustomerCurrentDistrict(), "");
+        String custCommune = getOrDefault(request.getCustomerCurrentCommune(), "");
+        String custVillage = getOrDefault(request.getCustomerCurrentVillage(), "");
         String referralId = getOrDefault(request.getReferralId(), "");
-        String releasedBy = getOrDefault(request.getReleasedBy(), "");
+        String releasedBy = getOrDefault("", "");
         String placeOfBirth = getOrDefault(request.getPlaceOfBirth(), "");
 
         // Format dates to T24 format (YYYYMMDD)
