@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class CustomerAmlRequest { 
+public class CustomerAmlRequest {
 
     @JsonProperty("CUSTOMER_ID")
     private String customerId;
@@ -91,10 +91,4 @@ public class CustomerAmlRequest {
 
     @JsonProperty("CUSTOMER_RATING")
     private String customerRating;
-
-    @JsonProperty("NID_IMAGE")
-    private String nidImage;
-
-    @JsonProperty("SELFIE_IMAGE")
-    private String selfieImage;
 }

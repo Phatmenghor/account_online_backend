@@ -110,6 +110,24 @@ public class AmlStatus extends BaseEntity {
     @Column(name = "screening_result", columnDefinition = "TEXT")
     private String screeningResult; // JSON result from AML service
 
+    @Column(name = "aml_ext_risk_level")
+    private String amlExternalRiskLevel;
+
+    @Column(name = "aml_ext_action_taken")
+    private String amlExternalActionTaken;
+
+    @Column(name = "aml_ext_rules_triggered", columnDefinition = "TEXT")
+    private String amlExternalRulesTriggered; // store as JSON string
+
+    @Column(name = "aml_ext_service_name")
+    private String amlExternalServiceName;
+
+    @Column(name = "aml_ext_total_rules_score")
+    private int amlExternalTotalRulesScore;
+
+    @Column(name = "aml_ext_trxn_id")
+    private String amlExternalTrxnID;
+
     // ============================================
     // ADMIN REMARKS
     // ============================================

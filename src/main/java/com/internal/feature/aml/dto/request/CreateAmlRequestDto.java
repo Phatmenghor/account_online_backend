@@ -17,6 +17,12 @@ public class CreateAmlRequestDto {
     private String originalResponse;
     private AmlStatusEnum status;
     private String screeningResult;
+    private String RiskLevel;
+    private String ActionTaken;
+    private Object[] RulesTriggered;
+    private String ServiceName;
+    private int TotalRulesScore;
+    private String TrxnID;
     private UserResponseDto approvedBy;
     private UserResponseDto rejectedBy;
 

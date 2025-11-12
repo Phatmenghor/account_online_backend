@@ -1,5 +1,6 @@
 package com.internal.feature.aml.mapper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.internal.feature.aml.dto.request.AmlHistoryRequestDto;
 import com.internal.feature.aml.dto.response.AllAmlHistoryResponseDto;
 import com.internal.feature.aml.dto.response.AmlHistoryDto;
@@ -45,7 +46,7 @@ public interface AmlHistoryMapper {
     default AmlHistory createHistoryFromStatusChange(
             AmlStatus status,
             Object changedBy
-    ) {
+    ) throws JsonProcessingException {
         if (status == null) return null;
 
         AmlHistory history = new AmlHistory();
@@ -67,8 +68,25 @@ public interface AmlHistoryMapper {
         history.setNationality(status.getNationality());
         history.setCurrentAddressName(status.getCurrentAddressName());
 
+        // =============================
+        // AML middleware - external service fields
+        // =============================
+        history.setAmlExternalActionTaken(status.getAmlExternalActionTaken());
+        history.setAmlExternalRiskLevel(status.getAmlExternalRiskLevel());
+        history.setAmlExternalTrxnID(status.getAmlExternalTrxnID());
+        history.setAmlExternalTotalRulesScore(status.getAmlExternalTotalRulesScore());
+        history.setAmlExternalServiceName(status.getAmlExternalServiceName());
+
+        // Convert rules triggered array to JSON string if needed
+        if (status.getAmlExternalRulesTriggered() != null) {
+            history.setAmlExternalRulesTriggered(
+                    new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(status.getAmlExternalRulesTriggered())
+            );
+        }
+
         return history;
     }
+
 
     // -------------------------------
     // PAGED RESPONSE

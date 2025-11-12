@@ -1,14 +1,24 @@
 package com.internal.feature.logs_report.model;
 
 import com.internal.config.entity.BaseNoIdEntity;
+import com.internal.enumation.AmlStatusEnum;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "acc_online_open_final")
+@Table(
+        name = "acc_online_open_final",
+        indexes = {
+                @Index(name = "idx_rec_id", columnList = "rec_id"),
+                @Index(name = "idx_legal_id", columnList = "legal_id"),
+                @Index(name = "idx_phone_number", columnList = "phone_number"),
+                @Index(name = "idx_branch_code", columnList = "branch_code")
+        }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,57 +31,57 @@ public class AccountOnlineFinalLog extends BaseNoIdEntity {
     private UUID id;
 
     // === Request Info ===
-    @Column(name = "rec_id")
+    @Column(name = "rec_id", nullable = false)
     private String recId;
 
     // === Legal / NID Info ===
-    @Column(name = "legal_id")
-    private String legalId; // idNumber from NID
+    @Column(name = "legal_id", nullable = false)
+    private String legalId;
 
     @Column(name = "legal_doc_name")
     private String legalDocName; // e.g., NATIONAL.ID
 
     @Column(name = "legal_holder_name")
-    private String legalHolderName; // full name on front of NID
+    private String legalHolderName;
 
     @Column(name = "legal_first_name_en")
-    private String legalFirstNameEn; // firstNameEn from NID
+    private String legalFirstNameEn;
 
     @Column(name = "legal_last_name_en")
-    private String legalLastNameEn; // lastNameEn from NID
+    private String legalLastNameEn;
 
     @Column(name = "legal_first_name_kh")
-    private String legalFirstNameKh; // firstNameKh from NID
+    private String legalFirstNameKh;
 
     @Column(name = "legal_last_name_kh")
-    private String legalLastNameKh; // lastNameKh from NID
+    private String legalLastNameKh;
 
     @Column(name = "legal_date_of_birth")
-    private String legalDateOfBirth; // dob from NID
+    private LocalDate legalDateOfBirth;
 
     @Column(name = "legal_gender")
-    private String legalGender; // gender from NID (M/F)
+    private String legalGender;
 
     @Column(name = "legal_address")
-    private String legalAddress; // address from NID
+    private String legalAddress;
 
     @Column(name = "legal_place_of_birth")
-    private String legalPlaceOfBirth; // pob from NID
+    private String legalPlaceOfBirth;
 
     @Column(name = "legal_issued_date")
-    private String legalIssuedDate; // issuedDate from NID
+    private LocalDate legalIssuedDate;
 
     @Column(name = "legal_expired_date")
-    private String legalExpiredDate; // expiredDate from NID
+    private LocalDate legalExpiredDate;
 
     @Column(name = "legal_mrz1")
-    private String legalMRZ1; // MRZ1 from NID
+    private String legalMRZ1;
 
     @Column(name = "legal_mrz2")
-    private String legalMRZ2; // MRZ2 from NID
+    private String legalMRZ2;
 
     @Column(name = "legal_mrz3")
-    private String legalMRZ3; // MRZ3 from NID
+    private String legalMRZ3;
 
     // === Customer Info ===
     @Column(name = "marital_status")
@@ -89,31 +99,101 @@ public class AccountOnlineFinalLog extends BaseNoIdEntity {
     @Column(name = "average_income")
     private String averageIncome;
 
-    @Column(name = "branch_code")
-    private String branchCode;
-
     @Column(name = "referral_id")
     private String referralId;
 
     @Column(name = "released_by")
     private String releasedBy;
 
-    // === Address Codes ===
-    @Column(name = "customer_province")
-    private String customerProvince;
+    //BRANCH
+    @Column(name = "branch_code")
+    private String branchCode;
 
-    @Column(name = "customer_district")
-    private String customerDistrict;
+    @Column(name = "branch_name_en")
+    private String branchNameEn;
 
-    @Column(name = "customer_commune")
-    private String customerCommune;
+    @Column(name = "branch_name_kh")
+    private String branchNameKh;
 
-    @Column(name = "customer_village")
-    private String customerVillage;
+    // === Current Address Codes + Names (EN/KH) ===
+
+    //PROVINCE
+    @Column(name = "customer_province_code")
+    private String customerProvinceCode;
+
+    @Column(name = "customer_province_en")
+    private String customerProvinceEn;
+
+    @Column(name = "customer_province_kh")
+    private String customerProvinceKh;
+
+    //DISTRICT
+    @Column(name = "customer_district_code")
+    private String customerDistrictCode;
+
+    @Column(name = "customer_district_en")
+    private String customerDistrictEn;
+
+    @Column(name = "customer_district_kh")
+    private String customerDistrictKh;
+
+    //COMMUNE
+    @Column(name = "customer_commune_code")
+    private String customerCommuneCode;
+
+    @Column(name = "customer_commune_en")
+    private String customerCommuneEn;
+
+    @Column(name = "customer_commune_kh")
+    private String customerCommuneKh;
+
+    //VILLAGE
+    @Column(name = "customer_village_code")
+    private String customerVillageCode;
+
+    @Column(name = "customer_village_en")
+    private String customerVillageEn;
+
+    @Column(name = "customer_village_kh")
+    private String customerVillageKh;
 
     // === Contact ===
     @Column(name = "phone_number")
     private String phoneNumber;
+
+    // === AML Info ===
+    @Column(name = "aml_status")
+    @Enumerated(EnumType.STRING)
+    private AmlStatusEnum amlStatus; // APPROVED / REJECTED / PENDING
+
+    @Column(name = "aml_approved_by")
+    private UUID amlApprovedById;
+
+    @Column(name = "aml_rejected_by")
+    private UUID amlRejectedById;
+
+    @Column(name = "aml_remarks", columnDefinition = "TEXT")
+    private String amlRemarks;
+
+    @Column(name = "aml_screening_result", columnDefinition = "TEXT")
+    private String amlScreeningResult; // JSON from AML service
+
+    // === Individual fields from AML JSON for easier queries ===
+    @Column(name = "aml_risk_level")
+    private String amlRiskLevel;
+
+    @Column(name = "aml_action_taken")
+    private String amlActionTaken;
+
+    @Column(name = "aml_total_rules_score")
+    private Integer amlTotalRulesScore;
+
+    @Column(name = "aml_trxn_id")
+    private String amlTrxnId;
+
+    // For storing triggered rules as comma-separated string
+    @Column(name = "aml_rules_triggered", columnDefinition = "TEXT")
+    private String amlRulesTriggered;
 
     // === Images (base64) ===
     @Lob
@@ -123,4 +203,11 @@ public class AccountOnlineFinalLog extends BaseNoIdEntity {
     @Lob
     @Column(name = "selfie_image", columnDefinition = "TEXT")
     private String selfieImage;
+
+    // === Optional Metadata for Audit / Tracking ===
+    @Column(name = "status")
+    private String status; // e.g., SUCCESS, REVIEWED
+
+    @Column(name = "source_system")
+    private String sourceSystem; // e.g., WEB, MOBILE
 }

@@ -1,5 +1,6 @@
 package com.internal.feature.aml.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.internal.feature.aml.dto.request.AllAmlHistoryRequestDto;
 import com.internal.feature.aml.dto.request.AllAmlRequestDto;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
@@ -13,8 +14,8 @@ import java.util.Optional;
 
 public interface AmlService {
     Optional<AmlStatus> findByLegalId(String legalId);
-    AmlStatusDto createAmlStatus(CreateAmlRequestDto requestDto);
-    AmlStatusDto updateAmlStatus(Long id, UpdateAmlStatusDto status);
+    AmlStatusDto createAmlStatus(CreateAmlRequestDto requestDto) throws JsonProcessingException;
+    AmlStatusDto updateAmlStatus(Long id, UpdateAmlStatusDto status) throws JsonProcessingException;
     AllAmlResponseDto getAllAml(AllAmlRequestDto requestDto);
     AllAmlHistoryResponseDto getAllAmlHistory(AllAmlHistoryRequestDto requestDto);
 }

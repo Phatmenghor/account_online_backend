@@ -1,5 +1,6 @@
 package com.internal.feature.aml.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.internal.enumation.AmlStatusEnum;
 import com.internal.feature.aml.dto.request.AllAmlHistoryRequestDto;
 import com.internal.feature.aml.dto.request.AllAmlRequestDto;
@@ -55,7 +56,7 @@ public class AmlServiceImp implements AmlService {
     // -------------------------------
     @Override
     @Transactional
-    public AmlStatusDto createAmlStatus(CreateAmlRequestDto requestDto) {
+    public AmlStatusDto createAmlStatus(CreateAmlRequestDto requestDto) throws JsonProcessingException {
         AmlStatus status = amlStatusMapper.fromCreateDto(requestDto);
         status.setRejectedBy(null);
         status = amlStatusRepository.save(status);
@@ -71,7 +72,6 @@ public class AmlServiceImp implements AmlService {
         } catch (Exception e) {
             log.error("Failed to send PENDING AML Telegram notification: {}", e.getMessage());
         }
-
         return amlDto;
     }
 
@@ -80,7 +80,7 @@ public class AmlServiceImp implements AmlService {
     // -------------------------------
     @Override
     @Transactional
-    public AmlStatusDto updateAmlStatus(Long id, UpdateAmlStatusDto req) {
+    public AmlStatusDto updateAmlStatus(Long id, UpdateAmlStatusDto req) throws JsonProcessingException {
         UserEntity currentUser = securityUtils.getCurrentUser();
 
         AmlStatus status = amlStatusRepository.findById(id)

@@ -29,6 +29,7 @@ public class OpenAccountXmlBuilder {
     private static final String DEFAULT_OWNERSHIP = "304";
     private static final String DEFAULT_LEGAL_DOC_NAME = "NATIONAL.ID";
     private static final String DEFAULT_LEGAL_HOLDER_NAME = "NATIONAL.ID";
+    private static final String DEFAULT_NATIONALITY = "KH";
 
     // Namespace URIs
     private static final String SOAP_ENV_NS = "http://schemas.xmlsoap.org/soap/envelope/";
@@ -99,9 +100,9 @@ public class OpenAccountXmlBuilder {
                 + "<cus:CostCenter>" + DEFAULT_COST_CENTER + "</cus:CostCenter>"
                 + "<cus:Industry>" + DEFAULT_INDUSTRY + "</cus:Industry>"
                 + "<cus:Target>" + DEFAULT_TARGET + "</cus:Target>"
-                + "<cus:Nationality>" + request.getNationality() + "</cus:Nationality>"
+                + "<cus:Nationality>" + DEFAULT_NATIONALITY + "</cus:Nationality>"
                 + "<cus:CustomerStatus>" + DEFAULT_CUSTOMER_STATUS + "</cus:CustomerStatus>"
-                + "<cus:Residence>" + request.getNationality() + "</cus:Residence>"
+                + "<cus:Residence>" + DEFAULT_NATIONALITY + "</cus:Residence>"
 
                 // Legal identification - Enhanced with all fields
                 + "<cus:gLEGALID g=\"1\"><cus:mLEGALID m=\"1\">"

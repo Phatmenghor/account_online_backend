@@ -1,5 +1,6 @@
 package com.internal.feature.aml.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.aml.dto.request.AllAmlHistoryRequestDto;
 import com.internal.feature.aml.dto.request.AllAmlRequestDto;
@@ -50,7 +51,7 @@ public class AmlController {
     public ResponseEntity<ApiResponse<AmlStatusDto>> updateAmlStatus(
             @PathVariable Long id,
             @RequestBody UpdateAmlStatusDto req
-            ) {
+            ) throws JsonProcessingException {
         log.info("Updating AML status for ID: {} to {}", id, req.getStatus());
         AmlStatusDto updatedStatus = service.updateAmlStatus(id, req);
         log.info("AML status updated successfully: {}", updatedStatus.getId());

@@ -1,19 +1,16 @@
 package com.internal.feature.aml.mapper;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.internal.enumation.AmlStatusEnum;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
 import com.internal.feature.aml.dto.response.AllAmlResponseDto;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.aml.model.AmlStatus;
 import com.internal.feature.auth.mapper.UserMapper;
-import com.internal.feature.open_account.dto.request.CustomerRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.springframework.data.domain.Page;
+
 import java.util.List;
-import java.util.Map;
 
 @Mapper(componentModel = "spring", uses = {UserMapper.class})
 public interface AmlStatusMapper {
@@ -23,7 +20,46 @@ public interface AmlStatusMapper {
     // -------------------------------
     @Mapping(target = "legalId", source = "legalId")
     @Mapping(target = "status", expression = "java(request.getStatus() != null ? request.getStatus() : com.internal.enumation.AmlStatusEnum.PENDING)")
-    AmlStatus fromCreateDto(CreateAmlRequestDto request);
+    @Mapping(target = "screeningResult", source = "screeningResult")
+    @Mapping(target = "amlExternalRiskLevel", source = "RiskLevel")
+    @Mapping(target = "amlExternalActionTaken", source = "ActionTaken")
+    @Mapping(target = "amlExternalServiceName", source = "ServiceName")
+    @Mapping(target = "amlExternalTotalRulesScore", source = "TotalRulesScore")
+    @Mapping(target = "amlExternalTrxnID", source = "TrxnID")
+    default AmlStatus fromCreateDto(CreateAmlRequestDto request) {
+        if (request == null) return null;
+
+        AmlStatus status = new AmlStatus();
+        status.setLegalId(request.getLegalId());
+        status.setFamilyName(request.getFamilyName());
+        status.setGivenName(request.getGivenName());
+        status.setFirstNameKh(request.getFirstNameKh());
+        status.setLastNameKh(request.getLastNameKh());
+        status.setDateOfBirth(request.getDateOfBirth());
+        status.setGender(request.getGender());
+        status.setNationality(request.getNationality());
+        status.setCurrentAddressName(request.getLegalAddress());
+        status.setStatus(request.getStatus() != null ? request.getStatus() : com.internal.enumation.AmlStatusEnum.PENDING);
+        status.setScreeningResult(request.getScreeningResult());
+        status.setAmlExternalRiskLevel(request.getRiskLevel());
+        status.setAmlExternalActionTaken(request.getActionTaken());
+        status.setAmlExternalServiceName(request.getServiceName());
+        status.setAmlExternalTotalRulesScore(request.getTotalRulesScore());
+        status.setAmlExternalTrxnID(request.getTrxnID());
+
+        // Convert RulesTriggered to JSON string
+        if (request.getRulesTriggered() != null) {
+            try {
+                status.setAmlExternalRulesTriggered(
+                        new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(request.getRulesTriggered())
+                );
+            } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                status.setAmlExternalRulesTriggered("[]"); // fallback
+            }
+        }
+
+        return status;
+    }
 
     // -------------------------------
     // ENTITY → DTO
@@ -52,33 +88,5 @@ public interface AmlStatusMapper {
         amlDtoList.setTotalPages(statuses.getTotalPages());
         amlDtoList.setLast(statuses.isLast());
         return amlDtoList;
-    }
-
-    // -------------------------------
-    // CUSTOMER REQUEST + RESPONSE → CREATE_AML_DTO
-    // -------------------------------
-    default CreateAmlRequestDto toCreateAmlRequestDto(CustomerRequest request, Map<String, Object> responseMap) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            String requestJson = objectMapper.writeValueAsString(request);
-            String responseJson = objectMapper.writeValueAsString(responseMap);
-
-            return CreateAmlRequestDto.builder()
-                    .originalRequest(requestJson)
-                    .originalResponse(responseJson)
-                    .status(AmlStatusEnum.PENDING)
-                    .legalId(request.getLegalId())
-                    .familyName(request.getFamilyName())
-                    .givenName(request.getGivenName())
-                    .firstNameKh(request.getFirstNameKh())
-                    .lastNameKh(request.getLastNameKh())
-                    .dateOfBirth(request.getDateOfBirth())
-                    .gender(request.getGender())
-                    .nationality(request.getNationality())
-                    .legalAddress(request.getLegalAddress())
-                    .build();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to map CustomerRequest to CreateAmlRequestDto", e);
-        }
     }
 }
