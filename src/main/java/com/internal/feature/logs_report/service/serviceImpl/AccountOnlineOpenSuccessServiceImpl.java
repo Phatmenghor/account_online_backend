@@ -36,7 +36,7 @@ public class AccountOnlineOpenSuccessServiceImpl implements AccountOnlineOpenSuc
                     .nationality("KH")
                     .releasedBy("")
                     .averageIncome("0")
-                    .legalDocName(request.getLegalDocName())
+                    .legalDocName("NATIONAL.ID")
                     .occupation(request.getOccupation())
                     .customerProvince(request.getCustomerCurrentProvince())
                     .customerDistrict(request.getCustomerCurrentDistrict())

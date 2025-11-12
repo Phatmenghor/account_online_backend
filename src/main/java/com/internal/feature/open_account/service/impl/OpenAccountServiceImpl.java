@@ -273,8 +273,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
      */
     private void createAmlRecordAndNotify(CustomerRequest request, String cif,
                                           String khrAccount, String usdAccount, String mnemonic) {
-        log.info(">>> Step 3: PROCESS_AML");
-
         try {
             checkExistingAmlRecord(request.getLegalId());
             CustomerAmlRequest amlRequestDto = buildAmlRequestDto(request);

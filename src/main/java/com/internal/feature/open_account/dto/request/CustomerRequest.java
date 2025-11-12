@@ -50,7 +50,6 @@ public class CustomerRequest {
     private String legalId;
 
     //legal type
-    private String legalDocName;
     private String legalIssueDate;
     private String legalExpireDate;
     private String legalAddress;

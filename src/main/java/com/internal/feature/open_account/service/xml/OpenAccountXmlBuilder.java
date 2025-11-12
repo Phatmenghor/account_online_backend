@@ -57,13 +57,21 @@ public class OpenAccountXmlBuilder {
         String branchCode = getOrDefault(request.getBranchCode(), DEFAULT_BRANCH_CODE);
         String maritalStatus = getOrDefault(request.getMaritalStatus(), "");
         String legalAddress = getOrDefault(request.getLegalAddress(), "");
+
+        // Current address codes
         String custProvince = getOrDefault(request.getCustomerCurrentProvince(), "");
         String custDistrict = getOrDefault(request.getCustomerCurrentDistrict(), "");
         String custCommune = getOrDefault(request.getCustomerCurrentCommune(), "");
         String custVillage = getOrDefault(request.getCustomerCurrentVillage(), "");
-        String referralId = getOrDefault(request.getReferralId(), "");
+
+        // Place of birth codes (primary P fields)
+        String pobProvince = getOrDefault(request.getCustomerPobProvince(), "");
+        String pobDistrict = getOrDefault(request.getCustomerPobDistrict(), "");
+        String pobCommune = getOrDefault(request.getCustomerPobCommune(), "");
+        String pobVillage = getOrDefault(request.getCustomerPobVillage(), "");
+
+        String referralId = getOrDefault("", "");
         String releasedBy = getOrDefault("", "");
-        String placeOfBirth = getOrDefault(request.getPlaceOfBirth(), "");
 
         // Format dates to T24 format (YYYYMMDD)
         String dateOfBirth = formatDateForT24(request.getDateOfBirth());
@@ -71,9 +79,6 @@ public class OpenAccountXmlBuilder {
 
         // Determine title from gender
         String title = determineTitle(request.getGender());
-
-        // Legal doc name
-        String legalDocName = getOrDefault(request.getLegalDocName(), DEFAULT_LEGAL_DOC_NAME);
 
         return "<soapenv:Envelope xmlns:soapenv=\"" + SOAP_ENV_NS + "\" "
                 + "xmlns:oaow=\"" + OAOW_NS + "\" "
@@ -95,7 +100,7 @@ public class OpenAccountXmlBuilder {
                 + "<cus:gNAME2 g=\"1\"><cus:FullName2>" + request.getLastNameKh() + " " + request.getFirstNameKh() + "</cus:FullName2></cus:gNAME2>"
                 + "<cus:gSTREET g=\"1\"><cus:STREET>" + legalAddress + "</cus:STREET></cus:gSTREET>"
 
-                // Organizational fields - Updated defaults
+                // Organizational fields
                 + "<cus:Sector>" + DEFAULT_SECTOR + "</cus:Sector>"
                 + "<cus:CostCenter>" + DEFAULT_COST_CENTER + "</cus:CostCenter>"
                 + "<cus:Industry>" + DEFAULT_INDUSTRY + "</cus:Industry>"
@@ -104,22 +109,22 @@ public class OpenAccountXmlBuilder {
                 + "<cus:CustomerStatus>" + DEFAULT_CUSTOMER_STATUS + "</cus:CustomerStatus>"
                 + "<cus:Residence>" + DEFAULT_NATIONALITY + "</cus:Residence>"
 
-                // Legal identification - Enhanced with all fields
+                // Legal identification
                 + "<cus:gLEGALID g=\"1\"><cus:mLEGALID m=\"1\">"
                 + "<cus:LegalId>" + request.getLegalId() + "</cus:LegalId>"
-                + "<cus:LegalDocName>" + legalDocName + "</cus:LegalDocName>"
+                + "<cus:LegalDocName>" + DEFAULT_LEGAL_DOC_NAME + "</cus:LegalDocName>"
                 + "<cus:LegalHolderName>" + DEFAULT_LEGAL_HOLDER_NAME + "</cus:LegalHolderName>"
                 + "<cus:LegalIssAuth>" + request.getGivenName() + "</cus:LegalIssAuth>"
                 + "<cus:LegalIssDate>" + legalIssueDate + "</cus:LegalIssDate>"
                 + "</cus:mLEGALID></cus:gLEGALID>"
 
-                // Language - Updated default
+                // Language
                 + "<cus:Language>" + DEFAULT_LANGUAGE + "</cus:Language>"
 
                 // Customer rating
                 + "<cus:gCUSTOMERRATING g=\"1\"><cus:CustomerRating>" + DEFAULT_CUSTOMER_RATING + "</cus:CustomerRating></cus:gCUSTOMERRATING>"
 
-                // Personal details - Enhanced with title
+                // Personal details
                 + "<cus:TITLE>" + title + "</cus:TITLE>"
                 + "<cus:GIVENNAMES>" + request.getGivenName() + "</cus:GIVENNAMES>"
                 + "<cus:FAMILYNAME>" + request.getFamilyName() + "</cus:FAMILYNAME>"
@@ -134,7 +139,7 @@ public class OpenAccountXmlBuilder {
                 + "<cus:EMAIL1/>"
                 + "</cus:mPHONE1></cus:gPHONE1>"
 
-                // Customer type - Updated default
+                // Customer type
                 + "<cus:CustomerType>" + DEFAULT_CUSTOMER_TYPE + "</cus:CustomerType>"
 
                 // Current address (administrative codes)
@@ -143,18 +148,18 @@ public class OpenAccountXmlBuilder {
                 + "<cus:CustCommune>" + custCommune + "</cus:CustCommune>"
                 + "<cus:CustVillage>" + custVillage + "</cus:CustVillage>"
 
-                // Ownership and staff fields - Added Ownership
+                // Ownership and staff
                 + "<cus:Ownership>" + DEFAULT_OWNERSHIP + "</cus:Ownership>"
                 + "<cus:RelationManager>" + referralId + "</cus:RelationManager>"
                 + "<cus:LoanOfficer/>"
                 + "<cus:Staff>" + releasedBy + "</cus:Staff>"
                 + "<cus:ReferralBy>" + referralId + "</cus:ReferralBy>"
 
-                // Place of birth address
-                + "<cus:CUSTPROVINCEP>" + placeOfBirth + "</cus:CUSTPROVINCEP>"
-                + "<cus:CUSTDISTRICTP/>"
-                + "<cus:CUSTCOMMUNEP/>"
-                + "<cus:CUSTVILLAGEP/>"
+                // Place of birth address (Primary P fields)
+                + "<cus:CUSTPROVINCEP>" + pobProvince + "</cus:CUSTPROVINCEP>"
+                + "<cus:CUSTDISTRICTP>" + pobDistrict + "</cus:CUSTDISTRICTP>"
+                + "<cus:CUSTCOMMUNEP>" + pobCommune + "</cus:CUSTCOMMUNEP>"
+                + "<cus:CUSTVILLAGEP>" + pobVillage + "</cus:CUSTVILLAGEP>"
 
                 + "</CUSTOMERCPBCREATEOAOType>"
                 + "</oaow:OAOCUSTOMERCREATION>"

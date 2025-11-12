@@ -33,6 +33,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -193,12 +194,12 @@ public class AmlServiceImp implements AmlService {
     }
 
     private String buildFullAddressCode(LocationCodesDto loc) {
-        return String.join("",
-                loc.getProvince() != null ? loc.getProvince().getProvinceCode() : "",
-                loc.getDistrict() != null ? loc.getDistrict().getDistrictCode() : "",
-                loc.getCommune() != null ? loc.getCommune().getCommuneCode() : "",
-                loc.getVillage() != null ? loc.getVillage().getVillageCode() : ""
-        );
+        List<String> codes = new ArrayList<>();
+        if (loc.getProvince() != null) codes.add(loc.getProvince().getProvinceCode());
+        if (loc.getDistrict() != null) codes.add(loc.getDistrict().getDistrictCode());
+        if (loc.getCommune() != null) codes.add(loc.getCommune().getCommuneCode());
+        if (loc.getVillage() != null) codes.add(loc.getVillage().getVillageCode());
+        return String.join(",", codes);
     }
 
     private void updateStatusByEnum(AmlStatus status, AmlStatusEnum newStatus, UserEntity user) {
