@@ -303,6 +303,36 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         }
     }
 
+    // ---------------------- Code-based lookups ----------------------
+    @Override
+    public ClsProvinceDto getProvinceByCode(String provinceCode) {
+        String sql = "SELECT province_code, province_en, province_kh FROM acc_online_province_cbc WHERE province_code = ? LIMIT 1";
+        return jdbcTemplate.query(sql, new ProvinceRowMapper(), provinceCode)
+                .stream().findFirst().orElse(null);
+    }
+
+    @Override
+    public ClsDistrictDto getDistrictByCode(String districtCode) {
+        String sql = "SELECT district_code, district_en, district_kh, province_code FROM acc_online_district_cbc WHERE district_code = ? LIMIT 1";
+        return jdbcTemplate.query(sql, new DistrictRowMapper(), districtCode)
+                .stream().findFirst().orElse(null);
+    }
+
+    @Override
+    public ClsCommuneDto getCommuneByCode(String communeCode) {
+        String sql = "SELECT commune_code, commune_en, commune_kh, district_code FROM acc_online_commune_cbc WHERE commune_code = ? LIMIT 1";
+        return jdbcTemplate.query(sql, new CommuneRowMapper(), communeCode)
+                .stream().findFirst().orElse(null);
+    }
+
+    @Override
+    public ClsVillageDto getVillageByCode(String villageCode) {
+        String sql = "SELECT village_code, village_en, village_kh, commune_code FROM acc_online_village_cbc WHERE village_code = ? LIMIT 1";
+        return jdbcTemplate.query(sql, new VillageRowMapper(), villageCode)
+                .stream().findFirst().orElse(null);
+    }
+
+
     // ---------------------- Helper Methods ----------------------
     private String removePrefix(String text, String... prefixes) {
         if (text == null) return "";

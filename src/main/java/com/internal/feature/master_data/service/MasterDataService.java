@@ -22,4 +22,13 @@ public interface MasterDataService {
 
     // ---------------------- POB Resolution (No Village) ----------------------
     LocationCodesDto initPob(AddressRequestDto pobString);
+
+    // ---------------------- Code-based lookups ----------------------
+    ClsProvinceDto getProvinceByCode(String provinceCode);
+
+    ClsDistrictDto getDistrictByCode(String districtCode);
+
+    ClsCommuneDto getCommuneByCode(String communeCode);
+
+    ClsVillageDto getVillageByCode(String villageCode);
 }

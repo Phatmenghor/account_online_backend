@@ -366,8 +366,11 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         }
     }
 
-    private AmlStatusDto saveAmlRecord(CustomerAmlRequest amlRequest, AmlExternalResponseDto amlResponse,
-                                    CustomerResponse customerResponse, CustomerRequest request) throws JsonProcessingException {
+    private AmlStatusDto saveAmlRecord(CustomerAmlRequest amlRequest,
+                                       AmlExternalResponseDto amlResponse,
+                                       CustomerResponse customerResponse,
+                                       CustomerRequest request) throws JsonProcessingException {
+
         CreateAmlRequestDto createRequest = CreateAmlRequestDto.builder()
                 .originalRequest(objectMapper.writeValueAsString(amlRequest))
                 .originalResponse(objectMapper.writeValueAsString(customerResponse))
@@ -380,6 +383,14 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                 .dateOfBirth(request.getDateOfBirth())
                 .gender(request.getGender())
                 .nationality("KH")
+                .customerCurrentProvince(request.getCustomerCurrentProvince())
+                .customerCurrentDistrict(request.getCustomerCurrentDistrict())
+                .customerCurrentCommune(request.getCustomerCurrentCommune())
+                .customerCurrentVillage(request.getCustomerCurrentVillage())
+                .customerPobProvince(request.getCustomerPobProvince())
+                .customerPobDistrict(request.getCustomerPobDistrict())
+                .customerPobCommune(request.getCustomerPobCommune())
+                .customerPobVillage(request.getCustomerPobVillage())
                 .legalAddress(request.getLegalAddress())
                 .screeningResult(objectMapper.writeValueAsString(amlResponse))
                 .RiskLevel(amlResponse.getRiskLevel())
@@ -392,6 +403,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
         return amlService.createAmlStatus(createRequest);
     }
+
 
     private void sendAmlNotification(CustomerAmlRequest amlRequest, AmlExternalResponseDto amlResponse, CustomerRequest request) {
         try {
