@@ -414,6 +414,8 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                             .lastNameKh(request.getLastNameKh())
                             .dateOfBirth(request.getDateOfBirth())
                             .gender(request.getGender())
+                            .placeOfBirth(request.getPlaceOfBirth())
+                            .phoneNumber(request.getPhoneNumber())
                             .nationality("KH")
                             .legalAddress(request.getLegalAddress())
                             .build())
