@@ -3,7 +3,7 @@ package com.internal.feature.logs_report.service.serviceImpl;
 import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
 import com.internal.feature.logs_report.model.AccountOnlineSuccessLog;
 import com.internal.feature.logs_report.repository.AccountOnlineFinalLogRepository;
-import com.internal.feature.logs_report.service.AccountOnlineOpenFinalLogsService;
+import com.internal.feature.logs_report.service.AccountOnlineOpenFinalService;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AccountOnlineOpenSuccessServiceImpl implements AccountOnlineOpenFinalLogsService {
+public class AccountOnlineOpenSuccessServiceImpl implements AccountOnlineOpenFinalService {
 
     private final AccountOnlineFinalLogRepository accountOnlineSuccessLogRepository;
 
