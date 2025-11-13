@@ -332,6 +332,12 @@ public class MasterDataDataServiceImpl implements MasterDataService {
                 .stream().findFirst().orElse(null);
     }
 
+    @Override
+    public ClsBranchDto getBranchByCode(String branchCode) {
+        String sql = "SELECT branch_code, branch_kh FROM acc_online_branch WHERE branch_code = ? LIMIT 1";
+        return jdbcTemplate.query(sql, new BranchRowMapper(), branchCode)
+                .stream().findFirst().orElse(null);
+    }
 
     // ---------------------- Helper Methods ----------------------
     private String removePrefix(String text, String... prefixes) {
@@ -588,7 +594,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         public ClsBranchDto mapRow(ResultSet rs, int rowNum) throws SQLException {
             return ClsBranchDto.builder()
                     .branchID(HelperUtils.formatCodeWithLeadingZero(rs.getString("branch_code"), 4))
-                    .branchkh(rs.getString("branch_kh"))
+                    .branchKh(rs.getString("branch_kh"))
                     .build();
         }
     }

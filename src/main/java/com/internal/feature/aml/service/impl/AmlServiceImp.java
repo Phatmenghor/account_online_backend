@@ -77,7 +77,7 @@ public class AmlServiceImp implements AmlService {
         // Prepare DTO
         AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status);
 
-        // Telegram notification
+//        // Telegram notification
         try {
             alertTelegramService.sendTelegramAmlProcess(amlDto);
         } catch (Exception e) {

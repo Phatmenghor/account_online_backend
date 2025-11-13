@@ -43,26 +43,27 @@
             <!-- AML Check Details -->
             <h3 style="border-bottom:2px solid #EC7925; color:#333; font-size:14px; margin:0 0 10px 0; padding-bottom:5px;">AML Check Details</h3>
             <table width="100%" cellpadding="6" cellspacing="0" border="0" style="border:1px solid #e0e0e0; font-size:13px; margin-bottom:15px;">
-              <tr><td style="background:#f9f9f9; font-weight:bold;">Status</td>
+              <tr>
+                <td style="background:#f9f9f9; font-weight:bold; width:35%;">Status</td>
                 <td>
-                  <span th:style="'display:inline-block; background-color:' + (${amlStatus.status}=='APPROVE'?'#22c55e':(${amlStatus.status}=='REJECT'?'#ef4444':'#f59e0b')) + '; color:#fff; padding:3px 8px; font-weight:bold; font-size:10px; text-transform:uppercase; border-radius:3px;'"
-                        th:text="${amlStatus.status}">PENDING</span>
+                <span th:style="'display:inline-block; background-color:' + (${amlStatus.status}=='APPROVE'?'#22c55e':(${amlStatus.status}=='REJECT'?'#ef4444':'#f59e0b')) + '; color:#fff; padding:3px 8px; font-weight:bold; font-size:10px; text-transform:uppercase; border-radius:3px;'"
+                 th:text="${amlStatus.status}">PENDING</span>
                 </td>
               </tr>
+              <tr><td style="background:#f9f9f9; font-weight:bold;">Action Taken</td><td th:text="${amlStatus.actionTaken}">Reviewed</td></tr>
+              <tr><td style="background:#f9f9f9; font-weight:bold;">Service Name</td><td th:text="${amlStatus.serviceName}">Account Opening</td></tr>
+              <tr><td style="background:#f9f9f9; font-weight:bold;">Total Rules Score</td><td th:text="${amlStatus.totalRulesScore}">85</td></tr>
+              <tr><td style="background:#f9f9f9; font-weight:bold;">Risk Level</td><td th:text="${amlStatus.riskLevel}">High</td></tr>
+              <tr>
+                <td style="background:#f9f9f9; font-weight:bold; vertical-align:top;">Rules Triggered</td>
+                <td>
+                  <ul style="margin:0; padding-left:18px;">
+                    <li th:each="rule : ${amlStatus.rulesTriggered}" th:text="${rule}">Rule 1</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr><td style="background:#f9f9f9; font-weight:bold;">Transaction ID</td><td th:text="${amlStatus.trxnID}">TXN-123456</td></tr>
             </table>
-
-            <!-- Collapsible Details - Optional -->
-            <details style="margin-bottom:15px;">
-              <summary style="cursor:pointer; color:#EC7925; font-weight:bold; font-size:13px; padding:5px 0;">View Technical Details</summary>
-              <div style="margin-top:10px;">
-                <h4 style="font-size:12px; color:#333; margin:10px 0 5px 0;">Original Request</h4>
-                <pre th:text="${amlStatus.originalRequest}" style="background:#f4f4f4; padding:8px; border:1px solid #e0e0e0; white-space:pre-wrap; font-size:11px; max-height:150px; overflow:auto;"></pre>
-
-                <h4 style="font-size:12px; color:#333; margin:10px 0 5px 0;">Original Response</h4>
-                <pre th:text="${amlStatus.originalResponse}" style="background:#f4f4f4; padding:8px; border:1px solid #e0e0e0; white-space:pre-wrap; font-size:11px; max-height:150px; overflow:auto;"></pre>
-              </div>
-            </details>
-
           </td>
         </tr>
 

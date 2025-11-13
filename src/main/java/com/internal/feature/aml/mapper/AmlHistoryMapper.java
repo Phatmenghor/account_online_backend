@@ -1,6 +1,7 @@
 package com.internal.feature.aml.mapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.internal.feature.aml.dto.request.AmlHistoryRequestDto;
 import com.internal.feature.aml.dto.response.AllAmlHistoryResponseDto;
 import com.internal.feature.aml.dto.response.AmlHistoryDto;
@@ -17,6 +18,8 @@ import java.util.List;
 
 @Mapper(componentModel = "spring", uses = {UserMapper.class})
 public interface AmlHistoryMapper {
+
+    ObjectMapper objectMapper = new ObjectMapper();
 
     // -------------------------------
     // CREATE DTO → ENTITY
@@ -38,15 +41,13 @@ public interface AmlHistoryMapper {
     @Mapping(target = "customerInfo.nationality", source = "nationality")
     @Mapping(target = "customerInfo.legalAddress", source = "currentAddressName")
     @Mapping(target = "changedBy", source = "approvedBy")
+    @Mapping(target = "rulesTriggered", source = "amlExternalRulesTriggered", qualifiedByName = "jsonToObjectArray")
     AmlHistoryDto toDto(AmlHistory history);
 
     // -------------------------------
     // HISTORY ENTRY FROM STATUS CHANGE
     // -------------------------------
-    default AmlHistory createHistoryFromStatusChange(
-            AmlStatus status,
-            Object changedBy
-    ) throws JsonProcessingException {
+    default AmlHistory createHistoryFromStatusChange(AmlStatus status, Object changedBy) {
         if (status == null) return null;
 
         AmlHistory history = new AmlHistory();
@@ -57,7 +58,7 @@ public interface AmlHistoryMapper {
             history.setApprovedBy((UserEntity) changedBy);
         }
 
-        // copy customer fields
+        // Copy customer details
         history.setLegalId(status.getLegalId());
         history.setGender(status.getGender());
         history.setFamilyName(status.getFamilyName());
@@ -68,25 +69,20 @@ public interface AmlHistoryMapper {
         history.setNationality(status.getNationality());
         history.setCurrentAddressName(status.getCurrentAddressName());
 
-        // =============================
-        // AML middleware - external service fields
-        // =============================
+        // Copy AML middleware fields
         history.setAmlExternalActionTaken(status.getAmlExternalActionTaken());
         history.setAmlExternalRiskLevel(status.getAmlExternalRiskLevel());
         history.setAmlExternalTrxnID(status.getAmlExternalTrxnID());
         history.setAmlExternalTotalRulesScore(status.getAmlExternalTotalRulesScore());
         history.setAmlExternalServiceName(status.getAmlExternalServiceName());
 
-        // Convert rules triggered array to JSON string if needed
-        if (status.getAmlExternalRulesTriggered() != null) {
-            history.setAmlExternalRulesTriggered(
-                    new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(status.getAmlExternalRulesTriggered())
-            );
-        }
+        // Convert rulesTriggered (JSON string or Object[])
+        history.setAmlExternalRulesTriggered(
+                normalizeRulesTriggered(status.getAmlExternalRulesTriggered())
+        );
 
         return history;
     }
-
 
     // -------------------------------
     // PAGED RESPONSE
@@ -101,5 +97,55 @@ public interface AmlHistoryMapper {
         response.setTotalPages(histories.getTotalPages());
         response.setLast(histories.isLast());
         return response;
+    }
+
+    // -------------------------------
+    // CONVERTERS
+    // -------------------------------
+    @Named("jsonToObjectArray")
+    static Object[] jsonToObjectArray(String json) {
+        if (json == null || json.isEmpty()) return null;
+        try {
+            return objectMapper.readValue(json, Object[].class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("❌ Failed to parse JSON string to Object[]: " + json, e);
+        }
+    }
+
+    static String objectArrayToJson(Object[] array) {
+        if (array == null) return null;
+        try {
+            return objectMapper.writeValueAsString(array);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("❌ Failed to convert Object[] to JSON string", e);
+        }
+    }
+
+    /**
+     * Normalizes amlExternalRulesTriggered from entity:
+     * - If it's already a JSON string → return as-is
+     * - If it's an array → serialize to JSON
+     */
+    /**
+     * Normalizes amlExternalRulesTriggered from entity:
+     * - If it's already a JSON string → return as-is
+     * - If it's an array → serialize to JSON
+     */
+    static String normalizeRulesTriggered(Object rulesTriggered) {
+        if (rulesTriggered == null) return null;
+
+        if (rulesTriggered instanceof String) {
+            // Already JSON string
+            return (String) rulesTriggered;
+        } else if (rulesTriggered instanceof Object[]) {
+            // Convert to JSON string
+            return objectArrayToJson((Object[]) rulesTriggered);
+        } else {
+            try {
+                return objectMapper.writeValueAsString(rulesTriggered);
+            } catch (JsonProcessingException e) {
+                return "[]"; // fallback
+            }
+        }
     }
 }

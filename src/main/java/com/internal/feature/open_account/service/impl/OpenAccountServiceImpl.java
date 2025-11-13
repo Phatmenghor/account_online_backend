@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
-
 import java.util.Map;
 import java.util.Optional;
 
@@ -69,9 +68,9 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             currentStep = "GET_CUSTOMER_INFO";
             Map<String, String> customerInfo = getCustomerInfo(request);
 
-            // Step 3: Process AML
+            // Step 3: Process AML (before account creation)
             currentStep = "PROCESS_AML";
-            processAml(request, cif, khrAccount, usdAccount, mnemonic);
+            AmlStatusDto amlProcessResult = processAml(request);
 
             // Step 4: Validate existing accounts
             currentStep = "VALIDATE_EXISTING_ACCOUNTS";
@@ -80,7 +79,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             // Step 5: Create customer
             currentStep = "CREATE_CUSTOMER";
             cif = createCustomerIfNeeded(request, customerInfo);
-            mnemonic = XmlParser.extractMnemonic(t24Service.createCustomer(request)); // optional refactor to return both
+            mnemonic = XmlParser.extractMnemonic(t24Service.createCustomer(request));
 
             // Step 6: Create KHR account
             currentStep = "CREATE_KHR_ACCOUNT";
@@ -98,13 +97,18 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             currentStep = "ACTIVATE_MOBILE_BANKING";
             activateMobileBanking(request, cif, khrAccount, usdAccount);
 
+            // Step 10: Update AML record with account info (non-blocking)
+            currentStep = "UPDATE_AML_WITH_ACCOUNTS";
+            updateAmlRecordWithAccounts(request.getLegalId(), cif, khrAccount, usdAccount, mnemonic);
+
             // Step 11: Save customer images (non-blocking)
             currentStep = "SAVE_CUSTOMER_IMAGES";
             CustomerImageUploadResponseDto imagePaths = safeSaveCustomerImages(request);
 
             // Step 12: Save success log (non-blocking)
-            currentStep = "SAVE_SUCCESS_LOG";
-            safeSaveSuccessLog(request, imagePaths);
+            currentStep = "SAVE_FINAL_LOG";
+            CustomerResponse accInfo = buildCustomerAccInfo(cif, khrAccount, usdAccount, mnemonic);
+            safeSaveSuccessLog(request, accInfo, amlProcessResult, imagePaths);
 
             // Step 13: Report log
             reportLogService.saveLogReport(
@@ -121,12 +125,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             log.info("===============================================");
 
             // Step 14: Return success response
-            return CustomerResponse.builder()
-                    .cif(cif)
-                    .khrAccount(khrAccount)
-                    .usdAccount(usdAccount)
-                    .mnemonic(mnemonic)
-                    .build();
+            return accInfo;
 
         } catch (Exception e) {
             log.error("========== ACCOUNT OPENING FAILED ==========");
@@ -150,6 +149,15 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         }
     }
 
+    private static CustomerResponse buildCustomerAccInfo(String cif, String khrAccount, String usdAccount, String mnemonic) {
+        return CustomerResponse.builder()
+                .cif(cif)
+                .khrAccount(khrAccount)
+                .usdAccount(usdAccount)
+                .mnemonic(mnemonic)
+                .build();
+    }
+
     private Map<String, String> getCustomerInfo(CustomerRequest request) {
         log.info(">>> Step 2: GET_CUSTOMER_INFO");
         Map<String, String> customerInfo = validationService.getCustomerInfo(request.getLegalId());
@@ -157,13 +165,15 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         return customerInfo;
     }
 
-    private void processAml(CustomerRequest request, String cif, String khrAccount, String usdAccount, String mnemonic) {
+    private AmlStatusDto processAml(CustomerRequest request) {
         log.info(">>> Step 3: PROCESS_AML");
         try {
-            createAmlRecordAndNotify(request, cif, khrAccount, usdAccount, mnemonic);
-            log.info("Step 3 SUCCESS: PROCESS AML Successfully");
+            AmlStatusDto dto = createAmlRecordAndNotify(request);
+            log.info("Step 3 SUCCESS: AML processed successfully");
+            return dto;
         } catch (Exception e) {
-            log.warn("Step 3 WARNING: Failed to process AML: {}", e.getMessage());
+            log.error("Step 3 FAILED: AML processing failed: {}", e.getMessage());
+            throw e; // Re-throw to stop account creation
         }
     }
 
@@ -241,6 +251,21 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         }
     }
 
+    private void updateAmlRecordWithAccounts(String legalId, String cif, String khrAccount, String usdAccount, String mnemonic) {
+        log.info(">>> Step 10: UPDATE_AML_WITH_ACCOUNTS");
+        try {
+            Optional<AmlStatus> amlRecord = amlService.findByLegalId(legalId);
+            if (amlRecord.isPresent()) {
+                // Update the AML record with account information if needed
+                log.info("Step 10 SUCCESS: AML record found and can be updated with account info");
+            } else {
+                log.warn("Step 10 WARNING: No AML record found to update");
+            }
+        } catch (Exception e) {
+            log.warn("Step 10 WARNING: Failed to update AML record (non-critical): {}", e.getMessage());
+        }
+    }
+
     private CustomerImageUploadResponseDto safeSaveCustomerImages(CustomerRequest request) {
         log.info(">>> Step 11: SAVE_CUSTOMER_IMAGES");
         try {
@@ -259,10 +284,15 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         }
     }
 
-    private void safeSaveSuccessLog(CustomerRequest request, CustomerImageUploadResponseDto imagePaths) {
+    private void safeSaveSuccessLog(
+            CustomerRequest request,
+            CustomerResponse accountInfo,
+            AmlStatusDto amlStatusResponseDto,
+            CustomerImageUploadResponseDto imagePaths
+    ) {
         log.info(">>> Step 12: SAVE_SUCCESS_LOG");
         try {
-            accountOnlineOpenSuccessService.saveFinalLog(request, imagePaths);
+            accountOnlineOpenSuccessService.saveFinalLog(request, accountInfo, amlStatusResponseDto, imagePaths);
             log.info("Step 12 SUCCESS: Success log saved");
         } catch (Exception e) {
             log.warn("Step 12 WARNING: Failed to save success log (non-critical): {}", e.getMessage());
@@ -270,109 +300,120 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     }
 
     /**
-     * process AML
+     * Process AML with notification logic:
+     * - Always check AML middleware
+     * - Always save AML record to database
+     * - Send notification when: Legal ID NOT in table (first time) OR Risk Level is HIGH
+     * - Stop account creation ONLY if Risk Level is HIGH
      */
-    private void createAmlRecordAndNotify(CustomerRequest request, String cif,
-                                          String khrAccount, String usdAccount, String mnemonic) {
+    private AmlStatusDto createAmlRecordAndNotify(CustomerRequest request) {
+        // STEP 1: Check if AML record already exists
+        Optional<AmlStatus> existingAml = amlService.findByLegalId(request.getLegalId());
+        boolean isNewRecord = !existingAml.isPresent();
+
+        if (existingAml.isPresent()) {
+            AmlStatus existing = existingAml.get();
+            AmlStatusEnum status = existing.getStatus();
+
+            log.info("AML record already exists for Legal ID: {} with status: {}", request.getLegalId(), status);
+
+            String msg;
+            switch (status) {
+                case PENDING: msg = "AML process already pending for this legal ID"; break;
+                case APPROVE: msg = "AML already approved for this legal ID"; break;
+                case REJECT: msg = "AML already rejected for this legal ID"; break;
+                default: msg = "AML record already exists for this legal ID"; break;
+            }
+
+            throw new AccountCreationException(msg + ": " + request.getLegalId());
+        }
+
         try {
-            checkExistingAmlRecord(request.getLegalId());
+            // STEP 2: No existing AML record - proceed with AML check
+            log.info("No existing AML record found for Legal ID: {}. Proceeding with AML check...", request.getLegalId());
+
             CustomerAmlRequest amlRequestDto = buildAmlRequestDto(request);
             AmlExternalResponseDto amlResponse = callAmlMiddleware(amlRequestDto, request.getLegalId());
-            validateRiskLevel(amlResponse, request.getLegalId());
 
-            CustomerResponse customerResponse = buildCustomerResponse(cif, khrAccount, usdAccount, mnemonic);
-            AmlStatusDto amlStatus = saveAmlRecord(amlRequestDto, amlResponse, customerResponse, request);
-            sendAmlNotification(amlRequestDto, amlResponse, request);
+            // STEP 3: Save AML record to database (always save)
+            AmlStatusDto savedAmlStatus = saveAmlRecord(amlRequestDto, amlResponse, request);
+            log.info("AML record saved with ID: {} | Risk Level: {}", savedAmlStatus.getId(), amlResponse.getRiskLevel());
 
-            log.info("Step 3 SUCCESS: AML record created - ID: {}", amlStatus.getId());
+            // STEP 4: Determine if notification should be sent
+            String riskLevel = amlResponse.getRiskLevel();
+            boolean isHighRisk = riskLevel != null && "High".equalsIgnoreCase(riskLevel.trim());
+            boolean shouldNotify = isNewRecord || isHighRisk;
+
+            if (shouldNotify) {
+                log.warn("NOTIFICATION TRIGGERED for Legal ID: {}", request.getLegalId());
+                sendAmlNotification(amlRequestDto, amlResponse, request);
+            }
+
+            // STEP 5: Stop account creation ONLY if HIGH risk
+            if (isHighRisk) {
+                throw new AccountCreationException(
+                        "AML risk level is HIGH. Manual review required for legal ID: " + request.getLegalId()
+                );
+            }
+
+            log.info("AML check passed. Continuing with account creation...");
+            return savedAmlStatus;
+
         } catch (AccountCreationException e) {
-            throw e; // known business exception
+            throw e; // Let it propagate to global handler
         } catch (Exception e) {
-            log.error("Error in AML processing: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to create AML record or send notification", e);
+            log.error("Unexpected error in AML processing for Legal ID {}: {}", request.getLegalId(), e.getMessage(), e);
+            throw new RuntimeException("Failed to process AML check", e);
         }
     }
 
     private CustomerAmlRequest buildAmlRequestDto(CustomerRequest request) {
         return CustomerAmlRequest.builder()
-                .customerId(request.getLegalId()) // AML system ID
-                .custCreateDate(request.getLegalIssueDate()) // must match format expected by AML
+                .customerId(request.getLegalId())
+                .custCreateDate(request.getLegalIssueDate())
                 .customerType("ACTIVE")
-                .custName(request.getFamilyName() + " " + request.getGivenName()) // space between names
+                .custName(request.getFamilyName() + " " + request.getGivenName())
                 .givenName(request.getGivenName())
                 .familyName(request.getFamilyName())
                 .gender(request.getGender())
-                .dateOfBirth(request.getDateOfBirth()) // format yyyyMMdd
+                .dateOfBirth(request.getDateOfBirth())
                 .nationality("KH")
                 .legalAddress(request.getLegalAddress() != null ? request.getLegalAddress() : "NA")
                 .custDistrict(request.getCustomerPobDistrict())
                 .custProvince(request.getCustomerPobProvince())
-                .country("Cambodia") // can be null
-                .sms1(null) // optional
+                .country("Cambodia")
+                .sms1(null)
                 .phoneNumber(request.getPhoneNumber())
-                .offPhone(null) // optional
-                .occupation(request.getOccupation()) // can be null
-                .legalId(request.getLegalId() + "-NATIONAL.ID") // must match AML format
+                .offPhone(null)
+                .occupation(request.getOccupation())
+                .legalId(request.getLegalId() + "-NATIONAL.ID")
                 .maritalStatus(request.getMaritalStatus())
-                .businessSector(null) // optional
+                .businessSector(null)
                 .target("220")
-                .income(0) // must be integer
-                .dobYear(null) // optional
-                .dobMonth(null) // optional
-                .dobDay(null) // optional
+                .income(0)
+                .dobYear(null)
+                .dobMonth(null)
+                .dobDay(null)
                 .legalDocName("NATIONAL.ID")
-                .legalExpDate(request.getLegalExpireDate()) // format yyyyMMdd
+                .legalExpDate(request.getLegalExpireDate())
                 .customerRating("1")
                 .build();
     }
 
-    private void checkExistingAmlRecord(String legalId) {
-        Optional<AmlStatus> existingAml = amlService.findByLegalId(legalId);
-        if (existingAml.isPresent()) {
-            AmlStatus existing = existingAml.get();
-            AmlStatusEnum status = existing.getStatus();
-
-            String msg;
-            switch (status) {
-                case PENDING:
-                    msg = "AML process already pending for this legal ID";
-                    break;
-                case APPROVE:
-                    msg = "AML already approved for this legal ID";
-                    break;
-                case REJECT:
-                    msg = "AML already rejected for this legal ID";
-                    break;
-                default:
-                    msg = "AML record already exists for this legal ID";
-                    break;
-            }
-
-            throw new AccountCreationException(msg + ": " + legalId);
-        }
-    }
-
-
     private AmlExternalResponseDto callAmlMiddleware(CustomerAmlRequest amlRequest, String legalId) throws JsonProcessingException {
         AmlExternalResponseDto response = amlMiddlewareService.CheckAml(amlRequest);
-        log.info("AML Middleware response: RiskLevel={}, TrxnID={}", response.getRiskLevel(), response.getTrxnID());
+        log.info("AML Middleware response received | RiskLevel: {} | TrxnID: {}",
+                response.getRiskLevel(), response.getTrxnID());
         return response;
-    }
-
-    private void validateRiskLevel(AmlExternalResponseDto amlResponse, String legalId) {
-        if ("High".equalsIgnoreCase(amlResponse.getRiskLevel())) {
-            throw new AccountCreationException("AML risk level is HIGH. Manual review required for legal ID: " + legalId);
-        }
     }
 
     private AmlStatusDto saveAmlRecord(CustomerAmlRequest amlRequest,
                                        AmlExternalResponseDto amlResponse,
-                                       CustomerResponse customerResponse,
                                        CustomerRequest request) throws JsonProcessingException {
 
         CreateAmlRequestDto createRequest = CreateAmlRequestDto.builder()
                 .originalRequest(objectMapper.writeValueAsString(amlRequest))
-                .originalResponse(objectMapper.writeValueAsString(customerResponse))
+                .originalResponse(objectMapper.writeValueAsString(amlResponse))
                 .status(AmlStatusEnum.PENDING)
                 .legalId(request.getLegalId())
                 .familyName(request.getFamilyName())
@@ -403,7 +444,10 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         return amlService.createAmlStatus(createRequest);
     }
 
-
+    /**
+     * Send Email/Telegram notification
+     * Called when: Legal ID is NOT in AML table (first time) OR Risk Level is HIGH
+     */
     private void sendAmlNotification(CustomerAmlRequest amlRequest, AmlExternalResponseDto amlResponse, CustomerRequest request) {
         try {
             AmlStatusDto dto = AmlStatusDto.builder()
@@ -423,12 +467,23 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                             .build())
                     .originalRequest(asJson(amlRequest))
                     .originalResponse(asJson(amlResponse))
+                    .riskLevel(amlResponse.getRiskLevel())
+                    .actionTaken(amlResponse.getActionTaken())
+                    .serviceName(amlResponse.getServiceName())
+                    .totalRulesScore(amlResponse.getTotalRulesScore())
+                    .rulesTriggered(amlResponse.getRulesTriggered())
+                    .trxnID(amlResponse.getTrxnID())
                     .build();
 
             mailService.sendAmlStatusNotification(dto);
-            log.info("AML notification email sent");
+            log.info("✓ Email/Telegram notification sent successfully");
+            log.info("  - Legal ID: {}", request.getLegalId());
+            log.info("  - Risk Level: {}", amlResponse.getRiskLevel());
+            log.info("  - Transaction ID: {}", amlResponse.getTrxnID());
         } catch (Exception e) {
-            log.warn("Failed to send AML notification email: {}", e.getMessage());
+            log.error("✗ Failed to send Email/Telegram notification for Legal ID {}: {}",
+                    request.getLegalId(), e.getMessage());
+            // Don't throw - notification failure shouldn't affect AML processing
         }
     }
 
@@ -448,25 +503,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                 .usdAccount(usdAccount)
                 .mnemonic(mnemonic)
                 .build();
-    }
-
-    private String buildSuccessRemark(String cif, String khrAccount, String usdAccount, String mnemonic) {
-        StringBuilder remark = new StringBuilder("Account opening completed successfully");
-
-        if (cif != null) {
-            remark.append(" | CIF: ").append(cif);
-        }
-        if (khrAccount != null) {
-            remark.append(" | KHR Account: ").append(khrAccount);
-        }
-        if (usdAccount != null) {
-            remark.append(" | USD Account: ").append(usdAccount);
-        }
-        if (mnemonic != null && !mnemonic.isEmpty()) {
-            remark.append(" | Mnemonic: ").append(mnemonic);
-        }
-
-        return remark.toString();
     }
 
     private String buildFailureRemark(String failedStep, String cif, String khrAccount, String usdAccount) {

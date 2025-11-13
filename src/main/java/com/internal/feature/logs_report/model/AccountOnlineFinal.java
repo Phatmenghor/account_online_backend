@@ -105,9 +105,6 @@ public class AccountOnlineFinal extends BaseNoIdEntity {
     @Column(name = "branch_code")
     private String branchCode;
 
-    @Column(name = "branch_name_en")
-    private String branchNameEn;
-
     @Column(name = "branch_name_kh")
     private String branchNameKh;
 
@@ -181,10 +178,10 @@ public class AccountOnlineFinal extends BaseNoIdEntity {
     private AmlStatusEnum amlStatus; // APPROVED / REJECTED / PENDING
 
     @Column(name = "aml_approved_by")
-    private UUID amlApprovedById;
+    private Long amlApprovedById;
 
     @Column(name = "aml_rejected_by")
-    private UUID amlRejectedById;
+    private Long amlRejectedById;
 
     @Column(name = "aml_remarks", columnDefinition = "TEXT")
     private String amlRemarks;
@@ -202,12 +199,14 @@ public class AccountOnlineFinal extends BaseNoIdEntity {
     @Column(name = "aml_total_rules_score")
     private Integer amlTotalRulesScore;
 
+    private String serviceName;
+
     @Column(name = "aml_trxn_id")
     private String amlTrxnId;
 
     // For storing triggered rules as comma-separated string
     @Column(name = "aml_rules_triggered", columnDefinition = "TEXT")
-    private String amlRulesTriggered;
+    private Object[] amlRulesTriggered;
 
     @Column(name = "nid_image")
     private String nidImage;

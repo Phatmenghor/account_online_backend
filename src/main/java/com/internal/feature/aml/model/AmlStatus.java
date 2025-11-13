@@ -50,6 +50,10 @@ public class AmlStatus extends BaseEntity {
     @Column(name = "first_name_kh")
     private String firstNameKh; // First Name (Khmer)
 
+    private String legalMRZ1;
+    private String legalMRZ2;
+    private String legalMRZ3;
+
     // ============================================
     // PERSONAL INFORMATION
     // ============================================

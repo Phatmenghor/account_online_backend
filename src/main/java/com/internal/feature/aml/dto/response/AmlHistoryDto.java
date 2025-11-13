@@ -22,12 +22,12 @@ public class AmlHistoryDto {
 
     private String screeningResult;      // AML screening JSON result
 
-    private String RiskLevel;
-    private String ActionTaken;
-    private Object[] RulesTriggered;
-    private String ServiceName;
-    private int TotalRulesScore;
-    private String TrxnID;
+    private String riskLevel;
+    private String actionTaken;
+    private Object[] rulesTriggered;
+    private String serviceName;
+    private int totalRulesScore;
+    private String trxnID;
 
     private String remarks;              // Admin remarks
 }

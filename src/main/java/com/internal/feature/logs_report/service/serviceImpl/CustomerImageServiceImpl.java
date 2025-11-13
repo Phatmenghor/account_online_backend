@@ -36,34 +36,37 @@ public class CustomerImageServiceImpl implements CustomerImageService {
     @Value("${app.upload.selfie:/selfie}")
     private String selfiePath;
 
+    /**
+     * Save NID and Selfie images for a customer.
+     * Only the filenames are stored in the DB to prevent dependency on path config.
+     */
     @Override
     public CustomerImageUploadResponseDto saveCustomerImages(CustomerFileUploadRequestDto request) {
         try {
-            // Ensure main directories exist
-            File mainDir = new File(uploadDir);
-            if (!mainDir.exists()) mainDir.mkdirs();
+            // Ensure directories exist
+            new File(uploadDir + nidPath).mkdirs();
+            new File(uploadDir + selfiePath).mkdirs();
 
-            // Ensure subfolders exist
-            File nidDir = new File(Paths.get(uploadDir, "nid").toString());
-            if (!nidDir.exists()) nidDir.mkdirs();
+            String legalId = request.getLegal_id();
 
-            File selfieDir = new File(Paths.get(uploadDir, "selfie").toString());
-            if (!selfieDir.exists()) selfieDir.mkdirs();
+            // Define consistent file names
+            String nidFileName = "nid_" + legalId + ".jpg";
+            String selfieFileName = "selfie_" + legalId + ".jpg";
 
-            // Save NID Image
-            String nidFileName = request.getLegal_id() + ".jpg";
-            String nidFilePath = Paths.get(uploadDir, "nid", nidFileName).toString();
-            saveBase64ToFile(request.getNidImage(), nidFilePath);
+            // Build full paths for saving to disk
+            String nidFullPath = Paths.get(uploadDir, "nid", nidFileName).toString();
+            String selfieFullPath = Paths.get(uploadDir, "selfie", selfieFileName).toString();
 
+            // Save physical files
+            saveBase64ToFile(request.getNidImage(), nidFullPath);
+            saveBase64ToFile(request.getSelfieImage(), selfieFullPath);
+
+            // Store only file names in DB (not full paths)
             customerImageRepository.save(CustomerImage.builder()
                     .type("NID")
                     .name(nidFileName)
-                    .filePath(nidFilePath)
+                    .filePath(nidFileName)
                     .build());
-
-            // Save Selfie Image
-            String selfieFileName = request.getLegal_id() + ".jpg";
-            saveBase64ToFile(request.getSelfieImage(), selfieFileName);
 
             customerImageRepository.save(CustomerImage.builder()
                     .type("SELFIE")
@@ -71,11 +74,11 @@ public class CustomerImageServiceImpl implements CustomerImageService {
                     .filePath(selfieFileName)
                     .build());
 
-            log.info("Saved customer images: NID={}, Selfie={}", nidFilePath, selfieFileName);
+            log.info("Saved customer images: NID={}, Selfie={}", nidFileName, selfieFileName);
 
-            // Return file paths
+            // Return filenames
             return CustomerImageUploadResponseDto.builder()
-                    .nidImagePath(nidFilePath)
+                    .nidImagePath(nidFileName)
                     .selfieImagePath(selfieFileName)
                     .build();
 
@@ -85,25 +88,20 @@ public class CustomerImageServiceImpl implements CustomerImageService {
         }
     }
 
-    /**
-     * Get NID image file as Resource for email attachment/inline embedding
-     * @param customerId Customer ID or legal_id
-     * @return FileSystemResource of the NID image
-     */
+    /** Get NID image file as Resource (for email attachment) */
     @Override
     public Resource getNidImageResourceForEmail(String customerId) {
         try {
-            String nidFileName = customerId + ".jpg";
-            String nidFilePath = Paths.get(uploadDir, "nid", nidFileName).toString();
+            String fileName = "nid_" + customerId + ".jpg";
+            String filePath = Paths.get(uploadDir, "nid", fileName).toString();
 
-            File nidFile = new File(nidFilePath);
-            if (!nidFile.exists()) {
+            File file = new File(filePath);
+            if (!file.exists()) {
                 log.warn("NID image not found for customer: {}", customerId);
                 return null;
             }
-
-            log.info("Retrieved NID image for email: {}", nidFilePath);
-            return new FileSystemResource(nidFile);
+            log.info("Retrieved NID image for email: {}", filePath);
+            return new FileSystemResource(file);
 
         } catch (Exception e) {
             log.error("Failed to get NID image resource: {}", e.getMessage(), e);
@@ -111,25 +109,21 @@ public class CustomerImageServiceImpl implements CustomerImageService {
         }
     }
 
-    /**
-     * Get NID image as byte array for email embedding
-     * @param customerId Customer ID or legal_id
-     * @return Byte array of the image, or null if not found
-     */
+    /** Get NID image as byte array */
     @Override
     public byte[] getNidImageBytes(String customerId) {
         try {
-            String nidFileName = customerId + ".jpg";
-            Path nidFilePath = Paths.get(uploadDir, "nid", nidFileName);
+            String fileName = "nid_" + customerId + ".jpg";
+            Path path = Paths.get(uploadDir, "nid", fileName);
 
-            if (!Files.exists(nidFilePath)) {
+            if (!Files.exists(path)) {
                 log.warn("NID image not found for customer: {}", customerId);
                 return null;
             }
 
-            byte[] imageBytes = Files.readAllBytes(nidFilePath);
-            log.info("Retrieved NID image bytes for customer: {} (size: {} bytes)", customerId, imageBytes.length);
-            return imageBytes;
+            byte[] bytes = Files.readAllBytes(path);
+            log.info("Retrieved NID image bytes for customer: {} ({} bytes)", customerId, bytes.length);
+            return bytes;
 
         } catch (IOException e) {
             log.error("Failed to read NID image bytes: {}", e.getMessage(), e);
@@ -137,25 +131,21 @@ public class CustomerImageServiceImpl implements CustomerImageService {
         }
     }
 
-    /**
-     * Get Selfie image file as Resource for email attachment/inline embedding
-     * @param customerId Customer ID or legal_id
-     * @return FileSystemResource of the Selfie image
-     */
+    /** Get Selfie image file as Resource (for email attachment) */
     @Override
     public Resource getSelfieImageResourceForEmail(String customerId) {
         try {
-            String selfieFileName = customerId + ".jpg";
-            String selfieFilePath = Paths.get(uploadDir, "selfie", selfieFileName).toString();
+            String fileName = "selfie_" + customerId + ".jpg";
+            String filePath = Paths.get(uploadDir, "selfie", fileName).toString();
 
-            File selfieFile = new File(selfieFilePath);
-            if (!selfieFile.exists()) {
+            File file = new File(filePath);
+            if (!file.exists()) {
                 log.warn("Selfie image not found for customer: {}", customerId);
                 return null;
             }
 
-            log.info("Retrieved Selfie image for email: {}", selfieFilePath);
-            return new FileSystemResource(selfieFile);
+            log.info("Retrieved Selfie image for email: {}", filePath);
+            return new FileSystemResource(file);
 
         } catch (Exception e) {
             log.error("Failed to get Selfie image resource: {}", e.getMessage(), e);
@@ -163,20 +153,21 @@ public class CustomerImageServiceImpl implements CustomerImageService {
         }
     }
 
+    /** Get Selfie image as byte array */
     @Override
     public byte[] getSelfieImageBytes(String customerId) {
         try {
-            String selfieFileName = customerId + ".jpg";
-            Path selfieFilePath = Paths.get(uploadDir, "selfie", selfieFileName);
+            String fileName = "selfie_" + customerId + ".jpg";
+            Path path = Paths.get(uploadDir, "selfie", fileName);
 
-            if (!Files.exists(selfieFilePath)) {
+            if (!Files.exists(path)) {
                 log.warn("Selfie image not found for customer: {}", customerId);
                 return null;
             }
 
-            byte[] imageBytes = Files.readAllBytes(selfieFilePath);
-            log.info("Retrieved Selfie image bytes for customer: {} (size: {} bytes)", customerId, imageBytes.length);
-            return imageBytes;
+            byte[] bytes = Files.readAllBytes(path);
+            log.info("Retrieved Selfie image bytes for customer: {} ({} bytes)", customerId, bytes.length);
+            return bytes;
 
         } catch (IOException e) {
             log.error("Failed to read Selfie image bytes: {}", e.getMessage(), e);
@@ -184,42 +175,39 @@ public class CustomerImageServiceImpl implements CustomerImageService {
         }
     }
 
-    /**
-     * Check if NID image exists for a customer
-     * @param customerId Customer ID or legal_id
-     * @return true if image exists, false otherwise
-     */
+    /** Check if NID image exists */
     @Override
     public boolean nidImageExists(String customerId) {
-        String nidFileName = customerId + ".jpg";
-        Path nidFilePath = Paths.get(uploadDir, "nid", nidFileName);
-        return Files.exists(nidFilePath);
+        String fileName = "nid_" + customerId + ".jpg";
+        Path path = Paths.get(uploadDir, "nid", fileName);
+        return Files.exists(path);
     }
 
-    /**
-     * Check if Selfie image exists for a customer
-     * @param customerId Customer ID or legal_id
-     * @return true if image exists, false otherwise
-     */
+    /** Check if Selfie image exists */
     @Override
     public boolean selfieImageExists(String customerId) {
-        String selfieFileName = customerId + ".jpg";
-        Path selfieFilePath = Paths.get(uploadDir, "selfie", selfieFileName);
-        return Files.exists(selfieFilePath);
+        String fileName = "selfie_" + customerId + ".jpg";
+        Path path = Paths.get(uploadDir, "selfie", fileName);
+        return Files.exists(path);
     }
 
+    /** Utility: Save base64 image to file */
     private void saveBase64ToFile(String base64, String filePath) throws Exception {
+        if (base64 == null || base64.isEmpty()) return;
+
         if (base64.contains(",")) {
             base64 = base64.split(",")[1];
         }
-        byte[] decodedBytes = Base64.getDecoder().decode(base64);
+
+        byte[] decoded = Base64.getDecoder().decode(base64);
         try (FileOutputStream fos = new FileOutputStream(filePath)) {
-            fos.write(decodedBytes);
+            fos.write(decoded);
         }
     }
 
+    /** Utility: Encode file to Base64 (optional use) */
     private String encodeFileToBase64(String filePath) throws Exception {
-        byte[] fileContent = Files.readAllBytes(Paths.get(filePath));
-        return Base64.getEncoder().encodeToString(fileContent);
+        byte[] bytes = Files.readAllBytes(Paths.get(filePath));
+        return Base64.getEncoder().encodeToString(bytes);
     }
 }

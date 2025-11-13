@@ -131,7 +131,6 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
                 .append("Error Code: ").append(errorCode).append("\n")
                 .append("Error Message: ").append(errorMessage).append("\n\n")
                 .append("NID: ").append(nidText).append("\n")
-                .append("App: ").append(request.getApplicationName() != null ? escapeMarkdown(request.getApplicationName()) : "Unknown").append("\n")
                 .append("--------------------").append("\n")
                 .append("Time: ").append(LocalDateTime.now().format(formatter)).append("\n")
                 .append("Issue: MOI / CAMDX unreachable or infrastructure failure.");
@@ -177,7 +176,6 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
                 .append("--------------------").append("\n")
                 .append("Status: ").append(escapeMarkdown(message)).append("\n\n")
                 .append("NID: `").append(escapeMarkdown(request.getIdNumber())).append("`\n")
-                .append("App: ").append(escapeMarkdown(request.getApplicationName())).append("\n")
                 .append("Score: `").append(String.format("%.2f", score)).append("`\n")
                 .append("Incorrect Fields:\n").append(formattedIncorrect).append("\n")
                 .append("--------------------").append("\n")

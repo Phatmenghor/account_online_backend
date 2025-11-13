@@ -1,8 +1,10 @@
 package com.internal.feature.logs_report.service;
 
-import com.internal.feature.logs_report.model.AccountOnlineSuccessLog;
-import com.internal.feature.open_account.dto.request.CustomerRequest;
+import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
+import com.internal.feature.logs_report.model.AccountOnlineFinal;
+import com.internal.feature.open_account.dto.request.CustomerRequest;
+import com.internal.feature.open_account.dto.response.CustomerResponse;
 
 public interface AccountOnlineOpenFinalService {
 
@@ -13,5 +15,10 @@ public interface AccountOnlineOpenFinalService {
      * @param imagePaths  the image paths returned after saving NID & Selfie
      * @return the persisted AccountOnlineSuccessLog entity
      */
-    AccountOnlineSuccessLog saveFinalLog(CustomerRequest request, CustomerImageUploadResponseDto imagePaths);
+    AccountOnlineFinal saveFinalLog(
+            CustomerRequest request,
+            CustomerResponse accountInfo,
+            AmlStatusDto amlProcessResult,
+            CustomerImageUploadResponseDto imagePaths
+    );
 }

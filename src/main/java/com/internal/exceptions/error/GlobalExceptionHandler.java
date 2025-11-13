@@ -1,5 +1,6 @@
 package com.internal.exceptions.error;
 
+import com.internal.exceptions.error.openaccount.AccountCreationException;
 import com.internal.exceptions.error.otp.OtpAttemptsExceededException;
 import com.internal.exceptions.error.otp.OtpCooldownException;
 import com.internal.exceptions.error.otp.OtpInvalidException;
@@ -41,6 +42,18 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @ExceptionHandler(AccountCreationException.class)
+    public ResponseEntity<ErrorResponse> handleAccountCreationException(AccountCreationException ex) {
+        log.warn("Account creation failed: {}", ex.getMessage());
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .message("ACCOUNT_CREATE_FAIL: " + ex.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
 
     @ExceptionHandler(ValidateServiceException.class)
     public ResponseEntity<ErrorResponse> handleValidateServiceException(ValidateServiceException ex) {

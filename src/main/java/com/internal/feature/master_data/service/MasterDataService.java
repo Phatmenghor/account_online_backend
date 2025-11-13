@@ -31,4 +31,6 @@ public interface MasterDataService {
     ClsCommuneDto getCommuneByCode(String communeCode);
 
     ClsVillageDto getVillageByCode(String villageCode);
+
+    ClsBranchDto getBranchByCode(String branchCode);
 }

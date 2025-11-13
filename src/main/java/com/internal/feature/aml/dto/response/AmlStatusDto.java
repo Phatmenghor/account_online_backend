@@ -21,6 +21,16 @@ public class AmlStatusDto {
     private CustomerAmlDto customerInfo;
     private AmlStatusEnum status;
     private String screeningResult;
+
+    //AML EXTERNAL
+    private String riskLevel;
+    private String actionTaken;
+    private Object[] rulesTriggered;
+    private String serviceName;
+    private int totalRulesScore;
+    private String trxnID;
+
+    //AUDIT
     private UserResponseDto approvedBy;
     private UserResponseDto rejectedBy;
     private LocalDateTime createdAt;

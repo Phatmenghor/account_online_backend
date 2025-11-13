@@ -8,5 +8,4 @@ public class CamdxFaceRequest {
 
     @JsonProperty("idImage")
     private String idImage;
-    private String applicationName;
 }
