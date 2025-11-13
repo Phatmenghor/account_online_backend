@@ -12,7 +12,7 @@ import com.internal.feature.aml.model.AmlStatus;
 import com.internal.feature.aml.service.AmlService;
 import com.internal.feature.logs_report.dto.request.CustomerFileUploadRequestDto;
 import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
-import com.internal.feature.logs_report.service.AccountOnlineOpenSuccessService;
+import com.internal.feature.logs_report.service.AccountOnlineOpenFinalLogsService;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
 import com.internal.feature.logs_report.service.CustomerImageService;
 import com.internal.feature.mail.service.MailService;
@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
+
 import java.util.Map;
 import java.util.Optional;
 
@@ -43,7 +44,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private final AmlService amlService;
     private final MailService mailService;
     private final CustomerImageService customerImageService;
-    private final AccountOnlineOpenSuccessService accountOnlineOpenSuccessService;
+    private final AccountOnlineOpenFinalLogsService accountOnlineOpenSuccessService;
     private final ObjectMapper objectMapper;
     private final AmlMiddlewareService amlMiddlewareService;
 
@@ -261,7 +262,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private void safeSaveSuccessLog(CustomerRequest request, CustomerImageUploadResponseDto imagePaths) {
         log.info(">>> Step 12: SAVE_SUCCESS_LOG");
         try {
-            accountOnlineOpenSuccessService.saveSuccessLog(request, imagePaths);
+            accountOnlineOpenSuccessService.saveFinalLog(request, imagePaths);
             log.info("Step 12 SUCCESS: Success log saved");
         } catch (Exception e) {
             log.warn("Step 12 WARNING: Failed to save success log (non-critical): {}", e.getMessage());

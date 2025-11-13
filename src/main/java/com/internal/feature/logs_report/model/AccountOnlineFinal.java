@@ -24,7 +24,7 @@ public class AccountOnlineFinal extends BaseNoIdEntity {
     @Column(columnDefinition = "uuid")
     private UUID id;
 
-    //
+    //ACCOUNT
     private String cif;
     private String khrAccount;
     private String usdAccount;

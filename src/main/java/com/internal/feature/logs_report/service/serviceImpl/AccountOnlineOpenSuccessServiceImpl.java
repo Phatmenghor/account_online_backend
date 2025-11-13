@@ -2,8 +2,8 @@ package com.internal.feature.logs_report.service.serviceImpl;
 
 import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
 import com.internal.feature.logs_report.model.AccountOnlineSuccessLog;
-import com.internal.feature.logs_report.repository.AccountOnlineSuccessLogRepository;
-import com.internal.feature.logs_report.service.AccountOnlineOpenSuccessService;
+import com.internal.feature.logs_report.repository.AccountOnlineFinalLogRepository;
+import com.internal.feature.logs_report.service.AccountOnlineOpenFinalLogsService;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,12 +12,12 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AccountOnlineOpenSuccessServiceImpl implements AccountOnlineOpenSuccessService {
+public class AccountOnlineOpenSuccessServiceImpl implements AccountOnlineOpenFinalLogsService {
 
-    private final AccountOnlineSuccessLogRepository accountOnlineSuccessLogRepository;
+    private final AccountOnlineFinalLogRepository accountOnlineSuccessLogRepository;
 
     @Override
-    public AccountOnlineSuccessLog saveSuccessLog(CustomerRequest request, CustomerImageUploadResponseDto imagePaths) {
+    public AccountOnlineSuccessLog saveFinalLog(CustomerRequest request, CustomerImageUploadResponseDto imagePaths) {
         try {
             AccountOnlineSuccessLog successLog = AccountOnlineSuccessLog.builder()
                     .legalId(request.getLegalId())
@@ -47,7 +47,7 @@ public class AccountOnlineOpenSuccessServiceImpl implements AccountOnlineOpenSuc
                     .selfieImage(imagePaths != null ? imagePaths.getSelfieImagePath() : null)
                     .build();
 
-            accountOnlineSuccessLogRepository.save(successLog);
+            accountOnlineSuccessLogRepository.save(null);
             log.info("✅ AccountOnlineSuccessLog saved successfully for Legal ID: {}", request.getLegalId());
             return successLog;
 
