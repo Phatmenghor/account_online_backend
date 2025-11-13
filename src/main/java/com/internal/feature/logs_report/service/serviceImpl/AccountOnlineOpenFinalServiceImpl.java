@@ -2,7 +2,7 @@ package com.internal.feature.logs_report.service.serviceImpl;
 
 import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
 import com.internal.feature.logs_report.model.AccountOnlineSuccessLog;
-import com.internal.feature.logs_report.repository.AccountOnlineFinalLogRepository;
+import com.internal.feature.logs_report.repository.AccountOnlineFinalRepository;
 import com.internal.feature.logs_report.service.AccountOnlineOpenFinalService;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinalService {
 
-    private final AccountOnlineFinalLogRepository accountOnlineSuccessLogRepository;
+    private final AccountOnlineFinalRepository accountOnlineSuccessLogRepository;
 
     @Override
     public AccountOnlineSuccessLog saveFinalLog(CustomerRequest request, CustomerImageUploadResponseDto imagePaths) {

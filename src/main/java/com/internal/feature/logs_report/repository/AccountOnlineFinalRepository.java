@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.UUID;
 
-public interface AccountOnlineFinalLogRepository extends JpaRepository<AccountOnlineFinal, UUID>,
+public interface AccountOnlineFinalRepository extends JpaRepository<AccountOnlineFinal, UUID>,
         JpaSpecificationExecutor<AccountOnlineFinal> {
 }
