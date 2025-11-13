@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinalService {
 
-    private final AccountOnlineFinalRepository accountOnlineSuccessLogRepository;
+    private final AccountOnlineFinalRepository accountOnlineFinalRepository;
 
     @Override
     public AccountOnlineSuccessLog saveFinalLog(CustomerRequest request, CustomerImageUploadResponseDto imagePaths) {
@@ -47,7 +47,7 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                     .selfieImage(imagePaths != null ? imagePaths.getSelfieImagePath() : null)
                     .build();
 
-            accountOnlineSuccessLogRepository.save(null);
+            accountOnlineFinalRepository.save(null);
             log.info("✅ AccountOnlineSuccessLog saved successfully for Legal ID: {}", request.getLegalId());
             return successLog;
 
