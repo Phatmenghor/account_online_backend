@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AccountOnlineOpenSuccessServiceImpl implements AccountOnlineOpenFinalService {
+public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinalService {
 
     private final AccountOnlineFinalLogRepository accountOnlineSuccessLogRepository;
 
