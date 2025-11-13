@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import javax.transaction.Transactional;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -19,7 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +29,12 @@ public class CustomerImageServiceImpl implements CustomerImageService {
 
     @Value("${app.upload.directory:/app/customer-image}")
     private String uploadDir;
+
+    @Value("${app.upload.nid:/nid}")
+    private String nidPath;
+
+    @Value("${app.upload.selfie:/selfie}")
+    private String selfiePath;
 
     @Override
     public CustomerImageUploadResponseDto saveCustomerImages(CustomerFileUploadRequestDto request) {
@@ -58,47 +63,25 @@ public class CustomerImageServiceImpl implements CustomerImageService {
 
             // Save Selfie Image
             String selfieFileName = request.getLegal_id() + ".jpg";
-            String selfieFilePath = Paths.get(uploadDir, "selfie", selfieFileName).toString();
-            saveBase64ToFile(request.getSelfieImage(), selfieFilePath);
+            saveBase64ToFile(request.getSelfieImage(), selfieFileName);
 
             customerImageRepository.save(CustomerImage.builder()
                     .type("SELFIE")
                     .name(selfieFileName)
-                    .filePath(selfieFilePath)
+                    .filePath(selfieFileName)
                     .build());
 
-            log.info("Saved customer images: NID={}, Selfie={}", nidFilePath, selfieFilePath);
+            log.info("Saved customer images: NID={}, Selfie={}", nidFilePath, selfieFileName);
 
             // Return file paths
             return CustomerImageUploadResponseDto.builder()
                     .nidImagePath(nidFilePath)
-                    .selfieImagePath(selfieFilePath)
+                    .selfieImagePath(selfieFileName)
                     .build();
 
         } catch (Exception e) {
             log.error("Failed to save customer images: {}", e.getMessage(), e);
             throw new RuntimeException("Error saving images", e);
-        }
-    }
-
-    @Transactional
-    @Override
-    public CustomerImageUploadResponseDto getCustomerImageById(UUID id) {
-        try {
-            CustomerImage nidImage = customerImageRepository.findByTypeAndId("NID", id)
-                    .orElseThrow(() -> new RuntimeException("NID image not found"));
-
-            CustomerImage selfieImage = customerImageRepository.findByTypeAndId("SELFIE", id)
-                    .orElseThrow(() -> new RuntimeException("Selfie image not found"));
-
-            return CustomerImageUploadResponseDto.builder()
-                    .nidImagePath(encodeFileToBase64(nidImage.getFilePath()))
-                    .selfieImagePath(encodeFileToBase64(selfieImage.getFilePath()))
-                    .build();
-
-        } catch (Exception e) {
-            log.error("Failed to read customer images: {}", e.getMessage(), e);
-            throw new RuntimeException("Error reading images", e);
         }
     }
 

@@ -408,6 +408,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             AmlStatusDto dto = AmlStatusDto.builder()
                     .status(AmlStatusEnum.PENDING)
                     .customerInfo(CustomerAmlDto.builder()
+                            .legalId(request.getLegalId())
                             .givenName(request.getGivenName())
                             .familyName(request.getFamilyName())
                             .firstNameKh(request.getFirstNameKh())

@@ -81,6 +81,8 @@ email:
 file:
   upload:
     directory: /app/customer-image
+    nid: /nid
+    selfie: /selfie
 
 # Oracle Database Configuration (UAT)
 oracle:

@@ -1,6 +1,5 @@
 package com.internal.feature.logs_report.controller;
 
-import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
 import com.internal.feature.logs_report.service.CustomerImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/customer-images")
@@ -24,28 +22,6 @@ import java.util.UUID;
 public class CustomerImageController {
 
     private final CustomerImageService customerImageService;
-
-    // 🔹 Fetch images by customer ID
-    @GetMapping("/{id}")
-    public ResponseEntity<CustomerImageUploadResponseDto> getCustomerImages(@PathVariable UUID id) {
-        try {
-            // Here we assume customerId is string, convert to UUID if necessary
-            CustomerImageUploadResponseDto imagePaths = customerImageService.getCustomerImageById(id);
-
-            // Optional: Convert to Base64
-            String nidBase64 = encodeFileToBase64(imagePaths.getNidImagePath());
-            String selfieBase64 = encodeFileToBase64(imagePaths.getSelfieImagePath());
-
-            imagePaths.setNidImagePath(nidBase64);
-            imagePaths.setSelfieImagePath(selfieBase64);
-
-            return ResponseEntity.ok(imagePaths);
-
-        } catch (Exception e) {
-            log.error("Failed to fetch images for customerId {}: {}", id, e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
-    }
 
     // 🔹 Stream NID image by legal ID
     @GetMapping("/{legalId}/nid")

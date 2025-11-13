@@ -11,28 +11,24 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(
-        name = "acc_online_open_final",
-        indexes = {
-                @Index(name = "idx_rec_id", columnList = "rec_id"),
-                @Index(name = "idx_legal_id", columnList = "legal_id"),
-                @Index(name = "idx_phone_number", columnList = "phone_number"),
-                @Index(name = "idx_branch_code", columnList = "branch_code")
-        }
+        name = "acc_online_open_final"
 )
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AccountOnlineFinalLog extends BaseNoIdEntity {
+public class AccountOnlineFinal extends BaseNoIdEntity {
 
     @Id
     @GeneratedValue
     @Column(columnDefinition = "uuid")
     private UUID id;
 
-    // === Request Info ===
-    @Column(name = "rec_id", nullable = false)
-    private String recId;
+    //
+    private String cif;
+    private String khrAccount;
+    private String usdAccount;
+    private String mnemonic;
 
     // === Legal / NID Info ===
     @Column(name = "legal_id", nullable = false)
@@ -213,12 +209,9 @@ public class AccountOnlineFinalLog extends BaseNoIdEntity {
     @Column(name = "aml_rules_triggered", columnDefinition = "TEXT")
     private String amlRulesTriggered;
 
-    // === Images (base64) ===
-    @Lob
-    @Column(name = "nid_image", columnDefinition = "TEXT")
+    @Column(name = "nid_image")
     private String nidImage;
 
-    @Lob
-    @Column(name = "selfie_image", columnDefinition = "TEXT")
+    @Column(name = "selfie_image")
     private String selfieImage;
 }

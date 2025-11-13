@@ -2,7 +2,6 @@ package com.internal.feature.logs_report.model;
 
 import com.internal.config.entity.BaseNoIdEntity;
 import lombok.*;
-
 import javax.persistence.*;
 import java.util.UUID;
 
