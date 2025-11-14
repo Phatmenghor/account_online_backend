@@ -86,8 +86,7 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
         audit.setUser(securityUtils.getCurrentUser());
         audit.setAccount(onlineFinal);
 
-        AccountOnlineOpenFinalAudit data = onlineFinalAuditRepository.save(audit);
-        log.info("Data history: {}",data);
+        onlineFinalAuditRepository.save(audit);
         return mapper.toDto(onlineFinal);
     }
 

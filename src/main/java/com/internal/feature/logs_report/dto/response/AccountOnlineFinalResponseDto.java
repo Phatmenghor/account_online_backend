@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 @Data
 @NoArgsConstructor
@@ -30,4 +31,8 @@ public class AccountOnlineFinalResponseDto {
     private String phoneNumber;
     private String nidImage;
     private String selfieImage;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private String createdBy;
+    private String updatedBy;
 }
