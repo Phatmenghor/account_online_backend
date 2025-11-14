@@ -1,11 +1,14 @@
 package com.internal.feature.logs_report.service;
 
 import com.internal.feature.aml.dto.response.AmlStatusDto;
+import com.internal.feature.logs_report.dto.request.AccountOnlineFinalLogRequestDto;
+import com.internal.feature.logs_report.dto.response.AccountOnlineFinalResponseDto;
 import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
 import com.internal.feature.logs_report.model.AccountOnlineFinal;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.response.CustomerResponse;
 import org.springframework.transaction.annotation.Transactional;
+
 
 public interface AccountOnlineOpenFinalService {
 
@@ -25,4 +28,6 @@ public interface AccountOnlineOpenFinalService {
 
     @Transactional
     AccountOnlineFinal updateFinalLogWithAml(AmlStatusDto amlStatus);
+    AccountOnlineFinalResponseDto findAccountByCifOrLegalId (AccountOnlineFinalLogRequestDto requestDto);
+
 }

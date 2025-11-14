@@ -1,14 +1,21 @@
 package com.internal.feature.logs_report.service.serviceImpl;
 
+import com.internal.exceptions.error.NotFoundException;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
+import com.internal.feature.logs_report.dto.request.AccountOnlineFinalLogRequestDto;
+import com.internal.feature.logs_report.dto.response.AccountOnlineFinalResponseDto;
 import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
+import com.internal.feature.logs_report.mapper.AccountOnlineFinalMapper;
 import com.internal.feature.logs_report.model.AccountOnlineFinal;
+import com.internal.feature.logs_report.model.AccountOnlineOpenFinalAudit;
+import com.internal.feature.logs_report.repository.AccountOnlineFinalAuditRepository;
 import com.internal.feature.logs_report.repository.AccountOnlineFinalRepository;
 import com.internal.feature.logs_report.service.AccountOnlineOpenFinalService;
 import com.internal.feature.master_data.dto.response.*;
 import com.internal.feature.master_data.service.MasterDataService;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.response.CustomerResponse;
+import com.internal.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -24,6 +32,9 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
 
     private final AccountOnlineFinalRepository accountOnlineFinalRepository;
     private final MasterDataService masterDataService;
+    private final AccountOnlineFinalAuditRepository onlineFinalAuditRepository;
+    private final AccountOnlineFinalMapper mapper;
+    private final SecurityUtils securityUtils;
 
     @Override
     public AccountOnlineFinal saveFinalLog(
@@ -207,4 +218,26 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
         try { return code != null ? masterDataService.getBranchByCode(code) : null; }
         catch (Exception e) { log.warn("⚠️ Branch lookup failed for code {}", code); return null; }
     }
+    @Override
+    public AccountOnlineFinalResponseDto findAccountByCifOrLegalId(AccountOnlineFinalLogRequestDto requestDto) {
+
+        AccountOnlineFinal onlineFinal = accountOnlineFinalRepository
+                .findTopByCifOrLegalIdOrderByCreatedAtDesc(requestDto.getCif(), requestDto.getLegalId())
+                .orElseThrow(() -> new NotFoundException(
+                        "Account not found for CIF: " + requestDto.getCif() + " or Legal ID: " + requestDto.getLegalId()
+                ));
+
+        log.info("Save data CIF : {} and Legal Id : {} to history ",requestDto.getCif(),requestDto.getLegalId());
+        AccountOnlineOpenFinalAudit audit = new AccountOnlineOpenFinalAudit();
+        // set data
+        audit.setCif(requestDto.getCif());
+        audit.setLegalId(requestDto.getLegalId());
+        audit.setUser(securityUtils.getCurrentUser());
+        audit.setAccount(onlineFinal);
+
+        onlineFinalAuditRepository.save(audit);
+        return mapper.toDto(onlineFinal);
+    }
+
+
 }

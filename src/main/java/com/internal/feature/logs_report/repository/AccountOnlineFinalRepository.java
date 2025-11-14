@@ -3,12 +3,16 @@ package com.internal.feature.logs_report.repository;
 import com.internal.feature.logs_report.model.AccountOnlineFinal;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
 
+@Repository
 public interface AccountOnlineFinalRepository extends JpaRepository<AccountOnlineFinal, UUID>,
         JpaSpecificationExecutor<AccountOnlineFinal> {
 
     Optional<AccountOnlineFinal> findByLegalId(String legalId);
+    Optional<AccountOnlineFinal> findTopByCifOrLegalIdOrderByCreatedAtDesc(String cif, String legalId);
+
 }
