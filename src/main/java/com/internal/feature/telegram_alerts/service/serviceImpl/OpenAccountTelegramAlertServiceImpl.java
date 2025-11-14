@@ -1,13 +1,13 @@
 package com.internal.feature.telegram_alerts.service.serviceImpl;
 
 import com.internal.enumation.OpenAccStatusEnum;
-import com.internal.feature.aml.dto.request.CustomerAmlDto;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.telegram_alerts.config.TelegramService;
 import com.internal.feature.telegram_alerts.service.AlertsOpenAccOnlineService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -36,41 +36,46 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
 
     @Override
     public void sendTelegramAmlProcess(AmlStatusDto amlDto) {
-        if (amlDto == null || amlDto.getCustomerInfo() == null) {
-            log.warn("AML Telegram could not send - dto or customer info missing");
+        if (amlDto == null) {
+            log.warn("AML Telegram could not send - dto missing");
             return;
         }
 
-        CustomerAmlDto c = amlDto.getCustomerInfo();
         String header = "*AML Account Online*";
-        String customerName = getCustomerDisplayName(c, amlDto.getStatus());
 
-        // Format DOB reliably, support single-digit month/day
-        String dobFormatted = formatDob(c.getDateOfBirth());
+        // Build customer display name directly from DTO fields
+        String customerName = getCustomerDisplayName(
+                amlDto.getGivenName(),
+                amlDto.getFamilyName(),
+                amlDto.getFirstNameKh(),
+                amlDto.getLastNameKh(),
+                amlDto.getStatus(),
+                amlDto.getLegalId()
+        );
+
+        String dobFormatted = formatDob(amlDto.getDateOfBirth());
 
         String body = String.format(
                 "Name: %s\nID: %s\nDOB: %s\nNationality: %s\nAddress: %s",
                 escapeMarkdown(getOrNA(customerName)),
-                escapeMarkdown(getOrNA(c.getLegalId())),
+                escapeMarkdown(getOrNA(amlDto.getLegalId())),
                 escapeMarkdown(getOrNA(dobFormatted)),
-                escapeMarkdown(getOrNA(c.getNationality())),
-                escapeMarkdown(getOrNA(c.getLegalAddress()))
+                escapeMarkdown(getOrNA(amlDto.getNationality())),
+                escapeMarkdown(getOrNA(amlDto.getCurrentAddressName()))
         );
 
         String statusText = amlDto.getStatus() != null ? amlDto.getStatus().name() : "N/A";
         String byUser = getProcessedUserName(amlDto);
 
         // Use AML record creation time if available, else fallback to now
-        String timeFormatted;
-        if (amlDto.getCreatedAt() != null) {
-            timeFormatted = amlDto.getUpdatedAt()
-                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        } else {
-            timeFormatted = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        }
+        String timeFormatted = amlDto.getCreatedAt() != null
+                ? amlDto.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                : LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
         String footer = String.format("Status: %s\nBy: %s\nTime: %s",
-                escapeMarkdown(statusText), escapeMarkdown(getOrNA(byUser)), escapeMarkdown(timeFormatted));
+                escapeMarkdown(statusText),
+                escapeMarkdown(getOrNA(byUser)),
+                escapeMarkdown(timeFormatted));
 
         String message = header + "\n" + SEPARATOR + "\n" + body + "\n" + SEPARATOR + "\n" + footer;
 
@@ -97,15 +102,32 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
         return (text == null || text.isEmpty()) ? "N/A" : text;
     }
 
-    private String getCustomerDisplayName(CustomerAmlDto customer, com.internal.enumation.AmlStatusEnum status) {
-        String name = joinNonNull(customer.getGivenName(), customer.getFamilyName());
+    private String getCustomerDisplayName(
+            String givenName,
+            String familyName,
+            String firstNameKh,
+            String lastNameKh,
+            com.internal.enumation.AmlStatusEnum status,
+            String legalId
+    ) {
+        // Prefer English names first
+        String name = joinNonNull(givenName, familyName);
+
+        // If English name is empty, fallback to Khmer names
         if (name.isEmpty()) {
-            name = customer.getLegalId();
+            name = joinNonNull(firstNameKh, lastNameKh);
         }
 
-        if (status == com.internal.enumation.AmlStatusEnum.PENDING && name.length() > 0) {
+        // If still empty, fallback to legal ID
+        if (name.isEmpty()) {
+            name = legalId != null ? legalId : "";
+        }
+
+        // If status is PENDING, mask to first character
+        if (status == com.internal.enumation.AmlStatusEnum.PENDING && !name.isEmpty()) {
             name = name.substring(0, 1);
         }
+
         return name;
     }
 

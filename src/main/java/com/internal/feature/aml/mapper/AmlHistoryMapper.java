@@ -68,6 +68,9 @@ public interface AmlHistoryMapper {
         history.setDateOfBirth(status.getDateOfBirth());
         history.setNationality(status.getNationality());
         history.setCurrentAddressName(status.getCurrentAddressName());
+        history.setCurrentAddressCode(status.getCurrentAddressCode());
+        history.setPlaceOfBirthName(status.getPlaceOfBirthName());
+        history.setPlaceOfBirthCode(status.getPlaceOfBirthCode());
 
         // Copy AML middleware fields
         history.setAmlExternalActionTaken(status.getAmlExternalActionTaken());
@@ -75,11 +78,15 @@ public interface AmlHistoryMapper {
         history.setAmlExternalTrxnID(status.getAmlExternalTrxnID());
         history.setAmlExternalTotalRulesScore(status.getAmlExternalTotalRulesScore());
         history.setAmlExternalServiceName(status.getAmlExternalServiceName());
+        history.setExpiredDate(status.getExpiredDate());
+        history.setIssuedDate(status.getIssuedDate());
+        history.setMaritalStatus(status.getMaritalStatus());
+        history.setPhoneNumber(status.getPhoneNumber());
+        history.setOccupationStatus(status.getOccupationStatus());
+        history.setOccupationCode(status.getOccupationCode());
 
-        // Convert rulesTriggered (JSON string or Object[])
-        history.setAmlExternalRulesTriggered(
-                normalizeRulesTriggered(status.getAmlExternalRulesTriggered())
-        );
+        // Convert rulesTriggered
+        history.setAmlExternalRulesTriggered(normalizeRulesTriggered(status.getAmlExternalRulesTriggered()));
 
         return history;
     }
@@ -121,31 +128,17 @@ public interface AmlHistoryMapper {
         }
     }
 
-    /**
-     * Normalizes amlExternalRulesTriggered from entity:
-     * - If it's already a JSON string → return as-is
-     * - If it's an array → serialize to JSON
-     */
-    /**
-     * Normalizes amlExternalRulesTriggered from entity:
-     * - If it's already a JSON string → return as-is
-     * - If it's an array → serialize to JSON
-     */
+    // -------------------------------
+    // NORMALIZE RULES TRIGGERED
+    // -------------------------------
     static String normalizeRulesTriggered(Object rulesTriggered) {
         if (rulesTriggered == null) return null;
-
-        if (rulesTriggered instanceof String) {
-            // Already JSON string
-            return (String) rulesTriggered;
-        } else if (rulesTriggered instanceof Object[]) {
-            // Convert to JSON string
-            return objectArrayToJson((Object[]) rulesTriggered);
-        } else {
-            try {
-                return objectMapper.writeValueAsString(rulesTriggered);
-            } catch (JsonProcessingException e) {
-                return "[]"; // fallback
-            }
+        if (rulesTriggered instanceof String) return (String) rulesTriggered;
+        if (rulesTriggered instanceof Object[]) return objectArrayToJson((Object[]) rulesTriggered);
+        try {
+            return objectMapper.writeValueAsString(rulesTriggered);
+        } catch (JsonProcessingException e) {
+            return "[]";
         }
     }
 }

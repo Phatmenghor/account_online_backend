@@ -12,6 +12,7 @@ import com.internal.feature.open_account.dto.response.CustomerResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -84,7 +85,7 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
 
                     // === Branch Info ===
                     .branchCode(request.getBranchCode())
-                    .branchNameKh(branch.getBranchKh())
+                    .branchNameKh(branch.getBranchkh())
 
                     // === Current Address ===
                     .customerProvinceCode(request.getCustomerCurrentProvince())
@@ -141,6 +142,33 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
         } catch (Exception e) {
             log.error("❌ Failed to save AccountOnlineFinal for Legal ID {}: {}", request.getLegalId(), e.getMessage(), e);
             throw new RuntimeException("Failed to save AccountOnlineFinal", e);
+        }
+    }
+
+    @Transactional
+    @Override
+    public AccountOnlineFinal updateFinalLogWithAml(AmlStatusDto amlStatus) {
+        try {
+            // Fetch existing record
+            AccountOnlineFinal finalLog = accountOnlineFinalRepository
+                    .findByLegalId(amlStatus.getLegalId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "AccountOnlineFinal not found for Legal ID: " + amlStatus.getLegalId()
+                    ));
+
+            // Update approve/reject
+            finalLog.setAmlRemarks(amlStatus.getRemarks());
+            finalLog.setAmlApprovedById(amlStatus.getApprovedBy() != null ? amlStatus.getApprovedBy().getId() : null);
+            finalLog.setAmlRejectedById(amlStatus.getRejectedBy() != null ? amlStatus.getRejectedBy().getId() : null);
+
+            // Save updated record
+            accountOnlineFinalRepository.save(finalLog);
+            log.info("✅ AccountOnlineFinal updated AML info for Legal ID: {}", amlStatus.getLegalId());
+            return finalLog;
+
+        } catch (Exception e) {
+            log.error("❌ Failed to update AccountOnlineFinal for Legal ID {}: {}", amlStatus.getLegalId(), e.getMessage(), e);
+            throw new RuntimeException("Failed to update AML info in AccountOnlineFinal", e);
         }
     }
 

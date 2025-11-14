@@ -7,5 +7,5 @@ import lombok.Data;
 @Builder
 public class ClsBranchDto {
     private String branchID;
-    private String branchKh;
+    private String branchkh;
 }

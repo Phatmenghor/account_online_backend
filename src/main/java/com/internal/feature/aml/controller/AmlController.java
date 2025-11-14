@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/api/v1/aml")
 @RequiredArgsConstructor
@@ -50,7 +52,7 @@ public class AmlController {
     @PostMapping("/update/{id}")
     public ResponseEntity<ApiResponse<AmlStatusDto>> updateAmlStatus(
             @PathVariable Long id,
-            @RequestBody UpdateAmlStatusDto req
+            @Valid @RequestBody UpdateAmlStatusDto req
             ) throws JsonProcessingException {
         log.info("Updating AML status for ID: {} to {}", id, req.getStatus());
         AmlStatusDto updatedStatus = service.updateAmlStatus(id, req);

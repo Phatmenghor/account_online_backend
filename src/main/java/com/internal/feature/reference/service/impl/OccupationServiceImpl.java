@@ -39,6 +39,13 @@ public class OccupationServiceImpl implements OccupationService {
     }
 
     @Override
+    public OccupationDto getOccupationByCode(String occupationCode) {
+        Occupation occupation = repository.findByOccupationCode(occupationCode)
+                .orElseThrow(() -> new NotFoundException("Occupation not found"));
+        return mapper.toDto(occupation);
+    }
+
+    @Override
     public AllOccupationResponseDto getAllOccupations(GetAllOccupationRequest request) {
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
 

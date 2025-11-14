@@ -11,10 +11,13 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring5.SpringTemplateEngine;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,15 +38,17 @@ public class MailService {
      * Send AML status notification email
      */
     public void sendAmlStatusNotification(AmlStatusDto amlStatus) {
-        log.info("Preparing AML status notification email for customer: {}",
-                amlStatus.getCustomerInfo().getLegalId());
+        if (amlStatus == null) {
+            log.warn("AML Status is null, email not sent.");
+            return;
+        }
+
+        log.info("Preparing AML status notification email for customer: {}", amlStatus.getLegalId());
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            // Parse recipients
-            // String[] recipients = amlRecipients.split(",");
             // Set multiple primary recipients
             String[] recipients = new String[]{
                     "menghor.phat@cambodiapostbank.com.kh",
@@ -65,7 +70,7 @@ public class MailService {
 
             // Attach NID & Selfie images as files (better for Outlook)
             try {
-                String legalId = String.valueOf(amlStatus.getCustomerInfo().getLegalId());
+                String legalId = amlStatus.getLegalId();
                 if (customerImageService.nidImageExists(legalId)) {
                     var nidRes = customerImageService.getNidImageResourceForEmail(legalId);
                     if (nidRes != null) helper.addAttachment("NID_" + legalId + ".jpg", nidRes);
@@ -79,12 +84,10 @@ public class MailService {
             }
 
             mailSender.send(message);
-            log.info("AML status email sent successfully for customer: {}",
-                    amlStatus.getCustomerInfo().getLegalId());
+            log.info("AML status email sent successfully for customer: {}", amlStatus.getLegalId());
 
         } catch (MessagingException e) {
-            log.error("Failed to send AML status email for customer: {}",
-                    amlStatus.getCustomerInfo().getLegalId(), e);
+            log.error("Failed to send AML status email for customer: {}", amlStatus.getLegalId(), e);
         }
     }
 
@@ -116,11 +119,22 @@ public class MailService {
 //    }
 
     private String buildEmailSubject(AmlStatusDto amlStatus) {
+        if (amlStatus == null) return "[AML UNKNOWN] Customer: N/A";
+
         String status = amlStatus.getStatus() != null ? amlStatus.getStatus().name() : "UNKNOWN";
-        return String.format("[AML %s] Customer: %s - %s",
-                status,
-                amlStatus.getCustomerInfo().getLegalId(),
-                amlStatus.getCustomerInfo().getGivenName() + " " +
-                amlStatus.getCustomerInfo().getFamilyName());
+        String legalId = amlStatus.getLegalId() != null ? amlStatus.getLegalId() : "N/A";
+        String fullName = joinNonNull(amlStatus.getGivenName(), amlStatus.getFamilyName());
+
+        return String.format("[AML %s] Customer: %s - %s", status, legalId, fullName);
     }
+
+    /**
+     * Helper to join non-null strings with a space
+     */
+    private String joinNonNull(String... parts) {
+        return Arrays.stream(parts)
+                .filter(p -> p != null && !p.isEmpty())
+                .collect(Collectors.joining(" "));
+    }
+
 }

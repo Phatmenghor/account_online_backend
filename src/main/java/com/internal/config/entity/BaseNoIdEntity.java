@@ -1,3 +1,4 @@
+
 package com.internal.config.entity;
 
 import lombok.Data;

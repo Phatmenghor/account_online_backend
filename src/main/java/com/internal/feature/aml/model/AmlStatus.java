@@ -50,10 +50,6 @@ public class AmlStatus extends BaseEntity {
     @Column(name = "first_name_kh")
     private String firstNameKh; // First Name (Khmer)
 
-    private String legalMRZ1;
-    private String legalMRZ2;
-    private String legalMRZ3;
-
     // ============================================
     // PERSONAL INFORMATION
     // ============================================
@@ -118,7 +114,7 @@ public class AmlStatus extends BaseEntity {
     private String amlExternalRiskLevel;
 
     @Column(name = "aml_ext_action_taken")
-    private String amlExternalActionTaken;
+    private String  amlExternalActionTaken;
 
     @Column(name = "aml_ext_rules_triggered", columnDefinition = "TEXT")
     private String amlExternalRulesTriggered; // store as JSON string

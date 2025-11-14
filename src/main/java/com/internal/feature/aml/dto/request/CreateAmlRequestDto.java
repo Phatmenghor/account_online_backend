@@ -2,10 +2,7 @@ package com.internal.feature.aml.dto.request;
 
 import com.internal.enumation.AmlStatusEnum;
 import com.internal.feature.auth.dto.response.UserResponseDto;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @AllArgsConstructor
@@ -13,19 +10,14 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CreateAmlRequestDto {
 
+    // Original request/response
     private String originalRequest;
     private String originalResponse;
-    private AmlStatusEnum status;
-    private String screeningResult;
-    private String RiskLevel;
-    private String ActionTaken;
-    private Object[] RulesTriggered;
-    private String ServiceName;
-    private int TotalRulesScore;
-    private String TrxnID;
-    private UserResponseDto approvedBy;
-    private UserResponseDto rejectedBy;
 
+    // AML status
+    private AmlStatusEnum status;
+
+    // CUSTOMER INFO
     private String legalId;
     private String familyName;
     private String givenName;
@@ -34,6 +26,16 @@ public class CreateAmlRequestDto {
     private String dateOfBirth;
     private String gender;
     private String nationality;
+
+    // Contact / Personal
+    private String phoneNumber;
+    private String maritalStatus;
+
+    // Document
+    private String issuedDate;
+    private String expiredDate;
+
+    // Address
     private String legalAddress;
 
     private String customerCurrentProvince;
@@ -45,5 +47,21 @@ public class CreateAmlRequestDto {
     private String customerPobDistrict;
     private String customerPobCommune;
     private String customerPobVillage;
-}
 
+    // Occupation
+    private String occupationCode;
+    private String occupationStatus;
+
+    // AML SCREENING
+    private String screeningResult;
+    private String riskLevel;
+    private String actionTaken;
+    private String rulesTriggered;
+    private String serviceName;
+    private Integer totalRulesScore;
+    private String trxnID;
+
+    // Admin workflow
+    private UserResponseDto approvedBy;
+    private UserResponseDto rejectedBy;
+}

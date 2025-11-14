@@ -77,7 +77,7 @@ public class AmlServiceImp implements AmlService {
         // Prepare DTO
         AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status);
 
-//        // Telegram notification
+        // Telegram notification
         try {
             alertTelegramService.sendTelegramAmlProcess(amlDto);
         } catch (Exception e) {
@@ -98,6 +98,10 @@ public class AmlServiceImp implements AmlService {
 
         // Update based on new status
         updateStatusByEnum(status, req.getStatus(), currentUser);
+
+        if(req.getRemark() != null) {
+            status.setRemarks(req.getRemark());
+        }
 
         // Save & record history
         status = amlStatusRepository.save(status);

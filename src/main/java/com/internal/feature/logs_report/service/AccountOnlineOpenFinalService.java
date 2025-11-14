@@ -5,15 +5,16 @@ import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponse
 import com.internal.feature.logs_report.model.AccountOnlineFinal;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.response.CustomerResponse;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface AccountOnlineOpenFinalService {
 
     /**
-     * Save AccountOnlineSuccessLog after customer successfully opened account.
+     * Save AccountOnlineFinal after customer successfully opened account.
      *
      * @param request     the customer request containing user info
      * @param imagePaths  the image paths returned after saving NID & Selfie
-     * @return the persisted AccountOnlineSuccessLog entity
+     * @return the persisted AccountOnlineFinal entity
      */
     AccountOnlineFinal saveFinalLog(
             CustomerRequest request,
@@ -21,4 +22,7 @@ public interface AccountOnlineOpenFinalService {
             AmlStatusDto amlProcessResult,
             CustomerImageUploadResponseDto imagePaths
     );
+
+    @Transactional
+    AccountOnlineFinal updateFinalLogWithAml(AmlStatusDto amlStatus);
 }

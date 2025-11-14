@@ -6,7 +6,6 @@ import com.internal.enumation.AmlStatusEnum;
 import com.internal.enumation.OpenAccStatusEnum;
 import com.internal.exceptions.error.openaccount.AccountCreationException;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
-import com.internal.feature.aml.dto.request.CustomerAmlDto;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.aml.model.AmlStatus;
 import com.internal.feature.aml.service.AmlService;
@@ -22,6 +21,8 @@ import com.internal.feature.open_account.dto.response.AmlExternalResponseDto;
 import com.internal.feature.open_account.dto.response.CustomerResponse;
 import com.internal.feature.open_account.service.OpenAccountService;
 import com.internal.feature.open_account.service.external.*;
+import com.internal.feature.reference.dto.response.OccupationDto;
+import com.internal.feature.reference.service.OccupationService;
 import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private final AccountOnlineOpenFinalService accountOnlineOpenSuccessService;
     private final ObjectMapper objectMapper;
     private final AmlMiddlewareService amlMiddlewareService;
+    private final OccupationService occupationService;
 
     @Override
     @Transactional
@@ -307,44 +309,30 @@ public class OpenAccountServiceImpl implements OpenAccountService {
      * - Stop account creation ONLY if Risk Level is HIGH
      */
     private AmlStatusDto createAmlRecordAndNotify(CustomerRequest request) {
-        // STEP 1: Check if AML record already exists
-        Optional<AmlStatus> existingAml = amlService.findByLegalId(request.getLegalId());
-        boolean isNewRecord = !existingAml.isPresent();
+        try {
+            // STEP 1: Check if AML record already exists
+            Optional<AmlStatus> existingAmlOpt = amlService.findByLegalId(request.getLegalId());
+            if (existingAmlOpt.isPresent()) {
+                AmlStatus existing = existingAmlOpt.get();
+                AmlStatusEnum status = existing.getStatus();
 
-        if (existingAml.isPresent()) {
-            AmlStatus existing = existingAml.get();
-            AmlStatusEnum status = existing.getStatus();
+                log.info("AML record already exists for Legal ID: {} with status: {}", request.getLegalId(), status);
 
-            log.info("AML record already exists for Legal ID: {} with status: {}", request.getLegalId(), status);
-
-            String msg;
-            switch (status) {
-                case PENDING: msg = "AML process already pending for this legal ID"; break;
-                case APPROVE: msg = "AML already approved for this legal ID"; break;
-                case REJECT: msg = "AML already rejected for this legal ID"; break;
-                default: msg = "AML record already exists for this legal ID"; break;
+                // Do NOT send notification if record exists
+                throw new AccountCreationException("AML already exists: " + request.getLegalId());
             }
 
-            throw new AccountCreationException(msg + ": " + request.getLegalId());
-        }
-
-        try {
             // STEP 2: No existing AML record - proceed with AML check
-            log.info("No existing AML record found for Legal ID: {}. Proceeding with AML check...", request.getLegalId());
-
             CustomerAmlRequest amlRequestDto = buildAmlRequestDto(request);
             AmlExternalResponseDto amlResponse = callAmlMiddleware(amlRequestDto, request.getLegalId());
 
             // STEP 3: Save AML record to database (always save)
             AmlStatusDto savedAmlStatus = saveAmlRecord(amlRequestDto, amlResponse, request);
-            log.info("AML record saved with ID: {} | Risk Level: {}", savedAmlStatus.getId(), amlResponse.getRiskLevel());
 
-            // STEP 4: Determine if notification should be sent
-            String riskLevel = amlResponse.getRiskLevel();
-            boolean isHighRisk = riskLevel != null && "High".equalsIgnoreCase(riskLevel.trim());
-            boolean shouldNotify = isNewRecord || isHighRisk;
+            // STEP 4: Only send notification once per request
+            boolean isHighRisk = "High".equalsIgnoreCase(amlResponse.getRiskLevel());
 
-            if (shouldNotify) {
+            if (isHighRisk) {
                 log.warn("NOTIFICATION TRIGGERED for Legal ID: {}", request.getLegalId());
                 sendAmlNotification(amlRequestDto, amlResponse, request);
             }
@@ -360,7 +348,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             return savedAmlStatus;
 
         } catch (AccountCreationException e) {
-            throw e; // Let it propagate to global handler
+            throw e; // propagate to handler
         } catch (Exception e) {
             log.error("Unexpected error in AML processing for Legal ID {}: {}", request.getLegalId(), e.getMessage(), e);
             throw new RuntimeException("Failed to process AML check", e);
@@ -411,10 +399,21 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                                        AmlExternalResponseDto amlResponse,
                                        CustomerRequest request) throws JsonProcessingException {
 
+        OccupationDto occupationDto = safeOccupationLookup(request.getOccupation());
+
+        // Fallback if occupation code is invalid or missing
+        String occupationCode = request.getOccupation();
+        String occupationStatus = occupationDto != null
+                ? occupationDto.getNameEn() + " / " + occupationDto.getNameKh()
+                : "UNKNOWN";
+
         CreateAmlRequestDto createRequest = CreateAmlRequestDto.builder()
+                // Original request/response
                 .originalRequest(objectMapper.writeValueAsString(amlRequest))
                 .originalResponse(objectMapper.writeValueAsString(amlResponse))
                 .status(AmlStatusEnum.PENDING)
+
+                // Personal info
                 .legalId(request.getLegalId())
                 .familyName(request.getFamilyName())
                 .givenName(request.getGivenName())
@@ -423,26 +422,43 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                 .dateOfBirth(request.getDateOfBirth())
                 .gender(request.getGender())
                 .nationality("KH")
+                .legalAddress(request.getLegalAddress())
+                .issuedDate(request.getLegalIssueDate())
+                .expiredDate(request.getLegalExpireDate())
+
+                // Contact & other personal
+                .phoneNumber(request.getPhoneNumber())
+                .maritalStatus(request.getMaritalStatus())
+                .occupationCode(occupationCode)
+                .occupationStatus(occupationStatus)
+
+                // Customer current address
                 .customerCurrentProvince(request.getCustomerCurrentProvince())
                 .customerCurrentDistrict(request.getCustomerCurrentDistrict())
                 .customerCurrentCommune(request.getCustomerCurrentCommune())
                 .customerCurrentVillage(request.getCustomerCurrentVillage())
+
+                // Place of birth
                 .customerPobProvince(request.getCustomerPobProvince())
                 .customerPobDistrict(request.getCustomerPobDistrict())
                 .customerPobCommune(request.getCustomerPobCommune())
                 .customerPobVillage(request.getCustomerPobVillage())
-                .legalAddress(request.getLegalAddress())
+
+                // AML external results (convert rulesTriggered to JSON)
                 .screeningResult(objectMapper.writeValueAsString(amlResponse))
-                .RiskLevel(amlResponse.getRiskLevel())
-                .ServiceName(amlResponse.getServiceName())
-                .RulesTriggered(amlResponse.getRulesTriggered())
-                .TrxnID(amlResponse.getTrxnID())
-                .TotalRulesScore(amlResponse.getTotalRulesScore())
-                .ActionTaken(amlResponse.getActionTaken())
+                .riskLevel(amlResponse.getRiskLevel())
+                .actionTaken(amlResponse.getActionTaken())
+                .rulesTriggered(objectMapper.writeValueAsString(amlResponse.getRulesTriggered()))
+                .serviceName(amlResponse.getServiceName())
+                .totalRulesScore(amlResponse.getTotalRulesScore())
+                .trxnID(amlResponse.getTrxnID())
+
                 .build();
 
         return amlService.createAmlStatus(createRequest);
     }
+
+
 
     /**
      * Send Email/Telegram notification
@@ -452,19 +468,17 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         try {
             AmlStatusDto dto = AmlStatusDto.builder()
                     .status(AmlStatusEnum.PENDING)
-                    .customerInfo(CustomerAmlDto.builder()
-                            .legalId(request.getLegalId())
-                            .givenName(request.getGivenName())
-                            .familyName(request.getFamilyName())
-                            .firstNameKh(request.getFirstNameKh())
-                            .lastNameKh(request.getLastNameKh())
-                            .dateOfBirth(request.getDateOfBirth())
-                            .gender(request.getGender())
-                            .placeOfBirth(request.getPlaceOfBirth())
-                            .phoneNumber(request.getPhoneNumber())
-                            .nationality("KH")
-                            .legalAddress(request.getLegalAddress())
-                            .build())
+                    .legalId(request.getLegalId())
+                    .givenName(request.getGivenName())
+                    .familyName(request.getFamilyName())
+                    .firstNameKh(request.getFirstNameKh())
+                    .lastNameKh(request.getLastNameKh())
+                    .dateOfBirth(request.getDateOfBirth())
+                    .gender(request.getGender())
+                    .placeOfBirth(request.getPlaceOfBirth())
+                    .phoneNumber(request.getPhoneNumber())
+                    .nationality("KH")
+                    .legalAddress(request.getLegalAddress())
                     .originalRequest(asJson(amlRequest))
                     .originalResponse(asJson(amlResponse))
                     .riskLevel(amlResponse.getRiskLevel())
@@ -539,5 +553,11 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             log.error("Error creating {} account: {}", currency, e.getMessage());
             return null;
         }
+    }
+
+
+    private OccupationDto safeOccupationLookup(String code) {
+        try { return code != null ? occupationService.getOccupationByCode(code) : null; }
+        catch (Exception e) { log.warn("⚠️ Occupation lookup failed for code {}", code); return null; }
     }
 }

@@ -594,7 +594,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         public ClsBranchDto mapRow(ResultSet rs, int rowNum) throws SQLException {
             return ClsBranchDto.builder()
                     .branchID(HelperUtils.formatCodeWithLeadingZero(rs.getString("branch_code"), 4))
-                    .branchKh(rs.getString("branch_kh"))
+                    .branchkh(rs.getString("branch_kh"))
                     .build();
         }
     }

@@ -1,8 +1,6 @@
 package com.internal.feature.aml.mapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.internal.enumation.AmlStatusEnum;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
 import com.internal.feature.aml.dto.response.AllAmlResponseDto;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
@@ -10,6 +8,7 @@ import com.internal.feature.aml.model.AmlStatus;
 import com.internal.feature.auth.mapper.UserMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
 import org.mapstruct.Named;
 import org.springframework.data.domain.Page;
 
@@ -20,65 +19,93 @@ public interface AmlStatusMapper {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    // -------------------------------
+    // ============================================================
     // CREATE DTO → ENTITY
-    // -------------------------------
-    @Mapping(target = "status", expression = "java(request.getStatus() != null ? request.getStatus() : AmlStatusEnum.PENDING)")
-    @Mapping(target = "screeningResult", source = "screeningResult")
-    @Mapping(target = "amlExternalRiskLevel", source = "riskLevel")
-    @Mapping(target = "amlExternalActionTaken", source = "actionTaken")
-    @Mapping(target = "amlExternalServiceName", source = "serviceName")
-    @Mapping(target = "amlExternalTotalRulesScore", source = "totalRulesScore")
-    @Mapping(target = "amlExternalTrxnID", source = "trxnID")
-    @Mapping(target = "amlExternalRulesTriggered", source = "rulesTriggered", qualifiedByName = "objectArrayToJson")
-    default AmlStatus fromCreateDto(CreateAmlRequestDto request) {
-        if (request == null) return null;
+    // ============================================================
+    @Mappings({
+            @Mapping(target = "approvedBy", source = "approvedBy"),
+            @Mapping(target = "rejectedBy", source = "rejectedBy"),
+            @Mapping(target = "status",
+                    expression = "java(request.getStatus() != null ? request.getStatus() : com.internal.enumation.AmlStatusEnum.PENDING)"),
+            @Mapping(target = "amlExternalRiskLevel", source = "riskLevel"),
+            @Mapping(target = "amlExternalActionTaken", source = "actionTaken"),
+            @Mapping(target = "amlExternalServiceName", source = "serviceName"),
+            @Mapping(target = "amlExternalTotalRulesScore", source = "totalRulesScore"),
+            @Mapping(target = "amlExternalTrxnID", source = "trxnID"),
+            @Mapping(target = "amlExternalRulesTriggered", source = "rulesTriggered"),
+            // Only map codes; names will be set in service
+            @Mapping(target = "currentAddressCode",
+                    expression = "java(request.getCustomerCurrentProvince() + \"-\" + request.getCustomerCurrentDistrict() + \"-\" + request.getCustomerCurrentCommune() + \"-\" + request.getCustomerCurrentVillage())"),
+            @Mapping(target = "placeOfBirthCode",
+                    expression = "java(request.getCustomerPobProvince() + \"-\" + request.getCustomerPobDistrict() + \"-\" + request.getCustomerPobCommune() + \"-\" + request.getCustomerPobVillage())"),
+            // Personal info
+            @Mapping(target = "legalId", source = "legalId"),
+            @Mapping(target = "familyName", source = "familyName"),
+            @Mapping(target = "givenName", source = "givenName"),
+            @Mapping(target = "firstNameKh", source = "firstNameKh"),
+            @Mapping(target = "lastNameKh", source = "lastNameKh"),
+            @Mapping(target = "dateOfBirth", source = "dateOfBirth"),
+            @Mapping(target = "gender", source = "gender"),
+            @Mapping(target = "nationality", source = "nationality"),
+            @Mapping(target = "phoneNumber", source = "phoneNumber"),
+            @Mapping(target = "maritalStatus", source = "maritalStatus"),
+            @Mapping(target = "occupationCode", source = "occupationCode"),
+            @Mapping(target = "occupationStatus", source = "occupationStatus"),
+            // Document
+            @Mapping(target = "issuedDate", source = "issuedDate"),
+            @Mapping(target = "expiredDate", source = "expiredDate")
+    })
+    AmlStatus fromCreateDto(CreateAmlRequestDto request);
 
-        AmlStatus status = new AmlStatus();
-        status.setLegalId(request.getLegalId());
-        status.setFamilyName(request.getFamilyName());
-        status.setGivenName(request.getGivenName());
-        status.setFirstNameKh(request.getFirstNameKh());
-        status.setLastNameKh(request.getLastNameKh());
-        status.setDateOfBirth(request.getDateOfBirth());
-        status.setGender(request.getGender());
-        status.setNationality(request.getNationality());
-        status.setCurrentAddressName(request.getLegalAddress());
-        status.setStatus(request.getStatus() != null ? request.getStatus() : AmlStatusEnum.PENDING);
-        status.setScreeningResult(request.getScreeningResult());
-        status.setAmlExternalRiskLevel(request.getRiskLevel());
-        status.setAmlExternalActionTaken(request.getActionTaken());
-        status.setAmlExternalServiceName(request.getServiceName());
-        status.setAmlExternalTotalRulesScore(request.getTotalRulesScore());
-        status.setAmlExternalTrxnID(request.getTrxnID());
-        status.setAmlExternalRulesTriggered(objectArrayToJson(request.getRulesTriggered()));
-
-        return status;
-    }
-
-    // -------------------------------
+    // ============================================================
     // ENTITY → DTO
-    // -------------------------------
-    @Mapping(target = "customerInfo.legalId", source = "legalId")
-    @Mapping(target = "customerInfo.familyName", source = "familyName")
-    @Mapping(target = "customerInfo.givenName", source = "givenName")
-    @Mapping(target = "customerInfo.firstNameKh", source = "firstNameKh")
-    @Mapping(target = "customerInfo.lastNameKh", source = "lastNameKh")
-    @Mapping(target = "customerInfo.dateOfBirth", source = "dateOfBirth")
-    @Mapping(target = "customerInfo.gender", source = "gender")
-    @Mapping(target = "customerInfo.nationality", source = "nationality")
-    @Mapping(target = "customerInfo.legalAddress", source = "currentAddressName")
-    @Mapping(target = "riskLevel", source = "amlExternalRiskLevel")
-    @Mapping(target = "actionTaken", source = "amlExternalActionTaken")
-    @Mapping(target = "rulesTriggered", source = "amlExternalRulesTriggered", qualifiedByName = "jsonToObjectArray")
-    @Mapping(target = "trxnID", source = "amlExternalTrxnID")
-    @Mapping(target = "serviceName", source = "amlExternalServiceName")
-    @Mapping(target = "totalRulesScore", source = "amlExternalTotalRulesScore")
+    // ============================================================
+    @Mappings({
+            // Customer
+            @Mapping(target = "legalId", source = "legalId"),
+            @Mapping(target = "familyName", source = "familyName"),
+            @Mapping(target = "givenName", source = "givenName"),
+            @Mapping(target = "firstNameKh", source = "firstNameKh"),
+            @Mapping(target = "lastNameKh", source = "lastNameKh"),
+            @Mapping(target = "dateOfBirth", source = "dateOfBirth"),
+            @Mapping(target = "gender", source = "gender"),
+            @Mapping(target = "nationality", source = "nationality"),
+            @Mapping(target = "phoneNumber", source = "phoneNumber"),
+            @Mapping(target = "maritalStatus", source = "maritalStatus"),
+            @Mapping(target = "occupationCode", source = "occupationCode"),
+            @Mapping(target = "occupationStatus", source = "occupationStatus"),
+
+            // Document
+            @Mapping(target = "issuedDate", source = "issuedDate"),
+            @Mapping(target = "expiredDate", source = "expiredDate"),
+
+            // Address
+            @Mapping(target = "legalAddress", source = "currentAddressName"),
+            @Mapping(target = "currentAddressName", source = "currentAddressName"),
+            @Mapping(target = "currentAddressCode", source = "currentAddressCode"),
+            @Mapping(target = "placeOfBirthName", source = "placeOfBirthName"),
+            @Mapping(target = "placeOfBirthCode", source = "placeOfBirthCode"),
+
+            // AML
+            @Mapping(target = "riskLevel", source = "amlExternalRiskLevel"),
+            @Mapping(target = "actionTaken", source = "amlExternalActionTaken"),
+            @Mapping(target = "rulesTriggered", source = "amlExternalRulesTriggered", qualifiedByName = "jsonToObjectArray"),
+            @Mapping(target = "serviceName", source = "amlExternalServiceName"),
+            @Mapping(target = "totalRulesScore", source = "amlExternalTotalRulesScore"),
+            @Mapping(target = "trxnID", source = "amlExternalTrxnID"),
+
+            // Remarks
+            @Mapping(target = "remarks", source = "remarks"),
+
+            // Users
+            @Mapping(target = "approvedBy", source = "approvedBy"),
+            @Mapping(target = "rejectedBy", source = "rejectedBy")
+    })
     AmlStatusDto toStatusDto(AmlStatus status);
 
-    // -------------------------------
-    // PAGED RESPONSE
-    // -------------------------------
+    // ============================================================
+    // PAGINATION MAPPING
+    // ============================================================
     @Named("mapToListDto")
     default AllAmlResponseDto mapToListDto(List<AmlStatusDto> content, Page<AmlStatus> statuses) {
         AllAmlResponseDto dto = new AllAmlResponseDto();
@@ -91,26 +118,18 @@ public interface AmlStatusMapper {
         return dto;
     }
 
-    // -------------------------------
-    // CONVERTERS
-    // -------------------------------
+    // ============================================================
+    // JSON HELPERS
+    // ============================================================
     @Named("jsonToObjectArray")
     static Object[] jsonToObjectArray(String json) {
-        if (json == null || json.isEmpty()) return null;
-        try {
-            return objectMapper.readValue(json, Object[].class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("❌ Failed to parse JSON string to Object[]: " + json, e);
-        }
+        try { return json == null ? null : objectMapper.readValue(json, Object[].class); }
+        catch (Exception e) { throw new RuntimeException(e); }
     }
 
     @Named("objectArrayToJson")
     static String objectArrayToJson(Object[] array) {
-        if (array == null) return null;
-        try {
-            return objectMapper.writeValueAsString(array);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("❌ Failed to convert Object[] to JSON string", e);
-        }
+        try { return array == null ? null : objectMapper.writeValueAsString(array); }
+        catch (Exception e) { throw new RuntimeException(e); }
     }
 }

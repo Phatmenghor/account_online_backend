@@ -8,6 +8,9 @@ import com.internal.feature.reference.dto.response.OccupationDto;
 
 public interface OccupationService {
     OccupationDto getOccupationById(Long id);
+
+    OccupationDto getOccupationByCode(String occupationCode);
+
     AllOccupationResponseDto getAllOccupations(GetAllOccupationRequest request);
     OccupationDto createOccupation(OccupationCreateRequestDto requestDto);
     OccupationDto updateOccupation(Long id, OccupationUpdateRequestDto requestDto);
