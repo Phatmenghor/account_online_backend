@@ -1,29 +1,33 @@
 package com.internal.feature.logs_report.service.serviceImpl;
 
-import com.internal.exceptions.error.BadRequestException;
 import com.internal.exceptions.error.NotFoundException;
 import com.internal.feature.logs_report.dto.request.AccountOnlineFinalLogRequestDto;
-import com.internal.feature.logs_report.dto.response.AccountOnlineFinalLogResponseDto;
+import com.internal.feature.logs_report.dto.response.AccountOnlineFinalResponseDto;
 import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
 import com.internal.feature.logs_report.mapper.AccountOnlineFinalMapper;
 import com.internal.feature.logs_report.model.AccountOnlineFinal;
+import com.internal.feature.logs_report.model.AccountOnlineOpenFinalAudit;
 import com.internal.feature.logs_report.model.AccountOnlineSuccessLog;
+import com.internal.feature.logs_report.repository.AccountOnlineFinalAuditRepository;
 import com.internal.feature.logs_report.repository.AccountOnlineFinalRepository;
 import com.internal.feature.logs_report.service.AccountOnlineOpenFinalService;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
+import com.internal.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.security.auth.login.AccountNotFoundException;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinalService {
 
-    private final AccountOnlineFinalRepository accountOnlineSuccessLogRepository;
+    private final AccountOnlineFinalRepository accountOnlineFinalRepository;
+    private final AccountOnlineFinalAuditRepository onlineFinalAuditRepository;
     private final AccountOnlineFinalMapper mapper;
+    private final SecurityUtils securityUtils;
+
     @Override
     public AccountOnlineSuccessLog saveFinalLog(CustomerRequest request, CustomerImageUploadResponseDto imagePaths) {
         try {
@@ -55,7 +59,7 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                     .selfieImage(imagePaths != null ? imagePaths.getSelfieImagePath() : null)
                     .build();
 
-            accountOnlineSuccessLogRepository.save(null);
+            accountOnlineFinalRepository.save(null);
             log.info("✅ AccountOnlineSuccessLog saved successfully for Legal ID: {}", request.getLegalId());
             return successLog;
 
@@ -66,16 +70,26 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
     }
 
     @Override
-    public AccountOnlineFinalLogResponseDto findAccountByCifOrLegalId(AccountOnlineFinalLogRequestDto requestDto) {
+    public AccountOnlineFinalResponseDto findAccountByCifOrLegalId(AccountOnlineFinalLogRequestDto requestDto) {
 
-        AccountOnlineFinal onlineFinal = accountOnlineSuccessLogRepository
+        AccountOnlineFinal onlineFinal = accountOnlineFinalRepository
                 .findTopByCifOrLegalIdOrderByCreatedAtDesc(requestDto.getCif(), requestDto.getLegalId())
                 .orElseThrow(() -> new NotFoundException(
                         "Account not found for CIF: " + requestDto.getCif() + " or Legal ID: " + requestDto.getLegalId()
                 ));
 
+        log.info("Save data CIF : {} and Legal Id : {} to history ",requestDto.getCif(),requestDto.getLegalId());
+        AccountOnlineOpenFinalAudit audit = new AccountOnlineOpenFinalAudit();
+        // set data
+        audit.setCif(requestDto.getCif());
+        audit.setLegalId(requestDto.getLegalId());
+        audit.setUser(securityUtils.getCurrentUser());
+        audit.setAccount(onlineFinal);
 
-
+        AccountOnlineOpenFinalAudit data = onlineFinalAuditRepository.save(audit);
+        log.info("Data history: {}",data);
         return mapper.toDto(onlineFinal);
     }
+
+
 }

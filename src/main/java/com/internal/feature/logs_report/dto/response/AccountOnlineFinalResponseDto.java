@@ -11,7 +11,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AccountOnlineFinalLogResponseDto {
+public class AccountOnlineFinalResponseDto {
     private UUID id;
     private String cif;
     private String legalId;
