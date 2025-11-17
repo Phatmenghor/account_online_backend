@@ -11,8 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UpdateAmlRequestDto {
 
-    private String originalRequest;
-    private String originalResponse;
     private AmlStatusEnum status;
     private UserResponseDto approvedBy;
     private UserResponseDto rejectedBy;

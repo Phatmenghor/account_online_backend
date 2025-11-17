@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -44,30 +44,27 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
             CustomerImageUploadResponseDto imagePaths
     ) {
         try {
-            // === Parse dates safely ===
             LocalDate dob = parseDate(request.getDateOfBirth());
             LocalDate issueDate = parseDate(request.getLegalIssueDate());
             LocalDate expireDate = parseDate(request.getLegalExpireDate());
 
-            // === Fetch master data for address ===
+            // === Fetch master data ===
             ClsProvinceDto province = safeProvinceLookup(request.getCustomerCurrentProvince());
             ClsDistrictDto district = safeDistrictLookup(request.getCustomerCurrentDistrict());
             ClsCommuneDto commune = safeCommuneLookup(request.getCustomerCurrentCommune());
             ClsVillageDto village = safeVillageLookup(request.getCustomerCurrentVillage());
 
-            // === Fetch master data for place of birth ===
             ClsProvinceDto pobProvince = safeProvinceLookup(request.getCustomerPobProvince());
             ClsDistrictDto pobDistrict = safeDistrictLookup(request.getCustomerPobDistrict());
             ClsCommuneDto pobCommune = safeCommuneLookup(request.getCustomerPobCommune());
             ClsVillageDto pobVillage = safeVillageLookup(request.getCustomerPobVillage());
 
-            // === Fetch branch ===
             ClsBranchDto branch = safeBranchLookup(request.getBranchCode());
-
-            // === Build the entity ===
             assert branch != null;
+
+            // === Build entity ===
             AccountOnlineFinal finalLog = AccountOnlineFinal.builder()
-                    // === Legal Info ===
+                    // Legal
                     .legalId(request.getLegalId())
                     .legalDocName(request.getLegalDocType() != null ? request.getLegalDocType() : "NATIONAL.ID")
                     .legalHolderName(request.getGivenName() + " " + request.getFamilyName())
@@ -85,7 +82,7 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                     .legalMRZ2(request.getLegalMrz2())
                     .legalMRZ3(request.getLegalMrz3())
 
-                    // === Customer Info ===
+                    // Customer
                     .maritalStatus(request.getMaritalStatus())
                     .nationality("KH")
                     .companyName(request.getCompanyName())
@@ -94,11 +91,11 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                     .referralId(request.getReferralId())
                     .releasedBy("")
 
-                    // === Branch Info ===
+                    // Branch
                     .branchCode(request.getBranchCode())
                     .branchNameKh(branch.getBranchkh())
 
-                    // === Current Address ===
+                    // Current address
                     .customerProvinceCode(request.getCustomerCurrentProvince())
                     .customerProvince(province != null ? province.getProvinceEn() + " / " + province.getProvinceKh() : null)
                     .customerDistrictCode(request.getCustomerCurrentDistrict())
@@ -108,7 +105,7 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                     .customerVillageCode(request.getCustomerCurrentVillage())
                     .customerVillage(village != null ? village.getVillageEn() + " / " + village.getVillageKh() : null)
 
-                    // === Place of Birth (POB) ===
+                    // Place of birth
                     .customerPobProvinceCode(request.getCustomerPobProvince())
                     .customerPobProvince(pobProvince != null ? pobProvince.getProvinceEn() + " / " + pobProvince.getProvinceKh() : null)
                     .customerPobDistrictCode(request.getCustomerPobDistrict())
@@ -118,35 +115,38 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                     .customerPobVillageCode(request.getCustomerPobVillage())
                     .customerPobVillage(pobVillage != null ? pobVillage.getVillageEn() + " / " + pobVillage.getVillageKh() : null)
 
-                    // === Contact ===
+                    // Contact
                     .phoneNumber(request.getPhoneNumber())
 
-                    // === AML Info ===
-                    .amlActionTaken(amlProcessResult.getActionTaken())
+                    // AML
+                    .amlStatus(amlProcessResult.getStatus())
+                    .amlActionBy(amlProcessResult.getApprovedBy() != null ? amlProcessResult.getApprovedBy().getId() :
+                            amlProcessResult.getRejectedBy() != null ? amlProcessResult.getRejectedBy().getId() : null)
+                    .amlActionName(amlProcessResult.getApprovedBy() != null ? amlProcessResult.getApprovedBy().getFullName() :
+                            amlProcessResult.getRejectedBy() != null ? amlProcessResult.getRejectedBy().getFullName() : null)
+                    .amlActionRole(amlProcessResult.getApprovedBy() != null ? amlProcessResult.getApprovedBy().getUserRole() :
+                            amlProcessResult.getRejectedBy() != null ? amlProcessResult.getRejectedBy().getUserRole() : null)
+                    .amlRemarks("")
+                    .amlScreeningResult(amlProcessResult.getScreeningResult())
                     .amlRiskLevel(amlProcessResult.getRiskLevel())
-                    .amlTrxnId(amlProcessResult.getTrxnID())
-                    .amlRulesTriggered(amlProcessResult.getRulesTriggered())
+                    .amlActionTaken(amlProcessResult.getActionTaken())
                     .amlTotalRulesScore(amlProcessResult.getTotalRulesScore())
                     .serviceName(amlProcessResult.getServiceName())
-                    .amlRejectedById(amlProcessResult.getRejectedBy() != null ? amlProcessResult.getRejectedBy().getId() : null)
-                    .amlApprovedById(amlProcessResult.getApprovedBy() != null ? amlProcessResult.getApprovedBy().getId() : null)
-                    .amlStatus(amlProcessResult.getStatus())
-                    .amlScreeningResult(amlProcessResult.getScreeningResult())
-                    .amlRemarks("")
+                    .amlTrxnId(amlProcessResult.getTrxnID())
+                    .amlRulesTriggered(joinRulesTriggered(amlProcessResult.getRulesTriggered()))
 
-                    // === Account Info ===
+                    // Account info
                     .mnemonic(accountInfo.getMnemonic())
                     .usdAccount(accountInfo.getUsdAccount())
                     .khrAccount(accountInfo.getKhrAccount())
                     .cif(accountInfo.getCif())
 
-                    // === Images ===
+                    // Images
                     .nidImage(imagePaths != null ? imagePaths.getNidImagePath() : request.getNidImage())
                     .selfieImage(imagePaths != null ? imagePaths.getSelfieImagePath() : request.getSelfieImage())
                     .build();
 
             accountOnlineFinalRepository.save(finalLog);
-
             log.info("✅ AccountOnlineFinal saved successfully for Legal ID: {}", request.getLegalId());
             return finalLog;
 
@@ -158,35 +158,61 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
 
     @Transactional
     @Override
-    public AccountOnlineFinal updateFinalLogWithAml(AmlStatusDto amlStatus) {
-        try {
-            // Fetch existing record
-            AccountOnlineFinal finalLog = accountOnlineFinalRepository
-                    .findByLegalId(amlStatus.getLegalId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "AccountOnlineFinal not found for Legal ID: " + amlStatus.getLegalId()
-                    ));
+    public void updateFinalLogWithAml(AmlStatusDto amlStatus) {
+        Optional<AccountOnlineFinal> optionalFinalLog = accountOnlineFinalRepository
+                .findByLegalId(amlStatus.getCustomerInfo().getLegalId());
 
-            // Update approve/reject
+        if (optionalFinalLog.isPresent()) {
+            AccountOnlineFinal finalLog = optionalFinalLog.get();
+            finalLog.setAmlStatus(amlStatus.getStatus());
+            finalLog.setAmlActionBy(amlStatus.getApprovedBy() != null ? amlStatus.getApprovedBy().getId() :
+                    amlStatus.getRejectedBy() != null ? amlStatus.getRejectedBy().getId() : null);
+            finalLog.setAmlActionName(amlStatus.getApprovedBy() != null ? amlStatus.getApprovedBy().getFullName() :
+                    amlStatus.getRejectedBy() != null ? amlStatus.getRejectedBy().getFullName() : null);
+            finalLog.setAmlActionRole(amlStatus.getApprovedBy() != null ? amlStatus.getApprovedBy().getUserRole() :
+                    amlStatus.getRejectedBy() != null ? amlStatus.getRejectedBy().getUserRole() : null);
             finalLog.setAmlRemarks(amlStatus.getRemarks());
-            finalLog.setAmlApprovedById(amlStatus.getApprovedBy() != null ? amlStatus.getApprovedBy().getId() : null);
-            finalLog.setAmlRejectedById(amlStatus.getRejectedBy() != null ? amlStatus.getRejectedBy().getId() : null);
-
-            // Save updated record
             accountOnlineFinalRepository.save(finalLog);
-            log.info("✅ AccountOnlineFinal updated AML info for Legal ID: {}", amlStatus.getLegalId());
-            return finalLog;
-
-        } catch (Exception e) {
-            log.error("❌ Failed to update AccountOnlineFinal for Legal ID {}: {}", amlStatus.getLegalId(), e.getMessage(), e);
-            throw new RuntimeException("Failed to update AML info in AccountOnlineFinal", e);
+            log.info("✅ AML updated for Legal ID: {}", amlStatus.getCustomerInfo().getLegalId());
+        } else {
+            log.warn("⚠️ AML update skipped: AccountOnlineFinal not found for Legal ID {}",
+                    amlStatus.getCustomerInfo().getLegalId());
         }
+    }
+
+    @Override
+    public AccountOnlineFinalResponseDto findAccountByCifOrLegalId(AccountOnlineFinalLogRequestDto requestDto) {
+        AccountOnlineFinal onlineFinal = accountOnlineFinalRepository
+                .findTopByCifOrLegalIdOrderByCreatedAtDesc(requestDto.getCif(), requestDto.getLegalId())
+                .orElseThrow(() -> new NotFoundException(
+                        "Account not found for CIF: " + requestDto.getCif() + " or Legal ID: " + requestDto.getLegalId()
+                ));
+
+        AccountOnlineOpenFinalAudit audit = new AccountOnlineOpenFinalAudit();
+        audit.setCif(requestDto.getCif());
+        audit.setLegalId(requestDto.getLegalId());
+        audit.setUser(securityUtils.getCurrentUser());
+        audit.setAccount(onlineFinal);
+
+        onlineFinalAuditRepository.save(audit);
+        log.info("Saved account access audit for CIF: {} and Legal ID: {}", requestDto.getCif(), requestDto.getLegalId());
+        return mapper.toDto(onlineFinal);
+    }
+
+    private String joinRulesTriggered(Object[] rules) {
+        if (rules == null || rules.length == 0) {
+            return null;
+        }
+        return java.util.Arrays.stream(rules)
+                .map(Object::toString)
+                .reduce((a, b) -> a + "," + b)
+                .orElse(null);
     }
 
     // === Helper methods ===
     private LocalDate parseDate(String dateStr) {
+        if (dateStr == null || dateStr.isEmpty()) return null;
         try {
-            if (dateStr == null || dateStr.isEmpty()) return null;
             return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         } catch (Exception e) {
             log.warn("⚠️ Could not parse date: {}", dateStr);
@@ -218,26 +244,4 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
         try { return code != null ? masterDataService.getBranchByCode(code) : null; }
         catch (Exception e) { log.warn("⚠️ Branch lookup failed for code {}", code); return null; }
     }
-    @Override
-    public AccountOnlineFinalResponseDto findAccountByCifOrLegalId(AccountOnlineFinalLogRequestDto requestDto) {
-
-        AccountOnlineFinal onlineFinal = accountOnlineFinalRepository
-                .findTopByCifOrLegalIdOrderByCreatedAtDesc(requestDto.getCif(), requestDto.getLegalId())
-                .orElseThrow(() -> new NotFoundException(
-                        "Account not found for CIF: " + requestDto.getCif() + " or Legal ID: " + requestDto.getLegalId()
-                ));
-
-        log.info("Save data CIF : {} and Legal Id : {} to history ",requestDto.getCif(),requestDto.getLegalId());
-        AccountOnlineOpenFinalAudit audit = new AccountOnlineOpenFinalAudit();
-        // set data
-        audit.setCif(requestDto.getCif());
-        audit.setLegalId(requestDto.getLegalId());
-        audit.setUser(securityUtils.getCurrentUser());
-        audit.setAccount(onlineFinal);
-
-        onlineFinalAuditRepository.save(audit);
-        return mapper.toDto(onlineFinal);
-    }
-
-
 }

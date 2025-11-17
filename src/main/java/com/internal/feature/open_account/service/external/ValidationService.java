@@ -1,12 +1,10 @@
 package com.internal.feature.open_account.service.external;
 
 import com.internal.exceptions.error.openaccount.AccountExistsException;
-import com.internal.exceptions.error.openaccount.DatabaseConnectionException;
 import com.internal.exceptions.error.openaccount.HighRiskCustomerException;
 import com.internal.feature.open_account.repository.CustomerInfoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -17,16 +15,6 @@ import java.util.Map;
 public class ValidationService {
 
     private final CustomerInfoRepository customerInfoRepository;
-
-    public void checkDatabaseConnections() {
-        try {
-            customerInfoRepository.testAllConnections();
-            log.debug("Database connection check successful");
-        } catch (DataAccessException e) {
-            log.error("Database connection failed: {}", e.getMessage());
-            throw new DatabaseConnectionException("Failed to connect to database");
-        }
-    }
 
     public Map<String, String> getCustomerInfo(String legalId) {
         return customerInfoRepository.findByLegalId(legalId);

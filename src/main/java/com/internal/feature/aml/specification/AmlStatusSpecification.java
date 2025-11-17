@@ -17,10 +17,8 @@ public class AmlStatusSpecification {
 
             String pattern = "%" + keyword.toLowerCase() + "%";
             return cb.or(
-                    cb.like(cb.lower(root.get("originalRequest")), pattern),
                     cb.like(cb.lower(root.get("approvedBy")), pattern),
-                    cb.like(cb.lower(root.get("rejectedBy")), pattern),
-                    cb.like(cb.lower(root.get("originalResponse")), pattern)
+                    cb.like(cb.lower(root.get("rejectedBy")), pattern)
             );
         };
     }

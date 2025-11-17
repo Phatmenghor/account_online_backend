@@ -2,6 +2,7 @@ package com.internal.feature.aml.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.internal.enumation.AmlStatusEnum;
+import com.internal.exceptions.error.NotFoundException;
 import com.internal.feature.aml.dto.request.AllAmlHistoryRequestDto;
 import com.internal.feature.aml.dto.request.AllAmlRequestDto;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
@@ -20,9 +21,9 @@ import com.internal.feature.aml.service.AmlService;
 import com.internal.feature.aml.specification.AmlHistorySpecification;
 import com.internal.feature.aml.specification.AmlStatusSpecification;
 import com.internal.feature.auth.models.UserEntity;
+import com.internal.feature.logs_report.service.AccountOnlineOpenFinalService;
 import com.internal.feature.master_data.dto.response.LocationCodesDto;
 import com.internal.feature.master_data.service.MasterDataService;
-import com.internal.feature.telegram_alerts.service.serviceImpl.OpenAccountTelegramAlertServiceImpl;
 import com.internal.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -48,8 +50,8 @@ public class AmlServiceImp implements AmlService {
     private final AmlStatusMapper amlStatusMapper;
     private final AmlHistoryMapper amlHistoryMapper;
     private final SecurityUtils securityUtils;
-    private final OpenAccountTelegramAlertServiceImpl alertTelegramService;
     private final MasterDataService masterDataService;
+    private final AccountOnlineOpenFinalService accountOnlineOpenFinalService;
 
     // ------------------------------- FIND BY LEGAL ID -------------------------------
     @Override
@@ -59,7 +61,7 @@ public class AmlServiceImp implements AmlService {
 
     // ------------------------------- CREATE AML STATUS -------------------------------
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public AmlStatusDto createAmlStatus(CreateAmlRequestDto requestDto) throws JsonProcessingException {
         AmlStatus status = amlStatusMapper.fromCreateDto(requestDto);
         status.setRejectedBy(null);
@@ -72,17 +74,11 @@ public class AmlServiceImp implements AmlService {
 
         // Create initial history (PENDING)
         AmlHistory history = amlHistoryMapper.createHistoryFromStatusChange(status, null);
+
         amlHistoryRepository.save(history);
 
         // Prepare DTO
         AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status);
-
-        // Telegram notification
-        try {
-            alertTelegramService.sendTelegramAmlProcess(amlDto);
-        } catch (Exception e) {
-            log.error("Failed to send PENDING AML Telegram notification: {}", e.getMessage());
-        }
 
         return amlDto;
     }
@@ -111,12 +107,15 @@ public class AmlServiceImp implements AmlService {
         // Convert to DTO
         AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status);
 
+        // Update the final log table
+        accountOnlineOpenFinalService.updateFinalLogWithAml(amlDto);
+
         // Telegram notification
-        try {
-            alertTelegramService.sendTelegramAmlProcess(amlDto);
-        } catch (Exception e) {
-            log.error("Failed to send AML {} Telegram notification: {}", req.getStatus(), e.getMessage());
-        }
+//        try {
+//            alertTelegramService.sendTelegramAmlProcess(amlDto);
+//        } catch (Exception e) {
+//            log.error("Failed to send AML {} Telegram notification: {}", req.getStatus(), e.getMessage());
+//        }
 
         return amlDto;
     }
@@ -135,6 +134,20 @@ public class AmlServiceImp implements AmlService {
                 .collect(Collectors.toList());
 
         return amlStatusMapper.mapToListDto(content, page);
+    }
+
+    @Override
+    public AmlStatusDto getAmlById(Long id) {
+        AmlStatus aml = amlStatusRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Aml not found with Id: " + id));
+        return amlStatusMapper.toStatusDto(aml);
+    }
+
+    @Override
+    public AmlHistoryDto getAmlHistoryById(Long id) {
+        AmlHistory aml = amlHistoryRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Aml history not found with Id: " + id));
+        return amlHistoryMapper.toDto(aml);
     }
 
     // ------------------------------- GET ALL AML HISTORY -------------------------------

@@ -10,10 +10,6 @@ import lombok.*;
 @Builder
 public class CreateAmlRequestDto {
 
-    // Original request/response
-    private String originalRequest;
-    private String originalResponse;
-
     // AML status
     private AmlStatusEnum status;
 

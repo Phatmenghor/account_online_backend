@@ -1,6 +1,7 @@
 package com.internal.feature.aml.dto.response;
 
 import com.internal.enumation.AmlStatusEnum;
+import com.internal.feature.aml.dto.request.CustomerAmlDto;
 import com.internal.feature.auth.dto.response.UserResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,21 +17,9 @@ import java.time.LocalDateTime;
 public class AmlStatusDto {
 
     private Long id;
-    private String originalRequest;
-    private String originalResponse;
 
     // CUSTOMER FIELDS (from CustomerAmlDto)
-    private String legalId;
-    private String familyName;
-    private String givenName;
-    private String firstNameKh;
-    private String lastNameKh;
-    private String dateOfBirth;
-    private String placeOfBirth;
-    private String gender;
-    private String nationality;
-    private String legalAddress;
-    private String phoneNumber;
+    private CustomerAmlDto customerInfo; // Nested DTO for customer details
 
     // AML
     private AmlStatusEnum status;

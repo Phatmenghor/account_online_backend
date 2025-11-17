@@ -10,9 +10,7 @@ import java.util.UUID;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(
-        name = "acc_online_open_final"
-)
+@Table(name = "acc_online_open_final")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,18 +22,25 @@ public class AccountOnlineFinal extends BaseNoIdEntity {
     @Column(columnDefinition = "uuid")
     private UUID id;
 
-    //ACCOUNT
+    // === ACCOUNT INFO ===
+    @Column(name = "cif")
     private String cif;
+
+    @Column(name = "khr_account")
     private String khrAccount;
+
+    @Column(name = "usd_account")
     private String usdAccount;
+
+    @Column(name = "mnemonic")
     private String mnemonic;
 
-    // === Legal / NID Info ===
+    // === LEGAL / NID INFO ===
     @Column(name = "legal_id", nullable = false)
     private String legalId;
 
     @Column(name = "legal_doc_name")
-    private String legalDocName; // e.g., NATIONAL.ID
+    private String legalDocName;
 
     @Column(name = "legal_holder_name")
     private String legalHolderName;
@@ -79,7 +84,7 @@ public class AccountOnlineFinal extends BaseNoIdEntity {
     @Column(name = "legal_mrz3")
     private String legalMRZ3;
 
-    // === Customer Info ===
+    // === CUSTOMER INFO ===
     @Column(name = "marital_status")
     private String maritalStatus;
 
@@ -101,95 +106,88 @@ public class AccountOnlineFinal extends BaseNoIdEntity {
     @Column(name = "released_by")
     private String releasedBy;
 
-    // === Branch Info ===
+    // === BRANCH INFO ===
     @Column(name = "branch_code")
     private String branchCode;
 
     @Column(name = "branch_name_kh")
     private String branchNameKh;
 
-    // === Current Address Codes + Names ===
-
-    // Province
+    // === CURRENT ADDRESS ===
     @Column(name = "customer_province_code")
     private String customerProvinceCode;
 
     @Column(name = "customer_province")
     private String customerProvince;
 
-    // District
     @Column(name = "customer_district_code")
     private String customerDistrictCode;
 
     @Column(name = "customer_district")
     private String customerDistrict;
 
-    // Commune
     @Column(name = "customer_commune_code")
     private String customerCommuneCode;
 
     @Column(name = "customer_commune")
     private String customerCommune;
 
-    // Village
     @Column(name = "customer_village_code")
     private String customerVillageCode;
 
     @Column(name = "customer_village")
     private String customerVillage;
 
-    // === Place of Birth (POB) Codes + Names ===
-
-    // Province
+    // === PLACE OF BIRTH ===
     @Column(name = "customer_pob_province_code")
     private String customerPobProvinceCode;
 
     @Column(name = "customer_pob_province")
     private String customerPobProvince;
 
-    // District
     @Column(name = "customer_pob_district_code")
     private String customerPobDistrictCode;
 
     @Column(name = "customer_pob_district")
     private String customerPobDistrict;
 
-    // Commune
     @Column(name = "customer_pob_commune_code")
     private String customerPobCommuneCode;
 
     @Column(name = "customer_pob_commune")
     private String customerPobCommune;
 
-    // Village
     @Column(name = "customer_pob_village_code")
     private String customerPobVillageCode;
 
     @Column(name = "customer_pob_village")
     private String customerPobVillage;
 
-    // === Contact ===
+    // === CONTACT INFO ===
     @Column(name = "phone_number")
     private String phoneNumber;
 
-    // === AML Info ===
+    // === AML FINAL STATUS ===
     @Column(name = "aml_status")
     @Enumerated(EnumType.STRING)
-    private AmlStatusEnum amlStatus; // APPROVED / REJECTED / PENDING
+    private AmlStatusEnum amlStatus;
 
-    @Column(name = "aml_approved_by")
-    private Long amlApprovedById;
+    @Column(name = "aml_action_by")
+    private Long amlActionBy; // user_id of last approver/rejector
 
-    @Column(name = "aml_rejected_by")
-    private Long amlRejectedById;
+    @Column(name = "aml_action_name")
+    private String amlActionName; // full name for reporting
+
+    @Column(name = "aml_action_role")
+    private String amlActionRole; // optional
 
     @Column(name = "aml_remarks", columnDefinition = "TEXT")
     private String amlRemarks;
 
     @Column(name = "aml_screening_result", columnDefinition = "TEXT")
-    private String amlScreeningResult; // JSON from AML service
+    private String amlScreeningResult;
 
-    // === Individual fields from AML JSON for easier queries ===
+    // === AML extracted fields ===
     @Column(name = "aml_risk_level")
     private String amlRiskLevel;
 
@@ -199,15 +197,16 @@ public class AccountOnlineFinal extends BaseNoIdEntity {
     @Column(name = "aml_total_rules_score")
     private Integer amlTotalRulesScore;
 
-    private String serviceName;
-
     @Column(name = "aml_trxn_id")
     private String amlTrxnId;
 
-    // For storing triggered rules as comma-separated string
-    @Column(name = "aml_rules_triggered", columnDefinition = "TEXT")
-    private Object[] amlRulesTriggered;
+    @Column(name = "service_name")
+    private String serviceName;
 
+    @Column(name = "aml_rules_triggered", columnDefinition = "TEXT")
+    private String amlRulesTriggered;
+
+    // === IMAGES ===
     @Column(name = "nid_image")
     private String nidImage;
 

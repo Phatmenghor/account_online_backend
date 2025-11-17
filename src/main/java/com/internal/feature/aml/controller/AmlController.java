@@ -7,6 +7,7 @@ import com.internal.feature.aml.dto.request.AllAmlRequestDto;
 import com.internal.feature.aml.dto.request.UpdateAmlStatusDto;
 import com.internal.feature.aml.dto.response.AllAmlHistoryResponseDto;
 import com.internal.feature.aml.dto.response.AllAmlResponseDto;
+import com.internal.feature.aml.dto.response.AmlHistoryDto;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.aml.service.AmlService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,6 +44,24 @@ public class AmlController {
         AllAmlResponseDto list = service.getAllAml(request);
         log.info("Successfully retrieved {} AML status records", list.getContent().size());
         return ResponseEntity.ok(ApiResponse.success("All AML statuses retrieved successfully", list));
+    }
+
+    /** Get all AML statuses */
+    @PostMapping("/status-by-id/{id}")
+    public ResponseEntity<ApiResponse<AmlStatusDto>> getAmlById(@PathVariable Long id) {
+        log.info("Fetching AML statuses by id: : {}", id);
+        AmlStatusDto amlStatusDto = service.getAmlById(id);
+        log.info("Successfully retrieved {} AML status records", id);
+        return ResponseEntity.ok(ApiResponse.success("AML statuses retrieved successfully", amlStatusDto));
+    }
+
+    /** Get all AML statuses */
+    @PostMapping("/history-by-id/{id}")
+    public ResponseEntity<ApiResponse<AmlHistoryDto>> getAmlHistoryById(@PathVariable Long id) {
+        log.info("Fetching AML statuses by id: : {}", id);
+        AmlHistoryDto amlStatusDto = service.getAmlHistoryById(id);
+        log.info("Successfully retrieved {} AML status records", id);
+        return ResponseEntity.ok(ApiResponse.success("AML statuses retrieved successfully", amlStatusDto));
     }
 
     /**

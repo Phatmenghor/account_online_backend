@@ -76,11 +76,11 @@ public class OpenAccountExceptionHandler {
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .message(AppConstants.ACCOUNT_CREATE_FAIL)
+                .status(HttpStatus.BAD_REQUEST.value())
+                .message(ex.getMessage())         // <-- FIX
                 .build();
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(T24ServiceException.class)

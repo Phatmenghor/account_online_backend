@@ -43,7 +43,7 @@ public class MailService {
             return;
         }
 
-        log.info("Preparing AML status notification email for customer: {}", amlStatus.getLegalId());
+        log.info("Preparing AML status notification email for customer: {}", amlStatus.getCustomerInfo().getLegalId());
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -70,7 +70,7 @@ public class MailService {
 
             // Attach NID & Selfie images as files (better for Outlook)
             try {
-                String legalId = amlStatus.getLegalId();
+                String legalId = amlStatus.getCustomerInfo().getLegalId();
                 if (customerImageService.nidImageExists(legalId)) {
                     var nidRes = customerImageService.getNidImageResourceForEmail(legalId);
                     if (nidRes != null) helper.addAttachment("NID_" + legalId + ".jpg", nidRes);
@@ -84,10 +84,10 @@ public class MailService {
             }
 
             mailSender.send(message);
-            log.info("AML status email sent successfully for customer: {}", amlStatus.getLegalId());
+            log.info("AML status email sent successfully for customer: {}", amlStatus.getCustomerInfo().getLegalId());
 
         } catch (MessagingException e) {
-            log.error("Failed to send AML status email for customer: {}", amlStatus.getLegalId(), e);
+            log.error("Failed to send AML status email for customer: {}", amlStatus.getCustomerInfo().getLegalId(), e);
         }
     }
 
@@ -122,8 +122,8 @@ public class MailService {
         if (amlStatus == null) return "[AML UNKNOWN] Customer: N/A";
 
         String status = amlStatus.getStatus() != null ? amlStatus.getStatus().name() : "UNKNOWN";
-        String legalId = amlStatus.getLegalId() != null ? amlStatus.getLegalId() : "N/A";
-        String fullName = joinNonNull(amlStatus.getGivenName(), amlStatus.getFamilyName());
+        String legalId = amlStatus.getCustomerInfo().getLegalId() != null ? amlStatus.getCustomerInfo().getLegalId() : "N/A";
+        String fullName = joinNonNull(amlStatus.getCustomerInfo().getFamilyName(), amlStatus.getCustomerInfo().getGivenName());
 
         return String.format("[AML %s] Customer: %s - %s", status, legalId, fullName);
     }

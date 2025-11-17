@@ -27,7 +27,7 @@ public interface AccountOnlineOpenFinalService {
     );
 
     @Transactional
-    AccountOnlineFinal updateFinalLogWithAml(AmlStatusDto amlStatus);
+    void updateFinalLogWithAml(AmlStatusDto amlStatus);
     AccountOnlineFinalResponseDto findAccountByCifOrLegalId (AccountOnlineFinalLogRequestDto requestDto);
 
 }

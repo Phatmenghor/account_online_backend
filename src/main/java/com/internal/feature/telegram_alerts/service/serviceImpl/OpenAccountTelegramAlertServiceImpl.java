@@ -7,7 +7,6 @@ import com.internal.feature.telegram_alerts.service.AlertsOpenAccOnlineService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -45,23 +44,24 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
 
         // Build customer display name directly from DTO fields
         String customerName = getCustomerDisplayName(
-                amlDto.getGivenName(),
-                amlDto.getFamilyName(),
-                amlDto.getFirstNameKh(),
-                amlDto.getLastNameKh(),
+                amlDto.getCustomerInfo().getGivenName(),
+                amlDto.getCustomerInfo().getFamilyName(),
+                amlDto.getCustomerInfo().getFirstNameKh(),
+                amlDto.getCustomerInfo().getLastNameKh(),
                 amlDto.getStatus(),
-                amlDto.getLegalId()
+                amlDto.getCustomerInfo().getLegalId()
         );
 
-        String dobFormatted = formatDob(amlDto.getDateOfBirth());
+        String dobFormatted = formatDob(amlDto.getCustomerInfo().getDateOfBirth());
 
         String body = String.format(
-                "Name: %s\nID: %s\nDOB: %s\nNationality: %s\nAddress: %s",
+                "- Name: %s\n- ID: %s\n- DOB: %s\n- Nationality: %s\n- Address: %s\n- Risk: %s",
                 escapeMarkdown(getOrNA(customerName)),
-                escapeMarkdown(getOrNA(amlDto.getLegalId())),
+                escapeMarkdown(getOrNA(amlDto.getCustomerInfo().getLegalId())),
                 escapeMarkdown(getOrNA(dobFormatted)),
-                escapeMarkdown(getOrNA(amlDto.getNationality())),
-                escapeMarkdown(getOrNA(amlDto.getCurrentAddressName()))
+                escapeMarkdown(getOrNA(amlDto.getCustomerInfo().getNationality())),
+                escapeMarkdown(getOrNA(amlDto.getCurrentAddressName())),
+                escapeMarkdown(getOrNA(amlDto.getRiskLevel()))
         );
 
         String statusText = amlDto.getStatus() != null ? amlDto.getStatus().name() : "N/A";

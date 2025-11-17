@@ -30,9 +30,7 @@ public class AmlHistorySpecification {
 
             String pattern = "%" + keyword.toLowerCase() + "%";
             return cb.or(
-                    cb.like(cb.lower(root.get("originalRequest")), pattern),
-                    cb.like(cb.lower(root.get("changedBy")), pattern),
-                    cb.like(cb.lower(root.get("originalResponse")), pattern)
+                    cb.like(cb.lower(root.get("changedBy")), pattern)
             );
         };
     }

@@ -62,15 +62,15 @@ public interface AmlStatusMapper {
     // ============================================================
     @Mappings({
             // Customer
-            @Mapping(target = "legalId", source = "legalId"),
-            @Mapping(target = "familyName", source = "familyName"),
-            @Mapping(target = "givenName", source = "givenName"),
-            @Mapping(target = "firstNameKh", source = "firstNameKh"),
-            @Mapping(target = "lastNameKh", source = "lastNameKh"),
-            @Mapping(target = "dateOfBirth", source = "dateOfBirth"),
-            @Mapping(target = "gender", source = "gender"),
-            @Mapping(target = "nationality", source = "nationality"),
-            @Mapping(target = "phoneNumber", source = "phoneNumber"),
+            @Mapping(target = "customerInfo.legalId", source = "legalId"),
+            @Mapping(target = "customerInfo.familyName", source = "familyName"),
+            @Mapping(target = "customerInfo.givenName", source = "givenName"),
+            @Mapping(target = "customerInfo.firstNameKh", source = "firstNameKh"),
+            @Mapping(target = "customerInfo.lastNameKh", source = "lastNameKh"),
+            @Mapping(target = "customerInfo.dateOfBirth", source = "dateOfBirth"),
+            @Mapping(target = "customerInfo.gender", source = "gender"),
+            @Mapping(target = "customerInfo.nationality", source = "nationality"),
+            @Mapping(target = "customerInfo.phoneNumber", source = "phoneNumber"),
             @Mapping(target = "maritalStatus", source = "maritalStatus"),
             @Mapping(target = "occupationCode", source = "occupationCode"),
             @Mapping(target = "occupationStatus", source = "occupationStatus"),
@@ -80,7 +80,7 @@ public interface AmlStatusMapper {
             @Mapping(target = "expiredDate", source = "expiredDate"),
 
             // Address
-            @Mapping(target = "legalAddress", source = "currentAddressName"),
+            @Mapping(target = "customerInfo.legalAddress", source = "currentAddressName"),
             @Mapping(target = "currentAddressName", source = "currentAddressName"),
             @Mapping(target = "currentAddressCode", source = "currentAddressCode"),
             @Mapping(target = "placeOfBirthName", source = "placeOfBirthName"),

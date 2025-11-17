@@ -7,6 +7,7 @@ import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
 import com.internal.feature.aml.dto.request.UpdateAmlStatusDto;
 import com.internal.feature.aml.dto.response.AllAmlHistoryResponseDto;
 import com.internal.feature.aml.dto.response.AllAmlResponseDto;
+import com.internal.feature.aml.dto.response.AmlHistoryDto;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.aml.model.AmlStatus;
 
@@ -17,5 +18,9 @@ public interface AmlService {
     AmlStatusDto createAmlStatus(CreateAmlRequestDto requestDto) throws JsonProcessingException;
     AmlStatusDto updateAmlStatus(Long id, UpdateAmlStatusDto status) throws JsonProcessingException;
     AllAmlResponseDto getAllAml(AllAmlRequestDto requestDto);
+    AmlStatusDto getAmlById(Long id);
+
+    AmlHistoryDto getAmlHistoryById(Long id);
+
     AllAmlHistoryResponseDto getAllAmlHistory(AllAmlHistoryRequestDto requestDto);
 }

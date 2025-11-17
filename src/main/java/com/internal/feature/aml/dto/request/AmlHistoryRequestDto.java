@@ -14,8 +14,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AmlHistoryRequestDto {
-    private String originalRequest;
-    private String originalResponse;
     private AmlStatusEnum status;
     private UserResponseDto changedBy;
 

@@ -85,7 +85,7 @@ public interface AmlHistoryMapper {
         history.setOccupationStatus(status.getOccupationStatus());
         history.setOccupationCode(status.getOccupationCode());
 
-        // Convert rulesTriggered
+        // Convert rulesTriggered safely
         history.setAmlExternalRulesTriggered(normalizeRulesTriggered(status.getAmlExternalRulesTriggered()));
 
         return history;
@@ -112,9 +112,20 @@ public interface AmlHistoryMapper {
     @Named("jsonToObjectArray")
     static Object[] jsonToObjectArray(String json) {
         if (json == null || json.isEmpty()) return null;
+
         try {
+            // Try parsing as JSON array
             return objectMapper.readValue(json, Object[].class);
         } catch (JsonProcessingException e) {
+            // If the value is a JSON string containing an array (like "\"[]\"")
+            if (json.startsWith("\"[") && json.endsWith("]\"")) {
+                String unquoted = json.substring(1, json.length() - 1).replace("\\\"", "\"");
+                try {
+                    return objectMapper.readValue(unquoted, Object[].class);
+                } catch (JsonProcessingException ex) {
+                    throw new RuntimeException("❌ Failed to parse unquoted JSON string: " + unquoted, ex);
+                }
+            }
             throw new RuntimeException("❌ Failed to parse JSON string to Object[]: " + json, e);
         }
     }
@@ -132,8 +143,12 @@ public interface AmlHistoryMapper {
     // NORMALIZE RULES TRIGGERED
     // -------------------------------
     static String normalizeRulesTriggered(Object rulesTriggered) {
-        if (rulesTriggered == null) return null;
-        if (rulesTriggered instanceof String) return (String) rulesTriggered;
+        if (rulesTriggered == null) return "[]"; // default to empty array
+        if (rulesTriggered instanceof String) {
+            String str = (String) rulesTriggered;
+            if (str.trim().isEmpty()) return "[]";
+            return str;
+        }
         if (rulesTriggered instanceof Object[]) return objectArrayToJson((Object[]) rulesTriggered);
         try {
             return objectMapper.writeValueAsString(rulesTriggered);

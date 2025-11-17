@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class CustomerAmlDto {
-
     private String legalId;
     private String familyName;
     private String givenName;
