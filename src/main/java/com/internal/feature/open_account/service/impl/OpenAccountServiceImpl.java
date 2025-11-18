@@ -2,11 +2,11 @@ package com.internal.feature.open_account.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.internal.config.TestProperties;
 import com.internal.enumation.AmlStatusEnum;
 import com.internal.enumation.OpenAccStatusEnum;
 import com.internal.exceptions.error.openaccount.AccountCreationException;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
-import com.internal.feature.aml.dto.request.CustomerAmlDto;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.aml.model.AmlStatus;
 import com.internal.feature.aml.service.AmlService;
@@ -20,6 +20,8 @@ import com.internal.feature.open_account.dto.request.CustomerAmlRequest;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.response.AmlExternalResponseDto;
 import com.internal.feature.open_account.dto.response.CustomerResponse;
+import com.internal.feature.open_account.mapper.MasterDataServiceHelper;
+import com.internal.feature.open_account.mapper.OpenAccountAmlStatusMapper;
 import com.internal.feature.open_account.service.OpenAccountService;
 import com.internal.feature.open_account.service.external.*;
 import com.internal.feature.reference.dto.response.OccupationDto;
@@ -52,6 +54,9 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private final AmlMiddlewareService amlMiddlewareService;
     private final OccupationService occupationService;
     private final OpenAccountTelegramAlertServiceImpl alertTelegramService;
+    private final OpenAccountAmlStatusMapper openAccountAmlStatusMapper;
+    private final TestProperties isTestMode;
+    private final MasterDataServiceHelper masterDataServiceHelper;
 
     @Override
     @Transactional
@@ -75,8 +80,8 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             Map<String, String> customerInfo = getCustomerInfo(request);
 
             // Step 3: Validate existing accounts
-            currentStep = "VALIDATE_EXISTING_ACCOUNTS";
-            validateExistingAccounts(customerInfo);
+//            currentStep = "VALIDATE_EXISTING_ACCOUNTS";
+//            validateExistingAccounts(customerInfo);
 
             // Step 4: Process AML (before account creation)
             currentStep = "PROCESS_AML";
@@ -172,14 +177,71 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     }
 
     private AmlStatusDto processAml(CustomerRequest request) {
-        log.info(">>> Step 3: PROCESS_AML");
         try {
-            AmlStatusDto dto = createAmlRecordAndNotify(request);
-            log.info("Step 3 SUCCESS: AML processed successfully");
-            return dto;
+            Optional<AmlStatus> existingAmlOpt = amlService.findByLegalId(request.getLegalId());
+
+            if (existingAmlOpt.isPresent()) {
+                AmlStatus existing = existingAmlOpt.get();
+                AmlStatusEnum status = existing.getStatus();
+
+                switch (status) {
+                    case APPROVE:
+                        return openAccountAmlStatusMapper.toDto(existing);
+
+                    case PENDING:
+                        throw new AccountCreationException(
+                                String.format(AppConstants.AML_NEED_REVIEW_MSG, request.getLegalId())
+                        );
+
+                    case REJECT:
+                        throw new AccountCreationException(
+                                String.format(AppConstants.AML_REJECTED_MSG, request.getLegalId())
+                        );
+
+                    default:
+                        throw new AccountCreationException(
+                                String.format(AppConstants.AML_UNKNOWN_MSG, request.getLegalId())
+                        );
+                }
+            }
+
+            // No existing AML → call middleware
+            CustomerAmlRequest amlRequestDto = buildAmlRequestDto(request);
+            AmlExternalResponseDto amlResponse = callAmlMiddleware(amlRequestDto, request.getLegalId());
+
+            OccupationDto occupation = safeOccupationLookup(request.getOccupation());
+            String occupationStatus = occupation != null
+                    ? occupation.getNameEn() + " / " + occupation.getNameKh()
+                    : "";
+
+            boolean isHighRisk = "High".equalsIgnoreCase(amlResponse.getRiskLevel());
+
+            CreateAmlRequestDto createRequest = openAccountAmlStatusMapper.toCreateRequest(
+                    amlRequestDto,
+                    amlResponse,
+                    request,
+                    occupationStatus,
+                    isHighRisk ? AmlStatusEnum.PENDING : AmlStatusEnum.APPROVE,
+                    objectMapper
+            );
+
+            if (isHighRisk) {
+                amlService.createAmlStatus(createRequest); // save only high risk
+                sendAmlNotification(amlRequestDto, amlResponse, request);
+
+                throw new AccountCreationException(
+                        String.format(AppConstants.AML_NEED_REVIEW_MSG, request.getLegalId())
+                );
+            }
+
+            // LOW risk → return DTO from mapper
+            return openAccountAmlStatusMapper.fromRequestAndResponse(request, amlResponse, AmlStatusEnum.APPROVE);
+
+        } catch (AccountCreationException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("Step 3 FAILED: AML processing failed: {}", e.getMessage());
-            throw e; // Re-throw to stop account creation
+            log.error("Unexpected AML error for {}: {}", request.getLegalId(), e.getMessage(), e);
+            throw new RuntimeException("Failed to process AML check", e);
         }
     }
 
@@ -190,34 +252,32 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     }
 
     private String createCustomerIfNeeded(CustomerRequest request, Map<String, String> customerInfo) {
-        String cif = customerInfo.get("CIF");
-        if (cif != null && !cif.isEmpty()) {
-            log.info("Existing CIF found: {}", cif);
-            log.info("Step 5 SKIPPED: Using existing customer");
-            return cif;
+
+        if (isTestMode.isSkipCheckCif()) {
+            log.info("TEST MODE ENABLED — Always creating new customer, ignoring existing CIF.");
+            Document resp = t24Service.createCustomer(request);
+            return XmlParser.extractCif(resp);
         }
 
-        log.info(">>> Step 5: CREATE_CUSTOMER");
-        log.info("No existing CIF found. Creating new customer in T24...");
-        Document t24Response = t24Service.createCustomer(request);
-
-        if (t24Response == null) {
-            throw new AccountCreationException("T24 returned null response for customer creation");
-        }
-        if (XmlParser.hasError(t24Response)) {
-            throw new AccountCreationException("T24 error: " + XmlParser.extractErrorMessage(t24Response));
+        // Normal production logic
+        String existingCif = customerInfo.get("CIF");
+        if (existingCif != null && !existingCif.isEmpty()) {
+            log.info("Existing CIF found → Using existing customer");
+            return existingCif;
         }
 
-        cif = XmlParser.extractCif(t24Response);
-        if (cif == null || cif.isEmpty()) {
-            throw new AccountCreationException("No CIF returned from T24");
-        }
-
-        log.info("Step 5 SUCCESS: Customer created in T24 with CIF: {}", cif);
-        return cif;
+        Document resp = t24Service.createCustomer(request);
+        return XmlParser.extractCif(resp);
     }
 
     private String createAccountIfNeeded(CustomerRequest request, Map<String, String> customerInfo, String cif, String currency) {
+
+        if (isTestMode.isSkipCheckAccount()) {
+            log.info("TEST MODE ENABLED — Skipping existing account check → creating new {} account", currency);
+            return createAccount(request, cif, currency);
+        }
+
+        // Normal production check
         if (validationService.hasAccount(customerInfo, currency)) {
             log.info(">>> Step {}: CREATE_{}_ACCOUNT - SKIPPED (already exists)",
                     currency.equals("KHR") ? 6 : 7, currency);
@@ -308,105 +368,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         }
     }
 
-    /**
-     * Process AML with admin approval mechanism:
-     * 1. Check if Legal ID exists in AML table
-     * 2. If exists with APPROVE status → Skip middleware, continue account creation
-     * 3. If exists with PENDING → Stop account creation, throw message to wait for admin approval
-     * 4. If exists with REJECT → Stop account creation, throw rejection message
-     * 5. If NOT exists → Call middleware, save as PENDING, stop account creation
-     *    - Send notification ONLY if HIGH risk
-     *    - Always require admin approval before account creation (PENDING status)
-     */
-    private AmlStatusDto createAmlRecordAndNotify(CustomerRequest request) {
-        try {
-            log.info(">>> Checking existing AML for Legal ID: {}", request.getLegalId());
-            // STEP 1: Check if AML record already exists
-            Optional<AmlStatus> existingAmlOpt = amlService.findByLegalId(request.getLegalId());
-
-            existingAmlOpt.ifPresent(record -> log.info("Existing AML record found: Status={}", record.getStatus()));
-
-
-            if (existingAmlOpt.isPresent()) {
-                AmlStatus existing = existingAmlOpt.get();
-                AmlStatusEnum status = existing.getStatus();
-
-                log.info("AML record already exists for Legal ID: {} with status: {}",
-                        request.getLegalId(), status);
-
-                switch (status) {
-                    case APPROVE:
-                        // ✅ Admin approved - skip middleware, continue account creation
-                        log.info("AML already APPROVED by admin. Skipping middleware check. Continuing account creation...");
-                        return AmlStatusDto.builder()
-                                .status(AmlStatusEnum.APPROVE)
-                                .remarks("AML approved by admin - Account creation allowed")
-                                .build();
-
-                    case PENDING:
-                        // ⏳ Waiting for admin approval - stop account creation
-                        log.warn("AML status is PENDING for Legal ID: {}. Waiting for admin approval.",
-                                request.getLegalId());
-                        throw new AccountCreationException(
-                                "AML check for Legal ID " + request.getLegalId() +
-                                        " is PENDING admin approval. Please wait for manual review before creating account."
-                        );
-
-                    case REJECT:
-                        // ❌ Admin rejected - stop account creation
-                        log.warn("AML status is REJECTED for Legal ID: {}", request.getLegalId());
-                        throw new AccountCreationException(
-                                "AML check for Legal ID " + request.getLegalId() +
-                                        " has been REJECTED by admin. Account cannot be created."
-                        );
-
-                    default:
-                        throw new AccountCreationException(
-                                "AML check for Legal ID " + request.getLegalId() +
-                                        " has unknown status: " + status
-                        );
-                }
-            }
-
-            // STEP 2: No existing AML record - call middleware to check risk
-            log.info("No existing AML record found. Calling middleware for Legal ID: {}",
-                    request.getLegalId());
-
-            CustomerAmlRequest amlRequestDto = buildAmlRequestDto(request);
-            AmlExternalResponseDto amlResponse = callAmlMiddleware(amlRequestDto, request.getLegalId());
-
-            // STEP 3: Save AML record as PENDING (requires admin approval)
-            AmlStatusDto savedAmlStatus = saveAmlRecord(amlRequestDto, amlResponse, request, AmlStatusEnum.PENDING);
-
-            log.info("AML record saved with PENDING status for Legal ID: {}", request.getLegalId());
-
-            // STEP 4: Send notification if HIGH risk
-            boolean isHighRisk = "High".equalsIgnoreCase(amlResponse.getRiskLevel());
-            if (isHighRisk) {
-                log.warn("HIGH RISK detected for Legal ID: {}. Sending notification to admin...",
-                        request.getLegalId());
-                sendAmlNotification(amlRequestDto, amlResponse, request);
-            } else {
-                log.info("LOW risk detected for Legal ID: {}. No notification sent.",
-                        request.getLegalId());
-            }
-
-            // STEP 5: Always stop account creation - require admin approval first
-            throw new AccountCreationException(
-                    "AML screening completed for Legal ID " + request.getLegalId() +
-                            ". Risk Level: " + amlResponse.getRiskLevel() +
-                            ". Status set to PENDING. Please wait for admin approval before creating account."
-            );
-
-        } catch (AccountCreationException e) {
-            throw e; // Propagate specific messages to controller
-        } catch (Exception e) {
-            log.error("Unexpected error in AML processing for Legal ID {}: {}",
-                    request.getLegalId(), e.getMessage(), e);
-            throw new RuntimeException("Failed to process AML check", e);
-        }
-    }
-
     private CustomerAmlRequest buildAmlRequestDto(CustomerRequest request) {
         return CustomerAmlRequest.builder()
                 .customerId(request.getLegalId())
@@ -447,67 +408,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         return response;
     }
 
-    private AmlStatusDto saveAmlRecord(CustomerAmlRequest amlRequest,
-                                       AmlExternalResponseDto amlResponse,
-                                       CustomerRequest request,
-                                       AmlStatusEnum status) throws JsonProcessingException {
-
-        OccupationDto occupationDto = safeOccupationLookup(request.getOccupation());
-
-        String occupationCode = request.getOccupation();
-        String occupationStatus = occupationDto != null
-                ? occupationDto.getNameEn() + " / " + occupationDto.getNameKh()
-                : "UNKNOWN";
-
-        CreateAmlRequestDto createRequest = CreateAmlRequestDto.builder()
-                // Set status based on risk level (PENDING for manual admin approval)
-                .status(status)
-
-                // Personal info
-                .legalId(request.getLegalId())
-                .familyName(request.getFamilyName())
-                .givenName(request.getGivenName())
-                .firstNameKh(request.getFirstNameKh())
-                .lastNameKh(request.getLastNameKh())
-                .dateOfBirth(request.getDateOfBirth())
-                .gender(request.getGender())
-                .nationality("KH")
-                .legalAddress(request.getLegalAddress())
-                .issuedDate(request.getLegalIssueDate())
-                .expiredDate(request.getLegalExpireDate())
-
-                // Contact & other personal
-                .phoneNumber(request.getPhoneNumber())
-                .maritalStatus(request.getMaritalStatus())
-                .occupationCode(occupationCode)
-                .occupationStatus(occupationStatus)
-
-                // Customer current address
-                .customerCurrentProvince(request.getCustomerCurrentProvince())
-                .customerCurrentDistrict(request.getCustomerCurrentDistrict())
-                .customerCurrentCommune(request.getCustomerCurrentCommune())
-                .customerCurrentVillage(request.getCustomerCurrentVillage())
-
-                // Place of birth
-                .customerPobProvince(request.getCustomerPobProvince())
-                .customerPobDistrict(request.getCustomerPobDistrict())
-                .customerPobCommune(request.getCustomerPobCommune())
-                .customerPobVillage(request.getCustomerPobVillage())
-
-                // AML external results
-                .screeningResult(objectMapper.writeValueAsString(amlResponse))
-                .riskLevel(amlResponse.getRiskLevel())
-                .actionTaken(amlResponse.getActionTaken())
-                .rulesTriggered(objectMapper.writeValueAsString(amlResponse.getRulesTriggered()))
-                .serviceName(amlResponse.getServiceName())
-                .totalRulesScore(amlResponse.getTotalRulesScore())
-                .trxnID(amlResponse.getTrxnID())
-
-                .build();
-
-        return amlService.createAmlStatus(createRequest);
-    }
-
     /**
      * Send Email/Telegram notification
      * Called ONLY when Risk Level is HIGH
@@ -516,35 +416,17 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                                      AmlExternalResponseDto amlResponse,
                                      CustomerRequest request) {
 
-        // 🔹 Log entry and key status info
         log.info(">>> ENTER sendAmlNotification() for Legal ID: {}", request.getLegalId());
         log.info("AML Risk Level: {}", amlResponse.getRiskLevel());
         log.info("AML Status (from request context / expected): PENDING");
 
         try {
-            // Build AML DTO payload
-            AmlStatusDto amlDto = AmlStatusDto.builder()
-                    .status(AmlStatusEnum.PENDING)
-                    .customerInfo(CustomerAmlDto.builder()
-                            .legalId(request.getLegalId())
-                            .givenName(request.getGivenName())
-                            .familyName(request.getFamilyName())
-                            .firstNameKh(request.getFirstNameKh())
-                            .lastNameKh(request.getLastNameKh())
-                            .dateOfBirth(request.getDateOfBirth())
-                            .gender(request.getGender())
-                            .placeOfBirth(request.getPlaceOfBirth())
-                            .phoneNumber(request.getPhoneNumber())
-                            .nationality("KH")
-                            .legalAddress(request.getLegalAddress())
-                            .build())
-                    .riskLevel(amlResponse.getRiskLevel())
-                    .actionTaken(amlResponse.getActionTaken())
-                    .serviceName(amlResponse.getServiceName())
-                    .totalRulesScore(amlResponse.getTotalRulesScore())
-                    .rulesTriggered(amlResponse.getRulesTriggered())
-                    .trxnID(amlResponse.getTrxnID())
-                    .build();
+            // Use mapper to build the AML DTO payload
+            AmlStatusDto amlDto = openAccountAmlStatusMapper.fromRequestAndResponse(
+                    request,
+                    amlResponse,
+                    AmlStatusEnum.PENDING
+            );
 
             // Telegram Notification
             log.info(">>> Attempting Telegram notification for Legal ID: {}", request.getLegalId());

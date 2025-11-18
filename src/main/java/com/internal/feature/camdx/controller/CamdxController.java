@@ -3,13 +3,16 @@ package com.internal.feature.camdx.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.camdx.dto.CamdxFaceRequest;
-import com.internal.feature.camdx.dto.CamdxRequest;
 import com.internal.feature.camdx.dto.CamdxValidateNidRequest;
 import com.internal.feature.camdx.service.CamdxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import javax.validation.Valid;
 
 @RestController
@@ -35,15 +38,15 @@ public class CamdxController {
     /**
      * Validate NID Face matching (ID photo vs live capture)
      */
-    @PostMapping("/validate-face")
-    public ResponseEntity<ApiResponse<?>> validateNidFace(@Valid @RequestBody CamdxRequest request) {
-        log.info("Processing NID face validation request");
-
-        JsonNode response = nidService.validateNidFace(request);
-
-        log.info("NID face validation completed successfully");
-        return ResponseEntity.ok(ApiResponse.success("Face validation successful", response));
-    }
+//    @PostMapping("/validate-face")
+//    public ResponseEntity<ApiResponse<?>> validateNidFace(@Valid @RequestBody CamdxRequest request) {
+//        log.info("Processing NID face validation request");
+//
+//        JsonNode response = nidService.validateNidFace(request);
+//
+//        log.info("NID face validation completed successfully");
+//        return ResponseEntity.ok(ApiResponse.success("Face validation successful", response));
+//    }
 
     /**
      * Extract NID information via OCR

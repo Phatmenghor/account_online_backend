@@ -58,48 +58,38 @@ public interface AmlStatusMapper {
     AmlStatus fromCreateDto(CreateAmlRequestDto request);
 
     // ============================================================
-    // ENTITY → DTO
+    // ENTITY → DTO (NO DUPLICATE NESTED MAPPING)
     // ============================================================
     @Mappings({
-            // Customer
-            @Mapping(target = "customerInfo.legalId", source = "legalId"),
-            @Mapping(target = "customerInfo.familyName", source = "familyName"),
-            @Mapping(target = "customerInfo.givenName", source = "givenName"),
-            @Mapping(target = "customerInfo.firstNameKh", source = "firstNameKh"),
-            @Mapping(target = "customerInfo.lastNameKh", source = "lastNameKh"),
-            @Mapping(target = "customerInfo.dateOfBirth", source = "dateOfBirth"),
-            @Mapping(target = "customerInfo.gender", source = "gender"),
-            @Mapping(target = "customerInfo.nationality", source = "nationality"),
-            @Mapping(target = "customerInfo.phoneNumber", source = "phoneNumber"),
-            @Mapping(target = "maritalStatus", source = "maritalStatus"),
-            @Mapping(target = "occupationCode", source = "occupationCode"),
-            @Mapping(target = "occupationStatus", source = "occupationStatus"),
+            @Mapping(target = "customerInfo.legalId",      source = "legalId"),
+            @Mapping(target = "customerInfo.familyName",   source = "familyName"),
+            @Mapping(target = "customerInfo.givenName",    source = "givenName"),
+            @Mapping(target = "customerInfo.firstNameKh",  source = "firstNameKh"),
+            @Mapping(target = "customerInfo.lastNameKh",   source = "lastNameKh"),
+            @Mapping(target = "customerInfo.dateOfBirth",  source = "dateOfBirth"),
+            @Mapping(target = "customerInfo.gender",       source = "gender"),
+            @Mapping(target = "customerInfo.nationality",  source = "nationality"),
+            @Mapping(target = "customerInfo.phoneNumber",  source = "phoneNumber"),
+            @Mapping(target = "customerInfo.issuedDate", source = "issuedDate"),
+            @Mapping(target = "customerInfo.expiredDate", source = "expiredDate"),
 
-            // Document
-            @Mapping(target = "issuedDate", source = "issuedDate"),
-            @Mapping(target = "expiredDate", source = "expiredDate"),
-
-            // Address
+            // Address to customerInfo
             @Mapping(target = "customerInfo.legalAddress", source = "currentAddressName"),
-            @Mapping(target = "currentAddressName", source = "currentAddressName"),
-            @Mapping(target = "currentAddressCode", source = "currentAddressCode"),
+
+
             @Mapping(target = "placeOfBirthName", source = "placeOfBirthName"),
-            @Mapping(target = "placeOfBirthCode", source = "placeOfBirthCode"),
 
-            // AML
-            @Mapping(target = "riskLevel", source = "amlExternalRiskLevel"),
-            @Mapping(target = "actionTaken", source = "amlExternalActionTaken"),
-            @Mapping(target = "rulesTriggered", source = "amlExternalRulesTriggered", qualifiedByName = "jsonToObjectArray"),
-            @Mapping(target = "serviceName", source = "amlExternalServiceName"),
+            // AML external info
+            @Mapping(target = "riskLevel",       source = "amlExternalRiskLevel"),
+            @Mapping(target = "actionTaken",     source = "amlExternalActionTaken"),
+            @Mapping(target = "rulesTriggered",  source = "amlExternalRulesTriggered"),
+            @Mapping(target = "serviceName",     source = "amlExternalServiceName"),
             @Mapping(target = "totalRulesScore", source = "amlExternalTotalRulesScore"),
-            @Mapping(target = "trxnID", source = "amlExternalTrxnID"),
-
-            // Remarks
-            @Mapping(target = "remarks", source = "remarks"),
+            @Mapping(target = "trxnID",          source = "amlExternalTrxnID"),
 
             // Users
             @Mapping(target = "approvedBy", source = "approvedBy"),
-            @Mapping(target = "rejectedBy", source = "rejectedBy")
+            @Mapping(target = "rejectedBy", source = "rejectedBy"),
     })
     AmlStatusDto toStatusDto(AmlStatus status);
 

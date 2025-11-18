@@ -35,6 +35,7 @@ public class CpbProperties {
     public static class Aml {
         private String token;
         private String url;
+        private boolean devForceHighRisk = false;
     }
 
     @Data

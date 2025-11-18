@@ -6,10 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -24,7 +21,7 @@ public class CustomerImageController {
     private final CustomerImageService customerImageService;
 
     // 🔹 Stream NID image by legal ID
-    @GetMapping("/{legalId}/nid")
+    @PostMapping("/{legalId}/nid")
     public ResponseEntity<byte[]> getNidImage(@PathVariable String legalId) {
         try {
             if (!customerImageService.nidImageExists(legalId)) {
@@ -45,7 +42,7 @@ public class CustomerImageController {
     }
 
     // 🔹 Stream Selfie image by legal ID
-    @GetMapping("/{legalId}/selfie")
+    @PostMapping("/{legalId}/selfie")
     public ResponseEntity<byte[]> getSelfieImage(@PathVariable String legalId) {
         try {
             if (!customerImageService.selfieImageExists(legalId)) {

@@ -6,6 +6,7 @@ import com.internal.feature.open_account.dto.request.CustomerAmlRequest;
 import com.internal.feature.open_account.dto.response.AmlExternalResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -19,23 +20,20 @@ public class AmlMiddlewareService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    private static final boolean DEV_FORCE_HIGH_RISK = true; // toggle on/off
-
     public AmlExternalResponseDto CheckAml(CustomerAmlRequest requestBody) {
-        // ✅ Dev override
-        if (DEV_FORCE_HIGH_RISK) {
+        // ✅ Dev override from properties
+        if (properties.getAml().isDevForceHighRisk()) {
             log.info("DEV override: returning HIGH risk for Legal ID {}", requestBody.getCustomerId());
             return AmlExternalResponseDto.builder()
                     .riskLevel("High")
                     .actionTaken("BLOCK")
                     .totalRulesScore(100)
                     .trxnID("DEV-TRXN-001")
-                    .rulesTriggered(new Object[]{"Rule1", "Rule2"})
+                    .rulesTriggered("[\"Rule1\",\"Rule2\"]")
                     .serviceName("MockService")
                     .build();
         }
 
-        // Original real API logic
         try {
             String url = properties.getAml().getUrl();
             String bearerToken = properties.getAml().getToken();
@@ -55,7 +53,12 @@ public class AmlMiddlewareService {
             String rawBody = response.getBody();
             log.info("AML raw response body: {}", rawBody);
 
-            return objectMapper.readValue(rawBody, AmlExternalResponseDto.class);
+            var map = objectMapper.readValue(rawBody, java.util.Map.class);
+            Object rulesArray = map.get("RulesTriggered");
+            String rulesAsString = rulesArray == null ? "" : objectMapper.writeValueAsString(rulesArray);
+            map.put("RulesTriggered", rulesAsString);
+
+            return objectMapper.convertValue(map, AmlExternalResponseDto.class);
 
         } catch (Exception e) {
             log.error("AML API call failed: {}", e.getMessage(), e);
@@ -65,7 +68,7 @@ public class AmlMiddlewareService {
                     .serviceName("Intuition")
                     .totalRulesScore(0)
                     .trxnID(null)
-                    .rulesTriggered(new Object[]{})
+                    .rulesTriggered("")
                     .build();
         }
     }

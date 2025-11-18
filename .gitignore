@@ -36,3 +36,6 @@ build/
 logs/
 *.log
 *.log.*
+
+#ignore mock image
+mock_images/

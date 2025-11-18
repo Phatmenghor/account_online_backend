@@ -19,7 +19,7 @@ public class AmlExternalResponseDto {
         private String actionTaken;
 
         @JsonProperty("RulesTriggered")
-        private Object[] rulesTriggered;
+        private String rulesTriggered;
 
         @JsonProperty("ServiceName")
         private String serviceName;

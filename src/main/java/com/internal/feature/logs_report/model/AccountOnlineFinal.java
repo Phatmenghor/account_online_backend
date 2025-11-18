@@ -3,7 +3,6 @@ package com.internal.feature.logs_report.model;
 import com.internal.config.entity.BaseNoIdEntity;
 import com.internal.enumation.AmlStatusEnum;
 import lombok.*;
-
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -36,7 +35,7 @@ public class AccountOnlineFinal extends BaseNoIdEntity {
     private String mnemonic;
 
     // === LEGAL / NID INFO ===
-    @Column(name = "legal_id", nullable = false)
+    @Column(name = "legal_id", nullable = false, unique = true)
     private String legalId;
 
     @Column(name = "legal_doc_name")

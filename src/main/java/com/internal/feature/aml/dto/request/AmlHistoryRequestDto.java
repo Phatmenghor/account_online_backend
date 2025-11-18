@@ -7,16 +7,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class AmlHistoryRequestDto {
+    // AML status
     private AmlStatusEnum status;
-    private UserResponseDto changedBy;
 
+    // CUSTOMER INFO
     private String legalId;
     private String familyName;
     private String givenName;
@@ -25,9 +24,43 @@ public class AmlHistoryRequestDto {
     private String dateOfBirth;
     private String gender;
     private String nationality;
+
+    // Contact / Personal
+    private String phoneNumber;
+    private String maritalStatus;
+
+    // Document
+    private String issuedDate;
+    private String expiredDate;
+
+    // Address
     private String legalAddress;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String customerCurrentProvince;
+    private String customerCurrentDistrict;
+    private String customerCurrentCommune;
+    private String customerCurrentVillage;
+
+    private String customerPobProvince;
+    private String customerPobDistrict;
+    private String customerPobCommune;
+    private String customerPobVillage;
+
+    // Occupation
+    private String occupationCode;
+    private String occupationStatus;
+
+    // AML SCREENING
+    private String screeningResult;
+    private String riskLevel;
+    private String actionTaken;
+    private String rulesTriggered;
+    private String serviceName;
+    private Integer totalRulesScore;
+    private String trxnID;
+
+    // Admin workflow
+    private UserResponseDto approvedBy;
+    private UserResponseDto rejectedBy;
 
 }

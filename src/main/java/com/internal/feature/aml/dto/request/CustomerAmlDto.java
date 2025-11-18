@@ -16,9 +16,10 @@ public class CustomerAmlDto {
     private String firstNameKh;
     private String lastNameKh;
     private String dateOfBirth;
-    private String placeOfBirth;
     private String gender;
     private String nationality;
     private String legalAddress;
     private String phoneNumber;
+    private String issuedDate;
+    private String expiredDate;
 }

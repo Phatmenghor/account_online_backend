@@ -1,7 +1,7 @@
 package com.internal.feature.aml.mapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.internal.enumation.AmlStatusEnum;
 import com.internal.feature.aml.dto.request.AmlHistoryRequestDto;
 import com.internal.feature.aml.dto.response.AllAmlHistoryResponseDto;
 import com.internal.feature.aml.dto.response.AmlHistoryDto;
@@ -21,12 +21,34 @@ public interface AmlHistoryMapper {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    // -------------------------------
-    // CREATE DTO → ENTITY
-    // -------------------------------
-    @Mapping(target = "approvedBy", source = "changedBy")
-    @Mapping(target = "currentAddressName", source = "legalAddress")
-    AmlHistory fromCreateDto(AmlHistoryRequestDto request);
+        // -------------------------------
+        // CREATE DTO → ENTITY
+        // -------------------------------
+        @Mapping(target = "approvedBy", source = "approvedBy")
+        @Mapping(target = "rejectedBy", source = "rejectedBy")
+        @Mapping(target = "legalId", source = "legalId")
+        @Mapping(target = "familyName", source = "familyName")
+        @Mapping(target = "givenName", source = "givenName")
+        @Mapping(target = "firstNameKh", source = "firstNameKh")
+        @Mapping(target = "lastNameKh", source = "lastNameKh")
+        @Mapping(target = "dateOfBirth", source = "dateOfBirth")
+        @Mapping(target = "gender", source = "gender")
+        @Mapping(target = "nationality", source = "nationality")
+        @Mapping(target = "phoneNumber", source = "phoneNumber")
+        @Mapping(target = "maritalStatus", source = "maritalStatus")
+        @Mapping(target = "issuedDate", source = "issuedDate")
+        @Mapping(target = "expiredDate", source = "expiredDate")
+        @Mapping(target = "currentAddressName", source = "legalAddress")
+        @Mapping(target = "occupationCode", source = "occupationCode")
+        @Mapping(target = "occupationStatus", source = "occupationStatus")
+        @Mapping(target = "screeningResult", source = "screeningResult")
+        @Mapping(target = "amlExternalRiskLevel", source = "riskLevel")
+        @Mapping(target = "amlExternalActionTaken", source = "actionTaken")
+        @Mapping(target = "amlExternalRulesTriggered", source = "rulesTriggered")
+        @Mapping(target = "amlExternalServiceName", source = "serviceName")
+        @Mapping(target = "amlExternalTotalRulesScore", source = "totalRulesScore")
+        @Mapping(target = "amlExternalTrxnID", source = "trxnID")
+        AmlHistory fromCreateDto(AmlHistoryRequestDto request);
 
     // -------------------------------
     // ENTITY → DTO
@@ -40,8 +62,15 @@ public interface AmlHistoryMapper {
     @Mapping(target = "customerInfo.gender", source = "gender")
     @Mapping(target = "customerInfo.nationality", source = "nationality")
     @Mapping(target = "customerInfo.legalAddress", source = "currentAddressName")
-    @Mapping(target = "changedBy", source = "approvedBy")
-    @Mapping(target = "rulesTriggered", source = "amlExternalRulesTriggered", qualifiedByName = "jsonToObjectArray")
+    @Mapping(target = "customerInfo.phoneNumber", source = "phoneNumber")
+    @Mapping(target = "customerInfo.issuedDate", source = "issuedDate")
+    @Mapping(target = "customerInfo.expiredDate", source = "expiredDate")
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "rulesTriggered", source = "amlExternalRulesTriggered")
+    @Mapping(target = "riskLevel", source = "amlExternalRiskLevel")
+    @Mapping(target = "trxnID", source = "amlExternalTrxnID")
+    @Mapping(target = "serviceName", source = "amlExternalServiceName")
+    @Mapping(target = "actionTaken", source = "amlExternalActionTaken")
     AmlHistoryDto toDto(AmlHistory history);
 
     // -------------------------------
@@ -55,8 +84,20 @@ public interface AmlHistoryMapper {
         history.setStatus(status.getStatus());
 
         if (changedBy instanceof UserEntity) {
-            history.setApprovedBy((UserEntity) changedBy);
+            UserEntity user = (UserEntity) changedBy;
+
+            if (status.getStatus() == AmlStatusEnum.APPROVE) {
+                history.setApprovedBy(user);
+                history.setRejectedBy(null);
+            } else if (status.getStatus() == AmlStatusEnum.REJECT) {
+                history.setRejectedBy(user);
+                history.setApprovedBy(null);
+            } else {
+                history.setApprovedBy(null);
+                history.setRejectedBy(null);
+            }
         }
+
 
         // Copy customer details
         history.setLegalId(status.getLegalId());
@@ -71,6 +112,9 @@ public interface AmlHistoryMapper {
         history.setCurrentAddressCode(status.getCurrentAddressCode());
         history.setPlaceOfBirthName(status.getPlaceOfBirthName());
         history.setPlaceOfBirthCode(status.getPlaceOfBirthCode());
+        history.setIssuedDate(status.getIssuedDate());
+        history.setExpiredDate(status.getExpiredDate());
+        history.setPlaceOfBirthName(status.getPlaceOfBirthName());
 
         // Copy AML middleware fields
         history.setAmlExternalActionTaken(status.getAmlExternalActionTaken());
@@ -86,7 +130,7 @@ public interface AmlHistoryMapper {
         history.setOccupationCode(status.getOccupationCode());
 
         // Convert rulesTriggered safely
-        history.setAmlExternalRulesTriggered(normalizeRulesTriggered(status.getAmlExternalRulesTriggered()));
+        history.setAmlExternalRulesTriggered(status.getAmlExternalRulesTriggered());
 
         return history;
     }
@@ -104,56 +148,5 @@ public interface AmlHistoryMapper {
         response.setTotalPages(histories.getTotalPages());
         response.setLast(histories.isLast());
         return response;
-    }
-
-    // -------------------------------
-    // CONVERTERS
-    // -------------------------------
-    @Named("jsonToObjectArray")
-    static Object[] jsonToObjectArray(String json) {
-        if (json == null || json.isEmpty()) return null;
-
-        try {
-            // Try parsing as JSON array
-            return objectMapper.readValue(json, Object[].class);
-        } catch (JsonProcessingException e) {
-            // If the value is a JSON string containing an array (like "\"[]\"")
-            if (json.startsWith("\"[") && json.endsWith("]\"")) {
-                String unquoted = json.substring(1, json.length() - 1).replace("\\\"", "\"");
-                try {
-                    return objectMapper.readValue(unquoted, Object[].class);
-                } catch (JsonProcessingException ex) {
-                    throw new RuntimeException("❌ Failed to parse unquoted JSON string: " + unquoted, ex);
-                }
-            }
-            throw new RuntimeException("❌ Failed to parse JSON string to Object[]: " + json, e);
-        }
-    }
-
-    static String objectArrayToJson(Object[] array) {
-        if (array == null) return null;
-        try {
-            return objectMapper.writeValueAsString(array);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("❌ Failed to convert Object[] to JSON string", e);
-        }
-    }
-
-    // -------------------------------
-    // NORMALIZE RULES TRIGGERED
-    // -------------------------------
-    static String normalizeRulesTriggered(Object rulesTriggered) {
-        if (rulesTriggered == null) return "[]"; // default to empty array
-        if (rulesTriggered instanceof String) {
-            String str = (String) rulesTriggered;
-            if (str.trim().isEmpty()) return "[]";
-            return str;
-        }
-        if (rulesTriggered instanceof Object[]) return objectArrayToJson((Object[]) rulesTriggered);
-        try {
-            return objectMapper.writeValueAsString(rulesTriggered);
-        } catch (JsonProcessingException e) {
-            return "[]";
-        }
     }
 }

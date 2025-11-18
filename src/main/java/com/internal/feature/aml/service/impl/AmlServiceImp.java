@@ -23,7 +23,8 @@ import com.internal.feature.aml.specification.AmlStatusSpecification;
 import com.internal.feature.auth.models.UserEntity;
 import com.internal.feature.logs_report.service.AccountOnlineOpenFinalService;
 import com.internal.feature.master_data.dto.response.LocationCodesDto;
-import com.internal.feature.master_data.service.MasterDataService;
+import com.internal.feature.open_account.mapper.MasterDataServiceHelper;
+import com.internal.feature.telegram_alerts.service.serviceImpl.OpenAccountTelegramAlertServiceImpl;
 import com.internal.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -50,8 +50,9 @@ public class AmlServiceImp implements AmlService {
     private final AmlStatusMapper amlStatusMapper;
     private final AmlHistoryMapper amlHistoryMapper;
     private final SecurityUtils securityUtils;
-    private final MasterDataService masterDataService;
     private final AccountOnlineOpenFinalService accountOnlineOpenFinalService;
+    private final OpenAccountTelegramAlertServiceImpl alertTelegramService;
+    private final MasterDataServiceHelper masterDataServiceHelper;
 
     // ------------------------------- FIND BY LEGAL ID -------------------------------
     @Override
@@ -62,7 +63,7 @@ public class AmlServiceImp implements AmlService {
     // ------------------------------- CREATE AML STATUS -------------------------------
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public AmlStatusDto createAmlStatus(CreateAmlRequestDto requestDto) throws JsonProcessingException {
+    public AmlStatus createAmlStatus(CreateAmlRequestDto requestDto) throws JsonProcessingException {
         AmlStatus status = amlStatusMapper.fromCreateDto(requestDto);
         status.setRejectedBy(null);
 
@@ -77,10 +78,7 @@ public class AmlServiceImp implements AmlService {
 
         amlHistoryRepository.save(history);
 
-        // Prepare DTO
-        AmlStatusDto amlDto = amlStatusMapper.toStatusDto(status);
-
-        return amlDto;
+        return status;
     }
 
     // ------------------------------- UPDATE AML STATUS -------------------------------
@@ -111,11 +109,11 @@ public class AmlServiceImp implements AmlService {
         accountOnlineOpenFinalService.updateFinalLogWithAml(amlDto);
 
         // Telegram notification
-//        try {
-//            alertTelegramService.sendTelegramAmlProcess(amlDto);
-//        } catch (Exception e) {
-//            log.error("Failed to send AML {} Telegram notification: {}", req.getStatus(), e.getMessage());
-//        }
+        try {
+            alertTelegramService.sendTelegramAmlProcess(amlDto);
+        } catch (Exception e) {
+            log.error("Failed to send AML {} Telegram notification: {}", req.getStatus(), e.getMessage());
+        }
 
         return amlDto;
     }
@@ -169,56 +167,20 @@ public class AmlServiceImp implements AmlService {
     // ------------------------------- PRIVATE METHODS -------------------------------
 
     private void populateAddressFields(AmlStatus status, CreateAmlRequestDto requestDto) {
-
         // ------------------ Current Address ------------------
         if (requestDto.getCustomerCurrentProvince() != null && !requestDto.getCustomerCurrentProvince().isEmpty()) {
-            LocationCodesDto currentAddr = LocationCodesDto.builder()
-                    .province(masterDataService.getProvinceByCode(requestDto.getCustomerCurrentProvince()))
-                    .district(masterDataService.getDistrictByCode(requestDto.getCustomerCurrentDistrict()))
-                    .commune(masterDataService.getCommuneByCode(requestDto.getCustomerCurrentCommune()))
-                    .village(masterDataService.getVillageByCode(requestDto.getCustomerCurrentVillage()))
-                    .build();
-
-            status.setCurrentAddressName(buildFullAddressName(currentAddr));
-            status.setCurrentAddressCode(buildFullAddressCode(currentAddr));
+            LocationCodesDto currentAddr = masterDataServiceHelper.resolveCurrentAddress(requestDto);
+            status.setCurrentAddressName(masterDataServiceHelper.buildFullAddressName(currentAddr));
+            status.setCurrentAddressCode(masterDataServiceHelper.buildFullAddressCode(currentAddr));
         }
 
         // ------------------ Place of Birth ------------------
         if (requestDto.getCustomerPobProvince() != null && !requestDto.getCustomerPobProvince().isEmpty()) {
-            LocationCodesDto pobAddr = LocationCodesDto.builder()
-                    .province(masterDataService.getProvinceByCode(requestDto.getCustomerPobProvince()))
-                    .district(masterDataService.getDistrictByCode(requestDto.getCustomerPobDistrict()))
-                    .commune(masterDataService.getCommuneByCode(requestDto.getCustomerPobCommune()))
-                    .village(masterDataService.getVillageByCode(requestDto.getCustomerPobVillage())) // optional
-                    .build();
-
-            status.setPlaceOfBirthName(buildFullAddressName(pobAddr));
-            status.setPlaceOfBirthCode(buildFullAddressCode(pobAddr));
+            LocationCodesDto pobAddr = masterDataServiceHelper.resolvePlaceOfBirth(requestDto);
+            status.setPlaceOfBirthName(masterDataServiceHelper.buildFullAddressName(pobAddr));
+            status.setPlaceOfBirthCode(masterDataServiceHelper.buildFullAddressCode(pobAddr));
         }
     }
-
-    private String buildFullAddressName(LocationCodesDto loc) {
-        StringBuilder sb = new StringBuilder();
-        if (loc.getProvince() != null)
-            sb.append(loc.getProvince().getProvinceEn()).append(" (").append(loc.getProvince().getProvinceKh()).append(")");
-        if (loc.getDistrict() != null)
-            sb.append(", ").append(loc.getDistrict().getDistrictEn()).append(" (").append(loc.getDistrict().getDistrictKh()).append(")");
-        if (loc.getCommune() != null)
-            sb.append(", ").append(loc.getCommune().getCommuneEn()).append(" (").append(loc.getCommune().getCommuneKh()).append(")");
-        if (loc.getVillage() != null)
-            sb.append(", ").append(loc.getVillage().getVillageEn()).append(" (").append(loc.getVillage().getVillageKh()).append(")");
-        return sb.toString();
-    }
-
-    private String buildFullAddressCode(LocationCodesDto loc) {
-        List<String> codes = new ArrayList<>();
-        if (loc.getProvince() != null) codes.add(loc.getProvince().getProvinceCode());
-        if (loc.getDistrict() != null) codes.add(loc.getDistrict().getDistrictCode());
-        if (loc.getCommune() != null) codes.add(loc.getCommune().getCommuneCode());
-        if (loc.getVillage() != null) codes.add(loc.getVillage().getVillageCode());
-        return String.join(",", codes);
-    }
-
     private void updateStatusByEnum(AmlStatus status, AmlStatusEnum newStatus, UserEntity user) {
         status.setStatus(newStatus);
         switch (newStatus) {

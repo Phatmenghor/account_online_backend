@@ -3,13 +3,10 @@ package com.internal.feature.camdx.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
-
 @Data
 public class CamdxValidateNidRequest {
 
     @JsonProperty("applicationName")
-    @NotBlank(message = "Application name is required")
     private String applicationName;
 
     @JsonProperty("idNumber")

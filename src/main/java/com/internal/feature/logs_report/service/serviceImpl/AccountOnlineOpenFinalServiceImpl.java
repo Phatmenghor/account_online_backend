@@ -133,7 +133,7 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                     .amlTotalRulesScore(amlProcessResult.getTotalRulesScore())
                     .serviceName(amlProcessResult.getServiceName())
                     .amlTrxnId(amlProcessResult.getTrxnID())
-                    .amlRulesTriggered(joinRulesTriggered(amlProcessResult.getRulesTriggered()))
+                    .amlRulesTriggered(amlProcessResult.getRulesTriggered())
 
                     // Account info
                     .mnemonic(accountInfo.getMnemonic())

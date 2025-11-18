@@ -28,7 +28,7 @@ public class AmlStatusDto {
     // AML EXTERNAL
     private String riskLevel;
     private String actionTaken;
-    private Object[] rulesTriggered;
+    private String rulesTriggered;
     private String serviceName;
     private int totalRulesScore;
     private String trxnID;
@@ -46,8 +46,6 @@ public class AmlStatusDto {
     private String maritalStatus;
     private String occupationCode;
     private String occupationStatus;
-    private String issuedDate;
-    private String expiredDate;
 
     private String remarks;
 }

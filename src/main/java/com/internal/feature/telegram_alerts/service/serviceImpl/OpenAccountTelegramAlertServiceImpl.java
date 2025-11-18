@@ -1,5 +1,6 @@
 package com.internal.feature.telegram_alerts.service.serviceImpl;
 
+import com.internal.enumation.AmlStatusEnum;
 import com.internal.enumation.OpenAccStatusEnum;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.telegram_alerts.config.TelegramService;
@@ -7,6 +8,7 @@ import com.internal.feature.telegram_alerts.service.AlertsOpenAccOnlineService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -23,10 +25,11 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
     @Override
     public void sendTelegramAccountOnlineError(String idNumber, OpenAccStatusEnum status, StringBuilder remarkBuilder) {
         try {
-            String body = String.format("NID: %s\nRemark: %s",
-                    escapeMarkdown(idNumber), escapeMarkdown(remarkBuilder.toString()));
+            StringBuilder bodyBuilder = new StringBuilder();
+            appendIfNotEmpty(bodyBuilder, "NID", idNumber);
+            appendIfNotEmpty(bodyBuilder, "Remark", remarkBuilder != null ? remarkBuilder.toString() : null);
 
-            String message = buildStandardMessage("Account Online Error", body, status.name(), "-");
+            String message = buildStandardMessage("Account Online Error", bodyBuilder.toString(), status.name(), "-");
             telegramService.sendMarkdownMessage(message);
         } catch (Exception e) {
             log.error("Telegram alert sending failed: {}", e.getMessage(), e);
@@ -41,8 +44,9 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
         }
 
         String header = "*AML Account Online*";
+        StringBuilder bodyBuilder = new StringBuilder();
 
-        // Build customer display name directly from DTO fields
+        // Customer display name
         String customerName = getCustomerDisplayName(
                 amlDto.getCustomerInfo().getGivenName(),
                 amlDto.getCustomerInfo().getFamilyName(),
@@ -52,40 +56,48 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
                 amlDto.getCustomerInfo().getLegalId()
         );
 
-        String dobFormatted = formatDob(amlDto.getCustomerInfo().getDateOfBirth());
+        // Append all fields for all statuses
+        appendIfNotEmpty(bodyBuilder, "Name", customerName);
+        appendIfNotEmpty(bodyBuilder, "Legal ID", amlDto.getCustomerInfo().getLegalId());
+        appendIfNotEmpty(bodyBuilder, "Gender", amlDto.getCustomerInfo().getGender());
+        appendIfNotEmpty(bodyBuilder, "DOB", formatDob(amlDto.getCustomerInfo().getDateOfBirth()));
+        appendIfNotEmpty(bodyBuilder, "Nationality", amlDto.getCustomerInfo().getNationality());
+        appendIfNotEmpty(bodyBuilder, "Current Address", amlDto.getCurrentAddressName());
+        appendIfNotEmpty(bodyBuilder, "Phone Number", amlDto.getCustomerInfo().getPhoneNumber());
+        appendIfNotEmpty(bodyBuilder, "Place of Birth", amlDto.getPlaceOfBirthName());
+        appendIfNotEmpty(bodyBuilder, "Marital Status", amlDto.getMaritalStatus());
+        appendIfNotEmpty(bodyBuilder, "ID Issued", amlDto.getCustomerInfo().getIssuedDate());
+        appendIfNotEmpty(bodyBuilder, "ID Expired", amlDto.getCustomerInfo().getExpiredDate());
+        appendIfNotEmpty(bodyBuilder, "Occupation", amlDto.getOccupationStatus());
+        appendIfNotEmpty(bodyBuilder, "Risk Level", amlDto.getRiskLevel());
+        appendIfNotEmpty(bodyBuilder, "Action Taken", amlDto.getActionTaken());
+        appendIfNotEmpty(bodyBuilder, "Service Name", amlDto.getServiceName());
+        if (amlDto.getTotalRulesScore() > 0) {
+            bodyBuilder.append("- Total Rules Score: ").append(amlDto.getTotalRulesScore()).append("\n");
+        }
+        appendIfNotEmpty(bodyBuilder, "Rules Triggered", String.join(", ", amlDto.getRulesTriggered()));
+        appendIfNotEmpty(bodyBuilder, "Transaction ID", amlDto.getTrxnID());
+        appendIfNotEmpty(bodyBuilder, "Remarks", amlDto.getRemarks());
 
-        String body = String.format(
-                "- Name: %s\n- ID: %s\n- DOB: %s\n- Nationality: %s\n- Address: %s\n- Risk: %s",
-                escapeMarkdown(getOrNA(customerName)),
-                escapeMarkdown(getOrNA(amlDto.getCustomerInfo().getLegalId())),
-                escapeMarkdown(getOrNA(dobFormatted)),
-                escapeMarkdown(getOrNA(amlDto.getCustomerInfo().getNationality())),
-                escapeMarkdown(getOrNA(amlDto.getCurrentAddressName())),
-                escapeMarkdown(getOrNA(amlDto.getRiskLevel()))
-        );
-
+        // Footer: "By" is empty for PENDING
         String statusText = amlDto.getStatus() != null ? amlDto.getStatus().name() : "N/A";
-        String byUser = getProcessedUserName(amlDto);
-
-        // Use AML record creation time if available, else fallback to now
+        String byUser = amlDto.getStatus() == AmlStatusEnum.PENDING ? "" : getProcessedUserName(amlDto);
         String timeFormatted = amlDto.getCreatedAt() != null
                 ? amlDto.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                 : LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
-        String footer = String.format("Status: %s\nBy: %s\nTime: %s",
-                escapeMarkdown(statusText),
-                escapeMarkdown(getOrNA(byUser)),
-                escapeMarkdown(timeFormatted));
+        String footer = "Status: " + escapeMarkdown(statusText) + "\n" +
+                (byUser.isEmpty() ? "" : "By: " + escapeMarkdown(byUser) + "\n") +
+                "Time: " + escapeMarkdown(timeFormatted);
 
-        String message = header + "\n" + SEPARATOR + "\n" + body + "\n" + SEPARATOR + "\n" + footer;
+        String message = header + "\n" + SEPARATOR + "\n" + bodyBuilder + SEPARATOR + "\n" + footer;
 
         telegramService.sendMarkdownUATMonitorMessage(message);
     }
 
     private String formatDob(String dob) {
-        if (dob == null || dob.isEmpty()) return "N/A";
+        if (dob == null || dob.isEmpty()) return null;
         try {
-            // Accepts both single-digit and double-digit months/days
             DateTimeFormatter inputFormatter = new DateTimeFormatterBuilder()
                     .appendPattern("yyyy-M-d")
                     .parseStrict()
@@ -94,12 +106,8 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
             return date.format(DateTimeFormatter.ofPattern("dd MMM yyyy"));
         } catch (Exception e) {
             log.warn("Failed to parse DOB '{}': {}", dob, e.getMessage());
-            return dob; // fallback to original string
+            return dob;
         }
-    }
-
-    private String getOrNA(String text) {
-        return (text == null || text.isEmpty()) ? "N/A" : text;
     }
 
     private String getCustomerDisplayName(
@@ -107,27 +115,12 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
             String familyName,
             String firstNameKh,
             String lastNameKh,
-            com.internal.enumation.AmlStatusEnum status,
+            AmlStatusEnum status,
             String legalId
     ) {
-        // Prefer English names first
         String name = joinNonNull(givenName, familyName);
-
-        // If English name is empty, fallback to Khmer names
-        if (name.isEmpty()) {
-            name = joinNonNull(firstNameKh, lastNameKh);
-        }
-
-        // If still empty, fallback to legal ID
-        if (name.isEmpty()) {
-            name = legalId != null ? legalId : "";
-        }
-
-        // If status is PENDING, mask to first character
-        if (status == com.internal.enumation.AmlStatusEnum.PENDING && !name.isEmpty()) {
-            name = name.substring(0, 1);
-        }
-
+        if (name.isEmpty()) name = joinNonNull(firstNameKh, lastNameKh);
+        if (name.isEmpty()) name = legalId != null ? legalId : "";
         return name;
     }
 
@@ -136,55 +129,43 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
 
         switch (amlDto.getStatus()) {
             case PENDING:
-                return "N/A";
+                return ""; // Hide "By" for pending
             case APPROVE:
                 if (amlDto.getApprovedBy() != null) {
-                    if (amlDto.getApprovedBy().getFullName() != null && !amlDto.getApprovedBy().getFullName().isEmpty()) {
+                    if (amlDto.getApprovedBy().getFullName() != null && !amlDto.getApprovedBy().getFullName().isEmpty())
                         return amlDto.getApprovedBy().getFullName();
-                    } else if (amlDto.getApprovedBy().getIdCard() != null && !amlDto.getApprovedBy().getIdCard().isEmpty()) {
+                    if (amlDto.getApprovedBy().getIdCard() != null && !amlDto.getApprovedBy().getIdCard().isEmpty())
                         return amlDto.getApprovedBy().getIdCard();
-                    }
                 }
-                return "N/A"; // If no user info, fallback to N/A
+                return "";
             case REJECT:
                 if (amlDto.getRejectedBy() != null) {
-                    if (amlDto.getRejectedBy().getFullName() != null && !amlDto.getRejectedBy().getFullName().isEmpty()) {
+                    if (amlDto.getRejectedBy().getFullName() != null && !amlDto.getRejectedBy().getFullName().isEmpty())
                         return amlDto.getRejectedBy().getFullName();
-                    } else if (amlDto.getRejectedBy().getIdCard() != null && !amlDto.getRejectedBy().getIdCard().isEmpty()) {
+                    if (amlDto.getRejectedBy().getIdCard() != null && !amlDto.getRejectedBy().getIdCard().isEmpty())
                         return amlDto.getRejectedBy().getIdCard();
-                    }
                 }
-                return "N/A"; // If no user info, fallback to N/A
+                return "";
             default:
-                return "N/A";
+                return "";
         }
     }
 
-    private String buildStandardMessage(String header, String body, String status, String user) {
-        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        return "*" + escapeMarkdown(header) + "*\n" +
-                SEPARATOR + "\n" +
-                body + "\n" +
-                SEPARATOR + "\n" +
-                "Status: " + escapeMarkdown(status) + "\n" +
-                "By: " + getOrNA(user) + "\n" +
-                "Time: " + now;
+    private void appendIfNotEmpty(StringBuilder sb, String fieldName, String value) {
+        if (value != null && !value.trim().isEmpty()) {
+            sb.append("- ").append(fieldName).append(": ").append(escapeMarkdown(value)).append("\n");
+        }
     }
 
     private String escapeMarkdown(String text) {
         if (text == null) return "";
-        return text.replace("\\", "\\\\")
-                .replace("_", "\\_")
+        // Escape only characters that actually break Markdown
+        return text.replace("_", "\\_")
                 .replace("*", "\\*")
-                .replace("[", "\\[").replace("]", "\\]")
-                .replace("(", "\\(").replace(")", "\\)")
-                .replace("~", "\\~").replace("`", "\\`")
-                .replace(">", "\\>").replace("#", "\\#")
-                .replace("+", "\\+")
-                .replace("=", "\\=").replace("|", "\\|")
-                .replace("{", "\\{").replace("}", "\\}").replace(".", "\\.")
-                .replace("!", "\\!");
+                .replace("~", "\\~")
+                .replace("`", "\\`");
     }
+
 
     private String joinNonNull(String a, String b) {
         StringBuilder sb = new StringBuilder();
@@ -194,5 +175,16 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
             sb.append(b.trim());
         }
         return sb.toString();
+    }
+
+    private String buildStandardMessage(String header, String body, String status, String user) {
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        return "*" + escapeMarkdown(header) + "*\n" +
+                SEPARATOR + "\n" +
+                body + "\n" +
+                SEPARATOR + "\n" +
+                "Status: " + escapeMarkdown(status) + "\n" +
+                (user != null && !user.isEmpty() ? "By: " + escapeMarkdown(user) + "\n" : "") +
+                "Time: " + now;
     }
 }

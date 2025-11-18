@@ -20,6 +20,7 @@ public interface UserMapper {
     @Mapping(source = "id", target = "id")
     @Mapping(source = "email", target = "email")
     @Mapping(source = "username", target = "idCard")
+    @Mapping(source = "userPermission", target = "userPermission")
     @Mapping(source = "status", target = "userStatus", qualifiedByName = "statusToString")
     @Mapping(source = "roles", target = "userRole", qualifiedByName = "rolesToString")
     @Mapping(source = "createdAt", target = "createdAt")

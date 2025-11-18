@@ -15,7 +15,7 @@ import java.util.Optional;
 
 public interface AmlService {
     Optional<AmlStatus> findByLegalId(String legalId);
-    AmlStatusDto createAmlStatus(CreateAmlRequestDto requestDto) throws JsonProcessingException;
+    AmlStatus createAmlStatus(CreateAmlRequestDto requestDto) throws JsonProcessingException;
     AmlStatusDto updateAmlStatus(Long id, UpdateAmlStatusDto status) throws JsonProcessingException;
     AllAmlResponseDto getAllAml(AllAmlRequestDto requestDto);
     AmlStatusDto getAmlById(Long id);
