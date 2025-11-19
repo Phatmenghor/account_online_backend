@@ -72,7 +72,7 @@ public class ApplicationController {
 
     @PostMapping("/all-list")
     public ResponseEntity<ApiResponse<List<ApplicationResponseDto>>> getAllListProject(@RequestBody GetAllApplicationRequestDto requestDto) {
-        log.info("Getting all list projects with filters - page: {}, size: {}", requestDto.getPageNo(), requestDto.getPageSize());
+        log.info("Getting all list projects with filters -- page: {}, size: {}", requestDto.getPageNo(), requestDto.getPageSize());
 
         List<ApplicationResponseDto> result = projectService.getAllListProject(requestDto);
 
