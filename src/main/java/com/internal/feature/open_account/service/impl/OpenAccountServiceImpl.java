@@ -20,7 +20,6 @@ import com.internal.feature.open_account.dto.request.CustomerAmlRequest;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.response.AmlExternalResponseDto;
 import com.internal.feature.open_account.dto.response.CustomerResponse;
-import com.internal.feature.open_account.mapper.MasterDataServiceHelper;
 import com.internal.feature.open_account.mapper.OpenAccountAmlStatusMapper;
 import com.internal.feature.open_account.service.OpenAccountService;
 import com.internal.feature.open_account.service.external.*;
@@ -30,6 +29,7 @@ import com.internal.feature.telegram_alerts.service.serviceImpl.OpenAccountTeleg
 import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
@@ -56,7 +56,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private final OpenAccountTelegramAlertServiceImpl alertTelegramService;
     private final OpenAccountAmlStatusMapper openAccountAmlStatusMapper;
     private final TestProperties isTestMode;
-    private final MasterDataServiceHelper masterDataServiceHelper;
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
     @Transactional
@@ -75,6 +75,10 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         String usdAccount = null;
 
         try {
+            //step 1: Test connection
+            currentStep = "TEST_CONNECTION";
+            testConnection();
+
             // Step 2: Get customer info
             currentStep = "GET_CUSTOMER_INFO";
             Map<String, String> customerInfo = getCustomerInfo(request);
@@ -118,7 +122,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
             // Step 12: Save success log (non-blocking)
             currentStep = "SAVE_FINAL_LOG";
-            CustomerResponse accInfo = buildCustomerAccInfo(cif, khrAccount, usdAccount, mnemonic);
+            CustomerResponse accInfo = openAccountAmlStatusMapper.buildCustomerAccInfo(cif, khrAccount, usdAccount, mnemonic);
             safeSaveSuccessLog(request, accInfo, amlProcessResult, imagePaths);
 
             // Step 13: Report log
@@ -160,13 +164,19 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         }
     }
 
-    private static CustomerResponse buildCustomerAccInfo(String cif, String khrAccount, String usdAccount, String mnemonic) {
-        return CustomerResponse.builder()
-                .cif(cif)
-                .khrAccount(khrAccount)
-                .usdAccount(usdAccount)
-                .mnemonic(mnemonic)
-                .build();
+    /**
+     * Step 1: Test DB connection by executing a simple query.
+     * Throws RuntimeException if connection fails.
+     */
+    private void testConnection() {
+        log.info(">>> Step 1: TEST_CONNECTION");
+        try {
+            jdbcTemplate.queryForObject("SELECT 1", Integer.class);
+            log.info("Step 1 SUCCESS: Database connection is healthy");
+        } catch (Exception e) {
+            log.error("Step 1 FAILED: Database connection test failed", e);
+            throw new RuntimeException("Database connection test failed", e);
+        }
     }
 
     private Map<String, String> getCustomerInfo(CustomerRequest request) {
@@ -178,63 +188,43 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
     private AmlStatusDto processAml(CustomerRequest request) {
         try {
+            // 1️⃣ Check for existing AML
             Optional<AmlStatus> existingAmlOpt = amlService.findByLegalId(request.getLegalId());
-
             if (existingAmlOpt.isPresent()) {
-                AmlStatus existing = existingAmlOpt.get();
-                AmlStatusEnum status = existing.getStatus();
-
-                switch (status) {
-                    case APPROVE:
-                        return openAccountAmlStatusMapper.toDto(existing);
-
-                    case PENDING:
-                        throw new AccountCreationException(
-                                String.format(AppConstants.AML_NEED_REVIEW_MSG, request.getLegalId())
-                        );
-
-                    case REJECT:
-                        throw new AccountCreationException(
-                                String.format(AppConstants.AML_REJECTED_MSG, request.getLegalId())
-                        );
-
-                    default:
-                        throw new AccountCreationException(
-                                String.format(AppConstants.AML_UNKNOWN_MSG, request.getLegalId())
-                        );
-                }
+                return handleExistingAml(existingAmlOpt.get(), request.getLegalId());
             }
 
-            // No existing AML → call middleware
-            CustomerAmlRequest amlRequestDto = buildAmlRequestDto(request);
+            // 2️⃣ Build request and call AML middleware
+            CustomerAmlRequest amlRequestDto = openAccountAmlStatusMapper.buildAmlRequestDto(request);
             AmlExternalResponseDto amlResponse = callAmlMiddleware(amlRequestDto, request.getLegalId());
 
-            OccupationDto occupation = safeOccupationLookup(request.getOccupation());
-            String occupationStatus = occupation != null
-                    ? occupation.getNameEn() + " / " + occupation.getNameKh()
-                    : "";
+            // 3️⃣ Build occupation status string
+            String occupationStatus = buildOccupationStatus(request.getOccupation());
 
-            boolean isHighRisk = "High".equalsIgnoreCase(amlResponse.getRiskLevel());
+            // 4️⃣ Determine AML status based on risk
+            boolean isHighRisk = AppConstants.HIGH_RISK.equalsIgnoreCase(amlResponse.getRiskLevel());
+            AmlStatusEnum amlStatusEnum = isHighRisk ? AmlStatusEnum.PENDING : AmlStatusEnum.APPROVE;
 
+            // 5️⃣ Map to CreateAmlRequestDto
             CreateAmlRequestDto createRequest = openAccountAmlStatusMapper.toCreateRequest(
                     amlRequestDto,
                     amlResponse,
                     request,
                     occupationStatus,
-                    isHighRisk ? AmlStatusEnum.PENDING : AmlStatusEnum.APPROVE,
+                    amlStatusEnum,
                     objectMapper
             );
 
+            // 6️⃣ Handle high-risk customers
             if (isHighRisk) {
-                amlService.createAmlStatus(createRequest); // save only high risk
+                amlService.createAmlStatus(createRequest);
                 sendAmlNotification(amlRequestDto, amlResponse, request);
-
                 throw new AccountCreationException(
                         String.format(AppConstants.AML_NEED_REVIEW_MSG, request.getLegalId())
                 );
             }
 
-            // LOW risk → return DTO from mapper
+            // 7️⃣ Low-risk → return mapped DTO
             return openAccountAmlStatusMapper.fromRequestAndResponse(request, amlResponse, AmlStatusEnum.APPROVE);
 
         } catch (AccountCreationException e) {
@@ -243,6 +233,26 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             log.error("Unexpected AML error for {}: {}", request.getLegalId(), e.getMessage(), e);
             throw new RuntimeException("Failed to process AML check", e);
         }
+    }
+
+    private AmlStatusDto handleExistingAml(AmlStatus existing, String legalId) {
+        switch (existing.getStatus()) {
+            case APPROVE: return openAccountAmlStatusMapper.toDto(existing);
+            case PENDING: throw new AccountCreationException(
+                    String.format(AppConstants.AML_NEED_REVIEW_MSG, legalId)
+            );
+            case REJECT: throw new AccountCreationException(
+                    String.format(AppConstants.AML_REJECTED_MSG, legalId)
+            );
+            default: throw new AccountCreationException(
+                    String.format(AppConstants.AML_UNKNOWN_MSG, legalId)
+            );
+        }
+    }
+
+    private String buildOccupationStatus(String occupationCode) {
+        OccupationDto occupation = safeOccupationLookup(occupationCode);
+        return occupation != null ? occupation.getNameEn() + " / " + occupation.getNameKh() : "";
     }
 
     private void validateExistingAccounts(Map<String, String> customerInfo) {
@@ -368,39 +378,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         }
     }
 
-    private CustomerAmlRequest buildAmlRequestDto(CustomerRequest request) {
-        return CustomerAmlRequest.builder()
-                .customerId(request.getLegalId())
-                .custCreateDate(request.getLegalIssueDate())
-                .customerType("ACTIVE")
-                .custName(request.getFamilyName() + " " + request.getGivenName())
-                .givenName(request.getGivenName())
-                .familyName(request.getFamilyName())
-                .gender(request.getGender())
-                .dateOfBirth(request.getDateOfBirth())
-                .nationality("KH")
-                .legalAddress(request.getLegalAddress() != null ? request.getLegalAddress() : "NA")
-                .custDistrict(request.getCustomerPobDistrict())
-                .custProvince(request.getCustomerPobProvince())
-                .country("Cambodia")
-                .sms1(null)
-                .phoneNumber(request.getPhoneNumber())
-                .offPhone(null)
-                .occupation(request.getOccupation())
-                .legalId(request.getLegalId() + "-NATIONAL.ID")
-                .maritalStatus(request.getMaritalStatus())
-                .businessSector(null)
-                .target("220")
-                .income(0)
-                .dobYear(null)
-                .dobMonth(null)
-                .dobDay(null)
-                .legalDocName("NATIONAL.ID")
-                .legalExpDate(request.getLegalExpireDate())
-                .customerRating("1")
-                .build();
-    }
-
     private AmlExternalResponseDto callAmlMiddleware(CustomerAmlRequest amlRequest, String legalId) throws JsonProcessingException {
         AmlExternalResponseDto response = amlMiddlewareService.CheckAml(amlRequest);
         log.info("AML Middleware response received | RiskLevel: {} | TrxnID: {}",
@@ -450,15 +427,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
         } catch (Exception e) {
             log.error("Notification logic failed for Legal ID {}: {}", request.getLegalId(), e.getMessage());
-        }
-    }
-
-    private String asJson(Object obj) {
-        try {
-            return objectMapper.writeValueAsString(obj);
-        } catch (JsonProcessingException e) {
-            log.warn("Failed to serialize object to JSON: {}", e.getMessage());
-            return "{}";
         }
     }
 

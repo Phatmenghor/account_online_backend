@@ -2,6 +2,7 @@ package com.internal.feature.open_account.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.internal.enumation.AmlStatusEnum;
+import com.internal.enumation.StatusData;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
 import com.internal.feature.aml.dto.request.CustomerAmlDto;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
@@ -12,6 +13,7 @@ import com.internal.feature.master_data.dto.response.LocationCodesDto;
 import com.internal.feature.open_account.dto.request.CustomerAmlRequest;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.response.AmlExternalResponseDto;
+import com.internal.feature.open_account.dto.response.CustomerResponse;
 import lombok.RequiredArgsConstructor;
 import org.mapstruct.Named;
 import org.springframework.stereotype.Component;
@@ -138,6 +140,14 @@ public class OpenAccountAmlStatusMapper {
                 .build();
     }
 
+    public CustomerResponse buildCustomerAccInfo(String cif, String khrAccount, String usdAccount, String mnemonic) {
+        return CustomerResponse.builder()
+                .cif(cif)
+                .khrAccount(khrAccount)
+                .usdAccount(usdAccount)
+                .mnemonic(mnemonic)
+                .build();
+    }
 
     @Named("mapCustomerInfo")
     private CustomerAmlDto mapCustomerInfo(CustomerRequest request) {
@@ -202,4 +212,38 @@ public class OpenAccountAmlStatusMapper {
                 .trxnID(amlResponse.getTrxnID())
                 .build();
     }
+
+    public CustomerAmlRequest buildAmlRequestDto(CustomerRequest request) {
+        return CustomerAmlRequest.builder()
+                .customerId(request.getLegalId())
+                .custCreateDate(request.getLegalIssueDate())
+                .customerType(StatusData.ACTIVE.toString())
+                .custName(request.getFamilyName() + " " + request.getGivenName())
+                .givenName(request.getGivenName())
+                .familyName(request.getFamilyName())
+                .gender(request.getGender())
+                .dateOfBirth(request.getDateOfBirth())
+                .nationality("KH")
+                .legalAddress(request.getLegalAddress() != null ? request.getLegalAddress() : "NA")
+                .custDistrict(request.getCustomerPobDistrict())
+                .custProvince(request.getCustomerPobProvince())
+                .country("Cambodia")
+                .sms1(null)
+                .phoneNumber(request.getPhoneNumber())
+                .offPhone(null)
+                .occupation(request.getOccupation())
+                .legalId(request.getLegalId() + "-NATIONAL.ID")
+                .maritalStatus(request.getMaritalStatus())
+                .businessSector(null)
+                .target("220")
+                .income(0)
+                .dobYear(null)
+                .dobMonth(null)
+                .dobDay(null)
+                .legalDocName("NATIONAL.ID")
+                .legalExpDate(request.getLegalExpireDate())
+                .customerRating("1")
+                .build();
+    }
+
 }
