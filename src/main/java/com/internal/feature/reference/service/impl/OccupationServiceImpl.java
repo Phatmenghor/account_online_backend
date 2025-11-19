@@ -1,7 +1,7 @@
 package com.internal.feature.reference.service.impl;
 
-import com.internal.exceptions.error.DuplicateNameException;
-import com.internal.exceptions.error.NotFoundException;
+import com.internal.exceptions.error.custom.DuplicateNameException;
+import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.reference.dto.request.GetAllOccupationRequest;
 import com.internal.feature.reference.dto.request.OccupationCreateRequestDto;
 import com.internal.feature.reference.dto.request.OccupationUpdateRequestDto;

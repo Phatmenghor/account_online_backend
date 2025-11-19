@@ -2,7 +2,7 @@ package com.internal.feature.auth.security;
 
 import com.internal.config.RequiresRole;
 import com.internal.enumation.RoleEnum;
-import com.internal.exceptions.error.UnauthorizedException;
+import com.internal.exceptions.error.custom.UnauthorizedException;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;

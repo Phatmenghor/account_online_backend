@@ -1,6 +1,6 @@
 package com.internal.feature.logs_report.service.serviceImpl;
 
-import com.internal.exceptions.error.NotFoundException;
+import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.logs_report.dto.request.AccountOnlineFinalLogRequestDto;
 import com.internal.feature.logs_report.dto.response.AccountOnlineFinalResponseDto;

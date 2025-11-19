@@ -1,7 +1,7 @@
 package com.internal.feature.auth.security;
 
 import com.internal.enumation.RoleEnum;
-import com.internal.exceptions.error.UnauthorizedException;
+import com.internal.exceptions.error.custom.UnauthorizedException;
 import com.internal.feature.auth.models.UserEntity;
 import com.internal.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;

@@ -2,7 +2,7 @@ package com.internal.feature.aml.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.internal.enumation.AmlStatusEnum;
-import com.internal.exceptions.error.NotFoundException;
+import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.aml.dto.request.AllAmlHistoryRequestDto;
 import com.internal.feature.aml.dto.request.AllAmlRequestDto;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;

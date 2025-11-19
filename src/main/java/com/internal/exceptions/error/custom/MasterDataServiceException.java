@@ -1,4 +1,4 @@
-package com.internal.exceptions.error;
+package com.internal.exceptions.error.custom;
 
 public class MasterDataServiceException extends RuntimeException {
 

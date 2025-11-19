@@ -197,6 +197,6 @@
                 </configuration>
             </plugin>
         </plugins>
-        <finalName>${app.name}</finalName>
+        <finalName>account_online</finalName>
     </build>
 </project>
