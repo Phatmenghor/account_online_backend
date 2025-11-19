@@ -14,20 +14,20 @@ import java.util.Optional;
 public interface OtpRepository extends JpaRepository<OtpSms, Long> {
 
     /**
-     * Find the latest active OTP for a phone number
-     * Status 0 = active, ordered by newest first
-     * FIXED: Added LIMIT 1 to prevent NonUniqueResultException
+     * Get latest active OTP (status = 0)
      */
-    @Query(value = "SELECT * FROM otp_sms o WHERE o.phone = :phone AND o.status = 0 ORDER BY o.created_at DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM acc_online_otp_sms o " +
+            "WHERE o.phone = :phone AND o.status = 0 " +
+            "ORDER BY o.created_at DESC LIMIT 1", nativeQuery = true)
     Optional<OtpSms> findLatestActiveOtpByPhone(@Param("phone") String phone);
 
     /**
-     * Find valid OTP by phone and code
-     * Must be active (status=0) and not expired
-     * FIXED: Added LIMIT 1 to prevent NonUniqueResultException
+     * Validate OTP by phone and code
      */
-    @Query(value = "SELECT * FROM otp_sms o WHERE o.phone = :phone AND o.otp_code = :otpCode " +
-            "AND o.status = 0 AND o.expires_at > :now ORDER BY o.created_at DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM acc_online_otp_sms o " +
+            "WHERE o.phone = :phone AND o.otp_code = :otpCode " +
+            "AND o.status = 0 AND o.expires_at > :now " +
+            "ORDER BY o.created_at DESC LIMIT 1", nativeQuery = true)
     Optional<OtpSms> findValidOtpByPhoneAndCode(
             @Param("phone") String phone,
             @Param("otpCode") String otpCode,
@@ -35,16 +35,15 @@ public interface OtpRepository extends JpaRepository<OtpSms, Long> {
     );
 
     /**
-     * Get the creation time of the last OTP sent to a phone
-     * Used for cooldown checking
-     * FIXED: Already has LIMIT 1 (native query)
+     * Last OTP creation time (cooldown)
      */
-    @Query(value = "SELECT o.created_at FROM otp_sms o WHERE o.phone = :phone ORDER BY o.created_at DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT o.created_at FROM acc_online_otp_sms o " +
+            "WHERE o.phone = :phone ORDER BY o.created_at DESC LIMIT 1",
+            nativeQuery = true)
     Optional<LocalDateTime> findLastOtpCreationTime(@Param("phone") String phone);
 
     /**
-     * Mark all active OTPs as expired for a phone number
-     * Called when generating a new OTP
+     * Expire all active (status=0) OTPs
      */
     @Modifying
     @Query("UPDATE OtpSms o SET o.status = 2 WHERE o.phone = :phone AND o.status = 0")

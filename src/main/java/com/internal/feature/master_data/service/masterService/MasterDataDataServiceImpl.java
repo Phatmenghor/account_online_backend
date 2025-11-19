@@ -36,7 +36,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         return getPaginatedData(
                 jdbcTemplate,
                 request,
-                "acc_online_province_cbc",
+                "location_province_cbc",
                 new ProvinceRowMapper(),
                 "province_code",
                 "province_en",
@@ -52,7 +52,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         return getPaginatedData(
                 jdbcTemplate,
                 request,
-                "acc_online_district_cbc",
+                "location_district_cbc",
                 new DistrictRowMapper(),
                 "district_code",
                 "district_en",
@@ -68,7 +68,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         return getPaginatedData(
                 jdbcTemplate,
                 request,
-                "acc_online_commune_cbc",
+                "location_commune_cbc",
                 new CommuneRowMapper(),
                 "commune_code",
                 "commune_en",
@@ -84,7 +84,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
         return getPaginatedData(
                 jdbcTemplate,
                 request,
-                "acc_online_village_cbc",
+                "location_village_cbc",
                 new VillageRowMapper(),
                 "village_code",
                 "village_en",
@@ -306,28 +306,28 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     // ---------------------- Code-based lookups ----------------------
     @Override
     public ClsProvinceDto getProvinceByCode(String provinceCode) {
-        String sql = "SELECT province_code, province_en, province_kh FROM acc_online_province_cbc WHERE province_code = ? LIMIT 1";
+        String sql = "SELECT province_code, province_en, province_kh FROM location_province_cbc WHERE province_code = ? LIMIT 1";
         return jdbcTemplate.query(sql, new ProvinceRowMapper(), provinceCode)
                 .stream().findFirst().orElse(null);
     }
 
     @Override
     public ClsDistrictDto getDistrictByCode(String districtCode) {
-        String sql = "SELECT district_code, district_en, district_kh, province_code FROM acc_online_district_cbc WHERE district_code = ? LIMIT 1";
+        String sql = "SELECT district_code, district_en, district_kh, province_code FROM location_district_cbc WHERE district_code = ? LIMIT 1";
         return jdbcTemplate.query(sql, new DistrictRowMapper(), districtCode)
                 .stream().findFirst().orElse(null);
     }
 
     @Override
     public ClsCommuneDto getCommuneByCode(String communeCode) {
-        String sql = "SELECT commune_code, commune_en, commune_kh, district_code FROM acc_online_commune_cbc WHERE commune_code = ? LIMIT 1";
+        String sql = "SELECT commune_code, commune_en, commune_kh, district_code FROM location_commune_cbc WHERE commune_code = ? LIMIT 1";
         return jdbcTemplate.query(sql, new CommuneRowMapper(), communeCode)
                 .stream().findFirst().orElse(null);
     }
 
     @Override
     public ClsVillageDto getVillageByCode(String villageCode) {
-        String sql = "SELECT village_code, village_en, village_kh, commune_code FROM acc_online_village_cbc WHERE village_code = ? LIMIT 1";
+        String sql = "SELECT village_code, village_en, village_kh, commune_code FROM location_village_cbc WHERE village_code = ? LIMIT 1";
         return jdbcTemplate.query(sql, new VillageRowMapper(), villageCode)
                 .stream().findFirst().orElse(null);
     }
@@ -352,7 +352,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     }
 
     private ClsProvinceDto findProvince(String provinceName) {
-        String sql = "SELECT province_code, province_en, province_kh FROM acc_online_province_cbc " +
+        String sql = "SELECT province_code, province_en, province_kh FROM location_province_cbc " +
                 "WHERE province_kh = ? LIMIT 1";
         try {
             List<ClsProvinceDto> results = jdbcTemplate.query(sql,
@@ -371,7 +371,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
 
     private ClsDistrictDto findDistrict(String provinceCode, String districtName) {
         String sql = "SELECT district_code, district_en, district_kh, province_code " +
-                "FROM acc_online_district_cbc " +
+                "FROM location_district_cbc " +
                 "WHERE province_code = ? AND district_kh = ? LIMIT 1";
         try {
             List<ClsDistrictDto> results = jdbcTemplate.query(sql,
@@ -391,7 +391,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
 
     private ClsCommuneDto findCommune(String districtCode, String communeName) {
         String sql = "SELECT commune_code, commune_en, commune_kh, district_code " +
-                "FROM acc_online_commune_cbc " +
+                "FROM location_commune_cbc " +
                 "WHERE district_code = ? AND commune_kh = ? LIMIT 1";
         try {
             List<ClsCommuneDto> results = jdbcTemplate.query(sql,
@@ -411,7 +411,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
 
     private ClsVillageDto findVillage(String communeCode, String villageName) {
         String sql = "SELECT village_code, village_en, village_kh, commune_code " +
-                "FROM acc_online_village_cbc " +
+                "FROM location_village_cbc " +
                 "WHERE commune_code = ? AND village_kh = ? LIMIT 1";
         try {
             List<ClsVillageDto> results = jdbcTemplate.query(sql,

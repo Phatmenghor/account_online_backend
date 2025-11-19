@@ -10,7 +10,7 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(
-        name = "acc_online_open_final_audit"
+        name = "acc_online_audit_open_final"
 )
 @Data
 @NoArgsConstructor

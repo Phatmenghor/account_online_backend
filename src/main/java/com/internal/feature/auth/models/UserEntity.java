@@ -13,7 +13,7 @@ import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "users")
+@Table(name = "acc_online_users")
 @Data
 @NoArgsConstructor
 public class UserEntity extends BaseEntity {
@@ -38,10 +38,9 @@ public class UserEntity extends BaseEntity {
     private UserPermission userPermission;
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE})
-    @JoinTable(name = "user_roles",
+    @JoinTable(name = "acc_online_user_roles",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private List<Role> roles = new ArrayList<>();
-
 
 }

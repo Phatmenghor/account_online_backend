@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "acc_online_reference_doc")
+@Table(name = "master_reference_doc")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

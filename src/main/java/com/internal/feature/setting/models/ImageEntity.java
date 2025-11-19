@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "images")
+@Table(name = "acc_online_images")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

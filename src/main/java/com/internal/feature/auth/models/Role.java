@@ -10,7 +10,7 @@ import javax.persistence.*;
 @Setter
 @Getter
 @Entity
-@Table(name = "roles")
+@Table(name = "acc_online_roles")
 public class Role extends BaseEntity {
 
     @Enumerated(EnumType.STRING)

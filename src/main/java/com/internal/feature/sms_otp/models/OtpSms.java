@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "acc_online_otp_sms")
 public class OtpSms extends BaseEntity {
 
     @Column(name = "phone", nullable = false, length = 20)
