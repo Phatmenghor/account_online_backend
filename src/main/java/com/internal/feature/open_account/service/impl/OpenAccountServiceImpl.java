@@ -33,7 +33,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
-
 import java.util.Map;
 import java.util.Optional;
 
@@ -73,55 +72,56 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         String mnemonic = null;
         String khrAccount = null;
         String usdAccount = null;
+        AmlStatusDto amlProcessResult = null;
 
         try {
             //step 1: Test connection
-            currentStep = "TEST_CONNECTION";
+            currentStep = AppConstants.TEST_CONNECTION;
             testConnection();
 
             // Step 2: Get customer info
-            currentStep = "GET_CUSTOMER_INFO";
+            currentStep = AppConstants.GET_CUSTOMER_INFO;
             Map<String, String> customerInfo = getCustomerInfo(request);
 
             // Step 3: Validate existing accounts
-//            currentStep = "VALIDATE_EXISTING_ACCOUNTS";
+//            currentStep = AppConstants.VALIDATE_ACCOUNT_CREATION;
 //            validateExistingAccounts(customerInfo);
 
             // Step 4: Process AML (before account creation)
-            currentStep = "PROCESS_AML";
-            AmlStatusDto amlProcessResult = processAml(request);
+            currentStep = AppConstants.PROCESS_AML;
+             amlProcessResult = processAml(request);
 
             // Step 5: Create customer
-            currentStep = "CREATE_CUSTOMER";
+            currentStep = AppConstants.CREATE_CUSTOMER;
             cif = createCustomerIfNeeded(request, customerInfo);
             mnemonic = XmlParser.extractMnemonic(t24Service.createCustomer(request));
 
             // Step 6: Create KHR account
-            currentStep = "CREATE_KHR_ACCOUNT";
+            currentStep = AppConstants.CREATE_KHR_ACCOUNT;
             khrAccount = createAccountIfNeeded(request, customerInfo, cif, "KHR");
 
             // Step 7: Create USD account
-            currentStep = "CREATE_USD_ACCOUNT";
+            currentStep = AppConstants.CREATE_USD_ACCOUNT;
             usdAccount = createAccountIfNeeded(request, customerInfo, cif, "USD");
 
             // Step 8: Validate at least one account created
-            currentStep = "VALIDATE_ACCOUNT_CREATION";
+            currentStep = AppConstants.VALIDATE_ACCOUNT_CREATION;
             validateAtLeastOneAccountExists(customerInfo, khrAccount, usdAccount);
 
             // Step 9: Activate mobile banking
-            currentStep = "ACTIVATE_MOBILE_BANKING";
+            currentStep = AppConstants.ACTIVATE_MOBILE_BANKING;
             activateMobileBanking(request, cif, khrAccount, usdAccount);
 
             // Step 10: Update AML record with account info (non-blocking)
-            currentStep = "UPDATE_AML_WITH_ACCOUNTS";
+            currentStep = AppConstants.UPDATE_AML_WITH_ACCOUNTS;
             updateAmlRecordWithAccounts(request.getLegalId(), cif, khrAccount, usdAccount, mnemonic);
 
             // Step 11: Save customer images (non-blocking)
-            currentStep = "SAVE_CUSTOMER_IMAGES";
+            currentStep = AppConstants.SAVE_CUSTOMER_IMAGES;
             CustomerImageUploadResponseDto imagePaths = safeSaveCustomerImages(request);
 
             // Step 12: Save success log (non-blocking)
-            currentStep = "SAVE_FINAL_LOG";
+            currentStep = AppConstants.SAVE_FINAL_LOG;
             CustomerResponse accInfo = openAccountAmlStatusMapper.buildCustomerAccInfo(cif, khrAccount, usdAccount, mnemonic);
             safeSaveSuccessLog(request, accInfo, amlProcessResult, imagePaths);
 
@@ -152,15 +152,29 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             log.error("USD Account: {}", usdAccount);
             log.error("============================================");
 
-            String failureRemark = buildFailureRemark(currentStep, cif, khrAccount, usdAccount);
+            String failureRemark = buildFailureRemark(currentStep, cif, khrAccount, usdAccount, amlProcessResult);
+
+            saveFailureLogs(request, e, currentStep, failureRemark);
+
+            throw e;
+        }
+    }
+
+    private void saveFailureLogs(CustomerRequest request, Exception e, String currentStep, String failureRemark) {
+        if (currentStep.equals(AppConstants.PROCESS_AML)) {
+            reportLogService.createAccountOpeningLog(
+                    request.getLegalId(),
+                    OpenAccStatusEnum.AML,
+                    failureRemark,
+                    e
+            );
+        } else {
             reportLogService.createAccountOpeningLog(
                     request.getLegalId(),
                     OpenAccStatusEnum.FAILURE,
                     failureRemark,
                     e
             );
-
-            throw e;
         }
     }
 
@@ -430,9 +444,16 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         }
     }
 
-    private String buildFailureRemark(String failedStep, String cif, String khrAccount, String usdAccount) {
+    private String buildFailureRemark(String failedStep, String cif, String khrAccount, String usdAccount, AmlStatusDto amlProcessResult) {
         StringBuilder remark = new StringBuilder("Account opening failed at: ").append(failedStep);
 
+        // Append AML status if it's not APPROVE and amlProcessResult is not null
+        if (amlProcessResult != null && amlProcessResult.getStatus() != null
+                && !amlProcessResult.getStatus().equals(AmlStatusEnum.APPROVE)) {
+            remark.append(" | AML Status: ").append(amlProcessResult.getStatus());
+        }
+
+        // Append account info if present
         if (cif != null) {
             remark.append(" | CIF: ").append(cif);
         }

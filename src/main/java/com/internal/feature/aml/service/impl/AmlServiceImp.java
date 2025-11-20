@@ -153,7 +153,8 @@ public class AmlServiceImp implements AmlService {
     public AllAmlHistoryResponseDto getAllAmlHistory(AllAmlHistoryRequestDto request) {
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
         Specification<AmlHistory> spec = AmlHistorySpecification.createdBetween(request.getStartDate(), request.getEndDate())
-                .and(AmlHistorySpecification.search(request.getSearch()));
+                .and(AmlHistorySpecification.search(request.getSearch()))
+                .and(AmlHistorySpecification.hasStatus(request.getStatus()));
 
         Page<AmlHistory> page = amlHistoryRepository.findAll(spec, pageable);
 

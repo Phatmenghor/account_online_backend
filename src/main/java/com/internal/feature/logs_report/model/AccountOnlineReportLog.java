@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "acc_online_report_log")
+@Table(name = "acc_online_audit_report")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

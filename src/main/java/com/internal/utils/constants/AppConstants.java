@@ -17,6 +17,7 @@ public final class AppConstants {
     public static final String SYSTEM_ERROR = "SYSTEM_ERROR";
     // សំណើរបស់អ្នកមិនអាចដំណើរការបានទេ ពីព្រោះការវាយតម្លៃអតិថិជនមានការហានិភ័យ
     public static final String ACCOUNT_RISK = "ACCOUNT_RISK";
+    public static final String AML_HIT = "AML_RE";
     // ការស្នើសុំរបស់លោកអ្នកមិនអាចដំណើរការបានទេ។ សូមព្យាយាមម្តងទៀត
     public static final String ACCOUNT_CREATE_FAIL = "ACCOUNT_CREATE_FAIL";
     public static final String FAIL_CREATE_ANY_ACCOUNT = "FAIL_CREATE_ANY_ACCOUNT";
@@ -25,4 +26,17 @@ public final class AppConstants {
     public static final String AML_NEED_REVIEW_MSG = "AML check indicates HIGH RISK or PENDING. Legal ID %s needs review.";
     public static final String AML_REJECTED_MSG    = "AML check REJECTED for Legal ID %s. Account cannot be created.";
     public static final String AML_UNKNOWN_MSG     = "AML UNKNOWN status for Legal ID %s.";
+
+    //OPEN ACCOUNT STEPS
+    public static final String TEST_CONNECTION = "TEST_CONNECTION";
+    public static final String PROCESS_AML = "PROCESS_AML";
+    public static final String GET_CUSTOMER_INFO = "GET_CUSTOMER_INFO";
+    public static final String CREATE_CUSTOMER = "CREATE_CUSTOMER";
+    public static final String CREATE_KHR_ACCOUNT = "CREATE_KHR_ACCOUNT";
+    public static final String CREATE_USD_ACCOUNT = "CREATE_USD_ACCOUNT";
+    public static final String VALIDATE_ACCOUNT_CREATION = "VALIDATE_ACCOUNT_CREATION";
+    public static final String ACTIVATE_MOBILE_BANKING = "ACTIVATE_MOBILE_BANKING";
+    public static final String UPDATE_AML_WITH_ACCOUNTS = "UPDATE_AML_WITH_ACCOUNTS";
+    public static final String SAVE_CUSTOMER_IMAGES = "SAVE_CUSTOMER_IMAGES";
+    public static final String SAVE_FINAL_LOG = "SAVE_FINAL_LOG";
 }
