@@ -24,7 +24,7 @@ public class OpenAccountController {
     private final OpenAccountService openAccountService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<CustomerResponse>> openAccount(@Valid @RequestBody CustomerRequest request) {
+    public ResponseEntity<ApiResponse<CustomerResponse>> openAccount(@Valid @RequestBody CustomerRequest request) throws Exception {
         log.info("Received account opening request for Legal ID: {}", request.getLegalId());
 
         CustomerResponse response = openAccountService.openAccount(request);

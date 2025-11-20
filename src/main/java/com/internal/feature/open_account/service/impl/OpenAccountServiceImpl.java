@@ -59,7 +59,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
     @Override
     @Transactional
-    public CustomerResponse openAccount(CustomerRequest request) {
+    public CustomerResponse openAccount(CustomerRequest request) throws Exception {
         log.info("========== ACCOUNT OPENING STARTED ==========");
         log.info("Legal ID: {}", request.getLegalId());
         log.info("Name: {} {} ({} {})", request.getGivenName(), request.getFamilyName(),
@@ -75,7 +75,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         AmlStatusDto amlProcessResult = null;
 
         try {
-            //step 1: Test connection
+            // Step 1: Test connection
             currentStep = AppConstants.TEST_CONNECTION;
             testConnection();
 
@@ -83,13 +83,12 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             currentStep = AppConstants.GET_CUSTOMER_INFO;
             Map<String, String> customerInfo = getCustomerInfo(request);
 
-            // Step 3: Validate existing accounts
-//            currentStep = AppConstants.VALIDATE_ACCOUNT_CREATION;
-//            validateExistingAccounts(customerInfo);
-
             // Step 4: Process AML (before account creation)
             currentStep = AppConstants.PROCESS_AML;
-             amlProcessResult = processAml(request);
+            amlProcessResult = processAml(request);
+
+            // Abort if high-risk
+            sentMessageOnHighRisk(request, amlProcessResult);
 
             // Step 5: Create customer
             currentStep = AppConstants.CREATE_CUSTOMER;
@@ -104,7 +103,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             currentStep = AppConstants.CREATE_USD_ACCOUNT;
             usdAccount = createAccountIfNeeded(request, customerInfo, cif, "USD");
 
-            // Step 8: Validate at least one account created
+            // Step 8: Validate accounts
             currentStep = AppConstants.VALIDATE_ACCOUNT_CREATION;
             validateAtLeastOneAccountExists(customerInfo, khrAccount, usdAccount);
 
@@ -112,7 +111,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             currentStep = AppConstants.ACTIVATE_MOBILE_BANKING;
             activateMobileBanking(request, cif, khrAccount, usdAccount);
 
-            // Step 10: Update AML record with account info (non-blocking)
+            // Step 10: Update AML records (non-blocking)
             currentStep = AppConstants.UPDATE_AML_WITH_ACCOUNTS;
             updateAmlRecordWithAccounts(request.getLegalId(), cif, khrAccount, usdAccount, mnemonic);
 
@@ -139,7 +138,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             log.info("Mnemonic: {}", mnemonic);
             log.info("===============================================");
 
-            // Step 14: Return success response
             return accInfo;
 
         } catch (Exception e) {
@@ -152,11 +150,23 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             log.error("USD Account: {}", usdAccount);
             log.error("============================================");
 
+            // ⚠️ AML process result used here for logging high-risk or failure
             String failureRemark = buildFailureRemark(currentStep, cif, khrAccount, usdAccount, amlProcessResult);
-
             saveFailureLogs(request, e, currentStep, failureRemark);
 
             throw e;
+        }
+    }
+
+    private static void sentMessageOnHighRisk(CustomerRequest request, AmlStatusDto amlProcessResult) {
+        if (amlProcessResult.getStatus() == AmlStatusEnum.PENDING) {
+            throw new AccountCreationException(
+                    String.format(AppConstants.AML_NEED_REVIEW_MSG, request.getLegalId())
+            );
+        } else if (amlProcessResult.getStatus() == AmlStatusEnum.REJECT) {
+            throw new AccountCreationException(
+                    String.format(AppConstants.AML_REJECTED_MSG, request.getLegalId())
+            );
         }
     }
 
@@ -200,10 +210,11 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         return customerInfo;
     }
 
-    private AmlStatusDto processAml(CustomerRequest request) {
-        try {
+    private AmlStatusDto processAml(CustomerRequest request) throws Exception {
+
             // 1️⃣ Check for existing AML
             Optional<AmlStatus> existingAmlOpt = amlService.findByLegalId(request.getLegalId());
+
             if (existingAmlOpt.isPresent()) {
                 return handleExistingAml(existingAmlOpt.get(), request.getLegalId());
             }
@@ -232,21 +243,13 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             // 6️⃣ Handle high-risk customers
             if (isHighRisk) {
                 amlService.createAmlStatus(createRequest);
-                sendAmlNotification(amlRequestDto, amlResponse, request);
-                throw new AccountCreationException(
-                        String.format(AppConstants.AML_NEED_REVIEW_MSG, request.getLegalId())
-                );
+                sendAmlNotification(amlRequestDto, amlResponse, request); // ⚠️ Keep comment
             }
 
             // 7️⃣ Low-risk → return mapped DTO
-            return openAccountAmlStatusMapper.fromRequestAndResponse(request, amlResponse, AmlStatusEnum.APPROVE);
+            return openAccountAmlStatusMapper.fromRequestAndResponse(request, amlResponse, amlStatusEnum);
 
-        } catch (AccountCreationException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("Unexpected AML error for {}: {}", request.getLegalId(), e.getMessage(), e);
-            throw new RuntimeException("Failed to process AML check", e);
-        }
+
     }
 
     private AmlStatusDto handleExistingAml(AmlStatus existing, String legalId) {

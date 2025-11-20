@@ -23,9 +23,9 @@ public class OtpGenerator {
      */
     public String generate() {
         String environment = cpbProperties.getEnvironment();
-//        if (AppConstants.ENV_DEVELOPMENT.equalsIgnoreCase(environment)) {
-//            return AppConstants.DEFAULT_DEV_OTP;
-//        }
+        if (AppConstants.ENV_DEVELOPMENT.equalsIgnoreCase(environment)) {
+            return AppConstants.DEFAULT_DEV_OTP;
+        }
 
         int otpLength = cpbProperties.getOtp().getLength() > 0
                 ? cpbProperties.getOtp().getLength()
