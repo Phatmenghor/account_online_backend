@@ -1,6 +1,6 @@
 package com.internal.feature.setting.service.impl;
 
-import com.internal.exceptions.error.NotFoundException;
+import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.setting.dto.ImageDto;
 import com.internal.feature.setting.dto.ImageResponse;
 import com.internal.feature.setting.dto.ImageUploadRequest;

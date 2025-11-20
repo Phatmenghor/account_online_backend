@@ -1,6 +1,6 @@
 package com.internal.feature.master_data.service.masterService;
 
-import com.internal.exceptions.error.MasterDataServiceException;
+import com.internal.exceptions.error.custom.MasterDataServiceException;
 import com.internal.feature.master_data.dto.request.AddressRequestDto;
 import com.internal.feature.master_data.dto.request.AllMasterDataRequest;
 import com.internal.feature.master_data.dto.request.LocationFilter;

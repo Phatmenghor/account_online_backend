@@ -2,6 +2,9 @@ package com.internal.feature.logs_report.service.serviceImpl;
 
 import com.internal.enumation.OpenAccStatusEnum;
 import com.internal.feature.logs_report.dto.request.AccountOnlineReportLogDto;
+import com.internal.feature.logs_report.dto.response.AccountOnlineReportProjection;
+import com.internal.feature.logs_report.dto.response.AccountOnlineReportResponse;
+import com.internal.feature.logs_report.mapper.AccountOnlineReportMapper;
 import com.internal.feature.logs_report.model.AccountOnlineReportLog;
 import com.internal.feature.logs_report.repository.AccountOnlineReportLogRepository;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
@@ -23,9 +26,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,8 +38,8 @@ import java.util.List;
 public class AccountOnlineReportLogImpl implements AccountOnlineReportLogService {
 
     private final AccountOnlineReportLogRepository repository;
-    private final AlertsOpenAccOnlineService accountOnlineErrorService;
     private final boolean passwordProtectionEnabled = false; // set true in future
+    private final AccountOnlineReportMapper accountOnlineReportMapper;
 
     @Override
     public void saveLogReport(String idNumber, OpenAccStatusEnum status, String remark) {
@@ -146,6 +151,16 @@ public class AccountOnlineReportLogImpl implements AccountOnlineReportLogService
             return returnExcelResult(filterDto, tempOut);
 
         }
+    }
+
+    @Override
+    public List<AccountOnlineReportResponse> getReportByDateRange(LocalDate fromDate, LocalDate toDate) {
+        LocalDateTime fromDateTime = fromDate.atStartOfDay();
+        LocalDateTime toDateTime = toDate.plusDays(1).atStartOfDay();
+
+        List<AccountOnlineReportProjection> projections = repository.getReportByDateRange(fromDateTime, toDateTime);
+
+        return accountOnlineReportMapper.projectionsToResponses(projections);
     }
 
     private static int generateTitleRow(Sheet sheet, int currentRow, CellStyle titleStyle) {

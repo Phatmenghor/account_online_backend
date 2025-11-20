@@ -248,8 +248,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
             // 7️⃣ Low-risk → return mapped DTO
             return openAccountAmlStatusMapper.fromRequestAndResponse(request, amlResponse, amlStatusEnum);
-
-
     }
 
     private AmlStatusDto handleExistingAml(AmlStatus existing, String legalId) {

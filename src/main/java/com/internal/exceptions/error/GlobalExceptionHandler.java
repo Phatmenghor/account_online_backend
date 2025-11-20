@@ -1,5 +1,6 @@
     package com.internal.exceptions.error;
 
+    import com.internal.exceptions.error.custom.*;
     import com.internal.exceptions.error.openaccount.AccountCreationException;
     import com.internal.exceptions.response.ErrorResponse;
     import lombok.extern.slf4j.Slf4j;

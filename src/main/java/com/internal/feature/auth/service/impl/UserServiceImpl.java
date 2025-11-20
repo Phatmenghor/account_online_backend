@@ -1,9 +1,9 @@
 package com.internal.feature.auth.service.impl;
 
 import com.internal.enumation.StatusData;
-import com.internal.exceptions.error.BadRequestException;
-import com.internal.exceptions.error.DuplicateNameException;
-import com.internal.exceptions.error.NotFoundException;
+import com.internal.exceptions.error.custom.BadRequestException;
+import com.internal.exceptions.error.custom.DuplicateNameException;
+import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.auth.dto.request.ChangePasswordByAdminRequestDto;
 import com.internal.feature.auth.dto.request.ChangePasswordRequestDto;
 import com.internal.feature.auth.dto.request.GetAllUserRequestDto;

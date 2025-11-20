@@ -2,10 +2,10 @@ package com.internal.feature.auth.service.impl;
 
 import com.internal.enumation.RoleEnum;
 import com.internal.enumation.StatusData;
-import com.internal.exceptions.error.BadRequestException;
-import com.internal.exceptions.error.DuplicateNameException;
-import com.internal.exceptions.error.NotFoundException;
-import com.internal.exceptions.error.UnauthorizedException;
+import com.internal.exceptions.error.custom.BadRequestException;
+import com.internal.exceptions.error.custom.DuplicateNameException;
+import com.internal.exceptions.error.custom.NotFoundException;
+import com.internal.exceptions.error.custom.UnauthorizedException;
 import com.internal.feature.auth.dto.request.LoginRequestDto;
 import com.internal.feature.auth.dto.request.RegisterRequestDto;
 import com.internal.feature.auth.dto.request.UpdateUserRequestDto;
@@ -51,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
 
         UserEntity userEntity = userRepository.findByUsername(loginDto.getUsername())
                 .orElseThrow(() -> {
-                    log.warn("Login failed: User not found with id card: {}", loginDto.getUsername());
+                    log.warn("Login failed: User not found with username: {}", loginDto.getUsername());
                     return new NotFoundException("User not found");
                 });
 

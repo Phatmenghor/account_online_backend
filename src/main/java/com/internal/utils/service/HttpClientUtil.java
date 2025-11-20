@@ -1,7 +1,7 @@
 package com.internal.utils.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.internal.exceptions.error.ValidateServiceException;
+import com.internal.exceptions.error.custom.ValidateServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;

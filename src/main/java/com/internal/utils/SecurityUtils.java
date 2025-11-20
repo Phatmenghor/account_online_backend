@@ -1,6 +1,6 @@
 package com.internal.utils;
 
-import com.internal.exceptions.error.NotFoundException;
+import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.auth.models.UserEntity;
 import com.internal.feature.auth.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
