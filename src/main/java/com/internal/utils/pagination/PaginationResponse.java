@@ -12,7 +12,6 @@ public class PaginationResponse<T> {
     private int pageSize;
     private long totalElements;
     private int totalPages;
-    private int totalCount;
 
     public PaginationResponse(List<T> content, int pageNo, int pageSize, long totalElements) {
         this.content = content;

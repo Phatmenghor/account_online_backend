@@ -1,8 +1,10 @@
 package com.internal.feature.logs_report.mapper;
 
 import com.internal.enumation.OpenAccStatusEnum;
+import com.internal.feature.logs_report.dto.response.AccountOnlineReportLogResponse;
 import com.internal.feature.logs_report.dto.response.AccountOnlineReportProjection;
 import com.internal.feature.logs_report.dto.response.AccountOnlineReportResponse;
+import com.internal.feature.logs_report.model.AccountOnlineReportLog;
 import org.mapstruct.Mapper;
 
 import java.time.LocalDate;
@@ -14,6 +16,12 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface AccountOnlineReportMapper {
+
+    // Map single entity to response
+    AccountOnlineReportLogResponse toResponse(AccountOnlineReportLog entity);
+
+    // Map list of entities to list of responses
+    List<AccountOnlineReportLogResponse> toResponseList(List<AccountOnlineReportLog> entities);
 
     default List<AccountOnlineReportResponse> projectionsToResponses(List<AccountOnlineReportProjection> projections) {
         // Group by date
