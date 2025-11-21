@@ -14,12 +14,6 @@ import com.internal.feature.telegram_alerts.service.AlertsOpenAccOnlineService;
 import com.internal.utils.pagination.PaginationResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.poifs.crypt.EncryptionInfo;
-import org.apache.poi.poifs.crypt.EncryptionMode;
-import org.apache.poi.poifs.crypt.Encryptor;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,14 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -90,12 +79,12 @@ public class AccountOnlineReportLogImpl implements AccountOnlineReportLogService
                 .build();
 
         //push tele ACL internal
-//        try {
-//            alertsOpenAccOnlineService.sendTelegramAccountOnlineError(idNumber,status,remarkBuilder);
-//        } catch (Exception e) {
-//            log.error("Failed to send Telegram notification, but logs was created: {}",
-//                    e.getMessage());
-//        }
+        try {
+            alertsOpenAccOnlineService.sendTelegramAccountOnlineError(idNumber,status,remarkBuilder);
+        } catch (Exception e) {
+            log.error("Failed to send Telegram notification, but logs was created: {}",
+                    e.getMessage());
+        }
 
         repository.save(onlineReportLog);
     }
