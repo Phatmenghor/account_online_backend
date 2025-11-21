@@ -199,7 +199,10 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             log.info("Step 1 SUCCESS: Database connection is healthy");
         } catch (Exception e) {
             log.error("Step 1 FAILED: Database connection test failed", e);
-            throw new RuntimeException("Database connection test failed", e);
+            throw new RuntimeException(
+                    "Unable to connect to the server. Please try again later. " +
+                            "If the issue continues, contact our support team at 070 200 002 or 1800 200 888."
+            );
         }
     }
 

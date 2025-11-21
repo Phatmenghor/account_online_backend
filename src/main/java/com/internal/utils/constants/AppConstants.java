@@ -20,12 +20,21 @@ public final class AppConstants {
     public static final String AML_HIT = "AML_RE";
     // ការស្នើសុំរបស់លោកអ្នកមិនអាចដំណើរការបានទេ។ សូមព្យាយាមម្តងទៀត
     public static final String ACCOUNT_CREATE_FAIL = "ACCOUNT_CREATE_FAIL";
-    public static final String FAIL_CREATE_ANY_ACCOUNT = "FAIL_CREATE_ANY_ACCOUNT";
+    public static final String FAIL_CREATE_ANY_ACCOUNT =
+            "Unable to create the account. Please try again later. If the issue continues, contact support at 070 200 002 or 1800 200 888.";
 
-    // AML messages
-    public static final String AML_NEED_REVIEW_MSG = "AML check indicates HIGH RISK or PENDING. Legal ID %s needs review.";
-    public static final String AML_REJECTED_MSG    = "AML check REJECTED for Legal ID %s. Account cannot be created.";
-    public static final String AML_UNKNOWN_MSG     = "AML UNKNOWN status for Legal ID %s.";
+    // AML messages with support contacts
+    public static final String AML_NEED_REVIEW_MSG =
+            "AML check indicates HIGH RISK or PENDING for Legal ID %s. This application requires manual review. " +
+                    "For assistance, please contact support at 070 200 002 or 1800 200 888.";
+
+    public static final String AML_REJECTED_MSG =
+            "AML check REJECTED for Legal ID %s. The account cannot be created. " +
+                    "Please contact support at 070 200 002 or 1800 200 888 for further assistance.";
+
+    public static final String AML_UNKNOWN_MSG =
+            "AML status is UNKNOWN for Legal ID %s. Please try again later or contact support at 070 200 002 or 1800 200 888.";
+
 
     //OPEN ACCOUNT STEPS
     public static final String TEST_CONNECTION = "TEST_CONNECTION";
