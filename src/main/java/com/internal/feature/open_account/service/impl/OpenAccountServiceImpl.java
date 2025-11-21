@@ -111,20 +111,16 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             currentStep = AppConstants.ACTIVATE_MOBILE_BANKING;
             activateMobileBanking(request, cif, khrAccount, usdAccount);
 
-            // Step 10: Update AML records (non-blocking)
-            currentStep = AppConstants.UPDATE_AML_WITH_ACCOUNTS;
-            updateAmlRecordWithAccounts(request.getLegalId(), cif, khrAccount, usdAccount, mnemonic);
-
-            // Step 11: Save customer images (non-blocking)
+            // Step 10: Save customer images (non-blocking)
             currentStep = AppConstants.SAVE_CUSTOMER_IMAGES;
             CustomerImageUploadResponseDto imagePaths = safeSaveCustomerImages(request);
 
-            // Step 12: Save success log (non-blocking)
+            // Step 11: Save success log (non-blocking)
             currentStep = AppConstants.SAVE_FINAL_LOG;
             CustomerResponse accInfo = openAccountAmlStatusMapper.buildCustomerAccInfo(cif, khrAccount, usdAccount, mnemonic);
             safeSaveSuccessLog(request, accInfo, amlProcessResult, imagePaths);
 
-            // Step 13: Report log
+            // Step 12: Report log
             reportLogService.saveLogReport(
                     request.getLegalId(),
                     OpenAccStatusEnum.SUCCESS,
@@ -342,24 +338,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             log.info("Step 9 SUCCESS: Mobile banking activated");
         } catch (Exception e) {
             log.warn("Step 9 WARNING: Mobile banking activation failed (non-critical): {}", e.getMessage());
-        }
-    }
-
-    private void updateAmlRecordWithAccounts(String legalId, String cif, String khrAccount, String usdAccount, String mnemonic) {
-        log.info(">>> Step 10: UPDATE_AML_WITH_ACCOUNTS");
-        try {
-            Optional<AmlStatus> amlRecord = amlService.findByLegalId(legalId);
-            log.info("Found existing AML? {} | Status: {}",
-                    amlRecord.isPresent(),
-                    amlRecord.map(AmlStatus::getStatus).orElse(null));
-            if (amlRecord.isPresent()) {
-                // Update the AML record with account information if needed
-                log.info("Step 10 SUCCESS: AML record found and can be updated with account info");
-            } else {
-                log.warn("Step 10 WARNING: No AML record found to update");
-            }
-        } catch (Exception e) {
-            log.warn("Step 10 WARNING: Failed to update AML record (non-critical): {}", e.getMessage());
         }
     }
 

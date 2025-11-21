@@ -45,7 +45,6 @@ public final class AppConstants {
     public static final String CREATE_USD_ACCOUNT = "CREATE_USD_ACCOUNT";
     public static final String VALIDATE_ACCOUNT_CREATION = "VALIDATE_ACCOUNT_CREATION";
     public static final String ACTIVATE_MOBILE_BANKING = "ACTIVATE_MOBILE_BANKING";
-    public static final String UPDATE_AML_WITH_ACCOUNTS = "UPDATE_AML_WITH_ACCOUNTS";
     public static final String SAVE_CUSTOMER_IMAGES = "SAVE_CUSTOMER_IMAGES";
     public static final String SAVE_FINAL_LOG = "SAVE_FINAL_LOG";
 }
