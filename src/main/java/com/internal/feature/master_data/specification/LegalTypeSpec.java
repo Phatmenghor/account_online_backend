@@ -1,15 +1,15 @@
 package com.internal.feature.master_data.specification;
 
 import com.internal.enumation.StatusData;
-import com.internal.feature.reference.models.ReferenceDoc;
+import com.internal.feature.reference.models.LegalType;
 import org.springframework.data.jpa.domain.Specification;
 
-public class ReferenceDocSpec {
-    public static Specification<ReferenceDoc> hasStatus(StatusData status) {
+public class LegalTypeSpec {
+    public static Specification<LegalType> hasStatus(StatusData status) {
         return (root, query, cb) -> status == null ? cb.conjunction() : cb.equal(root.get("status"), status);
     }
 
-    public static Specification<ReferenceDoc> searchByName(String search) {
+    public static Specification<LegalType> searchByName(String search) {
         return (root, query, cb) -> {
             if (search == null || search.trim().isEmpty()) {
                 return cb.conjunction();
@@ -17,7 +17,8 @@ public class ReferenceDocSpec {
             String likePattern = "%" + search.toLowerCase() + "%";
             return cb.or(
                     cb.like(cb.lower(root.get("nameEn")), likePattern),
-                    cb.like(cb.lower(root.get("nameKh")), likePattern)
+                    cb.like(cb.lower(root.get("nameKh")), likePattern),
+                    cb.like(cb.lower(root.get("legalTypeValue")), likePattern)
             );
         };
     }

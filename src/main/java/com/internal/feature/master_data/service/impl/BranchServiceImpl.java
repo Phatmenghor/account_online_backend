@@ -1,5 +1,6 @@
 package com.internal.feature.master_data.service.impl;
 
+import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.master_data.dto.request.BranchRequestDto;
 import com.internal.feature.master_data.dto.response.BranchResponseDto;
 import com.internal.feature.master_data.models.Branch;
@@ -42,7 +43,7 @@ public class BranchServiceImpl implements BranchService {
     @Override
     public BranchResponseDto getBranchByCode(String code) {
         Branch branch = branchRepository.findById(code)
-                .orElseThrow(() -> new RuntimeException("Branch not found with code: " + code));
+                .orElseThrow(() -> new NotFoundException("Branch not found with code: " + code));
         return mapToDto(branch);
     }
 
@@ -62,7 +63,7 @@ public class BranchServiceImpl implements BranchService {
     @Transactional
     public BranchResponseDto updateBranch(String code, BranchRequestDto request) {
         Branch branch = branchRepository.findById(code)
-                .orElseThrow(() -> new RuntimeException("Branch not found with code: " + code));
+                .orElseThrow(() -> new NotFoundException("Branch not found with code: " + code));
         branch.setBranchKh(request.getBranchKh());
         return mapToDto(branchRepository.save(branch));
     }
@@ -71,7 +72,7 @@ public class BranchServiceImpl implements BranchService {
     @Transactional
     public void deleteBranch(String code) {
         if (!branchRepository.existsById(code)) {
-            throw new RuntimeException("Branch not found with code: " + code);
+            throw new NotFoundException("Branch not found with code: " + code);
         }
         branchRepository.deleteById(code);
     }

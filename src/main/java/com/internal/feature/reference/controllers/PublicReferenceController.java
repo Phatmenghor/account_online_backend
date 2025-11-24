@@ -4,11 +4,11 @@ import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.reference.dto.request.PublicReferenceRequest;
 import com.internal.feature.reference.dto.response.MaritalStatusDto;
 import com.internal.feature.reference.dto.response.OccupationDto;
-import com.internal.feature.reference.dto.response.ReferenceDocDto;
+import com.internal.feature.reference.dto.response.LegalTypeDto;
 import com.internal.feature.reference.dto.response.ReferenceDto;
 import com.internal.feature.reference.service.MaritalStatusService;
 import com.internal.feature.reference.service.OccupationService;
-import com.internal.feature.reference.service.ReferenceDocService;
+import com.internal.feature.reference.service.LegalTypeService;
 import com.internal.feature.reference.service.ReferenceService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ public class PublicReferenceController {
     private final OccupationService occupationService;
     private final MaritalStatusService maritalStatusService;
     private final ReferenceService referenceService;
-    private final ReferenceDocService referenceDocService;
+    private final LegalTypeService legalTypeService;
 
     @PostMapping("/occupation/all")
     public ResponseEntity<ApiResponse<List<OccupationDto>>> getAllOccupations(@RequestBody PublicReferenceRequest request) {
@@ -55,11 +55,11 @@ public class PublicReferenceController {
         return ResponseEntity.ok(ApiResponse.success("All banks retrieved successfully", list));
     }
 
-    @PostMapping("/doc/all")
-    public ResponseEntity<ApiResponse<List<ReferenceDocDto>>> getAllReferenceDocs(@RequestBody PublicReferenceRequest request) {
-        log.info("Fetching all doc references (public)");
-        List<ReferenceDocDto> list = referenceDocService.getAllReferenceDocPublic(request.getSearch());
-        log.info("Successfully retrieved {} doc references", list.size());
-        return ResponseEntity.ok(ApiResponse.success("All doc references retrieved successfully", list));
+    @PostMapping("/legal-type/all")
+    public ResponseEntity<ApiResponse<List<LegalTypeDto>>> getAllLegalTypes(@RequestBody PublicReferenceRequest request) {
+        log.info("Fetching all legal types (public)");
+        List<LegalTypeDto> list = legalTypeService.getAllLegalTypePublic(request.getSearch());
+        log.info("Successfully retrieved {} legal types", list.size());
+        return ResponseEntity.ok(ApiResponse.success("All legal types retrieved successfully", list));
     }
 }

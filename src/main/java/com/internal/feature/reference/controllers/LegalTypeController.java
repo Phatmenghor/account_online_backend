@@ -1,0 +1,63 @@
+package com.internal.feature.reference.controllers;
+
+import com.internal.exceptions.response.ApiResponse;
+import com.internal.feature.reference.dto.request.*;
+import com.internal.feature.reference.dto.response.AllLegalTypeResponseDto;
+import com.internal.feature.reference.dto.response.LegalTypeDto;
+import com.internal.feature.reference.service.LegalTypeService;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/legal-type")
+@RequiredArgsConstructor
+@CrossOrigin
+@Slf4j
+@Tag(name = "Legal Type Management")
+public class LegalTypeController {
+    private final LegalTypeService service;
+
+    @PostMapping("/get-by-id/{id}")
+    public ResponseEntity<ApiResponse<LegalTypeDto>> getById(@PathVariable Long id) {
+        log.info("Fetching legal type with ID: {}", id);
+        LegalTypeDto dto = service.getById(id);
+        log.info("Successfully retrieved legal type with ID: {}", id);
+        return ResponseEntity.ok(ApiResponse.success("Legal type retrieved successfully", dto));
+    }
+    @PostMapping("/all")
+    public ResponseEntity<ApiResponse<AllLegalTypeResponseDto>> getAll(@RequestBody GetAllLegalTypeRequest request) {
+        log.info("Fetching all legal types");
+        AllLegalTypeResponseDto list = service.getAllLegalType(request);
+        log.info("Successfully retrieved {} legal types", list.getContent().size());
+        return ResponseEntity.ok(ApiResponse.success("All legal types retrieved successfully", list));
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<ApiResponse<LegalTypeDto>> create(@RequestBody LegalTypeCreateRequestDto request) {
+        log.info("Creating new legal type: {}", request);
+        LegalTypeDto dto = service.create(request);
+        log.info("Successfully created legal type with ID: {}", dto.getId());
+        return ResponseEntity.ok(ApiResponse.success("Legal type created successfully", dto));
+    }
+
+    @PostMapping("/update/{id}")
+    public ResponseEntity<ApiResponse<LegalTypeDto>> update(@PathVariable Long id,
+                                                                @RequestBody LegalTypeUpdateRequestDto request) {
+        log.info("Updating legal type with ID: {} with data: {}", id, request);
+        LegalTypeDto dto = service.update(id, request);
+        log.info("Successfully updated legal type with ID: {}", id);
+        return ResponseEntity.ok(ApiResponse.success("Legal type updated successfully", dto));
+    }
+
+    @PostMapping("/delete/{id}")
+    public ResponseEntity<ApiResponse<LegalTypeDto>> delete(@PathVariable Long id) {
+        log.info("Deleting legal type with ID: {}", id);
+        LegalTypeDto legalTypeDto = service.delete(id);
+        log.info("Successfully deleted legal type with ID: {}", id);
+        return ResponseEntity.ok(ApiResponse.success("Legal type deleted successfully", legalTypeDto));
+    }
+
+}

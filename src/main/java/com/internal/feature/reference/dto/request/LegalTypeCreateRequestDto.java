@@ -10,12 +10,14 @@ import javax.validation.constraints.NotBlank;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReferenceDocCreateRequestDto {
+public class LegalTypeCreateRequestDto {
     @NotBlank(message = "English name must not be blank")
     private String nameEn;
 
     @NotBlank(message = "Khmer name must not be blank")
     private String nameKh;
+
+    private String legalTypeValue;
 
     private StatusData status = StatusData.ACTIVE;
 }

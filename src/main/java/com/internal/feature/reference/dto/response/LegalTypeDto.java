@@ -10,9 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ReferenceDocDto {
+public class LegalTypeDto {
     private Long id;
     private String nameEn;
     private String nameKh;
+    private String legalTypeValue;
     private StatusData status;
 }

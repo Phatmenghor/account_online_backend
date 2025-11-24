@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GetAllReferenceDocRequest {
+public class GetAllLegalTypeRequest {
     @Builder.Default
     private int pageNo = 1;
 

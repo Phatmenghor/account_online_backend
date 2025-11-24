@@ -8,9 +8,9 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AllReferenceDocResponseDto {
+public class AllLegalTypeResponseDto {
 
-    private List<ReferenceDocDto> content;
+    private List<LegalTypeDto> content;
     private int pageNo;
     private int pageSize;
     private long totalElements;

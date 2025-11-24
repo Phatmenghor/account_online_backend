@@ -1,5 +1,6 @@
 package com.internal.feature.master_data.service.impl;
 
+import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.master_data.dto.request.CommuneRequestDto;
 import com.internal.feature.master_data.dto.request.DistrictRequestDto;
 import com.internal.feature.master_data.dto.request.ProvinceRequestDto;
@@ -61,7 +62,7 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public ProvinceResponseDto getProvinceByCode(String code) {
         Province province = provinceRepository.findById(code)
-                .orElseThrow(() -> new RuntimeException("Province not found with code: " + code));
+                .orElseThrow(() -> new NotFoundException("Province not found with code: " + code));
         return mapToProvinceDto(province);
     }
 
@@ -82,7 +83,7 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public ProvinceResponseDto updateProvince(String code, ProvinceRequestDto request) {
         Province province = provinceRepository.findById(code)
-                .orElseThrow(() -> new RuntimeException("Province not found with code: " + code));
+                .orElseThrow(() -> new NotFoundException("Province not found with code: " + code));
         province.setProvinceEn(request.getProvinceEn());
         province.setProvinceKh(request.getProvinceKh());
         return mapToProvinceDto(provinceRepository.save(province));
@@ -92,7 +93,7 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public void deleteProvince(String code) {
         if (!provinceRepository.existsById(code)) {
-            throw new RuntimeException("Province not found with code: " + code);
+            throw new NotFoundException("Province not found with code: " + code);
         }
         provinceRepository.deleteById(code);
     }
@@ -115,7 +116,7 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public DistrictResponseDto getDistrictByCode(String code) {
         District district = districtRepository.findById(code)
-                .orElseThrow(() -> new RuntimeException("District not found with code: " + code));
+                .orElseThrow(() -> new NotFoundException("District not found with code: " + code));
         return mapToDistrictDto(district);
     }
 
@@ -126,7 +127,7 @@ public class AddressServiceImpl implements AddressService {
             throw new RuntimeException("District with code " + request.getDistrictCode() + " already exists");
         }
         Province province = provinceRepository.findById(request.getProvinceCode())
-                .orElseThrow(() -> new RuntimeException("Province not found with code: " + request.getProvinceCode()));
+                .orElseThrow(() -> new NotFoundException("Province not found with code: " + request.getProvinceCode()));
         
         District district = new District();
         district.setDistrictCode(request.getDistrictCode());
@@ -140,11 +141,11 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public DistrictResponseDto updateDistrict(String code, DistrictRequestDto request) {
         District district = districtRepository.findById(code)
-                .orElseThrow(() -> new RuntimeException("District not found with code: " + code));
+                .orElseThrow(() -> new NotFoundException("District not found with code: " + code));
         
         if (!district.getProvince().getProvinceCode().equals(request.getProvinceCode())) {
              Province province = provinceRepository.findById(request.getProvinceCode())
-                .orElseThrow(() -> new RuntimeException("Province not found with code: " + request.getProvinceCode()));
+                .orElseThrow(() -> new NotFoundException("Province not found with code: " + request.getProvinceCode()));
              district.setProvince(province);
         }
 
@@ -157,7 +158,7 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public void deleteDistrict(String code) {
         if (!districtRepository.existsById(code)) {
-            throw new RuntimeException("District not found with code: " + code);
+            throw new NotFoundException("District not found with code: " + code);
         }
         districtRepository.deleteById(code);
     }
@@ -180,7 +181,7 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public CommuneResponseDto getCommuneByCode(String code) {
         Commune commune = communeRepository.findById(code)
-                .orElseThrow(() -> new RuntimeException("Commune not found with code: " + code));
+                .orElseThrow(() -> new NotFoundException("Commune not found with code: " + code));
         return mapToCommuneDto(commune);
     }
 
@@ -191,7 +192,7 @@ public class AddressServiceImpl implements AddressService {
             throw new RuntimeException("Commune with code " + request.getCommuneCode() + " already exists");
         }
         District district = districtRepository.findById(request.getDistrictCode())
-                .orElseThrow(() -> new RuntimeException("District not found with code: " + request.getDistrictCode()));
+                .orElseThrow(() -> new NotFoundException("District not found with code: " + request.getDistrictCode()));
 
         Commune commune = new Commune();
         commune.setCommuneCode(request.getCommuneCode());
@@ -205,11 +206,11 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public CommuneResponseDto updateCommune(String code, CommuneRequestDto request) {
         Commune commune = communeRepository.findById(code)
-                .orElseThrow(() -> new RuntimeException("Commune not found with code: " + code));
+                .orElseThrow(() -> new NotFoundException("Commune not found with code: " + code));
 
         if (!commune.getDistrict().getDistrictCode().equals(request.getDistrictCode())) {
             District district = districtRepository.findById(request.getDistrictCode())
-                    .orElseThrow(() -> new RuntimeException("District not found with code: " + request.getDistrictCode()));
+                    .orElseThrow(() -> new NotFoundException("District not found with code: " + request.getDistrictCode()));
             commune.setDistrict(district);
         }
 
@@ -222,7 +223,7 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public void deleteCommune(String code) {
         if (!communeRepository.existsById(code)) {
-            throw new RuntimeException("Commune not found with code: " + code);
+            throw new NotFoundException("Commune not found with code: " + code);
         }
         communeRepository.deleteById(code);
     }
@@ -245,7 +246,7 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public VillageResponseDto getVillageByCode(String code) {
         Village village = villageRepository.findById(code)
-                .orElseThrow(() -> new RuntimeException("Village not found with code: " + code));
+                .orElseThrow(() -> new NotFoundException("Village not found with code: " + code));
         return mapToVillageDto(village);
     }
 
@@ -256,7 +257,7 @@ public class AddressServiceImpl implements AddressService {
             throw new RuntimeException("Village with code " + request.getVillageCode() + " already exists");
         }
         Commune commune = communeRepository.findById(request.getCommuneCode())
-                .orElseThrow(() -> new RuntimeException("Commune not found with code: " + request.getCommuneCode()));
+                .orElseThrow(() -> new NotFoundException("Commune not found with code: " + request.getCommuneCode()));
 
         Village village = new Village();
         village.setVillageCode(request.getVillageCode());
@@ -270,11 +271,11 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public VillageResponseDto updateVillage(String code, VillageRequestDto request) {
         Village village = villageRepository.findById(code)
-                .orElseThrow(() -> new RuntimeException("Village not found with code: " + code));
+                .orElseThrow(() -> new NotFoundException("Village not found with code: " + code));
 
         if (!village.getCommune().getCommuneCode().equals(request.getCommuneCode())) {
             Commune commune = communeRepository.findById(request.getCommuneCode())
-                    .orElseThrow(() -> new RuntimeException("Commune not found with code: " + request.getCommuneCode()));
+                    .orElseThrow(() -> new NotFoundException("Commune not found with code: " + request.getCommuneCode()));
             village.setCommune(commune);
         }
 
@@ -287,7 +288,7 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public void deleteVillage(String code) {
         if (!villageRepository.existsById(code)) {
-            throw new RuntimeException("Village not found with code: " + code);
+            throw new NotFoundException("Village not found with code: " + code);
         }
         villageRepository.deleteById(code);
     }
