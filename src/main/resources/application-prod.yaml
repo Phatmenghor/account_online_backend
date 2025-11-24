@@ -1,5 +1,3 @@
-# application.yaml
-
 server:
   port: 9393
   servlet:
@@ -11,7 +9,6 @@ server:
 spring:
   application:
     name: account_online
-
   main:
     allow-bean-definition-overriding: true
 
@@ -38,10 +35,8 @@ spring:
         cache:
           use_second_level_cache: false
 
-  # Primary Database (PostgreSQL)
   datasource:
     url: jdbc:postgresql://192.168.103.106:5432/account_online
-    #    url: jdbc:postgresql://192.168.103.106:5432/internal_dev_uat
     username: postgres
     password: 123cp!@#
     driver-class-name: org.postgresql.Driver
@@ -55,80 +50,115 @@ spring:
       pool-name: PostgreSQL-Pool
       auto-commit: false
 
-#PROD - Dual Oracle Database Configuration
-#oracle:
-#  dwh:
-#    datasource:
-#      url: jdbc:oracle:thin:@//192.168.102.5:1521/dwh
-#      username: dwh
-#      password: Bnk$$444
-#      driver-class-name: oracle.jdbc.OracleDriver
-#      hikari:
-#        connection-test-query: SELECT 1 FROM DUAL
-#        maximum-pool-size: 10
-#        minimum-idle: 5
-#        connection-timeout: 30000
-#
-#  stg:
-#    datasource:
-#      url: jdbc:oracle:thin:@//192.168.102.5:1521/stg
-#      username: stg
-#      password: Bnk$$444
-#      driver-class-name: oracle.jdbc.OracleDriver
-#      hikari:
-#        connection-test-query: SELECT 1 FROM DUAL
-#        maximum-pool-size: 10
-#        minimum-idle: 5
-#        connection-timeout: 30000
+  # Mail configuration
+  mail:
+    host: 10.18.1.204
+    port: 25
+    username: ithelpdesk@cambodiapostbank.com.kh
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: false
+          ssl:
+            trust: "*"
+    default-encoding: UTF-8
 
-#UAT
+  # Thymeleaf configuration
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+
+  # Async Task Configuration (for request logging)
+  task:
+    execution:
+      pool:
+        core-size: 5
+        max-size: 10
+        queue-capacity: 100
+        thread-name-prefix: async-request-log-
+    scheduling:
+      enabled: true
+
+email:
+  sender:
+    address: ithelpdesk@cambodiapostbank.com.kh
+
+#FILE UPLOAD DIR
+file:
+  upload:
+    directory: /app/customer-image
+    nid: /nid
+    selfie: /selfie
+
+# Request Logging Configuration
+request:
+  log:
+    retention:
+      days: 30  # Auto-delete logs older than 30 days
+    enabled: true
+    exclude-paths:
+      - /swagger-ui
+      - /v3/api-docs
+      - /actuator
+      - /favicon.ico
+      - /webjars
+
+# Oracle Database Configuration (UAT)
 oracle:
   dwh:
     datasource:
-      url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
+      jdbc-url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
       username: stg
       password: Bnk$$444
       driver-class-name: oracle.jdbc.OracleDriver
-      hikari:
-        connection-test-query: SELECT 1 FROM DUAL
-        maximum-pool-size: 10
-        minimum-idle: 5
-        connection-timeout: 30000
+      connection-test-query: SELECT 1 FROM DUAL
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: Oracle-DWH-Pool
 
   stg:
     datasource:
-      url: jdbc:oracle:thin:@//192.168.102.5:1521/stg
+      jdbc-url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
       username: stg
       password: Bnk$$444
       driver-class-name: oracle.jdbc.OracleDriver
-      hikari:
-        connection-test-query: SELECT 1 FROM DUAL
-        maximum-pool-size: 10
-        minimum-idle: 5
-        connection-timeout: 30000
+      connection-test-query: SELECT 1 FROM DUAL
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: Oracle-STG-Pool
 
 masterdata:
   schema: DWH
 
 cpb:
-
   environment: development
-
   camdx:
     url: http://192.168.103.106:8099/api/v1/
     auth:
       token: d8a7f9e2-3c4b-4f10-9d75-1c9f2b84a7ec
       tokenHeaderName: X-CPB-CamDx-Auth
   aml:
-    token: d8a7f9e2-3c4b-4f10-9d75-1c9f2b84a7ec
-    url: https://data-intuition.cambodiapostbank.com.kh/api/v1/f4a10790-2f67-457a-ac0f-04f3f10ac583/dataSets/5c464510-2087-4bb2-b91e-ae04c080ddc2/documents?runStrategy=true&includeDetail=true
+    token: eyJhbGciOiJSUzI1NiIsImtpZCI6IjRDQTE2QjM1NEQwNTAyNDU0OUQ1MEUwQkJEREY4OEJDNTIzODBBMDYiLCJ0eXAiOiJKV1QiLCJ4NXQiOiJUS0ZyTlUwRkFrVkoxUTRMdmQtSXZGSTRDZ1kifQ.eyJuYmYiOjE3MDU5ODQ5ODMsImV4cCI6MTcwNTk4NTI4MywiaXNzIjoiaHR0cHM6Ly9hdXRoLXVhdC1pbnR1aXRpb24uY2FtYm9kaWFwb3N0YmFuay5jb20ua2giLCJhdWQiOiJmOTVkYTViMS04MGMwLTQ1MzAtYjlhZi03MTIxNTJjNWJjMjYiLCJub25jZSI6ImNlMWI0YmRhZGRiNTQzYTA5ZWU4OTc0OWNmMDZkMTIyIiwiaWF0IjoxNzA1OTg0OTgzLCJhdF9oYXNoIjoiSlUxV0liMFFSai1XTFFFbmtYWmUzUSIsInNfaGFzaCI6IlZvUjVzYmlwQlM0ZWF5U3lROUlaN3ciLCJzaWQiOiJvbWNkZ29zdmdlNlFNaWpoSDlQUUpnIiwic3ViIjoiZjRhMTA3OTAtMmY2Ny00NTdhLWFjMGYtMDRmM2YxMGFjNTgzIiwiYXV0aF90aW1lIjoxNzA1OTc3MjMxLCJpZHAiOiJsb2NhbCIsIm5hbWUiOiJhZG1pbiIsImZhbWlseV9uYW1lIjoiYWRtaW4iLCJnaXZlbl9uYW1lIjoiQWRtaW4iLCJ0ZW5hbnRfaWQiOiJmNGExMDc5MC0yZjY3LTQ1N2EtYWMwZi0wNGYzZjEwYWM1ODMiLCJwcm9maWxlX2lkcyI6ImY0YTEwNzkwLTJmNjctNDU3YS1hYzBmLTA0ZjNmMTBhYzU4MyIsImFtciI6WyJwd2QiXSwicGVybWlzc2lvbiI6WyJ0ZW5hbnR8Zi8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vMy8vLy8vLy8vLy8vLy92VC8vLzl4Ly83dy8vLzkvL3F4Ly8zIiwicHJvZHVjdHxvbmJvYXJkaW5nfFAvLy8vLytBQUFmMytDUC8vLy8vLytBQUlBQXZmLy8vOXc9PSIsInByb2R1Y3R8bW9uaXRvcmluZ3xQLy8vLy8rQUFBZjMrQ1AvLy8vLy8vLy8vLy8vZi8vLzl3PT0iXX0.MbhFfAjQNuBjMABdG8f474z1Qk19XOYbLh_xXSoQeBs1Kq1wtH50gN1W54VxiiB69w_JwuaP6bwglH0ua3wPr9rSqxCGbECSjidESh8Jqo3bbdyKm69hHFPWnAaIlyM-PCzXXw64eKMR9sT-pWwi99VEOKt1Bcy7UnrS9qP9vH7fsK1QdHoVN6mbo4xpkdljEk58PFWksbhjHQj-oPKs49QfT7Eu29asFvmvH9POpKgkAkKyEhCTqPHyOdM2HUKvzhByL0c0FjhqEKyFQhPxO81BXFGTROYqdWy8N1McYxJPvQY0RA6lToDB6uT3oCtpOT8ERqAlZnJiO0IGkZGrRQ
+    url: http://192.168.103.106:9095/api/aml-check
+    devForceHighRisk: true
   t24:
     url: http://192.168.127.31:7003
-    username: SODA.KROES
-    password: sodaIT@168
+    username: MENGHOR.PHAT
+    password: HouR$100
   mb:
-    otpUrl: http://10.18.1.47:15004/CPBBank/services/CPBMobile?wsdl
-    registerCodeUrl: http://10.18.1.48:8090/API/RegisterCustomerMB/
+    otpUrl: http://192.168.103.11:15004/CPBBank/services/CPBMobile?wsdl
+    registerCodeUrl: http://192.168.103.13:8090/API/RegisterCustomerMB/
     secretKey: cpbsmsgw@!@#974203
   otp:
     length: 6
@@ -137,16 +167,20 @@ cpb:
     lockMinutes: 5
     expiryMinutes: 5
     message: "Your OTP code is:"
-
   validate:
     nid: validate-nid
     faceApiRoute: validate-nid-face
   ocr:
     apiRoute: ocr-idcard
   xml:
-    createCustomer: C:\inetpub\wwwroot\cpbAccountOnlineApi\Xml\CREATE_CUSTOMER.xml
-    openAcctByCustomer: C:\inetpub\wwwroot\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_CUSTOMER.xml
-    openAcctByStaff: C:\inetpub\wwwroot\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_STAFF.xml
+    createCustomer: C:\Users\makkara.nob\cpbAccountOnlineApi\Xml\CREATE_CUSTOMER.xml
+    openAcctByCustomer: C:\Users\makkara.nob\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_CUSTOMER.xml
+    openAcctByStaff: C:\Users\makkara.nob\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_STAFF.xml
+
+# Open account TEST Config
+test:
+  skip-check-account: true
+  skip-check-cif: true
 
 # JWT Configuration
 jwt:
@@ -154,8 +188,6 @@ jwt:
     key: f7e8d9c6b5a4938271605f4de3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a001
   expiration-min: 525600
   issuer: internal-dev-api
-
-  # Task Execution for Async Telegram notifications
   task:
     execution:
       pool:
@@ -164,7 +196,7 @@ jwt:
         queue-capacity: 100
         thread-name-prefix: async-telegram-
 
-# TraineeReport Configuration
+# App Configuration
 app:
   default-users:
     create: true
@@ -172,7 +204,6 @@ app:
     idCard: phatmenghor19@gmail.com
     password: 88889999
     email: phatmenghor19@gmail.com
-
   data-load:
     batch-size: 1000
     max-retries: 1
@@ -183,27 +214,26 @@ app:
     progress-log-interval-minutes: 10
     heartbeat-interval-minutes: 5
 
-# Telegram Bot Configuration
+# Telegram Bot
 telegram:
   bot:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
     chat-id: "-1002740302492"
+    uat-monitor-chat-id: "-1003115792160"
     enabled: true
 
-# Logging Configuration
+# Logging
 logging:
   level:
     root: INFO
     com.internal: INFO
-    com.internal.feature.report_staging: INFO
-    org.springframework.security: WARN
-    org.springframework.web: WARN
-    org.springframework.data.jpa: WARN
+    org.springframework: WARN
     org.hibernate: WARN
-    org.hibernate.SQL: WARN
-    org.hibernate.type.descriptor.sql.BasicBinder: WARN
     com.zaxxer.hikari: INFO
-    org.postgresql: WARN
+    # Request Logging specific
+    com.internal.feature.auth.security.RequestLoggingFilter: DEBUG
+    com.internal.feature.auth.service.RequestLogService: INFO
+    com.internal.feature.auth.scheduler.RequestLogCleanupScheduler: INFO
   pattern:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{20} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
@@ -240,5 +270,3 @@ management:
     export:
       simple:
         enabled: true
-
-

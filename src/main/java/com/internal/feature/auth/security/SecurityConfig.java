@@ -14,6 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Security configuration with JWT authentication and request logging.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -21,6 +24,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthEntryPoint authEntryPoint;
+    private final RequestLoggingFilter requestLoggingFilter;
+
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/v1/occupation/all",
             "/api/v1/marital-status/all",
@@ -51,7 +56,12 @@ public class SecurityConfig {
                 .and()
                 .httpBasic();
 
+        // Add request logging filter first to capture all requests
+        http.addFilterBefore(requestLoggingFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // Add JWT authentication filter
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
