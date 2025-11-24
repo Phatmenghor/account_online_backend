@@ -26,13 +26,6 @@ public class SecurityConfig {
     private final JwtAuthEntryPoint authEntryPoint;
     private final RequestLoggingFilter requestLoggingFilter;
 
-    private static final String[] PUBLIC_ENDPOINTS = {
-            "/api/v1/occupation/all",
-            "/api/v1/marital-status/all",
-            "/api/v1/reference/doc/all",
-            "/api/v1/reference/banks/all"
-    };
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -50,7 +43,6 @@ public class SecurityConfig {
                 .antMatchers("/api/v1/enum/**").permitAll()
                 .antMatchers("/api/images/**").permitAll()
                 .antMatchers("/api/v1/staff/**").permitAll()
-                .antMatchers(PUBLIC_ENDPOINTS).permitAll()
                 .antMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
