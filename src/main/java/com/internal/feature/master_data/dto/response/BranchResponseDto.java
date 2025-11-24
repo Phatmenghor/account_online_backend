@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BranchResponseDto {
+    private Long id;
     private String branchCode;
     private String branchKh;
 

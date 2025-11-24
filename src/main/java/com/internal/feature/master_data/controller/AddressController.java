@@ -18,8 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/v1/master-data/address")
 @RequiredArgsConstructor
@@ -36,9 +34,9 @@ public class AddressController {
         return ResponseEntity.ok(ApiResponse.success("All provinces retrieved successfully", addressService.getAllProvinces(request)));
     }
 
-    @PostMapping("/provinces/get-by-code/{code}")
-    public ResponseEntity<ApiResponse<ProvinceResponseDto>> getProvinceByCode(@PathVariable String code) {
-        return ResponseEntity.ok(ApiResponse.success("Province retrieved successfully", addressService.getProvinceByCode(code)));
+    @PostMapping("/provinces/get-by-id/{id}")
+    public ResponseEntity<ApiResponse<ProvinceResponseDto>> getProvinceById( @PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("Province retrieved successfully", addressService.getProvinceById(id)));
     }
 
     @PostMapping("/provinces/create")
@@ -46,26 +44,26 @@ public class AddressController {
         return ResponseEntity.ok(ApiResponse.success("Province created successfully", addressService.createProvince(request)));
     }
 
-    @PostMapping("/provinces/update/{code}")
-    public ResponseEntity<ApiResponse<ProvinceResponseDto>> updateProvince(@PathVariable String code, @RequestBody ProvinceRequestDto request) {
-        return ResponseEntity.ok(ApiResponse.success("Province updated successfully", addressService.updateProvince(code, request)));
+    @PostMapping("/provinces/update/{id}")
+    public ResponseEntity<ApiResponse<ProvinceResponseDto>> updateProvince(@PathVariable Long id, @RequestBody ProvinceRequestDto request) {
+        return ResponseEntity.ok(ApiResponse.success("Province updated successfully", addressService.updateProvince(id, request)));
     }
 
-    @PostMapping("/provinces/delete/{code}")
-    public ResponseEntity<ApiResponse<Void>> deleteProvince(@PathVariable String code) {
-        addressService.deleteProvince(code);
+    @PostMapping("/provinces/delete/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteProvince(@PathVariable Long id) {
+        addressService.deleteProvince(id);
         return ResponseEntity.ok(ApiResponse.success("Province deleted successfully", null));
     }
 
     // District
-    @PostMapping("/districts/get-by-province")
-    public ResponseEntity<ApiResponse<PaginationResponse<DistrictResponseDto>>> getDistrictsByProvince(@RequestParam String provinceCode, @RequestBody AllMasterDataRequest request) {
-        return ResponseEntity.ok(ApiResponse.success("Districts retrieved successfully", addressService.getDistrictsByProvince(request, provinceCode)));
+    @PostMapping("/districts/all")
+    public ResponseEntity<ApiResponse<PaginationResponse<DistrictResponseDto>>> getAllDistricts(@RequestBody AllMasterDataRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("All districts retrieved successfully", addressService.getAllDistricts(request)));
     }
 
-    @PostMapping("/districts/get-by-code/{code}")
-    public ResponseEntity<ApiResponse<DistrictResponseDto>> getDistrictByCode(@PathVariable String code) {
-        return ResponseEntity.ok(ApiResponse.success("District retrieved successfully", addressService.getDistrictByCode(code)));
+    @PostMapping("/districts/get-by-id/{id}")
+    public ResponseEntity<ApiResponse<DistrictResponseDto>> getDistrictById(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("District retrieved successfully", addressService.getDistrictById(id)));
     }
 
     @PostMapping("/districts/create")
@@ -73,26 +71,26 @@ public class AddressController {
         return ResponseEntity.ok(ApiResponse.success("District created successfully", addressService.createDistrict(request)));
     }
 
-    @PostMapping("/districts/update/{code}")
-    public ResponseEntity<ApiResponse<DistrictResponseDto>> updateDistrict(@PathVariable String code, @RequestBody DistrictRequestDto request) {
-        return ResponseEntity.ok(ApiResponse.success("District updated successfully", addressService.updateDistrict(code, request)));
+    @PostMapping("/districts/update/{id}")
+    public ResponseEntity<ApiResponse<DistrictResponseDto>> updateDistrict(@PathVariable Long id, @RequestBody DistrictRequestDto request) {
+        return ResponseEntity.ok(ApiResponse.success("District updated successfully", addressService.updateDistrict(id, request)));
     }
 
-    @PostMapping("/districts/delete/{code}")
-    public ResponseEntity<ApiResponse<Void>> deleteDistrict(@PathVariable String code) {
-        addressService.deleteDistrict(code);
+    @PostMapping("/districts/delete/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteDistrict(@PathVariable Long id) {
+        addressService.deleteDistrict(id);
         return ResponseEntity.ok(ApiResponse.success("District deleted successfully", null));
     }
 
     // Commune
-    @PostMapping("/communes/get-by-district")
-    public ResponseEntity<ApiResponse<PaginationResponse<CommuneResponseDto>>> getCommunesByDistrict(@RequestParam String districtCode, @RequestBody AllMasterDataRequest request) {
-        return ResponseEntity.ok(ApiResponse.success("Communes retrieved successfully", addressService.getCommunesByDistrict(request, districtCode)));
+    @PostMapping("/communes/all")
+    public ResponseEntity<ApiResponse<PaginationResponse<CommuneResponseDto>>> getAllCommunes(@RequestBody AllMasterDataRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("All communes retrieved successfully", addressService.getAllCommunes(request)));
     }
 
-    @PostMapping("/communes/get-by-code/{code}")
-    public ResponseEntity<ApiResponse<CommuneResponseDto>> getCommuneByCode(@PathVariable String code) {
-        return ResponseEntity.ok(ApiResponse.success("Commune retrieved successfully", addressService.getCommuneByCode(code)));
+    @PostMapping("/communes/get-by-id/{id}")
+    public ResponseEntity<ApiResponse<CommuneResponseDto>> getCommuneById(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("Commune retrieved successfully", addressService.getCommuneById(id)));
     }
 
     @PostMapping("/communes/create")
@@ -100,26 +98,26 @@ public class AddressController {
         return ResponseEntity.ok(ApiResponse.success("Commune created successfully", addressService.createCommune(request)));
     }
 
-    @PostMapping("/communes/update/{code}")
-    public ResponseEntity<ApiResponse<CommuneResponseDto>> updateCommune(@PathVariable String code, @RequestBody CommuneRequestDto request) {
-        return ResponseEntity.ok(ApiResponse.success("Commune updated successfully", addressService.updateCommune(code, request)));
+    @PostMapping("/communes/update/{id}")
+    public ResponseEntity<ApiResponse<CommuneResponseDto>> updateCommune(@PathVariable Long id, @RequestBody CommuneRequestDto request) {
+        return ResponseEntity.ok(ApiResponse.success("Commune updated successfully", addressService.updateCommune(id, request)));
     }
 
-    @PostMapping("/communes/delete/{code}")
-    public ResponseEntity<ApiResponse<Void>> deleteCommune(@PathVariable String code) {
-        addressService.deleteCommune(code);
+    @PostMapping("/communes/delete/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteCommune(@PathVariable Long id) {
+        addressService.deleteCommune(id);
         return ResponseEntity.ok(ApiResponse.success("Commune deleted successfully", null));
     }
 
-    // Village
-    @PostMapping("/villages/get-by-commune")
-    public ResponseEntity<ApiResponse<PaginationResponse<VillageResponseDto>>> getVillagesByCommune(@RequestParam String communeCode, @RequestBody AllMasterDataRequest request) {
-        return ResponseEntity.ok(ApiResponse.success("Villages retrieved successfully", addressService.getVillagesByCommune(request, communeCode)));
+    // Village`
+    @PostMapping("/villages/all")
+    public ResponseEntity<ApiResponse<PaginationResponse<VillageResponseDto>>> getAllVillages(@RequestBody AllMasterDataRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("All villages retrieved successfully", addressService.getAllVillages(request)));
     }
 
-    @PostMapping("/villages/get-by-code/{code}")
-    public ResponseEntity<ApiResponse<VillageResponseDto>> getVillageByCode(@PathVariable String code) {
-        return ResponseEntity.ok(ApiResponse.success("Village retrieved successfully", addressService.getVillageByCode(code)));
+    @PostMapping("/villages/get-by-id/{id}")
+    public ResponseEntity<ApiResponse<VillageResponseDto>> getVillageById(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("Village retrieved successfully", addressService.getVillageById(id)));
     }
 
     @PostMapping("/villages/create")
@@ -127,14 +125,14 @@ public class AddressController {
         return ResponseEntity.ok(ApiResponse.success("Village created successfully", addressService.createVillage(request)));
     }
 
-    @PostMapping("/villages/update/{code}")
-    public ResponseEntity<ApiResponse<VillageResponseDto>> updateVillage(@PathVariable String code, @RequestBody VillageRequestDto request) {
-        return ResponseEntity.ok(ApiResponse.success("Village updated successfully", addressService.updateVillage(code, request)));
+    @PostMapping("/villages/update/{id}")
+    public ResponseEntity<ApiResponse<VillageResponseDto>> updateVillage(@PathVariable Long id, @RequestBody VillageRequestDto request) {
+        return ResponseEntity.ok(ApiResponse.success("Village updated successfully", addressService.updateVillage(id, request)));
     }
 
-    @PostMapping("/villages/delete/{code}")
-    public ResponseEntity<ApiResponse<Void>> deleteVillage(@PathVariable String code) {
-        addressService.deleteVillage(code);
+    @PostMapping("/villages/delete/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteVillage(@PathVariable Long id) {
+        addressService.deleteVillage(id);
         return ResponseEntity.ok(ApiResponse.success("Village deleted successfully", null));
     }
 }

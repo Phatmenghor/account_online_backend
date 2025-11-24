@@ -10,8 +10,8 @@ import java.util.List;
 
 public interface BranchService {
     PaginationResponse<BranchResponseDto> getAllBranches(AllMasterDataRequest request);
-    BranchResponseDto getBranchByCode(String code);
+    BranchResponseDto getBranchById(Long id);
     BranchResponseDto createBranch(BranchRequestDto request);
-    BranchResponseDto updateBranch(String code, BranchRequestDto request);
-    void deleteBranch(String code);
+    BranchResponseDto updateBranch(Long id, BranchRequestDto request);
+    void deleteBranch(Long id);
 }

@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DistrictResponseDto {
+    private Long id;
     private String districtCode;
     private String districtEn;
     private String districtKh;

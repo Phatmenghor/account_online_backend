@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProvinceResponseDto {
+    private Long id;
     private String provinceCode;
     private String provinceEn;
     private String provinceKh;

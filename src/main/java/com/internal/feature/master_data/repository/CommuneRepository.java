@@ -5,10 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 @Repository
-public interface CommuneRepository extends JpaRepository<Commune, String>, JpaSpecificationExecutor<Commune> {
+public interface CommuneRepository extends JpaRepository<Commune, Long>, JpaSpecificationExecutor<Commune> {
     List<Commune> findByDistrictDistrictCode(String districtCode);
+    Optional<Commune> findByCommuneCode(String communeCode);
+    boolean existsByCommuneCode(String communeCode);
 }

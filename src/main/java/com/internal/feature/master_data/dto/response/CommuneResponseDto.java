@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CommuneResponseDto {
+    private Long id;
     private String communeCode;
     private String communeEn;
     private String communeKh;

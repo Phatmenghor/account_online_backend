@@ -17,29 +17,32 @@ import java.util.List;
 public interface AddressService {
     // Province
     PaginationResponse<ProvinceResponseDto> getAllProvinces(AllMasterDataRequest request);
-    ProvinceResponseDto getProvinceByCode(String code);
+    ProvinceResponseDto getProvinceById(Long id);
     ProvinceResponseDto createProvince(ProvinceRequestDto request);
-    ProvinceResponseDto updateProvince(String code, ProvinceRequestDto request);
-    void deleteProvince(String code);
+    ProvinceResponseDto updateProvince(Long id, ProvinceRequestDto request);
+    void deleteProvince(Long id);
 
     // District
+    PaginationResponse<DistrictResponseDto> getAllDistricts(AllMasterDataRequest request);
     PaginationResponse<DistrictResponseDto> getDistrictsByProvince(AllMasterDataRequest request, String provinceCode);
-    DistrictResponseDto getDistrictByCode(String code);
+    DistrictResponseDto getDistrictById(Long id);
     DistrictResponseDto createDistrict(DistrictRequestDto request);
-    DistrictResponseDto updateDistrict(String code, DistrictRequestDto request);
-    void deleteDistrict(String code);
+    DistrictResponseDto updateDistrict(Long id, DistrictRequestDto request);
+    void deleteDistrict(Long id);
 
     // Commune
+    PaginationResponse<CommuneResponseDto> getAllCommunes(AllMasterDataRequest request);
     PaginationResponse<CommuneResponseDto> getCommunesByDistrict(AllMasterDataRequest request, String districtCode);
-    CommuneResponseDto getCommuneByCode(String code);
+    CommuneResponseDto getCommuneById(Long id);
     CommuneResponseDto createCommune(CommuneRequestDto request);
-    CommuneResponseDto updateCommune(String code, CommuneRequestDto request);
-    void deleteCommune(String code);
+    CommuneResponseDto updateCommune(Long id, CommuneRequestDto request);
+    void deleteCommune(Long id);
 
     // Village
+    PaginationResponse<VillageResponseDto> getAllVillages(AllMasterDataRequest request);
     PaginationResponse<VillageResponseDto> getVillagesByCommune(AllMasterDataRequest request, String communeCode);
-    VillageResponseDto getVillageByCode(String code);
+    VillageResponseDto getVillageById(Long id);
     VillageResponseDto createVillage(VillageRequestDto request);
-    VillageResponseDto updateVillage(String code, VillageRequestDto request);
-    void deleteVillage(String code);
+    VillageResponseDto updateVillage(Long id, VillageRequestDto request);
+    void deleteVillage(Long id);
 }

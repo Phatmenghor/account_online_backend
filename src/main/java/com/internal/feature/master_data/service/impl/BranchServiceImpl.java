@@ -41,16 +41,16 @@ public class BranchServiceImpl implements BranchService {
     }
 
     @Override
-    public BranchResponseDto getBranchByCode(String code) {
-        Branch branch = branchRepository.findById(code)
-                .orElseThrow(() -> new NotFoundException("Branch not found with code: " + code));
+    public BranchResponseDto getBranchById(Long id) {
+        Branch branch = branchRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Branch not found with id: " + id));
         return mapToDto(branch);
     }
 
     @Override
     @Transactional
     public BranchResponseDto createBranch(BranchRequestDto request) {
-        if (branchRepository.existsById(request.getBranchCode())) {
+        if (branchRepository.existsByBranchCode(request.getBranchCode())) {
             throw new RuntimeException("Branch with code " + request.getBranchCode() + " already exists");
         }
         Branch branch = new Branch();
@@ -61,24 +61,24 @@ public class BranchServiceImpl implements BranchService {
 
     @Override
     @Transactional
-    public BranchResponseDto updateBranch(String code, BranchRequestDto request) {
-        Branch branch = branchRepository.findById(code)
-                .orElseThrow(() -> new NotFoundException("Branch not found with code: " + code));
+    public BranchResponseDto updateBranch(Long id, BranchRequestDto request) {
+        Branch branch = branchRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Branch not found with id: " + id));
         branch.setBranchKh(request.getBranchKh());
         return mapToDto(branchRepository.save(branch));
     }
 
     @Override
     @Transactional
-    public void deleteBranch(String code) {
-        if (!branchRepository.existsById(code)) {
-            throw new NotFoundException("Branch not found with code: " + code);
-        }
-        branchRepository.deleteById(code);
+    public void deleteBranch(Long id) {
+        Branch branch = branchRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Branch not found with id: " + id));
+        branchRepository.delete(branch);
     }
 
     private BranchResponseDto mapToDto(Branch branch) {
         return BranchResponseDto.builder()
+                .id(branch.getId())
                 .branchCode(branch.getBranchCode())
                 .branchKh(branch.getBranchKh())
                 .build();

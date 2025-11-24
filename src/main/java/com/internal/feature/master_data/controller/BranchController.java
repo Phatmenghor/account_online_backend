@@ -12,8 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/v1/master-data/branches")
 @RequiredArgsConstructor
@@ -31,10 +29,11 @@ public class BranchController {
         return ResponseEntity.ok(ApiResponse.success("All branches retrieved successfully", branches));
     }
 
-    @PostMapping("/get-by-code/{code}")
-    public ResponseEntity<ApiResponse<BranchResponseDto>> getBranchByCode(@PathVariable String code) {
-        log.info("Fetching branch with code: {}", code);
-        BranchResponseDto branch = branchService.getBranchByCode(code);
+    @PostMapping("/get-by-id/{id}")
+    public ResponseEntity<ApiResponse<BranchResponseDto>> getBranchById(@PathVariable Long id) {
+        log.info("Fetching branch with ID: {}", id);
+        BranchResponseDto branch = branchService.getBranchById(id);
+        log.info("Successfully retrieved branch with ID: {}", id);
         return ResponseEntity.ok(ApiResponse.success("Branch retrieved successfully", branch));
     }
 
@@ -45,17 +44,19 @@ public class BranchController {
         return ResponseEntity.ok(ApiResponse.success("Branch created successfully", branch));
     }
 
-    @PostMapping("/update/{code}")
-    public ResponseEntity<ApiResponse<BranchResponseDto>> updateBranch(@PathVariable String code, @RequestBody BranchRequestDto request) {
-        log.info("Updating branch with code: {}", code);
-        BranchResponseDto branch = branchService.updateBranch(code, request);
+    @PostMapping("/update/{id}")
+    public ResponseEntity<ApiResponse<BranchResponseDto>> updateBranch(@PathVariable Long id, @RequestBody BranchRequestDto request) {
+        log.info("Updating branch with ID: {}", id);
+        BranchResponseDto branch = branchService.updateBranch(id, request);
+        log.info("Successfully updated branch with ID: {}", id);
         return ResponseEntity.ok(ApiResponse.success("Branch updated successfully", branch));
     }
 
-    @PostMapping("/delete/{code}")
-    public ResponseEntity<ApiResponse<Void>> deleteBranch(@PathVariable String code) {
-        log.info("Deleting branch with code: {}", code);
-        branchService.deleteBranch(code);
+    @PostMapping("/delete/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteBranch(@PathVariable Long id) {
+        log.info("Deleting branch with ID: {}", id);
+        branchService.deleteBranch(id);
+        log.info("Successfully deleted branch with ID: {}", id);
         return ResponseEntity.ok(ApiResponse.success("Branch deleted successfully", null));
     }
 }
