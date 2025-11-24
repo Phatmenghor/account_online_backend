@@ -31,6 +31,9 @@ public interface OccupationMapper {
         return dto;
     }
 
+    /** Map List of Entities to List of DTOs */
+    List<OccupationDto> toDtoList(List<Occupation> occupations);
+
     @Named("mapToListDto")
     default AllOccupationResponseDto mapToListDto(List<OccupationDto> content, Page<Occupation> occupations) {
         AllOccupationResponseDto occupationResponseDto = new AllOccupationResponseDto();

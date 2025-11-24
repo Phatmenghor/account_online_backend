@@ -27,6 +27,9 @@ public interface ReferenceDocMapper {
         return dto;
     }
 
+    /** Map List of Entities to List of DTOs */
+    List<ReferenceDocDto> toDtoList(List<ReferenceDoc> referenceDocs);
+
     @Named("mapToListDto")
     default AllReferenceDocResponseDto mapToListDto(List<ReferenceDocDto> content, Page<ReferenceDoc> referenceDoc) {
         AllReferenceDocResponseDto referenceDocList = new AllReferenceDocResponseDto();

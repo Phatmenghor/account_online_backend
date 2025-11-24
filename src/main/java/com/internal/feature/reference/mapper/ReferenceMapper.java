@@ -31,6 +31,9 @@ public interface ReferenceMapper {
         return dto;
     }
 
+    /** Map List of Entities to List of DTOs */
+    List<ReferenceDto> toDtoList(List<Reference> references);
+
     @Named("mapToListDto")
     default AllReferenceResponseDto mapToListDto(List<ReferenceDto> content, Page<Reference> referenceBank) {
         AllReferenceResponseDto referenceBankList = new AllReferenceResponseDto();

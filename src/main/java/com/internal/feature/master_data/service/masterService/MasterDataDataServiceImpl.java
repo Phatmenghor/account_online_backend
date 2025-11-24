@@ -305,6 +305,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
 
     // ---------------------- Code-based lookups ----------------------
     @Override
+    // USED BY OTHER SERVICES (AML, Open Account, Logs Report) - DO NOT MODIFY WITHOUT CHECKING DEPENDENCIES
     public ClsProvinceDto getProvinceByCode(String provinceCode) {
         String sql = "SELECT province_code, province_en, province_kh FROM location_province_cbc WHERE province_code = ? LIMIT 1";
         return jdbcTemplate.query(sql, new ProvinceRowMapper(), provinceCode)
@@ -312,6 +313,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     }
 
     @Override
+    // USED BY OTHER SERVICES (AML, Open Account, Logs Report) - DO NOT MODIFY WITHOUT CHECKING DEPENDENCIES
     public ClsDistrictDto getDistrictByCode(String districtCode) {
         String sql = "SELECT district_code, district_en, district_kh, province_code FROM location_district_cbc WHERE district_code = ? LIMIT 1";
         return jdbcTemplate.query(sql, new DistrictRowMapper(), districtCode)
@@ -319,6 +321,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     }
 
     @Override
+    // USED BY OTHER SERVICES (AML, Open Account, Logs Report) - DO NOT MODIFY WITHOUT CHECKING DEPENDENCIES
     public ClsCommuneDto getCommuneByCode(String communeCode) {
         String sql = "SELECT commune_code, commune_en, commune_kh, district_code FROM location_commune_cbc WHERE commune_code = ? LIMIT 1";
         return jdbcTemplate.query(sql, new CommuneRowMapper(), communeCode)
@@ -326,6 +329,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     }
 
     @Override
+    // USED BY OTHER SERVICES (AML, Open Account, Logs Report) - DO NOT MODIFY WITHOUT CHECKING DEPENDENCIES
     public ClsVillageDto getVillageByCode(String villageCode) {
         String sql = "SELECT village_code, village_en, village_kh, commune_code FROM location_village_cbc WHERE village_code = ? LIMIT 1";
         return jdbcTemplate.query(sql, new VillageRowMapper(), villageCode)
@@ -333,6 +337,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     }
 
     @Override
+    // USED BY OTHER SERVICES (AML, Open Account, Logs Report) - DO NOT MODIFY WITHOUT CHECKING DEPENDENCIES
     public ClsBranchDto getBranchByCode(String branchCode) {
         String sql = "SELECT branch_code, branch_kh FROM acc_online_branch WHERE branch_code = ? LIMIT 1";
         return jdbcTemplate.query(sql, new BranchRowMapper(), branchCode)

@@ -63,6 +63,16 @@ public class OccupationServiceImpl implements OccupationService {
     }
 
     @Override
+    public List<OccupationDto> getAllOccupationsPublic(String search) {
+        // Build specification dynamically - FORCE ACTIVE STATUS
+        var spec = OccupationSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
+                .and(OccupationSpec.searchByName(search));
+
+        List<Occupation> occupations = repository.findAll(spec);
+        return mapper.toDtoList(occupations);
+    }
+
+    @Override
     public OccupationDto createOccupation(OccupationCreateRequestDto requestDto) {
         if (repository.existsByNameEn(requestDto.getNameEn())) {
             throw new DuplicateNameException("Occupation with English name '" + requestDto.getNameEn() + "' already exists");

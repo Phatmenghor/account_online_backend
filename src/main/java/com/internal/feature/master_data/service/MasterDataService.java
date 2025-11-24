@@ -24,13 +24,18 @@ public interface MasterDataService {
     LocationCodesDto initPob(AddressRequestDto pobString);
 
     // ---------------------- Code-based lookups ----------------------
+    // USED BY OTHER SERVICES (AML, Open Account, Logs Report) - DO NOT MODIFY WITHOUT CHECKING DEPENDENCIES
     ClsProvinceDto getProvinceByCode(String provinceCode);
 
+    // USED BY OTHER SERVICES (AML, Open Account, Logs Report) - DO NOT MODIFY WITHOUT CHECKING DEPENDENCIES
     ClsDistrictDto getDistrictByCode(String districtCode);
 
+    // USED BY OTHER SERVICES (AML, Open Account, Logs Report) - DO NOT MODIFY WITHOUT CHECKING DEPENDENCIES
     ClsCommuneDto getCommuneByCode(String communeCode);
 
+    // USED BY OTHER SERVICES (AML, Open Account, Logs Report) - DO NOT MODIFY WITHOUT CHECKING DEPENDENCIES
     ClsVillageDto getVillageByCode(String villageCode);
 
+    // USED BY OTHER SERVICES (AML, Open Account, Logs Report) - DO NOT MODIFY WITHOUT CHECKING DEPENDENCIES
     ClsBranchDto getBranchByCode(String branchCode);
 }

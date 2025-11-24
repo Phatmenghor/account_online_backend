@@ -55,6 +55,16 @@ public class MaritalStatusServiceImpl implements MaritalStatusService {
         return mapper.mapToListDto(content, page);
     }
 
+    @Override
+    public List<MaritalStatusDto> getAllPublic(String search) {
+        // Build specification dynamically - FORCE ACTIVE STATUS
+        var spec = MaritalStatusSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
+                .and(MaritalStatusSpec.searchByName(search));
+
+        List<MaritalStatus> list = repository.findAll(spec);
+        return mapper.toDtoList(list);
+    }
+
 
     @Override
     public MaritalStatusDto create(MaritalStatusCreateRequestDto request) {

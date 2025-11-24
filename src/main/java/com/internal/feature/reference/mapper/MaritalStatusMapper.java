@@ -26,6 +26,9 @@ public interface MaritalStatusMapper {
         return dto;
     }
 
+    /** Map List of Entities to List of DTOs */
+    List<MaritalStatusDto> toDtoList(List<MaritalStatus> maritalStatuses);
+
     @Named("mapToListDto")
     default AllMaritalStatusResponseDto mapToListDto(List<MaritalStatusDto> content, Page<MaritalStatus> maritalStatuses) {
         AllMaritalStatusResponseDto maritalStatusesList = new AllMaritalStatusResponseDto();

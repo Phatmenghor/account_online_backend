@@ -56,6 +56,16 @@ public class ReferenceServiceImpl implements ReferenceService {
     }
 
     @Override
+    public List<ReferenceDto> getAllPublic(String search) {
+        // Build specification dynamically - FORCE ACTIVE STATUS
+        var spec = ReferenceSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
+                .and(ReferenceSpec.searchByName(search));
+
+        List<Reference> list = repository.findAll(spec);
+        return mapper.toDtoList(list);
+    }
+
+    @Override
     public ReferenceDto create(ReferenceCreateRequestDto request) {
         if (repository.existsByNameEn(request.getNameEn())) {
             throw new DuplicateNameException("Bank with English name '" + request.getNameEn() + "' already exists");

@@ -54,6 +54,16 @@ public class ReferenceDocServiceImpl implements ReferenceDocService {
     }
 
     @Override
+    public List<ReferenceDocDto> getAllReferenceDocPublic(String search) {
+        // FORCE ACTIVE STATUS
+        var spec = ReferenceDocSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
+                .and(ReferenceDocSpec.searchByName(search));
+
+        List<ReferenceDoc> list = repository.findAll(spec);
+        return mapper.toDtoList(list);
+    }
+
+    @Override
     public ReferenceDocDto create(ReferenceDocCreateRequestDto request) {
         if (repository.existsByNameEn(request.getNameEn())) {
             throw new DuplicateNameException("Doc reference  with English name '" + request.getNameEn() + "' already exists");

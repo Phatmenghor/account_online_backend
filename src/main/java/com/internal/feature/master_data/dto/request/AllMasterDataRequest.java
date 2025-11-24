@@ -1,14 +1,20 @@
 package com.internal.feature.master_data.dto.request;
 
+import com.internal.enumation.StatusData;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class AllMasterDataRequest {
+    @Builder.Default
     private int pageNo = 1;
-    private int pageSize = 20;
-    private String search;  // Optional search filter
+    @Builder.Default
+    private int pageSize = 10;
+    private String search;
+    private StatusData status;
 }
