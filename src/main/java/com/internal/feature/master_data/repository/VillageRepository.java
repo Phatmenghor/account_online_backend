@@ -14,4 +14,5 @@ public interface VillageRepository extends JpaRepository<Village, Long>, JpaSpec
     List<Village> findByCommuneCommuneCode(String communeCode);
     Optional<Village> findByVillageCode(String villageCode);
     boolean existsByVillageCode(String villageCode);
+    Optional<Village> findFirstByCommuneCommuneCodeAndVillageKh(String communeCode, String villageKh);
 }

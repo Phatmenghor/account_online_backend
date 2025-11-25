@@ -14,4 +14,5 @@ public interface DistrictRepository extends JpaRepository<District, Long>, JpaSp
     List<District> findByProvinceProvinceCode(String provinceCode);
     Optional<District> findByDistrictCode(String districtCode);
     boolean existsByDistrictCode(String districtCode);
+    Optional<District> findFirstByProvinceProvinceCodeAndDistrictKh(String provinceCode, String districtKh);
 }

@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface ProvinceRepository extends JpaRepository<Province, Long>, JpaSpecificationExecutor<Province> {
     Optional<Province> findByProvinceCode(String provinceCode);
     boolean existsByProvinceCode(String provinceCode);
+    Optional<Province> findFirstByProvinceKh(String provinceKh);
 }

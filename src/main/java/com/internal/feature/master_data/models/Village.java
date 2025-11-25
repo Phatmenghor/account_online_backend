@@ -1,10 +1,9 @@
 package com.internal.feature.master_data.models;
 
+import com.internal.config.entity.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
 
 import javax.persistence.*;
 
@@ -13,10 +12,7 @@ import javax.persistence.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Village implements Serializable {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Village extends BaseEntity {
 
     @Column(name = "village_code", nullable = false, length = 50)
     private String villageCode;
@@ -28,6 +24,6 @@ public class Village implements Serializable {
     private String villageKh;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "commune_code", referencedColumnName = "commune_code")
+    @JoinColumn(name = "commune_id")
     private Commune commune;
 }

@@ -2,6 +2,7 @@ package com.internal.feature.master_data.mapper;
 
 import com.internal.feature.master_data.dto.request.VillageRequestDto;
 import com.internal.feature.master_data.dto.response.VillageResponseDto;
+import com.internal.feature.master_data.dto.response.ClsVillageDto;
 import com.internal.feature.master_data.models.Village;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -25,4 +26,8 @@ public interface VillageMapper {
 
     @Mapping(target = "commune", ignore = true) // Handled in service
     void updateFromDto(VillageRequestDto request, @MappingTarget Village village);
+
+    @Mapping(target = "communeCode", source = "commune.communeCode")
+    ClsVillageDto toClsDto(Village village);
+    List<ClsVillageDto> toClsDtoList(List<Village> villages);
 }

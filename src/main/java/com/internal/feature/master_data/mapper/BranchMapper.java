@@ -22,4 +22,10 @@ public interface BranchMapper {
     Branch fromCreateDto(BranchRequestDto request);
 
     void updateFromDto(BranchRequestDto request, @MappingTarget Branch branch);
+
+    @org.mapstruct.Mapping(target = "branchID", source = "branchCode")
+    @org.mapstruct.Mapping(target = "branchkh", source = "branchKh")
+    com.internal.feature.master_data.dto.response.ClsBranchDto toClsDto(Branch branch);
+    
+    List<com.internal.feature.master_data.dto.response.ClsBranchDto> toClsDtoList(List<Branch> branches);
 }

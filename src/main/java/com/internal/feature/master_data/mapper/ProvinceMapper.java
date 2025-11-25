@@ -2,6 +2,7 @@ package com.internal.feature.master_data.mapper;
 
 import com.internal.feature.master_data.dto.request.ProvinceRequestDto;
 import com.internal.feature.master_data.dto.response.ProvinceResponseDto;
+import com.internal.feature.master_data.dto.response.ClsProvinceDto;
 import com.internal.feature.master_data.models.Province;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
@@ -22,4 +23,7 @@ public interface ProvinceMapper {
     Province fromCreateDto(ProvinceRequestDto request);
 
     void updateFromDto(ProvinceRequestDto request, @MappingTarget Province province);
+
+    ClsProvinceDto toClsDto(Province province);
+    List<ClsProvinceDto> toClsDtoList(List<Province> provinces);
 }

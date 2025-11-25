@@ -2,6 +2,7 @@ package com.internal.feature.master_data.mapper;
 
 import com.internal.feature.master_data.dto.request.DistrictRequestDto;
 import com.internal.feature.master_data.dto.response.DistrictResponseDto;
+import com.internal.feature.master_data.dto.response.ClsDistrictDto;
 import com.internal.feature.master_data.models.District;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -24,4 +25,8 @@ public interface DistrictMapper {
 
     @Mapping(target = "province", ignore = true) // Handled in service
     void updateFromDto(DistrictRequestDto request, @MappingTarget District district);
+
+    @Mapping(target = "provinceCode", source = "province.provinceCode")
+    ClsDistrictDto toClsDto(District district);
+    List<ClsDistrictDto> toClsDtoList(List<District> districts);
 }

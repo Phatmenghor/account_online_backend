@@ -1,21 +1,18 @@
 package com.internal.feature.master_data.models;
 
+import com.internal.config.entity.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.io.Serializable;
 
 @Entity
 @Table(name = "location_commune_cbc")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Commune implements Serializable {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Commune extends BaseEntity {
 
     @Column(name = "commune_code", nullable = false, length = 50)
     private String communeCode;
@@ -27,6 +24,6 @@ public class Commune implements Serializable {
     private String communeKh;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "district_code", referencedColumnName = "district_code")
+    @JoinColumn(name = "district_id")
     private District district;
 }

@@ -14,4 +14,5 @@ public interface CommuneRepository extends JpaRepository<Commune, Long>, JpaSpec
     List<Commune> findByDistrictDistrictCode(String districtCode);
     Optional<Commune> findByCommuneCode(String communeCode);
     boolean existsByCommuneCode(String communeCode);
+    Optional<Commune> findFirstByDistrictDistrictCodeAndCommuneKh(String districtCode, String communeKh);
 }

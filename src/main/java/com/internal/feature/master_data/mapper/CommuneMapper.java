@@ -2,6 +2,7 @@ package com.internal.feature.master_data.mapper;
 
 import com.internal.feature.master_data.dto.request.CommuneRequestDto;
 import com.internal.feature.master_data.dto.response.CommuneResponseDto;
+import com.internal.feature.master_data.dto.response.ClsCommuneDto;
 import com.internal.feature.master_data.models.Commune;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -26,4 +27,8 @@ public interface CommuneMapper {
 
     @Mapping(target = "district", ignore = true) // Handled in service
     void updateFromDto(CommuneRequestDto request, @MappingTarget Commune commune);
+
+    @Mapping(target = "districtCode", source = "district.districtCode")
+    ClsCommuneDto toClsDto(Commune commune);
+    List<ClsCommuneDto> toClsDtoList(List<Commune> communes);
 }
