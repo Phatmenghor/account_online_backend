@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -13,5 +15,7 @@ public class BranchResponseDto {
     private Long id;
     private String branchCode;
     private String branchKh;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 }

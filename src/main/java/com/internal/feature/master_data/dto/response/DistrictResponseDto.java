@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -15,4 +17,6 @@ public class DistrictResponseDto {
     private String districtEn;
     private String districtKh;
     private ProvinceResponseDto province;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

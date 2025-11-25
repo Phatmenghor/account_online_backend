@@ -1,5 +1,6 @@
 package com.internal.feature.reference.models;
 
+import com.internal.config.entity.BaseEntity;
 import com.internal.enumation.StatusData;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,11 +12,7 @@ import javax.persistence.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Occupation {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Occupation extends BaseEntity {
 
     @Column(name = "name_en", nullable = false, length = 100)
     private String nameEn;
