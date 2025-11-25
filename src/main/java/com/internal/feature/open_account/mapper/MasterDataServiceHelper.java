@@ -52,6 +52,6 @@ public class MasterDataServiceHelper {
         if (loc.getDistrict() != null) codes.add(loc.getDistrict().getDistrictCode());
         if (loc.getCommune() != null) codes.add(loc.getCommune().getCommuneCode());
         if (loc.getVillage() != null) codes.add(loc.getVillage().getVillageCode());
-        return String.join(",", codes);
+        return String.join(", ", codes);
     }
 }
