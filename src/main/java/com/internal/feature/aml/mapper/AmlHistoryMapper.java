@@ -71,6 +71,7 @@ public interface AmlHistoryMapper {
     @Mapping(target = "trxnID", source = "amlExternalTrxnID")
     @Mapping(target = "serviceName", source = "amlExternalServiceName")
     @Mapping(target = "actionTaken", source = "amlExternalActionTaken")
+    @Mapping(target = "totalRulesScore", source = "amlExternalTotalRulesScore")
     AmlHistoryDto toDto(AmlHistory history);
 
     // -------------------------------

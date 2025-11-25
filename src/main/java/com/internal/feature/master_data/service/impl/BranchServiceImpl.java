@@ -3,6 +3,7 @@ package com.internal.feature.master_data.service.impl;
 import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.master_data.dto.request.BranchRequestDto;
 import com.internal.feature.master_data.dto.response.BranchResponseDto;
+import com.internal.feature.master_data.mapper.BranchMapper;
 import com.internal.feature.master_data.models.Branch;
 import com.internal.feature.master_data.repository.BranchRepository;
 import com.internal.feature.master_data.service.BranchService;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 public class BranchServiceImpl implements BranchService {
 
     private final BranchRepository branchRepository;
+    private final BranchMapper branchMapper;
 
     @Override
     public PaginationResponse<BranchResponseDto> getAllBranches(AllMasterDataRequest request) {
@@ -33,9 +35,7 @@ public class BranchServiceImpl implements BranchService {
         Specification<Branch> spec = BranchSpec.searchByName(request.getSearch());
 
         Page<Branch> page = branchRepository.findAll(spec, pageable);
-        List<BranchResponseDto> content = page.stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+        List<BranchResponseDto> content = branchMapper.toDtoList(page.getContent());
 
         return new PaginationResponse<>(content, page.getNumber() + 1, page.getSize(), page.getTotalElements());
     }
@@ -44,7 +44,7 @@ public class BranchServiceImpl implements BranchService {
     public BranchResponseDto getBranchById(Long id) {
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Branch not found with id: " + id));
-        return mapToDto(branch);
+        return branchMapper.toDto(branch);
     }
 
     @Override
@@ -53,10 +53,8 @@ public class BranchServiceImpl implements BranchService {
         if (branchRepository.existsByBranchCode(request.getBranchCode())) {
             throw new RuntimeException("Branch with code " + request.getBranchCode() + " already exists");
         }
-        Branch branch = new Branch();
-        branch.setBranchCode(request.getBranchCode());
-        branch.setBranchKh(request.getBranchKh());
-        return mapToDto(branchRepository.save(branch));
+        Branch branch = branchMapper.fromCreateDto(request);
+        return branchMapper.toDto(branchRepository.save(branch));
     }
 
     @Override
@@ -64,8 +62,8 @@ public class BranchServiceImpl implements BranchService {
     public BranchResponseDto updateBranch(Long id, BranchRequestDto request) {
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Branch not found with id: " + id));
-        branch.setBranchKh(request.getBranchKh());
-        return mapToDto(branchRepository.save(branch));
+        branchMapper.updateFromDto(request, branch);
+        return branchMapper.toDto(branchRepository.save(branch));
     }
 
     @Override
@@ -74,13 +72,5 @@ public class BranchServiceImpl implements BranchService {
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Branch not found with id: " + id));
         branchRepository.delete(branch);
-    }
-
-    private BranchResponseDto mapToDto(Branch branch) {
-        return BranchResponseDto.builder()
-                .id(branch.getId())
-                .branchCode(branch.getBranchCode())
-                .branchKh(branch.getBranchKh())
-                .build();
     }
 }

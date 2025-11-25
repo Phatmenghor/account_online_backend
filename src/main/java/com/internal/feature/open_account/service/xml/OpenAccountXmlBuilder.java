@@ -26,7 +26,6 @@ public class OpenAccountXmlBuilder {
     private static final String DEFAULT_CUSTOMER_STATUS = "1";
     private static final String DEFAULT_CUSTOMER_TYPE = "ACTIVE";
     private static final String DEFAULT_OWNERSHIP = "304";
-    private static final String DEFAULT_LEGAL_DOC_NAME = "NATIONAL.ID";
     private static final String DEFAULT_LEGAL_HOLDER_NAME = "NATIONAL.ID";
     private static final String DEFAULT_NATIONALITY = "KH";
 
@@ -111,7 +110,7 @@ public class OpenAccountXmlBuilder {
                 // Legal identification
                 + "<cus:gLEGALID g=\"1\"><cus:mLEGALID m=\"1\">"
                 + "<cus:LegalId>" + request.getLegalId() + "</cus:LegalId>"
-                + "<cus:LegalDocName>" + DEFAULT_LEGAL_DOC_NAME + "</cus:LegalDocName>"
+                + "<cus:LegalDocName>" + request.getLegalDocType() + "</cus:LegalDocName>"
                 + "<cus:LegalHolderName>" + DEFAULT_LEGAL_HOLDER_NAME + "</cus:LegalHolderName>"
                 + "<cus:LegalIssAuth>" + request.getGivenName() + "</cus:LegalIssAuth>"
                 + "<cus:LegalIssDate>" + legalIssueDate + "</cus:LegalIssDate>"
