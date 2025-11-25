@@ -2,7 +2,9 @@ package com.internal.feature.logs_report.controller;
 
 import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.logs_report.dto.request.AccountOnlineFinalLogRequestDto;
+import com.internal.feature.logs_report.dto.request.AllAccountOnlineSuccessRequestDto;
 import com.internal.feature.logs_report.dto.response.AccountOnlineFinalResponseDto;
+import com.internal.feature.logs_report.dto.response.AllAccountOnlineFinalResponseDto;
 import com.internal.feature.logs_report.service.serviceImpl.AccountOnlineOpenFinalServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,15 @@ public class AccountOnlineFinalController {
         log.info("Successfully get Account By CIF : {} , Legal Id : {}",request.getCif(),request.getLegalId());
         return ResponseEntity.ok(ApiResponse.success("Account retrieved successfully", dto));
 
+    }
+
+    @PostMapping("/success-list")
+    public ResponseEntity<ApiResponse<AllAccountOnlineFinalResponseDto>> getSuccessOpenAccounts(@RequestBody AllAccountOnlineSuccessRequestDto request) {
+        log.info("Fetching success open accounts - Page: {}, Size: {}, Search: {}",
+                request.getPageNo(), request.getPageSize(), request.getSearch());
+        AllAccountOnlineFinalResponseDto response = openFinalService.getSuccessOpenAccount(request);
+        log.info("Successfully retrieved {} success open accounts", response.getTotalElements());
+        return ResponseEntity.ok(ApiResponse.success("Success accounts retrieved successfully", response));
     }
 
 }

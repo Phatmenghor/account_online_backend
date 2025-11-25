@@ -31,7 +31,7 @@ public class TelegramService {
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
             MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-            body.add("chat_id", chatId);
+            body.add("chat_id", chatId_uat_monitor);
             body.add("text", message);
             body.add("parse_mode", "Markdown");
 

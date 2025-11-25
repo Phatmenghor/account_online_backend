@@ -3,7 +3,9 @@ package com.internal.feature.logs_report.service.serviceImpl;
 import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.logs_report.dto.request.AccountOnlineFinalLogRequestDto;
+import com.internal.feature.logs_report.dto.request.AllAccountOnlineSuccessRequestDto;
 import com.internal.feature.logs_report.dto.response.AccountOnlineFinalResponseDto;
+import com.internal.feature.logs_report.dto.response.AllAccountOnlineFinalResponseDto;
 import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
 import com.internal.feature.logs_report.mapper.AccountOnlineFinalMapper;
 import com.internal.feature.logs_report.model.AccountOnlineFinal;
@@ -11,6 +13,7 @@ import com.internal.feature.logs_report.model.AccountOnlineOpenFinalAudit;
 import com.internal.feature.logs_report.repository.AccountOnlineFinalAuditRepository;
 import com.internal.feature.logs_report.repository.AccountOnlineFinalRepository;
 import com.internal.feature.logs_report.service.AccountOnlineOpenFinalService;
+import com.internal.feature.logs_report.specification.AccountOnlineFinalSpecification;
 import com.internal.feature.master_data.dto.response.*;
 import com.internal.feature.master_data.service.MasterDataService;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
@@ -18,12 +21,18 @@ import com.internal.feature.open_account.dto.response.CustomerResponse;
 import com.internal.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -154,6 +163,21 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
             log.error("❌ Failed to save AccountOnlineFinal for Legal ID {}: {}", request.getLegalId(), e.getMessage(), e);
             throw new RuntimeException("Failed to save AccountOnlineFinal", e);
         }
+    }
+
+    @Override
+    public AllAccountOnlineFinalResponseDto getSuccessOpenAccount(AllAccountOnlineSuccessRequestDto request) {
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
+
+        var spec = AccountOnlineFinalSpecification.searchByName(request.getSearch());
+
+        Page<AccountOnlineFinal> page = accountOnlineFinalRepository.findAll(spec, pageable);
+
+        List<AccountOnlineFinalResponseDto> content = page.stream()
+                .map(mapper::toDto)
+                .collect(Collectors.toList());
+
+        return mapper.mapToListDto(content, page);
     }
 
     @Transactional

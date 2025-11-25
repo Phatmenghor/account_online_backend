@@ -2,7 +2,9 @@ package com.internal.feature.logs_report.service;
 
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.logs_report.dto.request.AccountOnlineFinalLogRequestDto;
+import com.internal.feature.logs_report.dto.request.AllAccountOnlineSuccessRequestDto;
 import com.internal.feature.logs_report.dto.response.AccountOnlineFinalResponseDto;
+import com.internal.feature.logs_report.dto.response.AllAccountOnlineFinalResponseDto;
 import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
 import com.internal.feature.logs_report.model.AccountOnlineFinal;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
@@ -25,6 +27,8 @@ public interface AccountOnlineOpenFinalService {
             AmlStatusDto amlProcessResult,
             CustomerImageUploadResponseDto imagePaths
     );
+
+    AllAccountOnlineFinalResponseDto getSuccessOpenAccount(AllAccountOnlineSuccessRequestDto request);
 
     @Transactional
     void updateFinalLogWithAml(AmlStatusDto amlStatus);
