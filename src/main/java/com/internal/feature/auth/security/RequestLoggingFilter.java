@@ -32,7 +32,9 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             "/v3/api-docs",
             "/actuator",
             "/favicon.ico",
-            "/webjars"
+            "/webjars",
+            "/api/images"
+
     );
 
     @Override
