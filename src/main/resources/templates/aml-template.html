@@ -11,28 +11,39 @@
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f6f8;">
   <tr>
     <td align="center" style="padding: 20px 0;">
-      <table width="650" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border:1px solid #e0e0e0; max-width:650px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border:1px solid #e0e0e0; max-width:650px; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
 
         <!-- Header -->
         <tr>
-          <td align="center" bgcolor="#EC7925" style="padding: 12px;">
-            <span style="color: #fff; font-size: 16px; font-weight: bold;">AML Status Notification</span>
-            <span th:style="'display:inline-block; background-color:' + (${amlStatus.status}=='APPROVE'?'#22c55e':(${amlStatus.status}=='REJECT'?'#ef4444':'#f59e0b')) + '; color:#fff; padding:4px 10px; margin-left:10px; font-weight:bold; font-size:11px; text-transform:uppercase; border-radius:3px;'"
+          <td align="center" bgcolor="#EC7925" style="padding: 16px;">
+            <span style="color: #fff; font-size: 18px; font-weight: bold;">AML Status Notification</span>
+            <span th:style="'display:inline-block; background-color:' + (${amlStatus.status}=='APPROVE'?'#22c55e':(${amlStatus.status}=='REJECT'?'#ef4444':'#f59e0b')) + '; color:#fff; padding:5px 12px; margin-left:10px; font-weight:bold; font-size:12px; text-transform:uppercase; border-radius:4px;'"
                   th:text="${amlStatus.status}">PENDING</span>
           </td>
         </tr>
 
-        <!-- Content -->
+        <!-- Greeting & Top CTA -->
         <tr>
-          <td style="padding: 20px 25px;">
-            <p style="color:#EC7925; font-size:16px; font-weight:bold; margin:0 0 10px 0;">Dear Team,</p>
-            <p style="font-size:14px; line-height:20px; color:#333; margin:0 0 20px 0;">
-              AML status update for customer. Please review and take action if required.
+          <td style="padding: 24px 30px;">
+            <p style="color:#EC7925; font-size:16px; font-weight:bold; margin:0 0 12px 0;">Dear Team,</p>
+            <p style="font-size:14px; line-height:22px; color:#333; margin:0 0 16px 0;">
+              Action Required: Please review this AML case.
+            </p>
+
+            <!-- CTA Button -->
+            <p style="text-align:center; margin:10px 0; font-size:14px; line-height:20px;">
+               <a href="http://192.168.103.106:8282/aml-management?pageNo=1"
+                        style="color:#EC7925; font-weight:bold; text-decoration:underline;">
+              go to the AML Dashboard to review this case
+            </a>.
+            </p>
+            <p style="text-align:center; font-size:11px; color:#666; margin-top:4px;">
+              Secure Internal Link • Cambodia Post Bank AML System
             </p>
 
             <!-- Customer Information -->
-            <h3 style="border-bottom:2px solid #EC7925; color:#333; font-size:14px; margin:0 0 10px 0; padding-bottom:5px;">Customer Information</h3>
-            <table width="100%" cellpadding="6" cellspacing="0" border="0" style="border:1px solid #e0e0e0; font-size:13px; margin-bottom:15px;">
+            <h3 style="border-bottom:2px solid #EC7925; color:#333; font-size:14px; margin:20px 0 10px 0; padding-bottom:6px;">Customer Information</h3>
+            <table width="100%" cellpadding="6" cellspacing="0" border="0" style="border:1px solid #e0e0e0; font-size:13px; margin-bottom:20px; border-radius:4px;">
               <tr><td style="background:#f9f9f9; font-weight:bold; width:35%;">Customer ID (Legal ID)</td><td th:text="${amlStatus.customerInfo.legalId}">12345</td></tr>
               <tr><td style="background:#f9f9f9; font-weight:bold;">Full Name (English)</td><td th:text="${amlStatus.customerInfo.givenName} + ' ' + ${amlStatus.customerInfo.familyName}">John Doe</td></tr>
               <tr><td style="background:#f9f9f9; font-weight:bold;">Full Name (Khmer)</td><td th:text="${amlStatus.customerInfo.firstNameKh} + ' ' + ${amlStatus.customerInfo.lastNameKh}">ឈ្មោះ គោត្តនាម</td></tr>
@@ -59,8 +70,8 @@
             </table>
 
             <!-- Legal Document Information -->
-            <h3 style="border-bottom:2px solid #EC7925; color:#333; font-size:14px; margin:0 0 10px 0; padding-bottom:5px;">Legal Document Information</h3>
-            <table width="100%" cellpadding="6" cellspacing="0" border="0" style="border:1px solid #e0e0e0; font-size:13px; margin-bottom:15px;">
+            <h3 style="border-bottom:2px solid #EC7925; color:#333; font-size:14px; margin:20px 0 10px 0; padding-bottom:6px;">Legal Document Information</h3>
+            <table width="100%" cellpadding="6" cellspacing="0" border="0" style="border:1px solid #e0e0e0; font-size:13px; margin-bottom:20px; border-radius:4px;">
               <tr><td style="background:#f9f9f9; font-weight:bold; width:35%;">Document ID</td><td th:text="${amlStatus.customerInfo.legalId}">12345</td></tr>
               <tr th:if="${amlStatus.customerInfo.issuedDate != null}"><td style="background:#f9f9f9; font-weight:bold;">Issue Date</td><td th:text="${amlStatus.customerInfo.issuedDate}">2020-01-01</td></tr>
               <tr th:if="${amlStatus.customerInfo.expiredDate != null}"><td style="background:#f9f9f9; font-weight:bold;">Expiry Date</td><td th:text="${amlStatus.customerInfo.expiredDate}">2025-01-01</td></tr>
@@ -68,13 +79,13 @@
             </table>
 
             <!-- AML Check Details -->
-            <h3 style="border-bottom:2px solid #EC7925; color:#333; font-size:14px; margin:0 0 10px 0; padding-bottom:5px;">AML Check Details</h3>
-            <table width="100%" cellpadding="6" cellspacing="0" border="0" style="border:1px solid #e0e0e0; font-size:13px; margin-bottom:15px;">
+            <h3 style="border-bottom:2px solid #EC7925; color:#333; font-size:14px; margin:20px 0 10px 0; padding-bottom:6px;">AML Check Details</h3>
+            <table width="100%" cellpadding="6" cellspacing="0" border="0" style="border:1px solid #e0e0e0; font-size:13px; margin-bottom:20px; border-radius:4px;">
               <tr>
                 <td style="background:#f9f9f9; font-weight:bold; width:35%;">Status</td>
                 <td>
-                <span th:style="'display:inline-block; background-color:' + (${amlStatus.status}=='APPROVE'?'#22c55e':(${amlStatus.status}=='REJECT'?'#ef4444':'#f59e0b')) + '; color:#fff; padding:3px 8px; font-weight:bold; font-size:10px; text-transform:uppercase; border-radius:3px;'"
-                 th:text="${amlStatus.status}">PENDING</span>
+                  <span th:style="'display:inline-block; background-color:' + (${amlStatus.status}=='APPROVE'?'#22c55e':(${amlStatus.status}=='REJECT'?'#ef4444':'#f59e0b')) + '; color:#fff; padding:3px 8px; font-weight:bold; font-size:10px; text-transform:uppercase; border-radius:4px;'"
+                        th:text="${amlStatus.status}">PENDING</span>
                 </td>
               </tr>
               <tr><td style="background:#f9f9f9; font-weight:bold;">Risk Level</td><td><strong th:text="${amlStatus.riskLevel}" style="color:#ef4444;">High</strong></td></tr>
@@ -93,8 +104,8 @@
             </table>
 
             <!-- Audit Information -->
-            <h3 th:if="${amlStatus.approvedBy != null || amlStatus.rejectedBy != null}" style="border-bottom:2px solid #EC7925; color:#333; font-size:14px; margin:0 0 10px 0; padding-bottom:5px;">Audit Information</h3>
-            <table th:if="${amlStatus.approvedBy != null || amlStatus.rejectedBy != null}" width="100%" cellpadding="6" cellspacing="0" border="0" style="border:1px solid #e0e0e0; font-size:13px; margin-bottom:15px;">
+            <h3 th:if="${amlStatus.approvedBy != null || amlStatus.rejectedBy != null}" style="border-bottom:2px solid #EC7925; color:#333; font-size:14px; margin:20px 0 10px 0; padding-bottom:6px;">Audit Information</h3>
+            <table th:if="${amlStatus.approvedBy != null || amlStatus.rejectedBy != null}" width="100%" cellpadding="6" cellspacing="0" border="0" style="border:1px solid #e0e0e0; font-size:13px; margin-bottom:20px; border-radius:4px;">
               <tr th:if="${amlStatus.approvedBy != null}"><td style="background:#f9f9f9; font-weight:bold; width:35%;">Approved By</td><td th:text="${amlStatus.approvedBy.username}">Admin</td></tr>
               <tr th:if="${amlStatus.rejectedBy != null}"><td style="background:#f9f9f9; font-weight:bold;">Rejected By</td><td th:text="${amlStatus.rejectedBy.username}">Admin</td></tr>
               <tr th:if="${amlStatus.createdAt != null}"><td style="background:#f9f9f9; font-weight:bold;">Created At</td><td th:text="${amlStatus.createdAt}">2024-01-01</td></tr>
@@ -102,16 +113,26 @@
             </table>
 
             <!-- Remarks -->
-            <div th:if="${amlStatus.remarks != null}" style="background:#fff3cd; border-left:4px solid #ffc107; padding:12px; margin-bottom:15px;">
+            <div th:if="${amlStatus.remarks != null}" style="background:#fff3cd; border-left:4px solid #ffc107; padding:12px; margin-bottom:20px; border-radius:4px;">
               <h4 style="margin:0 0 8px 0; color:#856404; font-size:13px;">Remarks:</h4>
               <p style="margin:0; font-size:13px; color:#856404;" th:text="${amlStatus.remarks}">Additional notes here</p>
             </div>
+
+            <!-- Bottom CTA -->
+            <p style="text-align:center; margin:10px 0; font-size:14px; line-height:20px;">
+               <a href="http://192.168.103.106:8282/aml-management?pageNo=1"
+                        style="color:#EC7925; font-weight:bold; text-decoration:underline;">
+              review the AML case now
+            </a>.
+            </p>
+
+
           </td>
         </tr>
 
         <!-- Footer -->
         <tr>
-          <td style="background-color:#f9f9f9; border-top:2px solid #e0e0e0; padding:15px 25px; font-size:11px; color:#777; line-height:16px;">
+          <td style="background-color:#f9f9f9; border-top:2px solid #e0e0e0; padding:16px 30px; font-size:11px; color:#777; line-height:18px;">
             Automated notification from AML Compliance System<br>
             Cambodia Post Bank Plc.<br>
             Generated: [[${timestamp}]]<br>

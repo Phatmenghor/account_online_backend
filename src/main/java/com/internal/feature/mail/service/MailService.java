@@ -52,9 +52,7 @@ public class MailService {
             // Set multiple primary recipients
             String[] recipients = new String[]{
                     "menghor.phat@cambodiapostbank.com.kh",
-                    "makkara.nob@cambodiapostbank.com.kh",
-                    "complaint@cambodiapostbank.com.kh",
-                    "Nara.Im@cambodiapostbank.com.kh"
+                    "makkara.nob@cambodiapostbank.com.kh"
             };
 
             helper.setFrom(senderEmail);

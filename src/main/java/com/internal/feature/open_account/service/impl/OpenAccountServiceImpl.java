@@ -83,6 +83,9 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             currentStep = AppConstants.GET_CUSTOMER_INFO;
             Map<String, String> customerInfo = getCustomerInfo(request);
 
+            // Step 3: validate existing account
+//            validateExistingAccounts(customerInfo);
+
             // Step 4: Process AML (before account creation)
             currentStep = AppConstants.PROCESS_AML;
             amlProcessResult = processAml(request);

@@ -195,6 +195,7 @@ public class AuthServiceImpl implements AuthService {
         user.setFullName(registerDto.getFullName());
         user.setPosition(registerDto.getPosition());
         user.setPassword(passwordEncoder.encode(registerDto.getPassword()));
+        user.setUserPermission(registerDto.getUserPermission());
         user.setStatus(StatusData.ACTIVE);
         user.setRoles(Collections.singletonList(role));
         return user;

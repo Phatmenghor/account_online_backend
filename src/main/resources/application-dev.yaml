@@ -1,5 +1,5 @@
 server:
-  port: 9393
+  port: 3939
   servlet:
     context-path: /
   compression:
@@ -36,7 +36,7 @@ spring:
           use_second_level_cache: false
 
   datasource:
-    url: jdbc:postgresql://192.168.103.106:5432/account_online
+    url: jdbc:postgresql://192.168.103.106:5432/account_online_dev
     username: postgres
     password: 123cp!@#
     driver-class-name: org.postgresql.Driver
@@ -219,7 +219,8 @@ telegram:
   bot:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
     chat-id: "-1002740302492"
-    uat-monitor-chat-id: "-1003115792160"
+    #Push internal dev testing telegram group
+    uat-monitor-chat-id: "-4886328332"
     enabled: true
 
 # Logging
