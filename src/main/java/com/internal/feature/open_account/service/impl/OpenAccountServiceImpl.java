@@ -29,10 +29,12 @@ import com.internal.feature.telegram_alerts.service.serviceImpl.OpenAccountTeleg
 import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
@@ -56,6 +58,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private final OpenAccountAmlStatusMapper openAccountAmlStatusMapper;
     private final TestProperties isTestMode;
     private final JdbcTemplate jdbcTemplate;
+    private final Environment env;
 
     @Override
     @Transactional
@@ -84,7 +87,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             Map<String, String> customerInfo = getCustomerInfo(request);
 
             // Step 3: validate existing account
-//            validateExistingAccounts(customerInfo);
+            validateExistingAccounts(customerInfo);
 
             // Step 4: Process AML (before account creation)
             currentStep = AppConstants.PROCESS_AML;
@@ -273,10 +276,16 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     }
 
     private void validateExistingAccounts(Map<String, String> customerInfo) {
-        log.info(">>> Step 4: VALIDATE_EXISTING_ACCOUNTS");
-        validationService.validateExistingAccounts(customerInfo);
-        log.info("Existing accounts validation passed");
+        // Only run in 'uat' profile
+        if (Arrays.asList(env.getActiveProfiles()).contains("uat")) {
+            log.info(">>> Step 3: VALIDATE_EXISTING_ACCOUNTS (UAT profile)");
+            validationService.validateExistingAccounts(customerInfo);
+            log.info("Existing accounts validation passed");
+        } else {
+            log.info(">>> Step 3: VALIDATE_EXISTING_ACCOUNTS skipped for non-UAT profile");
+        }
     }
+
 
     private String createCustomerIfNeeded(CustomerRequest request, Map<String, String> customerInfo) {
 

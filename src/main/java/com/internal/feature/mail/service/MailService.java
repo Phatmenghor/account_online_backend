@@ -1,5 +1,6 @@
 package com.internal.feature.mail.service;
 
+import com.internal.enumation.AmlStatusEnum;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.logs_report.service.CustomerImageService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,8 @@ public class MailService {
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
     private final CustomerImageService customerImageService;
+    @Value("${aml.dashboard.url}")
+    private String amlDashboardUrl;
 
     @Value("${email.sender.address:ithelpdesk@cambodiapostbank.com.kh}")
     private String senderEmail;
@@ -64,6 +67,22 @@ public class MailService {
             context.setVariable("amlStatus", amlStatus);
             context.setVariable("timestamp", LocalDateTime.now().format(
                     DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
+            context.setVariable(
+                    "amlDashboardUrl",
+                    amlDashboardUrl + "&legalId=" + amlStatus.getCustomerInfo().getLegalId()
+            );
+            // Determine badge color based on AML status
+            String statusColor;
+            if (AmlStatusEnum.APPROVE.equals(amlStatus.getStatus())) {
+                statusColor = "#22c55e"; // green
+            } else if (AmlStatusEnum.REJECT.equals(amlStatus.getStatus())) {
+                statusColor = "#ef4444"; // red
+            } else {
+                statusColor = "#f59e0b"; // pending / amber
+            }
+
+            context.setVariable("statusColor", statusColor);
+
 
             String htmlContent = templateEngine.process("aml-template.html", context);
             helper.setText(htmlContent, true);

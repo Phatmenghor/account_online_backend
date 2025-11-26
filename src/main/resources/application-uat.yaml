@@ -182,6 +182,10 @@ test:
   skip-check-account: true
   skip-check-cif: true
 
+aml:
+  dashboard:
+    url: http://192.168.103.106:8282/aml-management?pageNo=1
+
 # JWT Configuration
 jwt:
   secret:

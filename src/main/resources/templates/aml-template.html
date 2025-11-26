@@ -32,10 +32,10 @@
 
             <!-- CTA Button -->
             <p style="text-align:center; margin:10px 0; font-size:14px; line-height:20px;">
-               <a href="http://192.168.103.106:8282/aml-management?pageNo=1"
-                        style="color:#EC7925; font-weight:bold; text-decoration:underline;">
-              go to the AML Dashboard to review this case
-            </a>.
+              <a th:href="${amlDashboardUrl}"
+                 style="color:#EC7925; font-weight:bold; text-decoration:underline;">
+                go to the AML Dashboard to review this case
+              </a>.
             </p>
             <p style="text-align:center; font-size:11px; color:#666; margin-top:4px;">
               Secure Internal Link • Cambodia Post Bank AML System
@@ -84,8 +84,8 @@
               <tr>
                 <td style="background:#f9f9f9; font-weight:bold; width:35%;">Status</td>
                 <td>
-                  <span th:style="'display:inline-block; background-color:' + (${amlStatus.status}=='APPROVE'?'#22c55e':(${amlStatus.status}=='REJECT'?'#ef4444':'#f59e0b')) + '; color:#fff; padding:3px 8px; font-weight:bold; font-size:10px; text-transform:uppercase; border-radius:4px;'"
-                        th:text="${amlStatus.status}">PENDING</span>
+                 <span th:style="'display:inline-block; background-color:' + ${statusColor} + '; color:#fff; padding:5px 12px; margin-left:10px; font-weight:bold; font-size:12px; text-transform:uppercase; border-radius:4px;'"
+                       th:text="${amlStatus.status}">PENDING</span>
                 </td>
               </tr>
               <tr><td style="background:#f9f9f9; font-weight:bold;">Risk Level</td><td><strong th:text="${amlStatus.riskLevel}" style="color:#ef4444;">High</strong></td></tr>
@@ -120,10 +120,10 @@
 
             <!-- Bottom CTA -->
             <p style="text-align:center; margin:10px 0; font-size:14px; line-height:20px;">
-               <a href="http://192.168.103.106:8282/aml-management?pageNo=1"
-                        style="color:#EC7925; font-weight:bold; text-decoration:underline;">
-              review the AML case now
-            </a>.
+              <a th:href="${amlDashboardUrl}"
+                 style="color:#EC7925; font-weight:bold; text-decoration:underline;">
+                review the AML case now
+              </a>
             </p>
 
 
