@@ -24,6 +24,14 @@
     @Slf4j
     public class GlobalExceptionHandler {
 
+        @ExceptionHandler(NidValidationException.class)
+        public ResponseEntity<ErrorResponse> handleNidValidationException(NidValidationException ex) {
+            log.error("NID Validation failed - Status: {}, Message: {}", ex.getStatusCode(), ex.getMessage());
+
+            // Return user-friendly message with BAD_REQUEST status to frontend
+            return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+        }
+
         @ExceptionHandler(NotFoundException.class)
         public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException ex) {
             log.warn("Resource not found: {}", ex.getMessage());
