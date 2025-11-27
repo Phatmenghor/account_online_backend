@@ -147,22 +147,22 @@ public class MasterDataDataServiceImpl implements MasterDataService {
                 provinceName = parts[index--];
             }
 
-            // Look for district (ស្រុក, ក្រុង, ខណ្ឌ)
-            if (index >= 0 && (parts[index].startsWith("ស្រុក") ||
-                    parts[index].startsWith("ក្រុង") ||
-                    parts[index].startsWith("ខណ្ឌ"))) {
-                districtName = removePrefix(parts[index--], "ស្រុក", "ក្រុង", "ខណ្ឌ");
+            // Look for district (ážŸáŸ’ážšáž»áž€, áž€áŸ’ážšáž»áž„, ážážŽáŸ’ážŒ)
+            if (index >= 0 && (parts[index].startsWith("ážŸáŸ’ážšáž»áž€") ||
+                    parts[index].startsWith("áž€áŸ’ážšáž»áž„") ||
+                    parts[index].startsWith("ážážŽáŸ’ážŒ"))) {
+                districtName = removePrefix(parts[index--], "ážŸáŸ’ážšáž»áž€", "áž€áŸ’ážšáž»áž„", "ážážŽáŸ’ážŒ");
             }
 
-            // Look for commune (ឃុំ, សង្កាត់)
-            if (index >= 0 && (parts[index].startsWith("ឃុំ") ||
-                    parts[index].startsWith("សង្កាត់"))) {
-                communeName = removePrefix(parts[index--], "ឃុំ", "សង្កាត់");
+            // Look for commune (ážƒáž»áŸ†, ážŸáž„áŸ’áž€áž¶ážáŸ‹)
+            if (index >= 0 && (parts[index].startsWith("ážƒáž»áŸ†") ||
+                    parts[index].startsWith("ážŸáž„áŸ’áž€áž¶ážáŸ‹"))) {
+                communeName = removePrefix(parts[index--], "ážƒáž»áŸ†", "ážŸáž„áŸ’áž€áž¶ážáŸ‹");
             }
 
-            // Look for village (ភូមិ)
-            if (index >= 0 && parts[index].startsWith("ភូមិ")) {
-                villageName = removePrefix(parts[index--], "ភូមិ");
+            // Look for village (áž—áž¼áž˜áž·)
+            if (index >= 0 && parts[index].startsWith("áž—áž¼áž˜áž·")) {
+                villageName = removePrefix(parts[index--], "áž—áž¼áž˜áž·");
             }
 
             log.info("Resolving location - Province: {}, District: {}, Commune: {}, Village: {}",
@@ -248,17 +248,17 @@ public class MasterDataDataServiceImpl implements MasterDataService {
                 provinceName = parts[index--];
             }
 
-            // Look for district (ស្រុក, ក្រុង, ខណ្ឌ)
-            if (index >= 0 && (parts[index].startsWith("ស្រុក") ||
-                    parts[index].startsWith("ក្រុង") ||
-                    parts[index].startsWith("ខណ្ឌ"))) {
-                districtName = removePrefix(parts[index--], "ស្រុក", "ក្រុង", "ខណ្ឌ");
+            // Look for district (ážŸáŸ’ážšáž»áž€, áž€áŸ’ážšáž»áž„, ážážŽáŸ’ážŒ)
+            if (index >= 0 && (parts[index].startsWith("ážŸáŸ’ážšáž»áž€") ||
+                    parts[index].startsWith("áž€áŸ’ážšáž»áž„") ||
+                    parts[index].startsWith("ážážŽáŸ’ážŒ"))) {
+                districtName = removePrefix(parts[index--], "ážŸáŸ’ážšáž»áž€", "áž€áŸ’ážšáž»áž„", "ážážŽáŸ’ážŒ");
             }
 
-            // Look for commune (ឃុំ, សង្កាត់)
-            if (index >= 0 && (parts[index].startsWith("ឃុំ") ||
-                    parts[index].startsWith("សង្កាត់"))) {
-                communeName = removePrefix(parts[index--], "ឃុំ", "សង្កាត់");
+            // Look for commune (ážƒáž»áŸ†, ážŸáž„áŸ’áž€áž¶ážáŸ‹)
+            if (index >= 0 && (parts[index].startsWith("ážƒáž»áŸ†") ||
+                    parts[index].startsWith("ážŸáž„áŸ’áž€áž¶ážáŸ‹"))) {
+                communeName = removePrefix(parts[index--], "ážƒáž»áŸ†", "ážŸáž„áŸ’áž€áž¶ážáŸ‹");
             }
 
             log.info("Resolving POB - Province: {}, District: {}, Commune: {}",

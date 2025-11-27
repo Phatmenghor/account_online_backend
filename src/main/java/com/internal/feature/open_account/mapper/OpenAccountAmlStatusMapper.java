@@ -24,7 +24,7 @@ public class OpenAccountAmlStatusMapper {
 
     private final MasterDataServiceHelper masterDataServiceHelper;
 
-    // -------------------- ENTITY → DTO --------------------
+    // -------------------- ENTITY â†’ DTO --------------------
     public AmlStatusDto toDto(AmlStatus entity) {
         if (entity == null) return null;
 
@@ -88,7 +88,7 @@ public class OpenAccountAmlStatusMapper {
                 .build();
     }
 
-    // -------------------- REQUEST + AML RESPONSE → DTO --------------------
+    // -------------------- REQUEST + AML RESPONSE â†’ DTO --------------------
     public AmlStatusDto fromRequestAndResponse(
             CustomerRequest request,
             AmlExternalResponseDto amlResponse,

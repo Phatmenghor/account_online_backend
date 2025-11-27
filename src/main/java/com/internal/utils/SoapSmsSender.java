@@ -41,9 +41,9 @@ public class SoapSmsSender {
 
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 
-            log.info("✅ SMS sent to {} - Response: {}", phone, response.getStatusCode());
+            log.info("âœ… SMS sent to {} - Response: {}", phone, response.getStatusCode());
         } catch (Exception ex) {
-            log.error("❌ Failed to send SMS to {} - {}", phone, ex.getMessage(), ex);
+            log.error("âŒ Failed to send SMS to {} - {}", phone, ex.getMessage(), ex);
         }
     }
 }

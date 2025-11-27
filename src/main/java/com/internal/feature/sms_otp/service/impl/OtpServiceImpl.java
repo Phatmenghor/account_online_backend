@@ -189,10 +189,10 @@ public class OtpServiceImpl implements OtpService {
         try {
             log.info("Sending SOAP SMS request - Phone: {}, RequestID: {}", phone, requestID);
 
-            // 🔹 Use raw XML POST, return response as String (no JSON parsing)
+            // ðŸ”¹ Use raw XML POST, return response as String (no JSON parsing)
             String responseXml = httpClient.postForString(otpUrl, soapXml, "application/soap+xml");
 
-            // 🔹 Extract <return> JSON payload from SOAP response
+            // ðŸ”¹ Extract <return> JSON payload from SOAP response
             Matcher matcher = Pattern.compile("<return>(.*?)</return>").matcher(responseXml);
             String jsonPayload = matcher.find() ? matcher.group(1) : null;
 

@@ -22,7 +22,7 @@ public interface AmlHistoryMapper {
     ObjectMapper objectMapper = new ObjectMapper();
 
         // -------------------------------
-        // CREATE DTO → ENTITY
+        // CREATE DTO â†’ ENTITY
         // -------------------------------
         @Mapping(target = "approvedBy", source = "approvedBy")
         @Mapping(target = "rejectedBy", source = "rejectedBy")
@@ -51,7 +51,7 @@ public interface AmlHistoryMapper {
         AmlHistory fromCreateDto(AmlHistoryRequestDto request);
 
     // -------------------------------
-    // ENTITY → DTO
+    // ENTITY â†’ DTO
     // -------------------------------
     @Mapping(target = "customerInfo.legalId", source = "legalId")
     @Mapping(target = "customerInfo.familyName", source = "familyName")

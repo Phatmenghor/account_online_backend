@@ -20,7 +20,7 @@ public class CustomerImageController {
 
     private final CustomerImageService customerImageService;
 
-    // 🔹 Stream NID image by legal ID
+    // ðŸ”¹ Stream NID image by legal ID
     @PostMapping("/{legalId}/nid")
     public ResponseEntity<byte[]> getNidImage(@PathVariable String legalId) {
         try {
@@ -41,7 +41,7 @@ public class CustomerImageController {
         }
     }
 
-    // 🔹 Stream Selfie image by legal ID
+    // ðŸ”¹ Stream Selfie image by legal ID
     @PostMapping("/{legalId}/selfie")
     public ResponseEntity<byte[]> getSelfieImage(@PathVariable String legalId) {
         try {

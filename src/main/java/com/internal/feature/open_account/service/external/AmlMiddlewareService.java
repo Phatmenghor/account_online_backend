@@ -21,7 +21,7 @@ public class AmlMiddlewareService {
     private final ObjectMapper objectMapper;
 
     public AmlExternalResponseDto CheckAml(CustomerAmlRequest requestBody) {
-        // ✅ Dev override from properties
+        // âœ… Dev override from properties
         if (properties.getAml().isDevForceHighRisk()) {
             log.info("DEV override: returning HIGH risk for Legal ID {}", requestBody.getCustomerId());
             return AmlExternalResponseDto.builder()

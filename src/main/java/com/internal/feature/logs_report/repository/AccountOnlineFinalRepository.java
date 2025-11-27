@@ -14,5 +14,4 @@ public interface AccountOnlineFinalRepository extends JpaRepository<AccountOnlin
 
     Optional<AccountOnlineFinal> findByLegalId(String legalId);
     Optional<AccountOnlineFinal> findTopByCifOrLegalIdOrderByCreatedAtDesc(String cif, String legalId);
-
 }

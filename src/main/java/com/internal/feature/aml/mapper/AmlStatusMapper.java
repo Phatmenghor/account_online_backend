@@ -20,7 +20,7 @@ public interface AmlStatusMapper {
     ObjectMapper objectMapper = new ObjectMapper();
 
     // ============================================================
-    // CREATE DTO → ENTITY
+    // CREATE DTO â†’ ENTITY
     // ============================================================
     @Mappings({
             @Mapping(target = "approvedBy", source = "approvedBy"),
@@ -58,7 +58,7 @@ public interface AmlStatusMapper {
     AmlStatus fromCreateDto(CreateAmlRequestDto request);
 
     // ============================================================
-    // ENTITY → DTO (NO DUPLICATE NESTED MAPPING)
+    // ENTITY â†’ DTO (NO DUPLICATE NESTED MAPPING)
     // ============================================================
     @Mappings({
             @Mapping(target = "customerInfo.legalId",      source = "legalId"),

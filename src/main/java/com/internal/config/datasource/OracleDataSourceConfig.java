@@ -28,12 +28,12 @@ public class OracleDataSourceConfig {
     @Bean(name = "dwhDataSource")
     public DataSource dwhDataSource(@Qualifier("dwhHikariConfig") HikariConfig config) {
         if (config.getJdbcUrl() == null || config.getJdbcUrl().isEmpty()) {
-            log.error("❌ DWH Oracle JDBC URL is NULL or EMPTY!");
+            log.error("âŒ DWH Oracle JDBC URL is NULL or EMPTY!");
             log.error("Check your application.yaml - oracle.dwh.datasource.jdbc-url");
             throw new IllegalStateException("DWH Oracle JDBC URL not configured!");
         }
 
-        log.info("✅ Creating DWH Oracle DataSource");
+        log.info("âœ… Creating DWH Oracle DataSource");
         log.info("   URL: {}", config.getJdbcUrl());
         log.info("   Username: {}", config.getUsername());
         log.info("   Driver: {}", config.getDriverClassName());
@@ -44,7 +44,7 @@ public class OracleDataSourceConfig {
 
     @Bean(name = "dwhJdbcTemplate")
     public JdbcTemplate dwhJdbcTemplate(@Qualifier("dwhDataSource") DataSource dataSource) {
-        log.info("✅ DWH Oracle JdbcTemplate created");
+        log.info("âœ… DWH Oracle JdbcTemplate created");
         return new JdbcTemplate(dataSource);
     }
 
@@ -59,12 +59,12 @@ public class OracleDataSourceConfig {
     @Bean(name = "stgDataSource")
     public DataSource stgDataSource(@Qualifier("stgHikariConfig") HikariConfig config) {
         if (config.getJdbcUrl() == null || config.getJdbcUrl().isEmpty()) {
-            log.error("❌ STG Oracle JDBC URL is NULL or EMPTY!");
+            log.error("âŒ STG Oracle JDBC URL is NULL or EMPTY!");
             log.error("Check your application.yaml - oracle.stg.datasource.jdbc-url");
             throw new IllegalStateException("STG Oracle JDBC URL not configured!");
         }
 
-        log.info("✅ Creating STG Oracle DataSource");
+        log.info("âœ… Creating STG Oracle DataSource");
         log.info("   URL: {}", config.getJdbcUrl());
         log.info("   Username: {}", config.getUsername());
         log.info("   Driver: {}", config.getDriverClassName());
@@ -75,7 +75,7 @@ public class OracleDataSourceConfig {
 
     @Bean(name = "stgJdbcTemplate")
     public JdbcTemplate stgJdbcTemplate(@Qualifier("stgDataSource") DataSource dataSource) {
-        log.info("✅ STG Oracle JdbcTemplate created");
+        log.info("âœ… STG Oracle JdbcTemplate created");
         return new JdbcTemplate(dataSource);
     }
 }

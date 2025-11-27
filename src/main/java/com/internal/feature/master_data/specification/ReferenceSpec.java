@@ -1,7 +1,7 @@
 package com.internal.feature.master_data.specification;
 
 import com.internal.enumation.StatusData;
-import com.internal.feature.reference.models.Reference;
+import com.internal.feature.master_data.models.Reference;
 import org.springframework.data.jpa.domain.Specification;
 
 public class ReferenceSpec {

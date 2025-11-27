@@ -17,7 +17,7 @@ public class CustomerInfoRepository {
     private final JdbcTemplate stgJdbcTemplate;
 
     public CustomerInfoRepository(@Qualifier("stgJdbcTemplate") JdbcTemplate stgJdbcTemplate) {
-        this.stgJdbcTemplate = stgJdbcTemplate;  // ✅ New way
+        this.stgJdbcTemplate = stgJdbcTemplate;  // âœ… New way
     }
 
     public Map<String, String> findByLegalId(String legalId) {
@@ -54,9 +54,9 @@ public class CustomerInfoRepository {
 //        try {
 //            log.debug("Testing DWH Oracle database connection...");
 //            Integer result = dwhJdbcTemplate.queryForObject("SELECT 1 FROM DUAL", Integer.class);
-//            log.info("✅ DWH Oracle connection test successful, result: {}", result);
+//            log.info("âœ… DWH Oracle connection test successful, result: {}", result);
 //        } catch (Exception e) {
-//            log.error("❌ DWH Oracle connection test failed: {}", e.getMessage());
+//            log.error("âŒ DWH Oracle connection test failed: {}", e.getMessage());
 //            throw e;
 //        }
 //    }
@@ -68,9 +68,9 @@ public class CustomerInfoRepository {
         try {
             log.debug("Testing STG Oracle database connection...");
             Integer result = stgJdbcTemplate.queryForObject("SELECT 1 FROM DUAL", Integer.class);
-            log.info("✅ STG Oracle connection test successful, result: {}", result);
+            log.info("âœ… STG Oracle connection test successful, result: {}", result);
         } catch (Exception e) {
-            log.error("❌ STG Oracle connection test failed: {}", e.getMessage());
+            log.error("âŒ STG Oracle connection test failed: {}", e.getMessage());
             throw e;
         }
     }

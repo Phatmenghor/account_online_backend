@@ -48,13 +48,13 @@ public interface UserMapper {
         return userResponse;
     }
 
-    // StatusData → String
+    // StatusData â†’ String
     @Named("statusToString")
     default String statusToString(StatusData status) {
         return status != null ? status.name() : null;
     }
 
-    // String → StatusData
+    // String â†’ StatusData
     @Named("stringToStatus")
     default StatusData stringToStatus(String status) {
         if (status == null || status.isEmpty()) {
@@ -67,7 +67,7 @@ public interface UserMapper {
         }
     }
 
-    // List<Role> → String
+    // List<Role> â†’ String
     @Named("rolesToString")
     default String rolesToString(List<Role> roles) {
         if (roles == null || roles.isEmpty()) {
@@ -78,7 +78,7 @@ public interface UserMapper {
                 .collect(Collectors.joining(", "));
     }
 
-    // String → List<Role>
+    // String â†’ List<Role>
     @Named("stringToRoles")
     default List<Role> stringToRoles(String rolesString) {
         if (rolesString == null || rolesString.isEmpty()) {

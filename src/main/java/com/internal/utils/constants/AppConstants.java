@@ -34,14 +34,14 @@ public final class AppConstants {
     public static final String NID_ERROR_SYSTEM = "System error occurred. Please try again later or contact support at "
             + SUPPORT_PHONE_PRIMARY + " or " + SUPPORT_PHONE_SECONDARY + ".";
 
-    // ោកអ្នកមានគណនីជាមួយធនាគាររួចហើយ។ សូមប្រើប្រាស់ជាមួយគណនីរបស់លោកអ្នក។
+    // áŸ„áž€áž¢áŸ’áž“áž€áž˜áž¶áž“áž‚ážŽáž“áž¸áž‡áž¶áž˜áž½áž™áž’áž“áž¶áž‚áž¶ážšážšáž½áž…áž áž¾áž™áŸ” ážŸáž¼áž˜áž”áŸ’ážšáž¾áž”áŸ’ážšáž¶ážŸáŸ‹áž‡áž¶áž˜áž½áž™áž‚ážŽáž“áž¸ážšáž”ážŸáŸ‹áž›áŸ„áž€áž¢áŸ’áž“áž€áŸ”
     public static final String ACCOUNT_ALREADY_EXIST = "ACCOUNT_ALREADY_EXIST";
-    // មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ប្រព័ន្ធ សូមព្យាយាមម្តងទៀត
+    // áž˜áž¶áž“áž”áž‰áŸ’áž áž¶áž€áŸ’áž“áž»áž„áž€áž¶ážšážáž—áŸ’áž‡áž¶áž”áŸ‹áž‘áŸ…áž€áž¶áž“áŸ‹áž”áŸ’ážšáž–áŸáž“áŸ’áž’ ážŸáž¼áž˜áž–áŸ’áž™áž¶áž™áž¶áž˜áž˜áŸ’ážáž„áž‘áŸ€áž
     public static final String SYSTEM_ERROR = "SYSTEM_ERROR";
-    // សំណើរបស់អ្នកមិនអាចដំណើរការបានទេ ពីព្រោះការវាយតម្លៃអតិថិជនមានការហានិភ័យ
+    // ážŸáŸ†ážŽáž¾ážšáž”ážŸáŸ‹áž¢áŸ’áž“áž€áž˜áž·áž“áž¢áž¶áž…ážŠáŸ†ážŽáž¾ážšáž€áž¶ážšáž”áž¶áž“áž‘áŸ áž–áž¸áž–áŸ’ážšáŸ„áŸ‡áž€áž¶ážšážœáž¶áž™ážáž˜áŸ’áž›áŸƒáž¢ážáž·ážáž·áž‡áž“áž˜áž¶áž“áž€áž¶ážšáž áž¶áž“áž·áž—áŸáž™
     public static final String ACCOUNT_RISK = "ACCOUNT_RISK";
     public static final String AML_HIT = "AML_RE";
-    // ការស្នើសុំរបស់លោកអ្នកមិនអាចដំណើរការបានទេ។ សូមព្យាយាមម្តងទៀត
+    // áž€áž¶ážšážŸáŸ’áž“áž¾ážŸáž»áŸ†ážšáž”ážŸáŸ‹áž›áŸ„áž€áž¢áŸ’áž“áž€áž˜áž·áž“áž¢áž¶áž…ážŠáŸ†ážŽáž¾ážšáž€áž¶ážšáž”áž¶áž“áž‘áŸáŸ” ážŸáž¼áž˜áž–áŸ’áž™áž¶áž™áž¶áž˜áž˜áŸ’ážáž„áž‘áŸ€áž
     public static final String ACCOUNT_CREATE_FAIL = "ACCOUNT_CREATE_FAIL";
     public static final String FAIL_CREATE_ANY_ACCOUNT =
             "Unable to create the account. Please try again later. If the issue continues, contact support at "

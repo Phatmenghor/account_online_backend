@@ -23,8 +23,8 @@ import com.internal.feature.open_account.dto.response.CustomerResponse;
 import com.internal.feature.open_account.mapper.OpenAccountAmlStatusMapper;
 import com.internal.feature.open_account.service.OpenAccountService;
 import com.internal.feature.open_account.service.external.*;
-import com.internal.feature.reference.dto.response.OccupationDto;
-import com.internal.feature.reference.service.OccupationService;
+import com.internal.feature.master_data.dto.response.OccupationDto;
+import com.internal.feature.master_data.service.OccupationService;
 import com.internal.feature.telegram_alerts.service.serviceImpl.OpenAccountTelegramAlertServiceImpl;
 import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
@@ -152,7 +152,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             log.error("USD Account: {}", usdAccount);
             log.error("============================================");
 
-            // ⚠️ AML process result used here for logging high-risk or failure
+            // âš ï¸ AML process result used here for logging high-risk or failure
             String failureRemark = buildFailureRemark(currentStep, cif, khrAccount, usdAccount, amlProcessResult);
             saveFailureLogs(request, e, currentStep, failureRemark);
 
@@ -217,25 +217,25 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
     private AmlStatusDto processAml(CustomerRequest request) throws Exception {
 
-            // 1️⃣ Check for existing AML
+            // 1ï¸âƒ£ Check for existing AML
             Optional<AmlStatus> existingAmlOpt = amlService.findByLegalId(request.getLegalId());
 
             if (existingAmlOpt.isPresent()) {
                 return handleExistingAml(existingAmlOpt.get(), request.getLegalId());
             }
 
-            // 2️⃣ Build request and call AML middleware
+            // 2ï¸âƒ£ Build request and call AML middleware
             CustomerAmlRequest amlRequestDto = openAccountAmlStatusMapper.buildAmlRequestDto(request);
             AmlExternalResponseDto amlResponse = callAmlMiddleware(amlRequestDto, request.getLegalId());
 
-            // 3️⃣ Build occupation status string
+            // 3ï¸âƒ£ Build occupation status string
             String occupationStatus = buildOccupationStatus(request.getOccupation());
 
-            // 4️⃣ Determine AML status based on risk
+            // 4ï¸âƒ£ Determine AML status based on risk
             boolean isHighRisk = AppConstants.HIGH_RISK.equalsIgnoreCase(amlResponse.getRiskLevel());
             AmlStatusEnum amlStatusEnum = isHighRisk ? AmlStatusEnum.PENDING : AmlStatusEnum.APPROVE;
 
-            // 5️⃣ Map to CreateAmlRequestDto
+            // 5ï¸âƒ£ Map to CreateAmlRequestDto
             CreateAmlRequestDto createRequest = openAccountAmlStatusMapper.toCreateRequest(
                     amlRequestDto,
                     amlResponse,
@@ -245,13 +245,13 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                     objectMapper
             );
 
-            // 6️⃣ Handle high-risk customers
+            // 6ï¸âƒ£ Handle high-risk customers
             if (isHighRisk) {
                 amlService.createAmlStatus(createRequest);
-                sendAmlNotification(amlRequestDto, amlResponse, request); // ⚠️ Keep comment
+                sendAmlNotification(amlRequestDto, amlResponse, request); // âš ï¸ Keep comment
             }
 
-            // 7️⃣ Low-risk → return mapped DTO
+            // 7ï¸âƒ£ Low-risk â†’ return mapped DTO
             return openAccountAmlStatusMapper.fromRequestAndResponse(request, amlResponse, amlStatusEnum);
     }
 
@@ -290,7 +290,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private String createCustomerIfNeeded(CustomerRequest request, Map<String, String> customerInfo) {
 
         if (isTestMode.isSkipCheckCif()) {
-            log.info("TEST MODE ENABLED — Always creating new customer, ignoring existing CIF.");
+            log.info("TEST MODE ENABLED â€” Always creating new customer, ignoring existing CIF.");
             Document resp = t24Service.createCustomer(request);
             return XmlParser.extractCif(resp);
         }
@@ -298,7 +298,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         // Normal production logic
         String existingCif = customerInfo.get("CIF");
         if (existingCif != null && !existingCif.isEmpty()) {
-            log.info("Existing CIF found → Using existing customer");
+            log.info("Existing CIF found â†’ Using existing customer");
             return existingCif;
         }
 
@@ -309,7 +309,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private String createAccountIfNeeded(CustomerRequest request, Map<String, String> customerInfo, String cif, String currency) {
 
         if (isTestMode.isSkipCheckAccount()) {
-            log.info("TEST MODE ENABLED — Skipping existing account check → creating new {} account", currency);
+            log.info("TEST MODE ENABLED â€” Skipping existing account check â†’ creating new {} account", currency);
             return createAccount(request, cif, currency);
         }
 
@@ -483,6 +483,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
     private OccupationDto safeOccupationLookup(String code) {
         try { return code != null ? occupationService.getOccupationByCode(code) : null; }
-        catch (Exception e) { log.warn("⚠️ Occupation lookup failed for code {}", code); return null; }
+        catch (Exception e) { log.warn("âš ï¸ Occupation lookup failed for code {}", code); return null; }
     }
 }
