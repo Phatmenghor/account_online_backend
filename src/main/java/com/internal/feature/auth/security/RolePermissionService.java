@@ -120,13 +120,13 @@ public class RolePermissionService {
      * @param resourceOwnerId The ID of the resource owner
      * @return true if user is owner or admin
      */
-    public boolean isOwnerOrAdmin(Long resourceOwnerId) {
+    public boolean isOwnerOrCompliance(Long resourceOwnerId) {
         try {
             UserEntity currentUser = securityUtils.getCurrentUser();
             
             // Check if user is an admin
             boolean isAdmin = currentUser.getRoles().stream()
-                    .anyMatch(role -> role.getName() == RoleEnum.ADMIN);
+                    .anyMatch(role -> role.getName() == RoleEnum.COMPLIANCE);
                     
             // Check if user is the owner
             boolean isOwner = currentUser.getId().equals(resourceOwnerId);
@@ -139,14 +139,14 @@ public class RolePermissionService {
     }
 
     /**
-     * Require the current user to be either the resource owner or have admin role.
+     * Require the current user to be either the resource owner or have compliance role.
      * @param resourceOwnerId The ID of the resource owner
      * @param message Error message if not authorized
-     * @throws UnauthorizedException if user is not owner or admin
+     * @throws UnauthorizedException if user is not owner or compliance
      */
-    public void requireOwnerOrAdmin(Long resourceOwnerId, String message) {
-        if (!isOwnerOrAdmin(resourceOwnerId)) {
-            log.warn("Access denied: User is neither the resource owner nor an admin");
+    public void requireOwnerOrCompliance(Long resourceOwnerId, String message) {
+        if (!isOwnerOrCompliance(resourceOwnerId)) {
+            log.warn("Access denied: User is neither the resource owner nor an compliance");
             throw new UnauthorizedException(message);
         }
     }
