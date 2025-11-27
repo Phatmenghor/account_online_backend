@@ -66,7 +66,7 @@ public class DefaultUserInitializer implements CommandLineRunner {
 
     private void createDefaultSuperAdminUser() {
         if (userRepository.existsByUsername(superCard)) {
-            log.info("Super admin user already exists: {}", superCard);
+            log.info("Developer user already exists: {}", superCard);
             return;
         }
 
@@ -84,6 +84,6 @@ public class DefaultUserInitializer implements CommandLineRunner {
         user.setRoles(roles);
 
         userRepository.save(user);
-        log.info("Created super admin user: {}", superCard);
+        log.info("Created developer user: {}", superCard);
     }
 }
