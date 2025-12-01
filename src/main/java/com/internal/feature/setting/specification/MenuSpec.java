@@ -2,6 +2,7 @@ package com.internal.feature.setting.specification;
 
 import com.internal.enumation.RoleEnum;
 import com.internal.feature.setting.models.Menu;
+import lombok.var;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.JoinType;

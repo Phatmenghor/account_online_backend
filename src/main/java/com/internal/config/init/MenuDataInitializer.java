@@ -9,6 +9,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -32,52 +33,52 @@ public class MenuDataInitializer implements CommandLineRunner {
         try {
             // Create root menus
             Menu dashboard = createMenu("Dashboard", "Home", "/dashboard", null, 1, 
-                    Set.of(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
             menuRepository.save(dashboard);
 
             // AML parent
             Menu amlParent = createMenu("AML", "Shield", null, null, 2,
-                    Set.of(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
             menuRepository.save(amlParent);
 
             // AML children
             Menu amlHistory = createMenu("AML History", null, "/dashboard/aml/history", amlParent, 1,
-                    Set.of(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
             menuRepository.save(amlHistory);
 
             Menu amlManagement = createMenu("AML Management", null, "/dashboard/aml/management", amlParent, 2,
-                    Set.of(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
             menuRepository.save(amlManagement);
 
             // Master Data parent
             Menu masterDataParent = createMenu("Master Data", "Database", null, null, 3,
-                    Set.of(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
             menuRepository.save(masterDataParent);
 
             // Master Data children
             int order = 1;
             menuRepository.save(createMenu("Marital Status", null, "/dashboard/static/marital", masterDataParent, order++,
-                    Set.of(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER))));
             menuRepository.save(createMenu("Occupation", null, "/dashboard/static/occupation", masterDataParent, order++,
-                    Set.of(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER))));
             menuRepository.save(createMenu("Reference", null, "/dashboard/static/reference", masterDataParent, order++,
-                    Set.of(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER))));
             menuRepository.save(createMenu("Branch", null, "/dashboard/static/branch", masterDataParent, order++,
-                    Set.of(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER))));
             menuRepository.save(createMenu("Legal Type", null, "/dashboard/static/legal-type", masterDataParent, order++,
-                    Set.of(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER))));
             menuRepository.save(createMenu("Province", null, "/dashboard/static/province", masterDataParent, order++,
-                    Set.of(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER))));
             menuRepository.save(createMenu("District", null, "/dashboard/static/district", masterDataParent, order++,
-                    Set.of(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER))));
             menuRepository.save(createMenu("Commune", null, "/dashboard/static/commune", masterDataParent, order++,
-                    Set.of(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER))));
             menuRepository.save(createMenu("Village", null, "/dashboard/static/village", masterDataParent, order++,
-                    Set.of(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER))));
 
             // User Management (SUPER only)
             Menu userManagement = createMenu("User Management", "Users", "/dashboard/user", null, 4,
-                    Set.of(RoleEnum.SUPER, RoleEnum.DEVELOPER));
+                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.DEVELOPER)));
             menuRepository.save(userManagement);
 
             log.info("Default menu structure initialized successfully");
