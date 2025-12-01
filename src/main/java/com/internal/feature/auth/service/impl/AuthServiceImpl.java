@@ -69,7 +69,11 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtGenerator.generateToken(authentication);
 
+        userEntity.setLastLogin(java.time.LocalDateTime.now(java.time.ZoneId.of("Asia/Phnom_Penh")));
+        userRepository.save(userEntity);
+
         UserResponseDto userDto = authMapper.userToUserResponseDto(userEntity);
+        userDto.setLastLogin(userEntity.getLastLogin());
         log.info("User {} logged in successfully", loginDto.getUsername());
         
         return new AuthResponseDTO(token, userDto);

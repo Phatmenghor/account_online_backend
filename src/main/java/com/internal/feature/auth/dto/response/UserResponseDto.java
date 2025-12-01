@@ -24,4 +24,5 @@ public class UserResponseDto {
     private UserPermission userPermission;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime lastLogin;
 }
