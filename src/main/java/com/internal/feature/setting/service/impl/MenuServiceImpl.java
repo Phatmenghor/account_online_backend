@@ -2,6 +2,7 @@ package com.internal.feature.setting.service.impl;
 
 import com.internal.enumation.RoleEnum;
 import com.internal.exceptions.error.custom.NotFoundException;
+import com.internal.feature.auth.models.Role;
 import com.internal.feature.auth.models.UserEntity;
 import com.internal.feature.auth.repository.UserRepository;
 import com.internal.feature.setting.dto.request.AssignMenuToUserRequestDto;
@@ -55,7 +56,7 @@ public class MenuServiceImpl implements MenuService {
 
         // Get user's roles
         Set<RoleEnum> userRoles = user.getRoles().stream()
-                .map(role -> role.getName())
+                .map(Role::getName)
                 .collect(Collectors.toSet());
 
         log.debug("User roles: {}", userRoles);
