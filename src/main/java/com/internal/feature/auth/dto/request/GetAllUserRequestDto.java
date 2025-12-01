@@ -20,4 +20,5 @@ public class GetAllUserRequestDto {
 
     private String search;
     private StatusData status = StatusData.ACTIVE;
+    private java.util.List<String> roles;
 }

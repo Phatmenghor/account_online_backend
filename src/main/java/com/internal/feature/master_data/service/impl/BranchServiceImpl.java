@@ -17,6 +17,7 @@ import com.internal.utils.pagination.PaginationResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
@@ -31,7 +32,7 @@ public class BranchServiceImpl implements BranchService {
 
     @Override
     public PaginationResponse<BranchResponseDto> getAllBranches(AllMasterDataRequest request) {
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<Branch> spec = BranchSpec.searchByName(request.getSearch());
 
         Page<Branch> page = branchRepository.findAll(spec, pageable);

@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +33,7 @@ public class VillageServiceImpl implements VillageService {
 
     @Override
     public PaginationResponse<VillageResponseDto> getAllVillages(AllMasterDataRequest request) {
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<Village> spec = VillageSpec.searchByName(request.getSearch());
 
         Page<Village> page = villageRepository.findAll(spec, pageable);
@@ -43,7 +44,7 @@ public class VillageServiceImpl implements VillageService {
 
     @Override
     public PaginationResponse<VillageResponseDto> getVillagesByCommune(AllMasterDataRequest request, String communeCode) {
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<Village> spec = VillageSpec.searchByName(request.getSearch())
                 .and((root, query, cb) -> cb.equal(root.get("commune").get("communeCode"), communeCode));
 

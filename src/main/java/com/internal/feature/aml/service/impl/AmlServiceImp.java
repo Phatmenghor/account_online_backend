@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -121,7 +122,7 @@ public class AmlServiceImp implements AmlService {
     // ------------------------------- GET ALL AML STATUS -------------------------------
     @Override
     public AllAmlResponseDto getAllAml(AllAmlRequestDto request) {
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<AmlStatus> spec = AmlStatusSpecification.hasStatus(request.getStatus())
                 .and(AmlStatusSpecification.search(request.getSearch()));
 
@@ -151,7 +152,7 @@ public class AmlServiceImp implements AmlService {
     // ------------------------------- GET ALL AML HISTORY -------------------------------
     @Override
     public AllAmlHistoryResponseDto getAllAmlHistory(AllAmlHistoryRequestDto request) {
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<AmlHistory> spec = AmlHistorySpecification.createdBetween(request.getStartDate(), request.getEndDate())
                 .and(AmlHistorySpecification.search(request.getSearch()))
                 .and(AmlHistorySpecification.hasStatus(request.getStatus()));

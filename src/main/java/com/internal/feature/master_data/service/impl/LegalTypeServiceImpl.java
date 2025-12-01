@@ -18,6 +18,7 @@ import lombok.var;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -39,7 +40,7 @@ public class LegalTypeServiceImpl implements LegalTypeService {
 
     @Override
     public AllLegalTypeResponseDto getAllLegalType(GetAllLegalTypeRequest request) {
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
         var spec = LegalTypeSpec.hasStatus(request.getStatus())
                 .and(LegalTypeSpec.searchByName(request.getSearch()));

@@ -72,6 +72,27 @@ public final class AppConstants {
     public static final String SAVE_CUSTOMER_IMAGES = "SAVE_CUSTOMER_IMAGES";
     public static final String SAVE_FINAL_LOG = "SAVE_FINAL_LOG";
 
+    public static final String MSG_400 =
+            "ID card not recognized by our system. Please contact management for alternative verification solution.";
+
+    public static final String MSG_420 =
+            "Request limit exceeded. Please contact technical team for assistance.";
+
+    public static final String MSG_500 =
+            "No face detected in your photo. Please take a clear photo and try again.";
+
+    public static final String MSG_501 =
+            "Unable to detect face on ID card. Please upload a clearer image of your ID.";
+
+    public static final String MSG_502 =
+            "System error occurred. Please check your NID and try again in a few minutes or contact support.";
+
+    public static final String MSG_503 =
+            "Connection issue with verification service. Please try again.";
+
+    public static final String MSG_504 =
+            "NID verification failed with CAMDX provider. Please try again later.";
+
     private AppConstants() {
         // Prevent instantiation
     }

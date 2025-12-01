@@ -12,6 +12,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+import com.internal.enumation.RoleEnum;
+
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Optional<UserEntity> findByUsername(String username);
@@ -47,6 +49,20 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Page<UserEntity> searchByMultipleFieldsAndStatus(
             @Param("searchText") String searchText,
             @Param("status")     StatusData status,
+            Pageable pageable);
+
+    @Query("SELECT DISTINCT u FROM UserEntity u JOIN u.roles r " +
+            "WHERE u.status IN :statuses " +
+            "AND (:searchText IS NULL OR :searchText = '' OR " +
+            "  LOWER(u.username) LIKE LOWER(CONCAT('%', :searchText, '%')) " +
+            "  OR LOWER(u.email)    LIKE LOWER(CONCAT('%', :searchText, '%')) " +
+            "  OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchText, '%')) " +
+            ") " +
+            "AND r.name IN :roleNames")
+    Page<UserEntity> searchByMultipleFieldsAndStatusesAndRoles(
+            @Param("searchText") String searchText,
+            @Param("statuses") List<StatusData> statuses,
+            @Param("roleNames") List<RoleEnum> roleNames,
             Pageable pageable);
 
 }

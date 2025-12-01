@@ -26,8 +26,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+
+import com.internal.enumation.RoleEnum;
 
 @Service
 @RequiredArgsConstructor
@@ -47,10 +51,11 @@ public class UserServiceImpl implements UserService {
         GetAllUserRequestDto userRequestDto = new GetAllUserRequestDto(Math.max(requestDto.getPageNo() - 1, 0),
                 Math.max(requestDto.getPageSize(), 1),
                 requestDto.getSearch(),
-                requestDto.getStatus());
+                requestDto.getStatus(),
+                requestDto.getRoles());
 
         Pageable pageable = PageRequest.of(userRequestDto.getPageNo(), userRequestDto.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<UserEntity> userPage = fetchUsers(userRequestDto.getSearch(), userRequestDto.getStatus(), pageable);
+        Page<UserEntity> userPage = fetchUsers(userRequestDto.getSearch(), userRequestDto.getStatus(), userRequestDto.getRoles(), pageable);
 
         List<UserResponseDto> content = userPage.getContent().stream()
                 .map(userMapper::mapToDto)
@@ -133,19 +138,35 @@ public class UserServiceImpl implements UserService {
         return userMapper.mapToDto(userEntity);
     }
 
-    private Page<UserEntity> fetchUsers(String search, StatusData status, Pageable pageable) {
+    private Page<UserEntity> fetchUsers(String search, StatusData status, List<String> roles, Pageable pageable) {
         boolean hasSearch = search != null && !search.trim().isEmpty();
         boolean hasStatus = status != null;
+        boolean hasRoles = roles != null && !roles.isEmpty();
 
-        if (!hasStatus) {
-            List<StatusData> activeStatuses = Arrays.asList(StatusData.ACTIVE, StatusData.DELETE);
-            return hasSearch 
-                ? userRepository.searchByMultipleFieldsAndStatuses(search, activeStatuses, pageable)
-                : userRepository.findByStatusIn(activeStatuses, pageable);
+        List<StatusData> statuses = hasStatus ? Collections.singletonList(status) : Arrays.asList(StatusData.ACTIVE, StatusData.DELETE);
+
+        if (hasRoles) {
+            List<RoleEnum> roleEnums = roles.stream()
+                    .map(role -> {
+                        try {
+                            return RoleEnum.valueOf(role);
+                        } catch (IllegalArgumentException e) {
+                            log.warn("Invalid role: {}", role);
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            if (roleEnums.isEmpty()) {
+                return Page.empty(pageable);
+            }
+
+            return userRepository.searchByMultipleFieldsAndStatusesAndRoles(search, statuses, roleEnums, pageable);
         } else {
-            return hasSearch 
-                ? userRepository.searchByMultipleFieldsAndStatus(search, status, pageable)
-                : userRepository.findByStatus(status, pageable);
+            return hasSearch
+                    ? userRepository.searchByMultipleFieldsAndStatuses(search, statuses, pageable)
+                    : userRepository.findByStatusIn(statuses, pageable);
         }
     }
 

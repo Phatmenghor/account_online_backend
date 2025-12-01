@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +33,7 @@ public class DistrictServiceImpl implements DistrictService {
 
     @Override
     public PaginationResponse<DistrictResponseDto> getAllDistricts(AllMasterDataRequest request) {
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<District> spec = DistrictSpec.searchByName(request.getSearch());
 
         Page<District> page = districtRepository.findAll(spec, pageable);
@@ -43,7 +44,7 @@ public class DistrictServiceImpl implements DistrictService {
 
     @Override
     public PaginationResponse<DistrictResponseDto> getDistrictsByProvince(AllMasterDataRequest request, String provinceCode) {
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<District> spec = DistrictSpec.searchByName(request.getSearch())
                 .and((root, query, cb) -> cb.equal(root.get("province").get("provinceCode"), provinceCode));
 

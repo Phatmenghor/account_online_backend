@@ -18,6 +18,7 @@ import lombok.var;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -47,7 +48,7 @@ public class OccupationServiceImpl implements OccupationService {
 
     @Override
     public AllOccupationResponseDto getAllOccupations(GetAllOccupationRequest request) {
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
         // Build specification dynamically
         var spec = OccupationSpec.hasStatus(request.getStatus())

@@ -9,6 +9,7 @@ import com.internal.feature.camdx.dto.CamdxRequest;
 import com.internal.feature.camdx.dto.CamdxValidateNidRequest;
 import com.internal.feature.camdx.service.CamdxService;
 import com.internal.feature.telegram_alerts.service.serviceImpl.CamdxErrorCheckServiceImpl;
+import com.internal.utils.constants.AppConstants;
 import com.internal.utils.service.HttpClientUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.internal.utils.constants.AppConstants.*;
+import static com.internal.utils.constants.AppConstants.NID_ERROR_SYSTEM;
 
 @Service
 @RequiredArgsConstructor
@@ -79,38 +80,47 @@ public class CamdxServiceImp implements CamdxService {
     }
 
     private String getUserFriendlyMessage(int statusCode, String rawBody) {
+        String uiMessage;
+
         switch (statusCode) {
             case 400:
-                return NID_ERROR_400;
-            case 401:
-                return NID_ERROR_401;
-            case 403:
-                return NID_ERROR_403;
-            case 404:
-                return NID_ERROR_404;
-            case 408:
-                return NID_ERROR_408;
-            case 429:
-                return NID_ERROR_429;
+                uiMessage = AppConstants.MSG_400;
+                break;
+            case 420:
+                uiMessage = AppConstants.MSG_420;
+                break;
             case 500:
-                return NID_ERROR_500;
+                uiMessage = AppConstants.MSG_500;
+                break;
+            case 501:
+                uiMessage = AppConstants.MSG_501;
+                break;
             case 502:
+                uiMessage = AppConstants.MSG_502;
+                break;
             case 503:
-                return NID_ERROR_502_503;
+                uiMessage = AppConstants.MSG_503;
+                break;
             case 504:
-                return NID_ERROR_504;
+                uiMessage = AppConstants.MSG_504;
+                break;
             default:
+                // Try to parse any message from rawBody JSON
                 try {
                     JsonNode json = objectMapper.readTree(rawBody);
                     if (json.has("message") && !json.path("message").asText().isEmpty()) {
-                        return json.path("message").asText() + " " + SUPPORT_CONTACT;
+                        uiMessage = json.path("message").asText() + " " + AppConstants.SUPPORT_CONTACT;
+                    } else {
+                        uiMessage = "Unknown error occurred. " + AppConstants.SUPPORT_CONTACT;
                     }
-                } catch (Exception ignored) {
-                    log.debug("Could not parse error response body", ignored);
+                } catch (Exception e) {
+                    log.debug("Could not parse error response body", e);
+                    uiMessage = "Unknown error occurred. " + AppConstants.SUPPORT_CONTACT;
                 }
-
-                return NID_ERROR_DEFAULT;
+                break;
         }
+
+        return uiMessage;
     }
 
     @Override

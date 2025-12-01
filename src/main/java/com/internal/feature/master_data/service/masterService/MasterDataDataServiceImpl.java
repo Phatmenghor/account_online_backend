@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -38,7 +39,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     // ---------------------- Province ----------------------
     @Override
     public PaginationResponse<ClsProvinceDto> getProvince(AllMasterDataRequest request) {
-        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize());
+        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<Province> spec = ProvinceSpec.searchByName(request.getSearch());
 
         Page<Province> page = provinceRepository.findAll(spec, pageable);
@@ -50,7 +51,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     // ---------------------- District ----------------------
     @Override
     public PaginationResponse<ClsDistrictDto> getDistrict(AllMasterDataRequest request, String provinceCode) {
-        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize());
+        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<District> spec = DistrictSpec.searchByName(request.getSearch());
 
         if (provinceCode != null) {
@@ -66,7 +67,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     // ---------------------- Commune ----------------------
     @Override
     public PaginationResponse<ClsCommuneDto> getCommune(AllMasterDataRequest request, String districtCode) {
-        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize());
+        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<Commune> spec = CommuneSpec.searchByName(request.getSearch());
 
         if (districtCode != null) {
@@ -82,7 +83,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     // ---------------------- Village ----------------------
     @Override
     public PaginationResponse<ClsVillageDto> getVillage(AllMasterDataRequest request, String communeCode) {
-        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize());
+        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<Village> spec = VillageSpec.searchByName(request.getSearch());
 
         if (communeCode != null) {
@@ -98,7 +99,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     // ---------------------- Branch ----------------------
     @Override
     public PaginationResponse<ClsBranchDto> getBranch(AllMasterDataRequest request) {
-        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize());
+        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
         // Assuming Branch has a similar search spec or we create a simple one
         Specification<Branch> spec = (root, query, cb) -> {
             if (request.getSearch() == null || request.getSearch().isEmpty()) {
