@@ -9,8 +9,14 @@ import java.util.List;
 
 @Repository
 public interface MenuRepository extends JpaRepository<Menu, Long>, JpaSpecificationExecutor<Menu> {
-    
+
     List<Menu> findByIsActiveTrueOrderByDisplayOrderAsc();
-    
+
     List<Menu> findByParentIsNullAndIsActiveTrueOrderByDisplayOrderAsc();
+
+    // Find menu by title when it has no parent (root menu)
+    Menu findByTitleAndParentIsNull(String title);
+
+    // Find menu by title and parent (for child menus)
+    Menu findByTitleAndParent(String title, Menu parent);
 }

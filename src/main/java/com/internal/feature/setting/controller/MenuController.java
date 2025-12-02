@@ -3,6 +3,7 @@ package com.internal.feature.setting.controller;
 import com.internal.config.RequiresRole;
 import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.setting.dto.request.AssignMenuToUserRequestDto;
+import com.internal.feature.setting.dto.request.AssignUserMenusRequestDto;
 import com.internal.feature.setting.dto.request.GetAllMenuRequestDto;
 import com.internal.feature.setting.dto.request.MenuCreateRequestDto;
 import com.internal.feature.setting.dto.request.MenuUpdateRequestDto;
@@ -103,5 +104,14 @@ public class MenuController {
         log.info("Removing menu {} from users", menuId);
         MenuResponseDto menu = menuService.removeMenuFromUsers(menuId, userIds);
         return ResponseEntity.ok(ApiResponse.success("Users removed from menu successfully", menu));
+    }
+
+    @PostMapping("/user/assign-menus")
+    @RequiresRole(value = {"DEVELOPER"}, anyRole = true)
+    public ResponseEntity<ApiResponse<List<MenuResponseDto>>> assignMenusToUser(
+            @Valid @RequestBody AssignUserMenusRequestDto request) {
+        log.info("Assigning menus to user ID: {}", request.getUserId());
+        List<MenuResponseDto> menus = menuService.assignMenusToUser(request);
+        return ResponseEntity.ok(ApiResponse.success("Menus assigned to user successfully", menus));
     }
 }

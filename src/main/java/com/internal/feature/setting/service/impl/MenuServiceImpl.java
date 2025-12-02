@@ -6,6 +6,7 @@ import com.internal.feature.auth.models.Role;
 import com.internal.feature.auth.models.UserEntity;
 import com.internal.feature.auth.repository.UserRepository;
 import com.internal.feature.setting.dto.request.AssignMenuToUserRequestDto;
+import com.internal.feature.setting.dto.request.AssignUserMenusRequestDto;
 import com.internal.feature.setting.dto.request.GetAllMenuRequestDto;
 import com.internal.feature.setting.dto.request.MenuCreateRequestDto;
 import com.internal.feature.setting.dto.request.MenuUpdateRequestDto;
@@ -207,6 +208,34 @@ public class MenuServiceImpl implements MenuService {
         log.info("Removed menu {} from {} users", menuId, userIds.size());
 
         return menuMapper.toDto(updatedMenu);
+    }
+
+    @Override
+    @Transactional
+    public List<MenuResponseDto> assignMenusToUser(AssignUserMenusRequestDto request) {
+        log.info("Assigning menus to user ID: {}", request.getUserId());
+
+        UserEntity user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new NotFoundException("User not found with ID: " + request.getUserId()));
+
+        List<Menu> allMenus = menuRepository.findAll();
+        List<Long> requestedMenuIds = request.getMenuIds();
+
+        for (Menu menu : allMenus) {
+            boolean shouldHaveAccess = requestedMenuIds.contains(menu.getId());
+            boolean currentlyHasAccess = menu.getAllowedUsers().contains(user);
+
+            if (shouldHaveAccess && !currentlyHasAccess) {
+                menu.getAllowedUsers().add(user);
+                menuRepository.save(menu);
+            } else if (!shouldHaveAccess && currentlyHasAccess) {
+                menu.getAllowedUsers().remove(user);
+                menuRepository.save(menu);
+            }
+        }
+
+        // Return updated menu list for the user
+        return getMenusByUserId(user.getId());
     }
 
     // Private helper methods

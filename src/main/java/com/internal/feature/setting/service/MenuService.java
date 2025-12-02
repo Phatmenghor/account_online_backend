@@ -1,6 +1,7 @@
 package com.internal.feature.setting.service;
 
 import com.internal.feature.setting.dto.request.AssignMenuToUserRequestDto;
+import com.internal.feature.setting.dto.request.AssignUserMenusRequestDto;
 import com.internal.feature.setting.dto.request.GetAllMenuRequestDto;
 import com.internal.feature.setting.dto.request.MenuCreateRequestDto;
 import com.internal.feature.setting.dto.request.MenuUpdateRequestDto;
@@ -28,4 +29,6 @@ public interface MenuService {
     MenuResponseDto assignMenuToUsers(Long menuId, AssignMenuToUserRequestDto request);
     
     MenuResponseDto removeMenuFromUsers(Long menuId, List<Long> userIds);
+
+    List<MenuResponseDto> assignMenusToUser(AssignUserMenusRequestDto request);
 }
