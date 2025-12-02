@@ -1,4 +1,4 @@
-package com.internal.feature.setting.constant;
+package com.internal.utils.constants;
 
 public class MenuConstant {
 

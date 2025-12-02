@@ -3,7 +3,7 @@ package com.internal.config.init;
 import com.internal.enumation.RoleEnum;
 import com.internal.feature.setting.models.Menu;
 import com.internal.feature.setting.repository.MenuRepository;
-import com.internal.feature.setting.constant.MenuConstant;
+import com.internal.utils.constants.MenuConstant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
