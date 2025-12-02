@@ -15,7 +15,7 @@ import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponse
 import com.internal.feature.logs_report.service.AccountOnlineOpenFinalService;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
 import com.internal.feature.logs_report.service.CustomerImageService;
-import com.internal.feature.mail.service.MailService;
+import com.internal.feature.aml.service.AmlNotificationService;
 import com.internal.feature.open_account.dto.request.CustomerAmlRequest;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.response.AmlExternalResponseDto;
@@ -48,7 +48,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private final MobileBankingService mobileBankingService;
     private final AccountOnlineReportLogService reportLogService;
     private final AmlService amlService;
-    private final MailService mailService;
+    private final AmlNotificationService amlNotificationService;
     private final CustomerImageService customerImageService;
     private final AccountOnlineOpenFinalService accountOnlineOpenSuccessService;
     private final ObjectMapper objectMapper;
@@ -425,7 +425,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             // Email Notification
             log.info(">>> Attempting Email notification for Legal ID: {}", request.getLegalId());
             try {
-                mailService.sendAmlStatusNotification(amlDto);
+                amlNotificationService.sendAmlStatusNotification(amlDto);
                 log.info("Email AML notification sent successfully.");
             } catch (Exception e) {
                 log.error("Email notification failed: {}", e.getMessage());
