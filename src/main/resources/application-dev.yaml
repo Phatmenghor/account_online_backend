@@ -218,7 +218,7 @@ app:
     progress-log-interval-minutes: 10
     heartbeat-interval-minutes: 5
 
-# Telegram Bot
+# Telegram Bots
 telegram:
   bot:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
