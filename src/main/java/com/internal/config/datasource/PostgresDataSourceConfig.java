@@ -30,7 +30,7 @@ public class PostgresDataSourceConfig {
                 .type(HikariDataSource.class)
                 .build();
 
-        log.info("âœ… PostgreSQL DataSource created - URL: {}", dataSource.getJdbcUrl());
+        log.info("✓ PostgreSQL DataSource created - URL: {}", dataSource.getJdbcUrl());
         return dataSource;
     }
 
@@ -38,7 +38,7 @@ public class PostgresDataSourceConfig {
     @Bean(name = "postgresJdbcTemplate")
     public JdbcTemplate postgresJdbcTemplate(
             @Qualifier("postgresDataSource") HikariDataSource dataSource) {
-        log.info("âœ… PostgreSQL JdbcTemplate created (PRIMARY)");
+        log.info("✓ PostgreSQL JdbcTemplate created (PRIMARY)");
         return new JdbcTemplate(dataSource);
     }
 }

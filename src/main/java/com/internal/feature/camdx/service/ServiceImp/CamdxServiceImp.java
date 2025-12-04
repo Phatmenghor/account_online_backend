@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.internal.config.CpbProperties;
 import com.internal.exceptions.error.custom.NidValidationException;
+import com.internal.exceptions.error.custom.ValidateServiceException;
 import com.internal.feature.camdx.dto.CamdxFaceRequest;
 import com.internal.feature.camdx.dto.CamdxRequest;
 import com.internal.feature.camdx.dto.CamdxValidateNidRequest;
@@ -14,8 +15,7 @@ import com.internal.utils.service.HttpClientUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,21 +51,24 @@ public class CamdxServiceImp implements CamdxService {
             errorCheckService.checkValidationResponse(response, request);
             return response;
 
-        } catch (HttpServerErrorException | HttpClientErrorException ex) {
-            String rawBody = ex.getResponseBodyAsString();
-            int statusCode = ex.getStatusCode().value();
+        } catch (ValidateServiceException ex) {
+            if (ex.getCause() instanceof HttpStatusCodeException) {
+                HttpStatusCodeException httpEx = (HttpStatusCodeException) ex.getCause();
+                String rawBody = httpEx.getResponseBodyAsString();
+                int statusCode = httpEx.getStatusCode().value();
 
-            log.error("NID Validation API error - Status: {}, Body: {}", statusCode, rawBody);
+                log.error("NID Validation API error - Status: {}, Body: {}", statusCode, rawBody);
 
-            try {
-                errorCheckService.sendInfraErrorAlertFromException(request, rawBody);
-            } catch (Exception e) {
-                log.error("Failed to send Telegram notification: {}", e.getMessage());
+                try {
+                    errorCheckService.sendInfraErrorAlertFromException(request, rawBody);
+                } catch (Exception e) {
+                    log.error("Failed to send Telegram notification: {}", e.getMessage());
+                }
+
+                String userMessage = getUserFriendlyMessage(statusCode, rawBody);
+                throw new NidValidationException(statusCode, userMessage);
             }
-
-            String userMessage = getUserFriendlyMessage(statusCode, rawBody);
-            throw new NidValidationException(statusCode, userMessage);
-
+            throw ex; // Rethrow if not an HTTP exception
         } catch (Exception e) {
             log.error("Unexpected error calling NID Validation", e);
 
@@ -80,47 +83,27 @@ public class CamdxServiceImp implements CamdxService {
     }
 
     private String getUserFriendlyMessage(int statusCode, String rawBody) {
-        String uiMessage;
-
-        switch (statusCode) {
-            case 400:
-                uiMessage = AppConstants.MSG_400;
-                break;
-            case 420:
-                uiMessage = AppConstants.MSG_420;
-                break;
-            case 500:
-                uiMessage = AppConstants.MSG_500;
-                break;
-            case 501:
-                uiMessage = AppConstants.MSG_501;
-                break;
-            case 502:
-                uiMessage = AppConstants.MSG_502;
-                break;
-            case 503:
-                uiMessage = AppConstants.MSG_503;
-                break;
-            case 504:
-                uiMessage = AppConstants.MSG_504;
-                break;
-            default:
-                // Try to parse any message from rawBody JSON
-                try {
-                    JsonNode json = objectMapper.readTree(rawBody);
-                    if (json.has("message") && !json.path("message").asText().isEmpty()) {
-                        uiMessage = json.path("message").asText() + " " + AppConstants.SUPPORT_CONTACT;
-                    } else {
-                        uiMessage = "Unknown error occurred. " + AppConstants.SUPPORT_CONTACT;
-                    }
-                } catch (Exception e) {
-                    log.debug("Could not parse error response body", e);
-                    uiMessage = "Unknown error occurred. " + AppConstants.SUPPORT_CONTACT;
-                }
-                break;
+        try {
+            JsonNode json = objectMapper.readTree(rawBody);
+            if (json.has("message") && !json.path("message").asText().isEmpty()) {
+                return json.path("message").asText() + " " + AppConstants.SUPPORT_CONTACT;
+            }
+        } catch (Exception e) {
+            log.debug("Could not parse error response body", e);
         }
 
-        return uiMessage;
+        // fallback to predefined constants if API message is missing
+        switch (statusCode) {
+            case 400: return AppConstants.MSG_400;
+            case 420: return AppConstants.MSG_420;
+            case 500: return AppConstants.MSG_500;
+            case 501: return AppConstants.MSG_501;
+            case 502: return AppConstants.MSG_502;
+            case 503: return AppConstants.MSG_503;
+            case 504: return AppConstants.MSG_504;
+            case 505: return AppConstants.MSG_502; // generic system error
+            default: return "Unknown error occurred. " + AppConstants.SUPPORT_CONTACT;
+        }
     }
 
     @Override

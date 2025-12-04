@@ -117,7 +117,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
         errorMessage = escapeMarkdown(errorMessage);
 
         String nidText = (request.getIdNumber() != null && !request.getIdNumber().isEmpty())
-                ? "`" + escapeMarkdown(request.getIdNumber())
+                ? "`" + escapeMarkdown(request.getIdNumber()) + "`"
                 : "Missing";
 
         StringBuilder sb = buildTelegramInfo(request, errorCode, errorMessage, nidText, formatter);
