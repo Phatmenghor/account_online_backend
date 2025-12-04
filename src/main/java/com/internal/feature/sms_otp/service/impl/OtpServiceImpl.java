@@ -66,10 +66,14 @@ public class OtpServiceImpl implements OtpService {
         otpSms = otpRepository.save(otpSms);
         log.info("OTP created successfully - ID: {}, Phone: {}", otpSms.getId(), phone);
 
-        try {
-            sendSmsToUser(phone, otpCode);
-        } catch (Exception e) {
-            log.error("SMS sending failed but OTP was saved - Phone: {}, OTP ID: {}", phone, otpSms.getId(), e);
+        if (AppConstants.DEFAULT_DEV_OTP.equals(otpCode)) {
+            log.info("Skipping SMS sending for default OTP: {}", otpCode);
+        } else {
+            try {
+                sendSmsToUser(phone, otpCode);
+            } catch (Exception e) {
+                log.error("SMS sending failed but OTP was saved - Phone: {}, OTP ID: {}", phone, otpSms.getId(), e);
+            }
         }
 
         return otpMapper.toSendOtpResponse(otpSms);

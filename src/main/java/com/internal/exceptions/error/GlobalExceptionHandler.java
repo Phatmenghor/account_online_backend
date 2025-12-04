@@ -13,6 +13,7 @@
     import org.springframework.web.bind.MethodArgumentNotValidException;
     import org.springframework.web.bind.annotation.ControllerAdvice;
     import org.springframework.web.bind.annotation.ExceptionHandler;
+    import org.springframework.security.authentication.BadCredentialsException;
 
     import javax.validation.ConstraintViolationException;
     import java.sql.SQLException;
@@ -129,6 +130,12 @@
                     : "Data integrity violation";
 
             return buildErrorResponse(HttpStatus.CONFLICT, message);
+        }
+
+        @ExceptionHandler(BadCredentialsException.class)
+        public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex) {
+            log.warn("Authentication failed: {}", ex.getMessage());
+            return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }
 
         // FIXED: Single Exception handler that excludes OTP exceptions

@@ -7,6 +7,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
+import java.util.Arrays;
 
 @Component
 @RequiredArgsConstructor
@@ -22,15 +23,16 @@ public class OtpGenerator {
      * @return 6-digit OTP string
      */
     public String generate() {
-        String environment = cpbProperties.getEnvironment();
-        if (AppConstants.ENV_DEVELOPMENT.equalsIgnoreCase(environment)) {
-            return AppConstants.DEFAULT_DEV_OTP;
-        }
+//        String environment = cpbProperties.getEnvironment();
+//        if (AppConstants.ENV_DEVELOPMENT.equalsIgnoreCase(environment)) {
+//            return AppConstants.DEFAULT_DEV_OTP;
+//        }
 
         // Return default OTP in UAT
-//        if (Arrays.asList(env.getActiveProfiles()).contains("uat")) {
-//            return AppConstants.DEFAULT_DEV_OTP; // e.g., "123456"
-//        }
+        if (Arrays.asList(env.getActiveProfiles()).contains("uat") ||
+                Arrays.asList(env.getActiveProfiles()).contains("dev")) {
+            return AppConstants.DEFAULT_DEV_OTP;
+        }
 
         int otpLength = cpbProperties.getOtp().getLength() > 0
                 ? cpbProperties.getOtp().getLength()

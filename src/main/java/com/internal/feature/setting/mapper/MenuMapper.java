@@ -29,14 +29,19 @@ public class MenuMapper {
                 .parentId(menu.getParent() != null ? menu.getParent().getId() : null)
                 .displayOrder(menu.getDisplayOrder())
                 .roles(menu.getRoles())
-                .allowedUserIds(menu.getAllowedUsers().stream()
+                .allowedUserIds(menu.getAllowedUsers() != null
+                        ? menu.getAllowedUsers().stream()
                         .map(UserEntity::getId)
-                        .collect(Collectors.toList()))
+                        .collect(Collectors.toList())
+                        : new ArrayList<>())
                 .isActive(menu.getIsActive())
-                .children(menu.getChildren().stream()
+                .children(menu.getChildren() != null
+                        ? menu.getChildren().stream()
                         .map(this::toDto)
-                        .collect(Collectors.toList()))
+                        .collect(Collectors.toList())
+                        : new ArrayList<>())
                 .build();
+
     }
 
     public MenuItemDto toItemDto(Menu menu) {

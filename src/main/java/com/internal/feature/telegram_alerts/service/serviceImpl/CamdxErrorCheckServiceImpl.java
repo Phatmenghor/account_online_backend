@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -132,7 +133,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
                 .append("Error Message: ").append(errorMessage).append("\n\n")
                 .append("NID: ").append(nidText).append("\n")
                 .append("--------------------").append("\n")
-                .append("Time: ").append(LocalDateTime.now().format(formatter)).append("\n")
+                .append("Time: ").append(LocalDateTime.now(ZoneId.of("Asia/Phnom_Penh")).format(formatter)).append("\n")
                 .append("Issue: MOI / CAMDX unreachable or infrastructure failure.");
         return sb;
     }
@@ -180,14 +181,14 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
                 .append("Incorrect Fields:\n").append(formattedIncorrect).append("\n")
                 .append("--------------------").append("\n")
                 .append("Request Info\n")
-                .append("â€¢ KH: ").append(escapeMarkdown(request.getLastNameKh())).append(" ").append(escapeMarkdown(request.getFirstNameKh())).append("\n")
-                .append("â€¢ EN: ").append(escapeMarkdown(request.getLastNameEn())).append(" ").append(escapeMarkdown(request.getFirstNameEn())).append("\n")
-                .append("â€¢ DOB: ").append(escapeMarkdown(request.getDob())).append("\n")
-                .append("â€¢ Gender: ").append(escapeMarkdown(request.getGender())).append("\n")
-                .append("â€¢ Issued: ").append(escapeMarkdown(request.getIssuedDate())).append("\n")
-                .append("â€¢ Expired: ").append(escapeMarkdown(request.getExpiredDate())).append("\n")
+                .append("Name KH: ").append(escapeMarkdown(request.getLastNameKh())).append(" ").append(escapeMarkdown(request.getFirstNameKh())).append("\n")
+                .append("Name EN: ").append(escapeMarkdown(request.getLastNameEn())).append(" ").append(escapeMarkdown(request.getFirstNameEn())).append("\n")
+                .append("DOB: ").append(escapeMarkdown(request.getDob())).append("\n")
+                .append("Gender: ").append(escapeMarkdown(request.getGender())).append("\n")
+                .append("Issued: ").append(escapeMarkdown(request.getIssuedDate())).append("\n")
+                .append("Expired: ").append(escapeMarkdown(request.getExpiredDate())).append("\n")
                 .append("--------------------").append("\n")
-                .append("Time: ").append(LocalDateTime.now().format(formatter)).append("\n")
+                .append("Time: ").append(LocalDateTime.now(ZoneId.of("Asia/Phnom_Penh")).format(formatter)).append("\n")
                 .append("Please recheck NID / submission.");
         return sb;
     }

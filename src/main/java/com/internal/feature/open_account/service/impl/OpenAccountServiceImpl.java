@@ -152,7 +152,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             log.error("USD Account: {}", usdAccount);
             log.error("============================================");
 
-            // âš ï¸ AML process result used here for logging high-risk or failure
+            // ⚠️ AML process result used here for logging high-risk or failure
             String failureRemark = buildFailureRemark(currentStep, cif, khrAccount, usdAccount, amlProcessResult);
             saveFailureLogs(request, e, currentStep, failureRemark);
 
@@ -248,10 +248,10 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             // 6ï¸âƒ£ Handle high-risk customers
             if (isHighRisk) {
                 amlService.createAmlStatus(createRequest);
-                sendAmlNotification(amlRequestDto, amlResponse, request); // âš ï¸ Keep comment
+                sendAmlNotification(amlRequestDto, amlResponse, request); // ⚠️ Keep comment
             }
 
-            // 7ï¸âƒ£ Low-risk â†’ return mapped DTO
+            // 7ï¸âƒ£ Low-risk → return mapped DTO
             return openAccountAmlStatusMapper.fromRequestAndResponse(request, amlResponse, amlStatusEnum);
     }
 
@@ -290,7 +290,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private String createCustomerIfNeeded(CustomerRequest request, Map<String, String> customerInfo) {
 
         if (isTestMode.isSkipCheckCif()) {
-            log.info("TEST MODE ENABLED â€” Always creating new customer, ignoring existing CIF.");
+            log.info("TEST MODE ENABLED — Always creating new customer, ignoring existing CIF.");
             Document resp = t24Service.createCustomer(request);
             return XmlParser.extractCif(resp);
         }
@@ -298,7 +298,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         // Normal production logic
         String existingCif = customerInfo.get("CIF");
         if (existingCif != null && !existingCif.isEmpty()) {
-            log.info("Existing CIF found â†’ Using existing customer");
+            log.info("Existing CIF found → Using existing customer");
             return existingCif;
         }
 
@@ -309,7 +309,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private String createAccountIfNeeded(CustomerRequest request, Map<String, String> customerInfo, String cif, String currency) {
 
         if (isTestMode.isSkipCheckAccount()) {
-            log.info("TEST MODE ENABLED â€” Skipping existing account check â†’ creating new {} account", currency);
+            log.info("TEST MODE ENABLED — Skipping existing account check → creating new {} account", currency);
             return createAccount(request, cif, currency);
         }
 
@@ -483,6 +483,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
     private OccupationDto safeOccupationLookup(String code) {
         try { return code != null ? occupationService.getOccupationByCode(code) : null; }
-        catch (Exception e) { log.warn("âš ï¸ Occupation lookup failed for code {}", code); return null; }
+        catch (Exception e) { log.warn("⚠️ Occupation lookup failed for code {}", code); return null; }
     }
 }

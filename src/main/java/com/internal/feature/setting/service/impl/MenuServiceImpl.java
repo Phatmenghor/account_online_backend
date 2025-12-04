@@ -62,11 +62,17 @@ public class MenuServiceImpl implements MenuService {
 
         log.debug("User roles: {}", userRoles);
 
-        // DEVELOPER gets ALL menus
+        // DEVELOPER gets ALL menus, but respecting explicit exclusions
         if (userRoles.contains(RoleEnum.DEVELOPER)) {
-            log.debug("User is DEVELOPER, returning all menus");
+            log.debug("User is DEVELOPER, returning all menus (respecting exclusions)");
             List<Menu> allMenus = menuRepository.findByIsActiveTrueOrderByDisplayOrderAsc();
-            return menuMapper.buildMenuTree(allMenus);
+            
+            // Filter out menus where user is explicitly excluded
+            List<Menu> filteredMenus = allMenus.stream()
+                    .filter(menu -> !menu.getExcludedUsers().contains(user))
+                    .collect(Collectors.toList());
+                    
+            return menuMapper.buildMenuTree(filteredMenus);
         }
 
         // Get menus accessible to user
@@ -111,11 +117,35 @@ public class MenuServiceImpl implements MenuService {
 
         Menu menu = menuMapper.fromCreateDto(request);
 
-        // Set parent if provided
+        // Handle parent menu - Option 1: Use existing parent
         if (request.getParentId() != null) {
+            log.debug("Using existing parent menu with ID: {}", request.getParentId());
             Menu parent = menuRepository.findById(request.getParentId())
                     .orElseThrow(() -> new NotFoundException("Parent menu not found with ID: " + request.getParentId()));
             menu.setParent(parent);
+        }
+        // Handle parent menu - Option 2: Create new parent
+        else if (request.getParentMenu() != null) {
+            log.info("Creating new parent menu: {}", request.getParentMenu().getTitle());
+            
+            // Create and save the parent menu first
+            Menu parentMenu = Menu.builder()
+                    .title(request.getParentMenu().getTitle())
+                    .icon(request.getParentMenu().getIcon())
+                    .href(request.getParentMenu().getHref())
+                    .displayOrder(request.getParentMenu().getDisplayOrder())
+                    .roles(request.getParentMenu().getRoles())
+                    .isActive(request.getParentMenu().getIsActive())
+                    .build();
+            
+            Menu savedParent = menuRepository.save(parentMenu);
+            log.info("Created parent menu with ID: {}", savedParent.getId());
+            
+            menu.setParent(savedParent);
+        }
+        // If neither is provided, this is a root menu
+        else {
+            log.debug("Creating root menu (no parent)");
         }
 
         // Set allowed users if provided
@@ -224,12 +254,29 @@ public class MenuServiceImpl implements MenuService {
         for (Menu menu : allMenus) {
             boolean shouldHaveAccess = requestedMenuIds.contains(menu.getId());
             boolean currentlyHasAccess = menu.getAllowedUsers().contains(user);
+            boolean currentlyExcluded = menu.getExcludedUsers().contains(user);
 
-            if (shouldHaveAccess && !currentlyHasAccess) {
-                menu.getAllowedUsers().add(user);
+            if (shouldHaveAccess) {
+                // If user should have access:
+                // 1. Add to allowedUsers if not present
+                if (!currentlyHasAccess) {
+                    menu.getAllowedUsers().add(user);
+                }
+                // 2. Remove from excludedUsers if present (to un-ban them)
+                if (currentlyExcluded) {
+                    menu.getExcludedUsers().remove(user);
+                }
                 menuRepository.save(menu);
-            } else if (!shouldHaveAccess && currentlyHasAccess) {
-                menu.getAllowedUsers().remove(user);
+            } else {
+                // If user should NOT have access:
+                // 1. Remove from allowedUsers if present
+                if (currentlyHasAccess) {
+                    menu.getAllowedUsers().remove(user);
+                }
+                // 2. Add to excludedUsers if not present (to explicitly ban them)
+                if (!currentlyExcluded) {
+                    menu.getExcludedUsers().add(user);
+                }
                 menuRepository.save(menu);
             }
         }
@@ -251,7 +298,12 @@ public class MenuServiceImpl implements MenuService {
     }
 
     private boolean isMenuAccessibleToUser(Menu menu, UserEntity user, Set<RoleEnum> userRoles) {
-        // Check user-specific access first
+        // Check explicit exclusion first (BLACK LIST)
+        if (menu.getExcludedUsers().contains(user)) {
+            return false;
+        }
+
+        // Check user-specific access (WHITE LIST)
         if (menu.getAllowedUsers().contains(user)) {
             return true;
         }

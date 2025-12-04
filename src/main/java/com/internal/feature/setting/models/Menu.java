@@ -55,6 +55,15 @@ public class Menu extends BaseEntity {
     @Builder.Default
     private Set<UserEntity> allowedUsers = new HashSet<>();
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "acc_online_menu_excluded_users",
+            joinColumns = @JoinColumn(name = "menu_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    @Builder.Default
+    private Set<UserEntity> excludedUsers = new HashSet<>();
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean isActive = true;

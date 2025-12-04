@@ -29,11 +29,11 @@ public class MenuDataInitializer implements CommandLineRunner {
 
         try {
             // Dashboard
-            Menu dashboard = findOrCreateMenu(MenuConstant.Dashboard.TITLE, MenuConstant.Dashboard.ICON, MenuConstant.Dashboard.HREF, null, MenuConstant.Dashboard.ORDER,
-                    new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.COMPLIANCE, RoleEnum.DEVELOPER)));
+            findOrCreateMenu(MenuConstant.Dashboard.TITLE, MenuConstant.Dashboard.ICON, MenuConstant.Dashboard.HREF, null, MenuConstant.Dashboard.ORDER,
+                    new HashSet<>(Collections.singletonList(RoleEnum.DEVELOPER)));
 
             // Users
-            Menu users = findOrCreateMenu(MenuConstant.Users.TITLE, MenuConstant.Users.ICON, MenuConstant.Users.HREF, null, MenuConstant.Users.ORDER,
+            findOrCreateMenu(MenuConstant.Users.TITLE, MenuConstant.Users.ICON, MenuConstant.Users.HREF, null, MenuConstant.Users.ORDER,
                     new HashSet<>(Arrays.asList(RoleEnum.SUPER, RoleEnum.DEVELOPER)));
 
             // Account parent
