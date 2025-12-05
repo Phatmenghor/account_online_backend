@@ -1,4 +1,4 @@
-package com.internal.config;
+package com.internal.config.init;
 
 import com.internal.enumation.RoleEnum;
 import com.internal.enumation.StatusData;

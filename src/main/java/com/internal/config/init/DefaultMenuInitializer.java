@@ -19,7 +19,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Slf4j
 @Order(100) // Run after DefaultUserInitializer
-public class MenuDataInitializer implements CommandLineRunner {
+public class DefaultMenuInitializer implements CommandLineRunner {
 
     private final MenuRepository menuRepository;
 
