@@ -13,6 +13,7 @@ import com.internal.feature.logs_report.model.AccountOnlineOpenFinalAudit;
 import com.internal.feature.logs_report.repository.AccountOnlineFinalAuditRepository;
 import com.internal.feature.logs_report.repository.AccountOnlineFinalRepository;
 import com.internal.feature.logs_report.service.AccountOnlineOpenFinalService;
+import com.internal.feature.logs_report.service.CustomerImageService;
 import com.internal.feature.logs_report.specification.AccountOnlineFinalSpecification;
 import com.internal.feature.master_data.dto.response.*;
 import com.internal.feature.master_data.service.MasterDataService;
@@ -28,8 +29,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -44,6 +47,7 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
     private final AccountOnlineFinalAuditRepository onlineFinalAuditRepository;
     private final AccountOnlineFinalMapper mapper;
     private final SecurityUtils securityUtils;
+    private final CustomerImageService customerImageService;
 
     @Override
     public AccountOnlineFinal saveFinalLog(
@@ -156,11 +160,11 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                     .build();
 
             accountOnlineFinalRepository.save(finalLog);
-            log.info("âœ… AccountOnlineFinal saved successfully for Legal ID: {}", request.getLegalId());
+            log.info("✔ AccountOnlineFinal saved successfully for Legal ID: {}", request.getLegalId());
             return finalLog;
 
         } catch (Exception e) {
-            log.error("âŒ Failed to save AccountOnlineFinal for Legal ID {}: {}", request.getLegalId(), e.getMessage(), e);
+            log.error("✘ Failed to save AccountOnlineFinal for Legal ID {}: {}", request.getLegalId(), e.getMessage(), e);
             throw new RuntimeException("Failed to save AccountOnlineFinal", e);
         }
     }
@@ -197,9 +201,10 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                     amlStatus.getRejectedBy() != null ? amlStatus.getRejectedBy().getUserRole() : null);
             finalLog.setAmlRemarks(amlStatus.getRemarks());
             accountOnlineFinalRepository.save(finalLog);
-            log.info("âœ… AML updated for Legal ID: {}", amlStatus.getCustomerInfo().getLegalId());
+
+            log.info("✔ AML updated for Legal ID: {}", amlStatus.getCustomerInfo().getLegalId());
         } else {
-            log.warn("âš ï¸ AML update skipped: AccountOnlineFinal not found for Legal ID {}",
+            log.warn("⚠ AML update skipped: AccountOnlineFinal not found for Legal ID {}",
                     amlStatus.getCustomerInfo().getLegalId());
         }
     }
@@ -220,17 +225,30 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
 
         onlineFinalAuditRepository.save(audit);
         log.info("Saved account access audit for CIF: {} and Legal ID: {}", requestDto.getCif(), requestDto.getLegalId());
-        return mapper.toDto(onlineFinal);
-    }
 
-    private String joinRulesTriggered(Object[] rules) {
-        if (rules == null || rules.length == 0) {
-            return null;
+        
+        AccountOnlineFinalResponseDto responseDto = mapper.toDto(onlineFinal);
+
+        // Populate images
+        try {
+            String legalId = onlineFinal.getLegalId();
+            if (legalId != null) {
+                byte[] nidBytes = customerImageService.getNidImageBytes(legalId);
+                if (nidBytes != null) {
+                    responseDto.setNidImage(Base64.getEncoder().encodeToString(nidBytes));
+                }
+
+                byte[] selfieBytes = customerImageService.getSelfieImageBytes(legalId);
+                if (selfieBytes != null) {
+                    responseDto.setSelfieImage(Base64.getEncoder().encodeToString(selfieBytes));
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to load images for Legal ID {}: {}", onlineFinal.getLegalId(), e.getMessage());
+            // Continue without images
         }
-        return java.util.Arrays.stream(rules)
-                .map(Object::toString)
-                .reduce((a, b) -> a + "," + b)
-                .orElse(null);
+
+        return responseDto;
     }
 
     // === Helper methods ===
@@ -239,33 +257,33 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
         try {
             return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         } catch (Exception e) {
-            log.warn("âš ï¸ Could not parse date: {}", dateStr);
+            log.warn("⚠ Could not parse date: {}", dateStr);
             return null;
         }
     }
 
     private ClsProvinceDto safeProvinceLookup(String code) {
         try { return code != null ? masterDataService.getProvinceByCode(code) : null; }
-        catch (Exception e) { log.warn("âš ï¸ Province lookup failed for code {}", code); return null; }
+        catch (Exception e) { log.warn("⚠ Province lookup failed for code {}", code); return null; }
     }
 
     private ClsDistrictDto safeDistrictLookup(String code) {
         try { return code != null ? masterDataService.getDistrictByCode(code) : null; }
-        catch (Exception e) { log.warn("âš ï¸ District lookup failed for code {}", code); return null; }
+        catch (Exception e) { log.warn("⚠ District lookup failed for code {}", code); return null; }
     }
 
     private ClsCommuneDto safeCommuneLookup(String code) {
         try { return code != null ? masterDataService.getCommuneByCode(code) : null; }
-        catch (Exception e) { log.warn("âš ï¸ Commune lookup failed for code {}", code); return null; }
+        catch (Exception e) { log.warn("⚠ Commune lookup failed for code {}", code); return null; }
     }
 
     private ClsVillageDto safeVillageLookup(String code) {
         try { return code != null ? masterDataService.getVillageByCode(code) : null; }
-        catch (Exception e) { log.warn("âš ï¸ Village lookup failed for code {}", code); return null; }
+        catch (Exception e) { log.warn("⚠ Village lookup failed for code {}", code); return null; }
     }
 
     private ClsBranchDto safeBranchLookup(String code) {
         try { return code != null ? masterDataService.getBranchByCode(code) : null; }
-        catch (Exception e) { log.warn("âš ï¸ Branch lookup failed for code {}", code); return null; }
+        catch (Exception e) { log.warn("⚠ Branch lookup failed for code {}", code); return null; }
     }
 }
