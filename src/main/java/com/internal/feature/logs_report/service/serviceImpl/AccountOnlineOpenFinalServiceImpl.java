@@ -229,24 +229,33 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
         
         AccountOnlineFinalResponseDto responseDto = mapper.toDto(onlineFinal);
 
-        // Populate images
+            // Populate images
         try {
             String legalId = onlineFinal.getLegalId();
+            log.info("Attempting to fetch images for Legal ID: {}", legalId);
+            
             if (legalId != null) {
                 byte[] nidBytes = customerImageService.getNidImageBytes(legalId);
                 if (nidBytes != null) {
+                    log.info("Found NID bytes: {} bytes", nidBytes.length);
                     responseDto.setNidImage(Base64.getEncoder().encodeToString(nidBytes));
+                } else {
+                    log.warn("NID bytes are NULL for Legal ID: {}", legalId);
                 }
 
                 byte[] selfieBytes = customerImageService.getSelfieImageBytes(legalId);
                 if (selfieBytes != null) {
+                    log.info("Found Selfie bytes: {} bytes", selfieBytes.length);
                     responseDto.setSelfieImage(Base64.getEncoder().encodeToString(selfieBytes));
+                } else {
+                    log.warn("Selfie bytes are NULL for Legal ID: {}", legalId);
                 }
             }
         } catch (Exception e) {
             log.error("Failed to load images for Legal ID {}: {}", onlineFinal.getLegalId(), e.getMessage());
             // Continue without images
         }
+        // End populate images
 
         return responseDto;
     }

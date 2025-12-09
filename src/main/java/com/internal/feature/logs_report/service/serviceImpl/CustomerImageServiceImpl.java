@@ -117,7 +117,7 @@ public class CustomerImageServiceImpl implements CustomerImageService {
             Path path = Paths.get(uploadDir, "nid", fileName);
 
             if (!Files.exists(path)) {
-                log.warn("NID image not found for customer: {}", customerId);
+                log.warn("NID image not found for customer: {} at path: {}", customerId, path.toAbsolutePath());
                 return null;
             }
 
@@ -161,7 +161,7 @@ public class CustomerImageServiceImpl implements CustomerImageService {
             Path path = Paths.get(uploadDir, "selfie", fileName);
 
             if (!Files.exists(path)) {
-                log.warn("Selfie image not found for customer: {}", customerId);
+                log.warn("Selfie image not found for customer: {} at path: {}", customerId, path.toAbsolutePath());
                 return null;
             }
 
