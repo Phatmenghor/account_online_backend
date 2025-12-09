@@ -195,9 +195,21 @@ public class CustomerImageServiceImpl implements CustomerImageService {
     private void saveBase64ToFile(String base64, String filePath) throws Exception {
         if (base64 == null || base64.isEmpty()) return;
 
+        // 1. Strip metadata if present (e.g., "data:image/jpeg;base64,")
         if (base64.contains(",")) {
-            base64 = base64.split(",")[1];
+            int base64Index = base64.indexOf("base64,");
+            if (base64Index != -1) {
+                base64 = base64.substring(base64Index + 7);
+            } else {
+                // Fallback: take content after the last comma
+                int lastCommaIndex = base64.lastIndexOf(",");
+                base64 = base64.substring(lastCommaIndex + 1);
+            }
         }
+
+        // 2. Sanitize: Remove all characters not in the Base64 alphabet (A-Z, a-z, 0-9, +, /, =)
+        // This handles newlines, spaces, dots (.), etc.
+        base64 = base64.replaceAll("[^A-Za-z0-9+/=]", "");
 
         byte[] decoded = Base64.getDecoder().decode(base64);
         try (FileOutputStream fos = new FileOutputStream(filePath)) {

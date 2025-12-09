@@ -7,6 +7,7 @@ import com.internal.enumation.OpenAccStatusEnum;
 import com.internal.feature.camdx.dto.CamdxValidateNidRequest;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
 import com.internal.feature.telegram_alerts.service.ErrorAlertsCamdxService;
+import com.internal.utils.constants.AppConstants;
 import com.internal.utils.constants.ErrorMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,15 +82,6 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
         }
     }
 
-    private String convertObjectToJson(Object obj) {
-        try {
-            return objectMapper.writeValueAsString(obj);
-        } catch (Exception e) {
-            log.warn("Failed to serialize request to JSON", e);
-            return obj.toString();
-        }
-    }
-
     @Override
     public void sendInfraErrorAlertFromException(CamdxValidateNidRequest request, String rawMessage) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -130,11 +122,11 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
         sb.append("*CAMDX / MIDDLEWARE FAILURE*").append("\n")
                 .append("--------------------").append("\n")
                 .append("Error Code: ").append(errorCode).append("\n")
-                .append("Error Message: ").append(errorMessage).append("\n\n")
+                .append("Error Message: ").append(errorMessage).append(". ").append(AppConstants.SUPPORT_CONTACT).append("\n\n")
                 .append("NID: ").append(nidText).append("\n")
                 .append("--------------------").append("\n")
                 .append("Time: ").append(LocalDateTime.now(ZoneId.of("Asia/Phnom_Penh")).format(formatter)).append("\n")
-                .append("Issue: MOI / CAMDX unreachable or infrastructure failure.");
+                .append("Issue: CAMDX error.");
         return sb;
     }
 

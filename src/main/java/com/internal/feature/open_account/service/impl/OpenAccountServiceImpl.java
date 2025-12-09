@@ -152,7 +152,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             log.error("USD Account: {}", usdAccount);
             log.error("============================================");
 
-            // ⚠️ AML process result used here for logging high-risk or failure
+            // AML process result used here for logging high-risk or failure
             String failureRemark = buildFailureRemark(currentStep, cif, khrAccount, usdAccount, amlProcessResult);
             saveFailureLogs(request, e, currentStep, failureRemark);
 
@@ -217,25 +217,25 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
     private AmlStatusDto processAml(CustomerRequest request) throws Exception {
 
-            // 1ï¸âƒ£ Check for existing AML
+            // Check for existing AML
             Optional<AmlStatus> existingAmlOpt = amlService.findByLegalId(request.getLegalId());
 
             if (existingAmlOpt.isPresent()) {
                 return handleExistingAml(existingAmlOpt.get(), request.getLegalId());
             }
 
-            // 2ï¸âƒ£ Build request and call AML middleware
+            // Build request and call AML middleware
             CustomerAmlRequest amlRequestDto = openAccountAmlStatusMapper.buildAmlRequestDto(request);
             AmlExternalResponseDto amlResponse = callAmlMiddleware(amlRequestDto, request.getLegalId());
 
-            // 3ï¸âƒ£ Build occupation status string
+            // Build occupation status string
             String occupationStatus = buildOccupationStatus(request.getOccupation());
 
-            // 4ï¸âƒ£ Determine AML status based on risk
+            // Determine AML status based on risk
             boolean isHighRisk = AppConstants.HIGH_RISK.equalsIgnoreCase(amlResponse.getRiskLevel());
             AmlStatusEnum amlStatusEnum = isHighRisk ? AmlStatusEnum.PENDING : AmlStatusEnum.APPROVE;
 
-            // 5ï¸âƒ£ Map to CreateAmlRequestDto
+            // Map to CreateAmlRequestDto
             CreateAmlRequestDto createRequest = openAccountAmlStatusMapper.toCreateRequest(
                     amlRequestDto,
                     amlResponse,
@@ -245,13 +245,13 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                     objectMapper
             );
 
-            // 6ï¸âƒ£ Handle high-risk customers
+            // Handle high-risk customers
             if (isHighRisk) {
                 amlService.createAmlStatus(createRequest);
-                sendAmlNotification(amlRequestDto, amlResponse, request); // ⚠️ Keep comment
+                sendAmlNotification(amlRequestDto, amlResponse, request);
             }
 
-            // 7ï¸âƒ£ Low-risk → return mapped DTO
+            // Low-risk → return mapped DTO
             return openAccountAmlStatusMapper.fromRequestAndResponse(request, amlResponse, amlStatusEnum);
     }
 
@@ -285,7 +285,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             log.info(">>> Step 3: VALIDATE_EXISTING_ACCOUNTS skipped for non-UAT profile");
         }
     }
-
 
     private String createCustomerIfNeeded(CustomerRequest request, Map<String, String> customerInfo) {
 
