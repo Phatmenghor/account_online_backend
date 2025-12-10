@@ -39,42 +39,57 @@ public class T24Service {
     }
 
     private Document executeT24Request(String xmlRequest, String operation) {
-        int retryCount = 3;
-        Exception lastException = null;
+        long startTime = System.currentTimeMillis();
+        String url = properties.getT24().getUrl() + "/TWS.CPBOAO/services";
 
-        for (int attempt = 1; attempt <= retryCount; attempt++) {
-            try {
-                String url = properties.getT24().getUrl() + "/TWS.CPBOAO/services";
+        log.info("T24 Request Started | op={} | url={} | payloadSize={} bytes",
+                operation, url, xmlRequest != null ? xmlRequest.length() : 0);
 
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.TEXT_XML);
-                headers.set("SOAPAction", operation);
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.TEXT_XML);
+            headers.set("SOAPAction", operation);
 
-                HttpEntity<String> entity = new HttpEntity<>(xmlRequest, headers);
+            HttpEntity<String> entity = new HttpEntity<>(xmlRequest, headers);
 
-                ResponseEntity<String> response = restTemplate.exchange(
-                        url,
-                        HttpMethod.POST,
-                        entity,
-                        String.class
-                );
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    entity,
+                    String.class
+            );
 
-                Document doc = parseXmlResponse(response.getBody());
+            long duration = System.currentTimeMillis() - startTime;
 
-                if (hasJmsError(doc)) {
-                    log.warn("JMS error detected, attempt {}/{}", attempt, retryCount);
-                    throw new T24ServiceException("T24 JMS error after " + retryCount + " attempts");
-                }
+            String responseBody = response.getBody();
+            int responseSize = responseBody != null ? responseBody.length() : 0;
 
-                return doc;
+            log.info("T24 Response Received | op={} | status={} | responseSize={} bytes | duration={} ms",
+                    operation, response.getStatusCode(), responseSize, duration
+            );
 
-            } catch (Exception e) {
-                lastException = e;
-                log.error("T24 error on attempt {}/{}: {}", attempt, retryCount, e.getMessage());
+            if (responseBody == null || responseBody.isEmpty()) {
+                log.error("T24 Empty Response | op={} | status={}", operation, response.getStatusCode());
+                throw new T24ServiceException("T24 returned an empty response");
             }
-        }
 
-        throw new T24ServiceException("T24 call failed after " + retryCount + " attempts", lastException);
+            Document doc = parseXmlResponse(responseBody);
+
+            if (hasJmsError(doc)) {
+                log.warn("T24 JMS Error Detected | op={}", operation);
+                throw new T24ServiceException("T24 JMS error");
+            }
+
+            return doc;
+
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+
+            log.error("T24 Request Failed | op={} | url={} | duration={} ms | message={}",
+                    operation, url, duration, e.getMessage(), e);
+
+            throw new T24ServiceException("T24 call failed", e);
+        }
     }
 
     private Document parseXmlResponse(String xmlString) throws Exception {

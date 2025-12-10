@@ -59,7 +59,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
 
         } catch (Exception e) {
             log.error("Error while checking CAMDX response for ID {}", idNumber, e);
-            telegramService.sendMarkdownMessage("Error parsing CAMDX response: " + escapeMarkdown(e.getMessage()));
+            telegramService.sendMarkdownAccountOnlineMonitorMessage("Error parsing CAMDX response: " + escapeMarkdown(e.getMessage()));
         }
     }
 
@@ -114,7 +114,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
 
         StringBuilder sb = buildTelegramInfo(request, errorCode, errorMessage, nidText, formatter);
 
-        telegramService.sendMarkdownMessage(sb.toString());
+        telegramService.sendMarkdownAccountOnlineMonitorMessage(sb.toString());
     }
 
     private StringBuilder buildTelegramInfo(CamdxValidateNidRequest request, String errorCode, String errorMessage, String nidText, DateTimeFormatter formatter) {
@@ -160,7 +160,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
         String formattedIncorrect = getFormattedIncorrect(incorrectFields);
         StringBuilder sb = buildTelegramErrorAlertInfo(request, message, score, formattedIncorrect, formatter);
 
-        telegramService.sendMarkdownMessage(sb.toString());
+        telegramService.sendMarkdownAccountOnlineMonitorMessage(sb.toString());
     }
 
     private StringBuilder buildTelegramErrorAlertInfo(CamdxValidateNidRequest request, String message, Double score, String formattedIncorrect, DateTimeFormatter formatter) {

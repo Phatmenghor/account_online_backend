@@ -30,7 +30,7 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
             appendIfNotEmpty(bodyBuilder, "Remark", remarkBuilder != null ? remarkBuilder.toString() : null);
 
             String message = buildStandardMessage("Account Online Error", bodyBuilder.toString(), status.name(), "-");
-            telegramService.sendMarkdownMessage(message);
+            telegramService.sendMarkdownAccountOnlineMonitorMessage(message);
         } catch (Exception e) {
             log.error("Telegram alert sending failed: {}", e.getMessage(), e);
         }
@@ -92,7 +92,7 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
 
         String message = header + "\n" + SEPARATOR + "\n" + bodyBuilder + SEPARATOR + "\n" + footer;
 
-        telegramService.sendMarkdownUATMonitorMessage(message);
+        telegramService.sendMarkdownAccountOnlineMonitorMessage(message);
     }
 
     private String formatDob(String dob) {

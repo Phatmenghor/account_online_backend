@@ -222,8 +222,8 @@ app:
 telegram:
   bot:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
-    chat-id: "-1002740302492"
-    #Push internal dev testing telegram group
+    uat-acl-chat-id: "-1002740302492"
+    #Push uat monitor dev testing telegram group
     uat-monitor-chat-id: "-4886328332"
     enabled: true
 

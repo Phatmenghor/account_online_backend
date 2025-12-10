@@ -77,7 +77,6 @@ public class UserController {
     }
 
     @PostMapping("/change-password")
-    @RequiresRole(value = {"ADMIN", "SUPER", "USER"}, anyRole = true)
     public ResponseEntity<ApiResponse<UserResponseDto>> changePassword(@Valid @RequestBody ChangePasswordRequestDto changePasswordDto) {
         log.info("Password change request for current user");
         UserResponseDto userDto = userService.changePassword(changePasswordDto);
@@ -86,7 +85,6 @@ public class UserController {
     }
 
     @PostMapping("/change-password-by-admin")
-    @RequiresRole(value = {"ADMIN", "SUPER"}, anyRole = true)
     public ResponseEntity<ApiResponse<UserResponseDto>> changePasswordByAdmin(@Valid @RequestBody ChangePasswordByAdminRequestDto changePasswordDto) {
         log.info("Admin password change request for user ID: {}", changePasswordDto.getId());
         UserResponseDto userDto = userService.changePasswordByAdmin(changePasswordDto);
