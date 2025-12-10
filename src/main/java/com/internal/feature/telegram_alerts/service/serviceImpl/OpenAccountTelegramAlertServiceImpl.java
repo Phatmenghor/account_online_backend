@@ -37,6 +37,20 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
     }
 
     @Override
+    public void sendTelegramInternalError(String idNumber, OpenAccStatusEnum status, StringBuilder remarkBuilder) {
+        try {
+            StringBuilder bodyBuilder = new StringBuilder();
+            appendIfNotEmpty(bodyBuilder, "NID", idNumber);
+            appendIfNotEmpty(bodyBuilder, "Remark", remarkBuilder != null ? remarkBuilder.toString() : null);
+
+            String message = buildStandardMessage("Request Failed", bodyBuilder.toString(), status.name(), "-");
+            telegramService.sendMarkdownAclInternalMessage(message);
+        } catch (Exception e) {
+            log.error("Telegram internal alert sending failed: {}", e.getMessage(), e);
+        }
+    }
+
+    @Override
     public void sendTelegramAmlProcess(AmlStatusDto amlDto) {
         if (amlDto == null) {
             log.warn("AML Telegram could not send - dto missing");

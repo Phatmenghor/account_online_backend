@@ -21,18 +21,6 @@ public class AmlMiddlewareService {
     private final ObjectMapper objectMapper;
 
     public AmlExternalResponseDto CheckAml(CustomerAmlRequest requestBody) {
-        // âœ… Dev override from properties
-        if (properties.getAml().isDevForceHighRisk()) {
-            log.info("DEV override: returning HIGH risk for Legal ID {}", requestBody.getCustomerId());
-            return AmlExternalResponseDto.builder()
-                    .riskLevel("High")
-                    .actionTaken("BLOCK")
-                    .totalRulesScore(100)
-                    .trxnID("DEV-TRXN-001")
-                    .rulesTriggered("[\"Rule1\",\"Rule2\"]")
-                    .serviceName("MockService")
-                    .build();
-        }
 
         try {
             String url = properties.getAml().getUrl();

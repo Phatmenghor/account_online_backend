@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class TelegramService {
 
@@ -38,8 +40,9 @@ public class TelegramService {
             HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
 
             restTemplate.postForObject(url, requestEntity, String.class);
+            log.info("Telegram sent to ACL Internal channel.");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to send Telegram to ACL Internal channel: {}", e.getMessage(), e);
         }
     }
 
@@ -58,8 +61,9 @@ public class TelegramService {
             HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
 
             restTemplate.postForObject(url, requestEntity, String.class);
+            log.info("Telegram sent to Monitor channel.");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to send Telegram to Monitor channel: {}", e.getMessage(), e);
         }
     }
 }

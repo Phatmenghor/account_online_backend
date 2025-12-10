@@ -78,13 +78,9 @@ public class AccountOnlineReportLogImpl implements AccountOnlineReportLogService
                 .remark(remarkBuilder.toString())
                 .build();
 
-        //push tele ACL internal
-        try {
-            alertsOpenAccOnlineService.sendTelegramAccountOnlineError(idNumber,status,remarkBuilder);
-        } catch (Exception e) {
-            log.error("Failed to send Telegram notification, but logs was created: {}",
-                    e.getMessage());
-        }
+        // Alerting is now handled by OpenAccountServiceImpl to allow conditional routing (Internal vs Monitor)
+        // and to avoid duplicates.
+        // DO NOT call alertsOpenAccOnlineService here.
 
         repository.save(onlineReportLog);
     }

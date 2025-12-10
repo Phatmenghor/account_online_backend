@@ -23,6 +23,8 @@ import com.internal.feature.open_account.dto.response.CustomerResponse;
 import com.internal.feature.open_account.mapper.OpenAccountAmlStatusMapper;
 import com.internal.feature.open_account.service.OpenAccountService;
 import com.internal.feature.open_account.service.external.*;
+import com.internal.exceptions.error.custom.NidValidationException;
+import com.internal.exceptions.error.custom.ValidateServiceException;
 import com.internal.feature.master_data.dto.response.OccupationDto;
 import com.internal.feature.master_data.service.OccupationService;
 import com.internal.feature.telegram_alerts.service.serviceImpl.OpenAccountTelegramAlertServiceImpl;
@@ -59,6 +61,21 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private final TestProperties isTestMode;
     private final JdbcTemplate jdbcTemplate;
     private final Environment env;
+
+    // ==================================================================================
+    // TESTING CONFIGURATION - TOGGLE THESE FLAGS TO SIMULATE ERRORS
+    // ==================================================================================
+    private static class TestConfig {
+        // Set to TRUE to simulate a CAMDX/NID Validation error (Step 2) -> Should alert Monitor Channel
+        static final boolean SIMULATE_CAMDX_ERROR = false;
+
+        // Set to TRUE to simulate an Internal/T24 error (Step 1) -> Should alert ACL Internal Channel
+        static final boolean SIMULATE_INTERNAL_ERROR = false;
+
+        // Set to TRUE to force AML High Risk result (Step 4) -> Should alert Monitor Channel & Skip Generic Alert
+        static final boolean FORCE_AML_HIGH_RISK = true;
+    }
+    // ==================================================================================
 
     @Override
     @Transactional
@@ -154,7 +171,16 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
             // AML process result used here for logging high-risk or failure
             String failureRemark = buildFailureRemark(currentStep, cif, khrAccount, usdAccount, amlProcessResult);
-            saveFailureLogs(request, e, currentStep, failureRemark);
+
+            boolean skipTelegramAlert = false;
+            // Skip generic alert if AML specific alert was likely sent (High Risk/Reject)
+            if (AppConstants.PROCESS_AML.equals(currentStep)
+                    && amlProcessResult != null
+                    && (AmlStatusEnum.PENDING.equals(amlProcessResult.getStatus()) || AmlStatusEnum.REJECT.equals(amlProcessResult.getStatus()))) {
+                skipTelegramAlert = true;
+            }
+
+            saveFailureLogs(request, e, currentStep, failureRemark, skipTelegramAlert);
 
             throw e;
         }
@@ -172,22 +198,37 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         }
     }
 
-    private void saveFailureLogs(CustomerRequest request, Exception e, String currentStep, String failureRemark) {
+    private void saveFailureLogs(CustomerRequest request, Exception e, String currentStep, String failureRemark, boolean skipTelegramAlert) {
+        OpenAccStatusEnum status = OpenAccStatusEnum.FAILURE;
         if (currentStep.equals(AppConstants.PROCESS_AML)) {
-            reportLogService.createAccountOpeningLog(
-                    request.getLegalId(),
-                    OpenAccStatusEnum.AML,
-                    failureRemark,
-                    e
-            );
-        } else {
-            reportLogService.createAccountOpeningLog(
-                    request.getLegalId(),
-                    OpenAccStatusEnum.FAILURE,
-                    failureRemark,
-                    e
-            );
+            status = OpenAccStatusEnum.AML;
         }
+
+        reportLogService.createAccountOpeningLog(
+                request.getLegalId(),
+                status,
+                failureRemark,
+                e
+        );
+
+        if (skipTelegramAlert) {
+            log.info("Skipping generic Telegram alert for step {} as strictly handled by specific logic.", currentStep);
+            return;
+        }
+
+        StringBuilder remarkBuilder = new StringBuilder(failureRemark);
+        remarkBuilder.append(" | Error: ").append(e.getMessage());
+
+        if (isMonitorAlertStep(currentStep)) {
+            alertTelegramService.sendTelegramAccountOnlineError(request.getLegalId(), status, remarkBuilder);
+        } else {
+            alertTelegramService.sendTelegramInternalError(request.getLegalId(), status, remarkBuilder);
+        }
+    }
+
+    private boolean isMonitorAlertStep(String step) {
+        return AppConstants.PROCESS_AML.equals(step) ||
+                AppConstants.GET_CUSTOMER_INFO.equals(step);
     }
 
     /**
@@ -196,6 +237,13 @@ public class OpenAccountServiceImpl implements OpenAccountService {
      */
     private void testConnection() {
         log.info(">>> Step 1: TEST_CONNECTION");
+
+        // --- TEST PROBE ---
+        if (TestConfig.SIMULATE_INTERNAL_ERROR) {
+            throw new ValidateServiceException("Simulated Internal T24 Connection Error (TEST_CONFIG)");
+        }
+        // ------------------
+
         try {
             jdbcTemplate.queryForObject("SELECT 1", Integer.class);
             log.info("Step 1 SUCCESS: Database connection is healthy");
@@ -210,6 +258,14 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
     private Map<String, String> getCustomerInfo(CustomerRequest request) {
         log.info(">>> Step 2: GET_CUSTOMER_INFO");
+
+        // --- TEST PROBE ---
+        if (TestConfig.SIMULATE_CAMDX_ERROR) {
+            // "500" here mimics the status code from CAMDX, though the exception itself maps to 400 Bad Request
+            throw new NidValidationException(500, "Simulated CAMDX/NID Validation Failure (TEST_CONFIG)");
+        }
+        // ------------------
+
         Map<String, String> customerInfo = validationService.getCustomerInfo(request.getLegalId());
         log.info("Customer info retrieved: {}", customerInfo != null ? "Found" : "Not found");
         return customerInfo;
@@ -233,6 +289,13 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
             // Determine AML status based on risk
             boolean isHighRisk = AppConstants.HIGH_RISK.equalsIgnoreCase(amlResponse.getRiskLevel());
+
+            // --- TEST PROBE ---
+            if (TestConfig.FORCE_AML_HIGH_RISK) {
+                log.warn(">>> FORCING AML HIGH RISK (TEST_CONFIG)");
+                isHighRisk = true;
+            }
+            // ------------------
             AmlStatusEnum amlStatusEnum = isHighRisk ? AmlStatusEnum.PENDING : AmlStatusEnum.APPROVE;
 
             // Map to CreateAmlRequestDto
