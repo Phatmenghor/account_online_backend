@@ -6,7 +6,6 @@ import com.internal.feature.open_account.dto.request.CustomerAmlRequest;
 import com.internal.feature.open_account.dto.response.AmlExternalResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -41,7 +40,7 @@ public class AmlMiddlewareService {
             String rawBody = response.getBody();
             log.info("AML raw response body: {}", rawBody);
 
-            var map = objectMapper.readValue(rawBody, java.util.Map.class);
+            java.util.Map<String, Object> map = objectMapper.readValue(rawBody, java.util.Map.class);
             Object rulesArray = map.get("RulesTriggered");
             String rulesAsString = rulesArray == null ? "" : objectMapper.writeValueAsString(rulesArray);
             map.put("RulesTriggered", rulesAsString);

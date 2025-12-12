@@ -14,11 +14,11 @@ import com.internal.feature.master_data.service.MaritalStatusService;
 import com.internal.feature.master_data.specification.MaritalStatusSpec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -44,7 +44,7 @@ public class MaritalStatusServiceImpl implements MaritalStatusService {
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
         // Build specification dynamically
-        var spec = MaritalStatusSpec.hasStatus(request.getStatus())
+        Specification<MaritalStatus> spec = MaritalStatusSpec.hasStatus(request.getStatus())
                 .and(MaritalStatusSpec.searchByName(request.getSearch()));
 
         Page<MaritalStatus> page = repository.findAll(spec, pageable);
@@ -59,7 +59,7 @@ public class MaritalStatusServiceImpl implements MaritalStatusService {
     @Override
     public List<MaritalStatusDto> getAllPublic(String search) {
         // Build specification dynamically - FORCE ACTIVE STATUS
-        var spec = MaritalStatusSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
+        Specification<MaritalStatus> spec = MaritalStatusSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
                 .and(MaritalStatusSpec.searchByName(search));
 
         List<MaritalStatus> list = repository.findAll(spec);

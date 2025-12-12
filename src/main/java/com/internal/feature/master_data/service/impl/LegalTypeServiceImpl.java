@@ -14,11 +14,11 @@ import com.internal.feature.master_data.service.LegalTypeService;
 import com.internal.feature.master_data.specification.LegalTypeSpec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -42,7 +42,7 @@ public class LegalTypeServiceImpl implements LegalTypeService {
     public AllLegalTypeResponseDto getAllLegalType(GetAllLegalTypeRequest request) {
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        var spec = LegalTypeSpec.hasStatus(request.getStatus())
+        Specification<LegalType> spec = LegalTypeSpec.hasStatus(request.getStatus())
                 .and(LegalTypeSpec.searchByName(request.getSearch()));
 
         Page<LegalType> page = repository.findAll(spec,pageable);
@@ -57,7 +57,7 @@ public class LegalTypeServiceImpl implements LegalTypeService {
     @Override
     public List<LegalTypeDto> getAllLegalTypePublic(String search) {
         // FORCE ACTIVE STATUS
-        var spec = LegalTypeSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
+        Specification<LegalType> spec = LegalTypeSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
                 .and(LegalTypeSpec.searchByName(search));
 
         List<LegalType> list = repository.findAll(spec);

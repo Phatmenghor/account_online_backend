@@ -14,11 +14,11 @@ import com.internal.feature.master_data.service.ReferenceService;
 import com.internal.feature.master_data.specification.ReferenceSpec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -44,7 +44,7 @@ public class ReferenceServiceImpl implements ReferenceService {
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
         // Build specification dynamically
-        var spec = ReferenceSpec.hasStatus(request.getStatus())
+        Specification<Reference> spec = ReferenceSpec.hasStatus(request.getStatus())
                 .and(ReferenceSpec.searchByName(request.getSearch()));
 
         Page<Reference> page = repository.findAll(spec, pageable);
@@ -59,7 +59,7 @@ public class ReferenceServiceImpl implements ReferenceService {
     @Override
     public List<ReferenceDto> getAllPublic(String search) {
         // Build specification dynamically - FORCE ACTIVE STATUS
-        var spec = ReferenceSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
+        Specification<Reference> spec = ReferenceSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
                 .and(ReferenceSpec.searchByName(search));
 
         List<Reference> list = repository.findAll(spec);

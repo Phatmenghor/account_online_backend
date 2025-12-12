@@ -14,11 +14,11 @@ import com.internal.feature.master_data.service.OccupationService;
 import com.internal.feature.master_data.specification.OccupationSpec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -51,7 +51,7 @@ public class OccupationServiceImpl implements OccupationService {
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
         // Build specification dynamically
-        var spec = OccupationSpec.hasStatus(request.getStatus())
+        Specification<Occupation> spec = OccupationSpec.hasStatus(request.getStatus())
                 .and(OccupationSpec.searchByName(request.getSearch()));
 
         Page<Occupation> page = repository.findAll(spec, pageable);
@@ -66,7 +66,7 @@ public class OccupationServiceImpl implements OccupationService {
     @Override
     public List<OccupationDto> getAllOccupationsPublic(String search) {
         // Build specification dynamically - FORCE ACTIVE STATUS
-        var spec = OccupationSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
+        Specification<Occupation> spec = OccupationSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
                 .and(OccupationSpec.searchByName(search));
 
         List<Occupation> occupations = repository.findAll(spec);

@@ -22,11 +22,11 @@ import com.internal.feature.open_account.dto.response.CustomerResponse;
 import com.internal.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -173,7 +173,7 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
     public AllAccountOnlineFinalResponseDto getSuccessOpenAccount(AllAccountOnlineSuccessRequestDto request) {
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        var spec = AccountOnlineFinalSpecification.searchByName(request.getSearch());
+        Specification<AccountOnlineFinal> spec = AccountOnlineFinalSpecification.searchByName(request.getSearch());
 
         Page<AccountOnlineFinal> page = accountOnlineFinalRepository.findAll(spec, pageable);
 

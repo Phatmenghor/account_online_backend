@@ -2,9 +2,9 @@ package com.internal.feature.setting.specification;
 
 import com.internal.enumation.RoleEnum;
 import com.internal.feature.setting.models.Menu;
-import lombok.var;
 import org.springframework.data.jpa.domain.Specification;
 
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 
 public class MenuSpec {
@@ -55,7 +55,7 @@ public class MenuSpec {
             if (userId == null) {
                 return cb.conjunction();
             }
-            var userJoin = root.join("allowedUsers", JoinType.LEFT);
+            Join<Object, Object> userJoin = root.join("allowedUsers", JoinType.LEFT);
             return cb.equal(userJoin.get("id"), userId);
         };
     }

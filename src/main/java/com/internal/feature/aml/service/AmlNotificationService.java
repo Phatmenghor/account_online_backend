@@ -6,7 +6,6 @@ import com.internal.feature.logs_report.service.CustomerImageService;
 import com.internal.feature.mail.service.MailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -87,11 +86,11 @@ public class AmlNotificationService {
             try {
                 String legalId = amlStatus.getCustomerInfo().getLegalId();
                 if (customerImageService.nidImageExists(legalId)) {
-                    var nidRes = customerImageService.getNidImageResourceForEmail(legalId);
+                    Resource nidRes = customerImageService.getNidImageResourceForEmail(legalId);
                     if (nidRes != null) attachments.put("NID_" + legalId + ".jpg", nidRes);
                 }
                 if (customerImageService.selfieImageExists(legalId)) {
-                    var selfieRes = customerImageService.getSelfieImageResourceForEmail(legalId);
+                    Resource selfieRes = customerImageService.getSelfieImageResourceForEmail(legalId);
                     if (selfieRes != null) attachments.put("SELFIE_" + legalId + ".jpg", selfieRes);
                 }
             } catch (Exception e) {
