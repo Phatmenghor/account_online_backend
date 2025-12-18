@@ -68,7 +68,15 @@ public class CamdxServiceImp implements CamdxService {
                 String userMessage = getUserFriendlyMessage(statusCode, rawBody);
                 throw new NidValidationException(statusCode, userMessage);
             }
-            throw ex; // Rethrow if not an HTTP exception
+            
+            // Handle other ValidateServiceExceptions (e.g. empty response, connection error)
+            log.error("NID Validation specific error: {}", ex.getMessage());
+            try {
+                errorCheckService.sendInfraErrorAlertFromException(request, ex.getMessage());
+            } catch (Exception e) {
+                log.error("Failed to send Telegram notification: {}", e.getMessage());
+            }
+            throw new NidValidationException(502, AppConstants.NID_ERROR_SYSTEM);
         } catch (Exception e) {
             log.error("Unexpected error calling NID Validation", e);
 
