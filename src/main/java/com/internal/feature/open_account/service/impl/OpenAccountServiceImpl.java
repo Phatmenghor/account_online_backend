@@ -104,7 +104,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             Map<String, String> customerInfo = getCustomerInfo(request);
 
             // Step 3: validate existing account
-            validateExistingAccounts(customerInfo);
+//            validateExistingAccounts(customerInfo);
 
             // Step 4: Process AML (before account creation)
             currentStep = AppConstants.PROCESS_AML;
@@ -219,7 +219,9 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         StringBuilder remarkBuilder = new StringBuilder(failureRemark);
         remarkBuilder.append(" | Error: ").append(e.getMessage());
 
-        if (isMonitorAlertStep(currentStep)) {
+        boolean isAccountExistsError = e.getMessage() != null && e.getMessage().contains("Account already exists");
+
+        if (isMonitorAlertStep(currentStep) && !isAccountExistsError) {
             alertTelegramService.sendTelegramAccountOnlineError(request.getLegalId(), status, remarkBuilder);
         } else {
             alertTelegramService.sendTelegramInternalError(request.getLegalId(), status, remarkBuilder);
