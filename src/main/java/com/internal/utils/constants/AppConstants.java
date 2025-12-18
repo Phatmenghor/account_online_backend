@@ -71,6 +71,7 @@ public final class AppConstants {
     public static final String MSG_CREATE_ACCOUNT_ERR = "មិនអាចបង្កើតគណនីណាមួយបានទេ។ សូមព្យាយាមម្តងទៀត។";
     public static final String MSG_SUCCESS = "ការស្នើសុំជោគជ័យ។ លោកអ្នកនឹងទទួលបានលេខគណនី តាមសារទូរស័ព្ទ។ សូមភ្ជាប់សេវាធនាគារចល័តដើម្បីរីករាយជាមួយប្រតិបត្តិការដ៏សម្បូរបែប។";
 
+
     // ==================================================================================
     // 6. AML MESSAGES
     // Used in: OpenAccountServiceImpl

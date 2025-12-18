@@ -1,6 +1,7 @@
 package com.internal.feature.open_account.controller;
 
 import com.internal.exceptions.response.ApiResponse;
+import com.internal.utils.constants.AppConstants;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.response.CustomerResponse;
 import com.internal.feature.open_account.service.OpenAccountService;
@@ -31,6 +32,6 @@ public class OpenAccountController {
 
         log.info("Account opening completed - , CIF: {}", response.getCif());
 
-        return ResponseEntity.ok(ApiResponse.success("Account created successfully!", response));
+        return ResponseEntity.ok(ApiResponse.success(AppConstants.MSG_SUCCESS, response));
     }
 }

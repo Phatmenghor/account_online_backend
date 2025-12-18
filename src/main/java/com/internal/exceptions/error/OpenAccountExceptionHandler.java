@@ -30,7 +30,7 @@ public class OpenAccountExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_GATEWAY.value())
-                .message(AppConstants.SYSTEM_ERROR)
+                .message(AppConstants.MSG_DB_CONNECTION_ERR)
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_GATEWAY);
@@ -46,7 +46,7 @@ public class OpenAccountExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.FORBIDDEN.value())
-                .message(AppConstants.ACCOUNT_RISK)
+                .message(AppConstants.MSG_HIGH_RISK_ERR)
                 .details(details)
                 .build();
 
@@ -63,7 +63,7 @@ public class OpenAccountExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.CONFLICT.value())
-                .message(AppConstants.ACCOUNT_ALREADY_EXIST)
+                .message(AppConstants.MSG_ACCOUNT_EXISTS_ERR)
                 .details(details)
                 .build();
 
@@ -77,7 +77,7 @@ public class OpenAccountExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_REQUEST.value())
-                .message(ex.getMessage())         // <-- FIX
+                .message(ex.getMessage())
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -90,7 +90,7 @@ public class OpenAccountExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_GATEWAY.value())
-                .message(AppConstants.SYSTEM_ERROR)
+                .message(AppConstants.MSG_GENERIC_ERROR)
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_GATEWAY);
