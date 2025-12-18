@@ -7,7 +7,7 @@ public class AccountExistsException extends RuntimeException {
     private final String cif;
     
     public AccountExistsException(String cif) {
-        super("Account already exists for CIF: " + cif);
+        super(com.internal.utils.constants.AppConstants.ACCOUNT_ALREADY_EXIST);
         this.cif = cif;
     }
 }

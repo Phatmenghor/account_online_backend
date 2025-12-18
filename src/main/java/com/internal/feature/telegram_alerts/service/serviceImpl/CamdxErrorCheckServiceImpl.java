@@ -189,7 +189,17 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
         if (incorrectFields != null && !incorrectFields.isEmpty()) {
             StringBuilder sbIncorrect = new StringBuilder();
             for (String field : incorrectFields) {
-                sbIncorrect.append("- ").append(field).append("\n");
+                String translatedField = field;
+                if ("lastNameEn".equalsIgnoreCase(field)) {
+                    translatedField = AppConstants.FIELD_KH_LASTNAME_EN;
+                } else if ("firstNameEn".equalsIgnoreCase(field)) {
+                    translatedField = AppConstants.FIELD_KH_FIRSTNAME_EN;
+                } else if ("dob".equalsIgnoreCase(field)) {
+                    translatedField = AppConstants.FIELD_KH_DOB;
+                } else if ("gender".equalsIgnoreCase(field)) {
+                    translatedField = AppConstants.FIELD_KH_GENDER;
+                }
+                sbIncorrect.append("- ").append(translatedField).append("\n");
             }
             return sbIncorrect.toString().trim();
         } else {

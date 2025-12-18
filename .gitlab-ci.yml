@@ -1,0 +1,124 @@
+variables:
+  # =========================================
+  # PROJECT CONFIGURATION
+  # =========================================
+  PROJECT_NAME: "account_online_dev"
+  JAR_NAME: "account_online"
+  APP_PORT: "3939"
+
+  # Database Settings (Should be overridden in GitLab CI/CD Variables for security)
+  DB_HOST: "192.168.103.106"
+  DB_PORT: "5432" 
+  DB_NAME: "account_online_dev"
+  DB_USERNAME: "postgres"
+  # DB_PASSWORD: Defined in GitLab CI/CD Secret Variables
+
+  # Java Settings
+  JAVA_VERSION: "17" # Updated to 17 as per project upgrade
+
+  # Directory Settings
+  UPLOADS_DIR: "uploads"
+  LOGS_DIR: "logs"
+  CUSTOMER_IMAGE_DIR: "/DATA/files/account_online_dev/customer-image"
+
+  # Docker Settings
+  DOCKER_IMAGE_TAG: "1.0"
+  CONTAINER_NAME: "${PROJECT_NAME}_service_container"
+
+  # Maven Settings
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+
+stages:
+  - build
+  - deploy
+
+# Cache downloaded dependencies and plugins between builds.
+cache:
+  paths:
+    - .m2/repository
+
+# =========================================
+# BUILD STAGE
+# =========================================
+build_app:
+  stage: build
+  image: maven:3.8.5-openjdk-17
+  script:
+    - echo "Building application with Maven..."
+    - mvn clean package -DskipTests
+  artifacts:
+    paths:
+      - target/*.jar
+    expire_in: 1 hour
+  only:
+    - development # Matches GIT_BRANCH="development" from script
+
+# =========================================
+# DEPLOY STAGE
+# =========================================
+deploy_local:
+  stage: deploy
+  # This job requires a GitLab Runner with Shell executor installed on the target server
+  # and Docker installed/accessible by the runner user.
+  tags:
+    - shell-runner # Tag to select the specific runner on your deployment server
+  script:
+    - echo "Starting deployment..."
+    
+    # 1. Manage Artifacts
+    - JAR_FILE=$(find target -name "*.jar" -not -name "*-sources.jar" -not -name "*-javadoc.jar" | head -1)
+    - if [ -z "$JAR_FILE" ]; then echo "JAR file not found!"; exit 1; fi
+    - echo "Found JAR: $JAR_FILE"
+    - cp "$JAR_FILE" "${JAR_NAME}.jar"
+
+    # 2. Port Management & Cleanup
+    - echo "Checking for existing container $CONTAINER_NAME..."
+    - >
+      if docker ps -a --format '{{.Names}}' | grep -Eq "^${CONTAINER_NAME}\$"; then
+        echo "Stopping and removing existing container..."
+        docker stop "$CONTAINER_NAME" || true
+        docker rm "$CONTAINER_NAME" || true
+      fi
+
+    # 3. Create Dockerfile (Dynamic creation to match script logic)
+    - echo "Creating Dockerfile..."
+    - |
+      cat > Dockerfile << EOF
+      FROM openjdk:${JAVA_VERSION}
+      RUN mkdir /app
+      ADD ${JAR_NAME}.jar /app/${JAR_NAME}.jar
+      WORKDIR /app
+      EXPOSE ${APP_PORT}
+      ENTRYPOINT ["java","-jar","${JAR_NAME}.jar"]
+      EOF
+
+    # 4. Build Docker Image
+    - echo "Building Docker image..."
+    - docker build --tag="${PROJECT_NAME}:${DOCKER_IMAGE_TAG}" .
+
+    # 5. Setup Directories
+    - mkdir -p "${UPLOADS_DIR}"
+    - mkdir -p "${LOGS_DIR}"
+    - chmod 755 "${LOGS_DIR}"
+    # Ensure external directory exists (may require sudo or pre-creation on host)
+    - mkdir -p "${CUSTOMER_IMAGE_DIR}" || echo "Warning: Could not create ${CUSTOMER_IMAGE_DIR}, assuming it exists or volume mount might fail if not present."
+
+    # 6. Start Application Container
+    - echo "Starting container..."
+    - >
+      docker run 
+      -v "$(pwd)/${UPLOADS_DIR}:/${UPLOADS_DIR}" 
+      -v "$(pwd)/${LOGS_DIR}:/app/logs" 
+      -v "${CUSTOMER_IMAGE_DIR}:/app/customer-images" 
+      -e SPRING_DATASOURCE_URL=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME} 
+      -e SPRING_DATASOURCE_USERNAME=${DB_USERNAME} 
+      -e SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD} 
+      -e SPRING_PROFILES_ACTIVE=dev 
+      -itd -p ${APP_PORT}:${APP_PORT} 
+      --name ${CONTAINER_NAME} 
+      ${PROJECT_NAME}:${DOCKER_IMAGE_TAG}
+
+    - echo "Deployment complete! Application running on port ${APP_PORT}"
+  
+  only:
+    - development

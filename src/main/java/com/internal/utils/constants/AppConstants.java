@@ -2,6 +2,10 @@ package com.internal.utils.constants;
 
 public final class AppConstants {
 
+    // ==================================================================================
+    // 1. ENVIRONMENT & CONFIGURATION
+    // Used in: OtpGenerator, etc.
+    // ==================================================================================
     public static final String ENV_DEVELOPMENT = "development";
     public static final String ENV_PRODUCTION = "production";
     public static final String HIGH_RISK = "High";
@@ -11,56 +15,74 @@ public final class AppConstants {
     public static final int MAX_ATTEMPTS = 3;
     public static final int LOCKOUT_MINUTES = 5;
 
-    // Support contact information
-    public static final String SUPPORT_CONTACT = "Please contact support at 070 200 002 or 1800 200 888 for further assistance.";
+    // ==================================================================================
+    // 2. SUPPORT CONTACT INFORMATION
+    // Used in: Various services to append support info
+    // ==================================================================================
     public static final String SUPPORT_PHONE_PRIMARY = "070 200 002";
     public static final String SUPPORT_PHONE_SECONDARY = "1800 200 888";
+    
+    public static final String SUPPORT_CONTACT = "សូមទំនាក់ទំនងសេវាបម្រើអតិថិជនតាមរយៈលេខ " + SUPPORT_PHONE_PRIMARY + " ឬ " + SUPPORT_PHONE_SECONDARY + " ដើម្បីទទួលបានជំនួយបន្ថែម។";
 
-    // NID Validation Error Messages
-    public static final String NID_ERROR_400 = "Invalid NID information. Please verify your National ID number. " + SUPPORT_CONTACT;
-    public static final String NID_ERROR_401 = "Authentication failed. " + SUPPORT_CONTACT;
-    public static final String NID_ERROR_403 = "Access denied. You don't have permission to validate this NID. " + SUPPORT_CONTACT;
-    public static final String NID_ERROR_404 = "NID validation service not found. " + SUPPORT_CONTACT;
-    public static final String NID_ERROR_408 = "Request timeout. Please try again in a moment. If the issue persists, contact support at "
-            + SUPPORT_PHONE_PRIMARY + " or " + SUPPORT_PHONE_SECONDARY + ".";
-    public static final String NID_ERROR_429 = "Too many validation attempts. Please wait and try again. " + SUPPORT_CONTACT;
-    public static final String NID_ERROR_500 = "Service error occurred. Please try again later or contact support at "
-            + SUPPORT_PHONE_PRIMARY + " or " + SUPPORT_PHONE_SECONDARY + ".";
-    public static final String NID_ERROR_502_503 = "Service temporarily unavailable. Please try again in a few minutes. If the problem continues, contact support at "
-            + SUPPORT_PHONE_PRIMARY + " or " + SUPPORT_PHONE_SECONDARY + ".";
-    public static final String NID_ERROR_504 = "Request timeout. Please try again in a moment. If the issue persists, contact support at "
-            + SUPPORT_PHONE_PRIMARY + " or " + SUPPORT_PHONE_SECONDARY + ".";
-    public static final String NID_ERROR_DEFAULT = "Unable to validate NID at this time. " + SUPPORT_CONTACT;
-    public static final String NID_ERROR_SYSTEM = "System error occurred. Please try again later or contact support at "
-            + SUPPORT_PHONE_PRIMARY + " or " + SUPPORT_PHONE_SECONDARY + ".";
+    // ==================================================================================
+    // 3. NID VALIDATION ERRORS (Generic)
+    // Used in: CamdxServiceImp, internal validations
+    // ==================================================================================
+    public static final String NID_ERROR_400 = "ព័ត៌មានអត្តសញ្ញាណប័ណ្ណមិនត្រឹមត្រូវ។ សូមពិនិត្យមើលលេខអត្តសញ្ញាណប័ណ្ណជាតិរបស់អ្នក។ " + SUPPORT_CONTACT;
+    public static final String NID_ERROR_401 = "ការផ្ទៀងផ្ទាត់មិនបានជោគជ័យ។ " + SUPPORT_CONTACT;
+    public static final String NID_ERROR_403 = "ការចូលប្រើត្រូវបានបដិសេធ។ អ្នកមិនមានសិទ្ធិក្នុងការផ្ទៀងផ្ទាត់អត្តសញ្ញាណប័ណ្ណនេះទេ។ " + SUPPORT_CONTACT;
+    public static final String NID_ERROR_404 = "រកមិនឃើញសេវាកម្មផ្ទៀងផ្ទាត់អត្តសញ្ញាណប័ណ្ណទេ។ " + SUPPORT_CONTACT;
+    public static final String NID_ERROR_408 = "ការស្នើសុំលើសម៉ោងកំណត់។ សូមព្យាយាមម្តងទៀត។ ប្រសិនបើបញ្ហានៅតែបន្ត សូមទំនាក់ទំនងសេវាបម្រើអតិថិជន។";
+    public static final String NID_ERROR_429 = "ការព្យាយាមផ្ទៀងផ្ទាត់ច្រើនដងពេក។ សូមរង់ចាំហើយព្យាយាមម្តងទៀត។ " + SUPPORT_CONTACT;
+    public static final String NID_ERROR_500 = "មានបញ្ហាសេវាកម្ម។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ ឬទំនាក់ទំនងសេវាបម្រើអតិថិជន។";
+    public static final String NID_ERROR_502_503 = "សេវាកម្មមិនដំណើរការជាបណ្តោះអាសន្ន។ សូមព្យាយាមម្តងទៀតក្នុងរយៈពេលពីរបីនាទី។ " + SUPPORT_CONTACT;
+    public static final String NID_ERROR_504 = "ការស្នើសុំលើសម៉ោងកំណត់។ សូមព្យាយាមម្តងទៀត។ " + SUPPORT_CONTACT;
+    public static final String NID_ERROR_DEFAULT = "មិនអាចផ្ទៀងផ្ទាត់អត្តសញ្ញាណប័ណ្ណនៅពេលនេះបានទេ។ " + SUPPORT_CONTACT;
+    public static final String NID_ERROR_SYSTEM = "មានបញ្ហាបច្ចេកទេស។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ ឬទំនាក់ទំនងសេវាបម្រើអតិថិជន។";
 
-    // áŸ„áž€áž¢áŸ’áž“áž€áž˜áž¶áž“áž‚ážŽáž“áž¸áž‡áž¶áž˜áž½áž™áž’áž“áž¶áž‚áž¶ážšážšáž½áž…áž áž¾áž™áŸ” ážŸáž¼áž˜áž”áŸ’ážšáž¾áž”áŸ’ážšáž¶ážŸáŸ‹áž‡áž¶áž˜áž½áž™áž‚ážŽáž“áž¸ážšáž”ážŸáŸ‹áž›áŸ„áž€áž¢áŸ’áž“áž€áŸ”
-    public static final String ACCOUNT_ALREADY_EXIST = "ACCOUNT_ALREADY_EXIST";
-    // áž˜áž¶áž“áž”áž‰áŸ’áž áž¶áž€áŸ’áž“áž»áž„áž€áž¶ážšážáž—áŸ’áž‡áž¶áž”áŸ‹áž‘áŸ…áž€áž¶áž“áŸ‹áž”áŸ’ážšáž–áŸáž“áŸ’áž’ ážŸáž¼áž˜áž–áŸ’áž™áž¶áž™áž¶áž˜áž˜áŸ’ážáž„áž‘áŸ€áž
-    public static final String SYSTEM_ERROR = "SYSTEM_ERROR";
-    // ážŸáŸ†ážŽáž¾ážšáž”ážŸáŸ‹áž¢áŸ’áž“áž€áž˜áž·áž“áž¢áž¶áž…ážŠáŸ†ážŽáž¾ážšáž€áž¶ážšáž”áž¶áž“áž‘áŸ áž–áž¸áž–áŸ’ážšáŸ„áŸ‡áž€áž¶ážšážœáž¶áž™ážáž˜áŸ’áž›áŸƒáž¢ážáž·ážáž·áž‡áž“áž˜áž¶áž“áž€áž¶ážšáž áž¶áž“áž·áž—áŸáž™
-    public static final String ACCOUNT_RISK = "ACCOUNT_RISK";
-    public static final String AML_HIT = "AML_RE";
-    // áž€áž¶ážšážŸáŸ’áž“áž¾ážŸáž»áŸ†ážšáž”ážŸáŸ‹áž›áŸ„áž€áž¢áŸ’áž“áž€áž˜áž·áž“áž¢áž¶áž…ážŠáŸ†ážŽáž¾ážšáž€áž¶ážšáž”áž¶áž“áž‘áŸáŸ” ážŸáž¼áž˜áž–áŸ’áž™áž¶áž™áž¶áž˜áž˜áŸ’ážáž„áž‘áŸ€áž
-    public static final String ACCOUNT_CREATE_FAIL = "ACCOUNT_CREATE_FAIL";
-    public static final String FAIL_CREATE_ANY_ACCOUNT =
-            "Unable to create the account. Please try again later. If the issue continues, contact support at "
-                    + SUPPORT_PHONE_PRIMARY + " or " + SUPPORT_PHONE_SECONDARY + ".";
+    // ==================================================================================
+    // 4. CAMDX SPECIFIC ERRORS (MSG_*)
+    // Used in: CamdxServiceImp
+    // ==================================================================================
+    public static final String MSG_400 = "អត្តសញ្ញាណប័ណ្ណមិនត្រូវបានទទួលស្គាល់ដោយប្រព័ន្ធរបស់យើងទេ។ សូមទាក់ទងផ្នែកគ្រប់គ្រងសម្រាប់ដំណោះស្រាយផ្សេងទៀត។";
+    public static final String MSG_420 = "ការស្នើសុំលើសចំនួនកំណត់។ សូមទាក់ទងក្រុមបច្ចេកទេសដើម្បីទទួលបានជំនួយ។";
+    public static final String MSG_500 = "រកមិនឃើញមុខនៅក្នុងរូបថតរបស់អ្នកទេ។ សូមថតរូបអោយច្បាស់ហើយព្យាយាមម្តងទៀត។";
+    public static final String MSG_501 = "មិនអាចចាប់យកផ្ទៃមុខនៅលើអត្តសញ្ញាណប័ណ្ណបានទេ។ សូមបញ្ចូលរូបភាពអត្តសញ្ញាណប័ណ្ណរបស់អ្នកអោយបានច្បាស់។";
+    public static final String MSG_502 = "មានបញ្ហាបច្ចេកទេស។ សូមពិនិត្យមើលអត្តសញ្ញាណប័ណ្ណរបស់អ្នក ហើយព្យាយាមម្តងទៀតក្នុងរយៈពេលពីរបីនាទី ឬទំនាក់ទំនងសេវាបម្រើអតិថិជន។";
+    public static final String MSG_503 = "បញ្ហានៃការតភ្ជាប់ជាមួយសេវាកម្មផ្ទៀងផ្ទាត់។ សូមព្យាយាមម្តងទៀត។";
+    public static final String MSG_504 = "ការផ្ទៀងផ្ទាត់អត្តសញ្ញាណប័ណ្ណជាមួយ CAMDX បរាជ័យ។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។";
 
-    // AML messages with support contacts
-    public static final String AML_NEED_REVIEW_MSG =
-            "AML check indicates HIGH RISK or PENDING for Legal ID %s. This application requires manual review. " +
-                    SUPPORT_CONTACT;
+    // ==================================================================================
+    // 5. ACCOUNT CREATION & OPEN ACCOUNT ERRORS
+    // Used in: OpenAccountServiceImpl, OpenAcctController (legacy logic)
+    // ==================================================================================
+    public static final String ACCOUNT_ALREADY_EXIST = "ACCOUNT_ALREADY_EXIST"; // ID
+    public static final String SYSTEM_ERROR = "SYSTEM_ERROR"; // ID
+    public static final String ACCOUNT_RISK = "ACCOUNT_RISK"; // ID
+    public static final String AML_HIT = "AML_RE"; // ID
+    public static final String ACCOUNT_CREATE_FAIL = "ACCOUNT_CREATE_FAIL"; // ID
 
-    public static final String AML_REJECTED_MSG =
-            "AML check REJECTED for Legal ID %s. The account cannot be created. " +
-                    SUPPORT_CONTACT;
+    public static final String FAIL_CREATE_ANY_ACCOUNT = "មិនអាចបង្កើតគណនីបានទេ។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។ ប្រសិនបើបញ្ហានៅតែបន្ត សូមទំនាក់ទំនងសេវាបម្រើអតិថិជន។";
+    public static final String MSG_DB_CONNECTION_ERR = "មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ប្រព័ន្ធ សូមព្យាយាមម្តងទៀត";
+    public static final String MSG_HIGH_RISK_ERR = "សំណើរបស់អ្នកមិនអាចដំណើរការបានទេ ពីព្រោះការវាយតម្លៃអតិថិជនមានការហានិភ័យ";
+    public static final String MSG_ACCOUNT_EXISTS_ERR = "លោកអ្នកមានគណនីជាមួយធនាគាររួចហើយ។ សូមប្រើប្រាស់ជាមួយគណនីរបស់លោកអ្នក។";
+    public static final String MSG_CREATE_CUSTOMER_ERR = "ការស្នើសុំរបស់លោកអ្នកមិនអាចដំណើរការបានទេ។ សូមព្យាយាមម្តងទៀត";
+    public static final String MSG_GENERIC_ERROR = "ការស្នើសុំរបស់លោកអ្នកមិនអាចដំណើរការបានទេ។ សូមព្យាយាមម្តងទៀត"; // For 500, 503, 504, 505, 506
+    public static final String MSG_CREATE_ACCOUNT_ERR = "មិនអាចបង្កើតគណនីណាមួយបានទេ។ សូមព្យាយាមម្តងទៀត។";
+    public static final String MSG_SUCCESS = "ការស្នើសុំជោគជ័យ។ លោកអ្នកនឹងទទួលបានលេខគណនី តាមសារទូរស័ព្ទ។ សូមភ្ជាប់សេវាធនាគារចល័តដើម្បីរីករាយជាមួយប្រតិបត្តិការដ៏សម្បូរបែប។";
 
-    public static final String AML_UNKNOWN_MSG =
-            "AML status is UNKNOWN for Legal ID %s. Please try again later or " +
-                    "contact support at " + SUPPORT_PHONE_PRIMARY + " or " + SUPPORT_PHONE_SECONDARY + ".";
+    // ==================================================================================
+    // 6. AML MESSAGES
+    // Used in: OpenAccountServiceImpl
+    // ==================================================================================
+    public static final String AML_NEED_REVIEW_MSG = "ការត្រួតពិនិត្យ AML បង្ហាញថាហានិភ័យខ្ពស់ឬកំពុងរង់ចាំសម្រាប់អត្តសញ្ញាណប័ណ្ណលេខ %s។ ពាក្យស្នើសុំនេះត្រូវការការត្រួតពិនិត្យដោយផ្ទាល់។ " + SUPPORT_CONTACT;
+    public static final String AML_REJECTED_MSG = "ការត្រួតពិនិត្យ AML ត្រូវបានបដិសេធសម្រាប់អត្តសញ្ញាណប័ណ្ណលេខ %s។ គណនីមិនអាចបង្កើតបានទេ។ " + SUPPORT_CONTACT;
+    public static final String AML_UNKNOWN_MSG = "ស្ថានភាព AML មិនស្គាល់សម្រាប់អត្តសញ្ញាណប័ណ្ណលេខ %s។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ ឬទំនាក់ទំនងសេវាបម្រើអតិថិជនតាមរយៈលេខ " + SUPPORT_PHONE_PRIMARY + " ឬ " + SUPPORT_PHONE_SECONDARY + "។";
 
-    //OPEN ACCOUNT STEPS
+    // ==================================================================================
+    // 7. OPEN ACCOUNT WORKFLOW STEPS
+    // Used in: OpenAccountServiceImpl for tracking progress
+    // ==================================================================================
     public static final String TEST_CONNECTION = "TEST_CONNECTION";
     public static final String PROCESS_AML = "PROCESS_AML";
     public static final String GET_CUSTOMER_INFO = "GET_CUSTOMER_INFO";
@@ -71,27 +93,15 @@ public final class AppConstants {
     public static final String ACTIVATE_MOBILE_BANKING = "ACTIVATE_MOBILE_BANKING";
     public static final String SAVE_CUSTOMER_IMAGES = "SAVE_CUSTOMER_IMAGES";
     public static final String SAVE_FINAL_LOG = "SAVE_FINAL_LOG";
-
-    public static final String MSG_400 =
-            "ID card not recognized by our system. Please contact management for alternative verification solution.";
-
-    public static final String MSG_420 =
-            "Request limit exceeded. Please contact technical team for assistance.";
-
-    public static final String MSG_500 =
-            "No face detected in your photo. Please take a clear photo and try again.";
-
-    public static final String MSG_501 =
-            "Unable to detect face on ID card. Please upload a clearer image of your ID.";
-
-    public static final String MSG_502 =
-            "System error occurred. Please check your NID and try again in a few minutes or contact support.";
-
-    public static final String MSG_503 =
-            "Connection issue with verification service. Please try again.";
-
-    public static final String MSG_504 =
-            "NID verification failed with CAMDX provider. Please try again later.";
+    
+    // ==================================================================================
+    // 8. FIELD NAME TRANSLATIONS
+    // Used in: CamdxErrorCheckServiceImpl
+    // ==================================================================================
+    public static final String FIELD_KH_LASTNAME_EN = "នាមត្រកូល (អង់គ្លេស)";
+    public static final String FIELD_KH_FIRSTNAME_EN = "នាមខ្លួន (អង់គ្លេស)";
+    public static final String FIELD_KH_DOB = "ថ្ងៃខែឆ្នាំកំណើត";
+    public static final String FIELD_KH_GENDER = "ភេទ";
 
     private AppConstants() {
         // Prevent instantiation

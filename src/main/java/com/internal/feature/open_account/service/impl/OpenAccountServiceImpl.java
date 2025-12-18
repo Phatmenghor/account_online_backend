@@ -73,7 +73,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         static final boolean SIMULATE_INTERNAL_ERROR = false;
 
         // Set to TRUE to force AML High Risk result (Step 4) -> Should alert Monitor Channel & Skip Generic Alert
-        static final boolean FORCE_AML_HIGH_RISK = true;
+        static final boolean FORCE_AML_HIGH_RISK = false;
     }
     // ==================================================================================
 

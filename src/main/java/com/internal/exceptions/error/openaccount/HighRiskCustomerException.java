@@ -7,7 +7,7 @@ public class HighRiskCustomerException extends RuntimeException {
     private final String rating;
     
     public HighRiskCustomerException(String rating) {
-        super("High-risk customer with rating: " + rating);
+        super(com.internal.utils.constants.AppConstants.ACCOUNT_RISK);
         this.rating = rating;
     }
 }
