@@ -44,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final JWTGenerator jwtGenerator;
     private final AuthMapper authMapper;
     private final UserMapper userMapper;
+    private final com.internal.feature.auth.service.RefreshTokenService refreshTokenService;
 
     @Override
     public AuthResponseDTO login(LoginRequestDto loginDto) {
@@ -72,11 +73,48 @@ public class AuthServiceImpl implements AuthService {
         userEntity.setLastLogin(java.time.LocalDateTime.now(java.time.ZoneId.of("UTC")));
         userRepository.save(userEntity);
 
+        com.internal.feature.auth.models.RefreshToken refreshToken = refreshTokenService.createRefreshToken(loginDto.getUsername());
+
         UserResponseDto userDto = authMapper.userToUserResponseDto(userEntity);
         userDto.setLastLogin(userEntity.getLastLogin());
         log.info("User {} logged in successfully", loginDto.getUsername());
         
-        return new AuthResponseDTO(token, userDto);
+        return new AuthResponseDTO(token, refreshToken.getToken(), userDto);
+    }
+
+    @Override
+    public com.internal.feature.auth.dto.response.TokenRefreshResponseDto refreshToken(com.internal.feature.auth.dto.request.TokenRefreshRequestDto requestDto) {
+        String requestRefreshToken = requestDto.getRefreshToken();
+
+        return refreshTokenService.findByToken(requestRefreshToken)
+                .map(refreshTokenService::verifyExpiration)
+                .map(com.internal.feature.auth.models.RefreshToken::getUser)
+                .map(user -> {
+                    String token = jwtGenerator.generateToken(createAuthentication(user));
+                    return new com.internal.feature.auth.dto.response.TokenRefreshResponseDto(token, requestRefreshToken);
+                })
+                .orElseThrow(() -> new com.internal.exceptions.error.custom.TokenRefreshException(requestRefreshToken,
+                        "Refresh token is not in database!"));
+    }
+
+    private Authentication createAuthentication(UserEntity user) {
+        // Map UserEntity roles to GrantedAuthority
+        List<org.springframework.security.core.GrantedAuthority> authorities = user.getRoles().stream()
+                .map(role -> new org.springframework.security.core.authority.SimpleGrantedAuthority(role.getName().name()))
+                .collect(Collectors.toList());
+
+        return new UsernamePasswordAuthenticationToken(
+            new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), authorities),
+            null,
+            authorities
+        );
+    }
+
+    @Override
+    public void logout(String username) {
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        refreshTokenService.deleteByUser(user);
     }
 
     @Override

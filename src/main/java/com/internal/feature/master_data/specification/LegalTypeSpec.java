@@ -14,6 +14,7 @@ public class LegalTypeSpec {
             if (search == null || search.trim().isEmpty()) {
                 return cb.conjunction();
             }
+
             String likePattern = "%" + search.toLowerCase() + "%";
             return cb.or(
                     cb.like(cb.lower(root.get("nameEn")), likePattern),

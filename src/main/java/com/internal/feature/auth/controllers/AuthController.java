@@ -35,6 +35,19 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Login successful", authResponse));
     }
 
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse<com.internal.feature.auth.dto.response.TokenRefreshResponseDto>> refreshToken(@Valid @RequestBody com.internal.feature.auth.dto.request.TokenRefreshRequestDto requestDto) {
+        return ResponseEntity.ok(ApiResponse.success("Token refreshed successfully", authService.refreshToken(requestDto)));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> logout() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        authService.logout(username); 
+        return ResponseEntity.ok(ApiResponse.success("Log out successful", null));
+    }
+
     @PostMapping("/roles")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAvailableRoles() {
         log.debug("Fetching available roles");
