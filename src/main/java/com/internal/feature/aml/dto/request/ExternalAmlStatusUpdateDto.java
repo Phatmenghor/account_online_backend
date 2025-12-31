@@ -10,8 +10,8 @@ import javax.validation.constraints.NotBlank;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ExternalAmlStatusUpdateDto {
-    @NotBlank(message = "oao (Legal ID) is required")
-    private String oao;
+    @NotBlank(message = "customerId (Legal ID) is required")
+    private String customerId;
     
     private String updateFrom;
 }

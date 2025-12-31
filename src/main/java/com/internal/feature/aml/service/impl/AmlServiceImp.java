@@ -171,7 +171,10 @@ public class AmlServiceImp implements AmlService {
     @Override
     @Transactional
     public void updateExternalAmlStatus(ExternalAmlStatusUpdateDto request) {
-        String legalId = request.getOao();
+        String legalId = request.getCustomerId();
+        if (legalId != null && legalId.toUpperCase().startsWith("OAO")) {
+            legalId = legalId.substring(3); // Remove "OAO" prefix
+        }
         Optional<AmlStatus> amlStatusOpt = amlStatusRepository.findByLegalId(legalId);
         if (amlStatusOpt.isPresent()) {
             AmlStatus amlStatus = amlStatusOpt.get();

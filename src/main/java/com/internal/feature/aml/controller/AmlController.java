@@ -100,7 +100,7 @@ public class AmlController {
             return ResponseEntity.status(401).body(ApiResponse.error("Invalid API Key or Secret Key"));
         }
 
-        log.info("Received external request to update AML status for Legal ID: {}", req.getOao());
+        log.info("Received external request to update AML status for Legal ID: {}", req.getCustomerId());
         service.updateExternalAmlStatus(req);
         
         return ResponseEntity.ok(ApiResponse.success("AML Risk Level Updated to Low", null));
