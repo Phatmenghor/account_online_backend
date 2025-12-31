@@ -8,7 +8,7 @@ server:
 
 spring:
   application:
-    name: account_online_prod
+    name: account_online
   main:
     allow-bean-definition-overriding: true
 

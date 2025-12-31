@@ -1,5 +1,5 @@
 server:
-  port: 3939
+  port: 9393
   servlet:
     context-path: /
   compression:
@@ -36,7 +36,7 @@ spring:
           use_second_level_cache: false
 
   datasource:
-    url: jdbc:postgresql://192.168.103.106:5432/account_online_dev
+    url: jdbc:postgresql://192.168.103.106:5432/account_online
     username: postgres
     password: 123cp!@#
     driver-class-name: org.postgresql.Driver
@@ -183,7 +183,7 @@ test:
 
 aml:
   dashboard:
-    url: http://192.168.103.106:2828/aml-management?pageNo=1
+    url: http://192.168.103.106:8282/aml-management?pageNo=1
   api:
     key: 34acefcd-6e4e-4a81-a553-852b21000c8a
     secret-key: zH9iyS42JWYh4Ol+FeSGsuREwRJmoaDYBbZhgL4lBG0=
@@ -191,11 +191,9 @@ aml:
 # JWT Configuration
 jwt:
   secret:
-    key: f7e8d9c6b5a4938271605f4de3d2c1b0a9f8e7d6c5gb4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a001
-  expiration-min: 15
-  refresh:
-    expiration-days: 30
-  issuer: internal-dev-api
+    key: f7e8d9c6b5a4938271605f4de3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a001
+  expiration-min: 525600
+  issuer: account-online-api
   task:
     execution:
       pool:
@@ -227,8 +225,7 @@ telegram:
   bot:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
     uat-acl-chat-id: "-1002740302492"
-    #Push uat monitor dev testing telegram group
-    uat-monitor-chat-id: "-4886328332"
+    uat-monitor-chat-id: "-1003115792160"
     enabled: true
 
 # Logging
