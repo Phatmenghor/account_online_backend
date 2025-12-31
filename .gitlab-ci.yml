@@ -3,18 +3,20 @@ stages:
   - deploy
 
 variables:
-  IMAGE_NAME: $CI_REGISTRY_IMAGE
+  IMAGE_NAME: uatgit.cambodiapostbank.com:5050/developer/backend/account-online-springboot
   IMAGE_TAG: $CI_COMMIT_SHORT_SHA
 
 build-docker:
   stage: docker
   script:
     - echo "Building Docker image..."
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN uatgit.cambodiapostbank.com:5050
     - ls -lh target/account_online.jar
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:dev-latest
     - docker push $IMAGE_NAME:$IMAGE_TAG
-    - echo "Image pushed successfully!"
+    - docker push $IMAGE_NAME:dev-latest
+    - echo "✅ Image pushed to registry!"
   tags:
     - shell
   only:
@@ -29,12 +31,12 @@ deploy-dev:
     - echo "$SSH_PRIVATE_KEY_DEV" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
     - ssh-keyscan -p 22 $DEV_SERVER >> ~/.ssh/known_hosts
-    - ssh -p 22 $DEV_USER@$DEV_SERVER "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
+    - ssh -p 22 $DEV_USER@$DEV_SERVER "echo $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin uatgit.cambodiapostbank.com:5050"
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker pull $IMAGE_NAME:$IMAGE_TAG"
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker stop account_online || true"
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker rm account_online || true"
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker run -d --name account_online --restart unless-stopped -p 9393:9393 -v /app/customer-image:/app/customer-image $IMAGE_NAME:$IMAGE_TAG"
-    - echo "Deployed to http://$DEV_SERVER:9393"
+    - echo "✅ Deployed to http://$DEV_SERVER:9393"
   environment:
     name: development
   tags:
