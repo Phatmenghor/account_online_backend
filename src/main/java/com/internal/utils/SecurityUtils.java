@@ -27,7 +27,7 @@ public class SecurityUtils {
 
         // Get the (username = Idcard) from the authentication object
         String username = authentication.getName();
-        log.info("Fetching user with id card: {}", username);
+        log.info("Fetching  user with id card: {}", username);
 
         // Fetch the user from the repository
         UserEntity user = userRepository.findByUsername(username)
