@@ -12,28 +12,20 @@ cache:
   paths:
     - .m2/repository
 
-# ========== BUILD SPRING BOOT JAR ==========
 build-jar:
   stage: build
   image: maven:3.8-eclipse-temurin-17
   script:
-    - echo "========================================="
-    - echo "Building Spring Boot Application"
-    - echo "Project account-online-backend"
-    - echo "========================================="
+    - echo "Building Spring Boot Application..."
     - mvn clean package -DskipTests
     - ls -lh target/
-    - echo "Build completed account_online.jar"
   artifacts:
     paths:
       - target/account_online.jar
     expire_in: 1 hour
   tags:
     - docker
-  only:
-    - development
 
-# ========== BUILD DOCKER IMAGE ==========
 build-docker:
   stage: docker
   image: docker:latest
@@ -44,22 +36,14 @@ build-docker:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - echo "========================================="
-    - echo "Building Docker Image"
-    - echo "========================================="
+    - echo "Building Docker image..."
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
-    - docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:dev-latest
-    - echo "Pushing to registry..."
+    - docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:$CI_COMMIT_REF_NAME-latest
     - docker push $IMAGE_NAME:$IMAGE_TAG
-    - docker push $IMAGE_NAME:dev-latest
-    - echo "Image pushed successfully!"
-    - echo "Image $IMAGE_NAME:$IMAGE_TAG"
+    - docker push $IMAGE_NAME:$CI_COMMIT_REF_NAME-latest
   tags:
     - docker
-  only:
-    - development
 
-# ========== DEPLOY TO DEVELOPMENT SERVER ==========
 deploy-dev:
   stage: deploy
   image: alpine:latest
@@ -71,46 +55,13 @@ deploy-dev:
     - chmod 700 ~/.ssh
     - ssh-keyscan -p 22 $DEV_SERVER >> ~/.ssh/known_hosts
   script:
-    - echo "========================================="
-    - echo "Deploying to Development Server"
-    - echo "========================================="
-    - echo "Server $DEV_SERVER"
-    - echo "Port 9393"
-    - echo "Image $IMAGE_NAME:$IMAGE_TAG"
-    - echo ""
-
-    # Login to registry
+    - echo "Deploying to Development Server..."
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
-
-    # Pull new image
-    - echo "Pulling new image..."
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker pull $IMAGE_NAME:$IMAGE_TAG"
-
-    # Stop old container
-    - echo "Stopping old container..."
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker stop account_online || true"
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker rm account_online || true"
-
-    # Start new container
-    - echo "Starting new container..."
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker run -d --name account_online --restart unless-stopped -p 9393:9393 -v /app/customer-image:/app/customer-image $IMAGE_NAME:$IMAGE_TAG"
-
-    # Wait for app to start
-    - sleep 10
-
-    # Check container status
-    - ssh -p 22 $DEV_USER@$DEV_SERVER "docker ps | grep account_online"
-
-    - echo ""
-    - echo "========================================="
-    - echo "Deployment Completed Successfully!"
-    - echo "========================================="
-    - echo "App URL http://$DEV_SERVER:9393"
-    - echo "Swagger http://$DEV_SERVER:9393/swagger-ui.html"
-    - echo "Health http://$DEV_SERVER:9393/actuator/health"
-    - echo ""
-    - echo "Check logs docker logs -f account_online"
-
+    - echo "Deployed to http://$DEV_SERVER:9393"
   environment:
     name: development
     url: http://192.168.103.106:9393
