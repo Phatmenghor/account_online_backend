@@ -184,9 +184,6 @@ test:
 aml:
   dashboard:
     url: http://192.168.103.106:2828/aml-management?pageNo=1
-  api:
-    key:
-    secret-key:
 
 # JWT Configuration
 jwt:
