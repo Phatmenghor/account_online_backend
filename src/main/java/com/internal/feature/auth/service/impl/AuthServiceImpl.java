@@ -2,33 +2,39 @@ package com.internal.feature.auth.service.impl;
 
 import com.internal.enumation.RoleEnum;
 import com.internal.enumation.StatusData;
-import com.internal.exceptions.error.custom.BadRequestException;
-import com.internal.exceptions.error.custom.DuplicateNameException;
-import com.internal.exceptions.error.custom.NotFoundException;
-import com.internal.exceptions.error.custom.UnauthorizedException;
+import com.internal.exceptions.error.custom.*;
 import com.internal.feature.auth.dto.request.LoginRequestDto;
 import com.internal.feature.auth.dto.request.RegisterRequestDto;
+import com.internal.feature.auth.dto.request.TokenRefreshRequestDto;
 import com.internal.feature.auth.dto.request.UpdateUserRequestDto;
 import com.internal.feature.auth.dto.response.AuthResponseDTO;
+import com.internal.feature.auth.dto.response.TokenRefreshResponseDto;
 import com.internal.feature.auth.dto.response.UserResponseDto;
 import com.internal.feature.auth.mapper.AuthMapper;
 import com.internal.feature.auth.mapper.UserMapper;
+import com.internal.feature.auth.models.RefreshToken;
 import com.internal.feature.auth.models.Role;
 import com.internal.feature.auth.models.UserEntity;
 import com.internal.feature.auth.repository.RoleRepository;
 import com.internal.feature.auth.repository.UserRepository;
 import com.internal.feature.auth.security.JWTGenerator;
 import com.internal.feature.auth.service.AuthService;
+import com.internal.feature.auth.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -44,7 +50,7 @@ public class AuthServiceImpl implements AuthService {
     private final JWTGenerator jwtGenerator;
     private final AuthMapper authMapper;
     private final UserMapper userMapper;
-    private final com.internal.feature.auth.service.RefreshTokenService refreshTokenService;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     public AuthResponseDTO login(LoginRequestDto loginDto) {
@@ -70,10 +76,10 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtGenerator.generateToken(authentication);
 
-        userEntity.setLastLogin(java.time.LocalDateTime.now(java.time.ZoneId.of("UTC")));
+        userEntity.setLastLogin(LocalDateTime.now(ZoneId.of("UTC")));
         userRepository.save(userEntity);
 
-        com.internal.feature.auth.models.RefreshToken refreshToken = refreshTokenService.createRefreshToken(loginDto.getUsername());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(loginDto.getUsername());
 
         UserResponseDto userDto = authMapper.userToUserResponseDto(userEntity);
         userDto.setLastLogin(userEntity.getLastLogin());
@@ -83,28 +89,28 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public com.internal.feature.auth.dto.response.TokenRefreshResponseDto refreshToken(com.internal.feature.auth.dto.request.TokenRefreshRequestDto requestDto) {
+    public TokenRefreshResponseDto refreshToken(TokenRefreshRequestDto requestDto) {
         String requestRefreshToken = requestDto.getRefreshToken();
 
         return refreshTokenService.findByToken(requestRefreshToken)
                 .map(refreshTokenService::verifyExpiration)
-                .map(com.internal.feature.auth.models.RefreshToken::getUser)
+                .map(RefreshToken::getUser)
                 .map(user -> {
                     String token = jwtGenerator.generateToken(createAuthentication(user));
-                    return new com.internal.feature.auth.dto.response.TokenRefreshResponseDto(token, requestRefreshToken);
+                    return new TokenRefreshResponseDto(token, requestRefreshToken);
                 })
-                .orElseThrow(() -> new com.internal.exceptions.error.custom.TokenRefreshException(requestRefreshToken,
+                .orElseThrow(() -> new TokenRefreshException(requestRefreshToken,
                         "Refresh token is not in database!"));
     }
 
     private Authentication createAuthentication(UserEntity user) {
         // Map UserEntity roles to GrantedAuthority
-        List<org.springframework.security.core.GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new org.springframework.security.core.authority.SimpleGrantedAuthority(role.getName().name()))
+        List<GrantedAuthority> authorities = user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName().name()))
                 .collect(Collectors.toList());
 
         return new UsernamePasswordAuthenticationToken(
-            new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), authorities),
+            new User(user.getUsername(), user.getPassword(), authorities),
             null,
             authorities
         );

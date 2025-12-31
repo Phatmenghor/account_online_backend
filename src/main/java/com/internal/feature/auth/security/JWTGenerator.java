@@ -116,8 +116,7 @@ public class JWTGenerator {
             return true;
         } catch (Exception ex) {
             log.warn("JWT validation failed: {}", ex.getMessage());
-            throw new AuthenticationCredentialsNotFoundException(
-                    "JWT was expired or incorrect", ex);
+            return false;
         }
     }
 

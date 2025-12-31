@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.internal.feature.aml.dto.request.AllAmlHistoryRequestDto;
 import com.internal.feature.aml.dto.request.AllAmlRequestDto;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
+import com.internal.feature.aml.dto.request.ExternalAmlStatusUpdateDto;
 import com.internal.feature.aml.dto.request.UpdateAmlStatusDto;
 import com.internal.feature.aml.dto.response.AllAmlHistoryResponseDto;
 import com.internal.feature.aml.dto.response.AllAmlResponseDto;
@@ -23,4 +24,6 @@ public interface AmlService {
     AmlHistoryDto getAmlHistoryById(Long id);
 
     AllAmlHistoryResponseDto getAllAmlHistory(AllAmlHistoryRequestDto requestDto);
+
+    void updateExternalAmlStatus(ExternalAmlStatusUpdateDto request);
 }

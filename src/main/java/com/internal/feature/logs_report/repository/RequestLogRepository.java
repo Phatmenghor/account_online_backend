@@ -60,7 +60,7 @@ public interface RequestLogRepository extends JpaRepository<RequestLog, UUID> {
      */
     @Modifying
     @Transactional
-    @Query(value = "DELETE FROM acc_online_audit WHERE created_at < :cutoffDate", nativeQuery = true)
+    @Query(value = "DELETE FROM acc_online_audit WHERE created_at < :cutoffDate AND api_key IS NULL", nativeQuery = true)
     int deleteLogsOlderThan(@Param("cutoffDate") LocalDateTime cutoffDate);
 
     /**

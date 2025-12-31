@@ -4,6 +4,7 @@ import com.internal.feature.logs_report.model.RequestLog;
 import com.internal.feature.logs_report.service.RequestLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,8 @@ import java.util.List;
 public class RequestLoggingFilter extends OncePerRequestFilter {
 
     private final RequestLogService requestLogService;
+
+
 
     // Endpoints to exclude from logging (to reduce noise)
     private static final List<String> EXCLUDED_PATHS = Arrays.asList(
@@ -49,6 +52,8 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             return;
         }
 
+        String apiKey = request.getHeader("X-API-KEY");
+
         long startTime = System.currentTimeMillis();
         ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
         
@@ -63,7 +68,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             long duration = System.currentTimeMillis() - startTime;
             
             // Build and save request log to database
-            RequestLog requestLog = buildRequestLog(request, responseWrapper, duration, caughtException);
+            RequestLog requestLog = buildRequestLog(request, responseWrapper, apiKey, duration, caughtException);
             requestLogService.saveLog(requestLog);
             
             // Copy response body back
@@ -77,6 +82,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
      */
     private RequestLog buildRequestLog(HttpServletRequest request,
                                        ContentCachingResponseWrapper response,
+                                       String apiKey,
                                        long duration,
                                        Exception exception) {
         
@@ -93,6 +99,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
                 // id is auto-generated, don't set it
                 .ipAddress(ipAddress)
                 .username(username)
+                .apiKey(apiKey)
                 .endpoint(endpoint)
                 .method(method)
                 .statusCode(statusCode)

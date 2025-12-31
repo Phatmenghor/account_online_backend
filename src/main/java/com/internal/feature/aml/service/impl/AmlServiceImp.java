@@ -6,6 +6,7 @@ import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.aml.dto.request.AllAmlHistoryRequestDto;
 import com.internal.feature.aml.dto.request.AllAmlRequestDto;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
+import com.internal.feature.aml.dto.request.ExternalAmlStatusUpdateDto;
 import com.internal.feature.aml.dto.request.UpdateAmlStatusDto;
 import com.internal.feature.aml.dto.response.AllAmlHistoryResponseDto;
 import com.internal.feature.aml.dto.response.AllAmlResponseDto;
@@ -164,6 +165,27 @@ public class AmlServiceImp implements AmlService {
                 .collect(Collectors.toList());
 
         return amlHistoryMapper.mapToListDto(content, page);
+    }
+
+    // ------------------------------- UPDATE EXTERNAL AML STATUS -------------------------------
+    @Override
+    @Transactional
+    public void updateExternalAmlStatus(ExternalAmlStatusUpdateDto request) {
+        String legalId = request.getOao();
+        Optional<AmlStatus> amlStatusOpt = amlStatusRepository.findByLegalId(legalId);
+        if (amlStatusOpt.isPresent()) {
+            AmlStatus amlStatus = amlStatusOpt.get();
+            amlStatus.setAmlExternalRiskLevel("Low");
+            amlStatus.setStatus(AmlStatusEnum.APPROVE);
+            if (request.getUpdateFrom() != null) {
+                amlStatus.setAmlExternalServiceName(request.getUpdateFrom());
+            }
+            amlStatusRepository.save(amlStatus);
+            log.info("Successfully updated AML Status Risk Level to Low for Legal ID: {}", legalId);
+        } else {
+            log.warn("Attempted to update AML Status for non-existent Legal ID: {}", legalId);
+            throw new NotFoundException("AML Status not found for Legal ID: " + legalId);
+        }
     }
 
     // ------------------------------- PRIVATE METHODS -------------------------------

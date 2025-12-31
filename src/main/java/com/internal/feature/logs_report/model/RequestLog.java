@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -30,6 +29,9 @@ public class RequestLog {
 
     @Column(name = "method", nullable = false, length = 10)
     private String method;
+
+    @Column(name = "api_key")
+    private String apiKey;
 
     @Column(name = "endpoint", nullable = false, length = 500)
     private String endpoint;

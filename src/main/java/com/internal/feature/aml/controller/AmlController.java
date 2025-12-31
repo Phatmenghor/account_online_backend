@@ -4,12 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.internal.exceptions.response.ApiResponse;
 import com.internal.feature.aml.dto.request.AllAmlHistoryRequestDto;
 import com.internal.feature.aml.dto.request.AllAmlRequestDto;
+import com.internal.feature.aml.dto.request.ExternalAmlStatusUpdateDto;
 import com.internal.feature.aml.dto.request.UpdateAmlStatusDto;
 import com.internal.feature.aml.dto.response.AllAmlHistoryResponseDto;
 import com.internal.feature.aml.dto.response.AllAmlResponseDto;
 import com.internal.feature.aml.dto.response.AmlHistoryDto;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.aml.service.AmlService;
+import com.internal.feature.auth.service.ApiKeyService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -79,5 +81,28 @@ public class AmlController {
         return ResponseEntity.ok(ApiResponse.success(
                 "AML status updated successfully to " + req.getStatus(), updatedStatus
         ));
+    }
+
+
+    /**
+     * Update External AML Status for downstream (OAO/CORE)
+     */
+    private final ApiKeyService apiKeyService;
+
+    @PostMapping("/external/update-status")
+    public ResponseEntity<ApiResponse<String>> updateExternalAmlStatus(
+            @RequestHeader("X-API-KEY") String apiKey,
+            @RequestHeader("X-SECRET-KEY") String secretKey,
+            @RequestBody @Valid ExternalAmlStatusUpdateDto req) {
+
+        if (!apiKeyService.validateKey(apiKey, secretKey)) {
+            log.warn("Authentication failed for external AML update");
+            return ResponseEntity.status(401).body(ApiResponse.error("Invalid API Key or Secret Key"));
+        }
+
+        log.info("Received external request to update AML status for Legal ID: {}", req.getOao());
+        service.updateExternalAmlStatus(req);
+        
+        return ResponseEntity.ok(ApiResponse.success("AML Risk Level Updated to Low", null));
     }
 }
