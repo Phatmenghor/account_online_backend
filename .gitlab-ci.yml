@@ -8,14 +8,15 @@ variables:
 
 build-docker:
   stage: docker
-  image: docker:latest
   script:
+    - echo "Building Docker image..."
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - ls -lh target/account_online.jar
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
     - docker push $IMAGE_NAME:$IMAGE_TAG
+    - echo "Image pushed successfully!"
   tags:
-    - docker
+    - shell
   only:
     - development
 
@@ -32,7 +33,8 @@ deploy-dev:
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker pull $IMAGE_NAME:$IMAGE_TAG"
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker stop account_online || true"
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker rm account_online || true"
-    - ssh -p 22 $DEV_USER@$DEV_SERVER "docker run -d --name account_online -p 9393:9393 -v /app/customer-image:/app/customer-image $IMAGE_NAME:$IMAGE_TAG"
+    - ssh -p 22 $DEV_USER@$DEV_SERVER "docker run -d --name account_online --restart unless-stopped -p 9393:9393 -v /app/customer-image:/app/customer-image $IMAGE_NAME:$IMAGE_TAG"
+    - echo "Deployed to http://$DEV_SERVER:9393"
   environment:
     name: development
   tags:
