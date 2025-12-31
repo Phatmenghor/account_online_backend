@@ -36,7 +36,7 @@ public class SecurityUtils {
                     return new NotFoundException("User with id card " + username + " not found");
             });
 
-        log.info("User with id card {} successfully retrieved", username);
+        log.info("Users with id card {} successfully retrieved", username);
         return user;
     }
 }
