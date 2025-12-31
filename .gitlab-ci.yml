@@ -1,49 +1,36 @@
 stages:
-  - build
   - docker
   - deploy
 
 variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
   IMAGE_TAG: $CI_COMMIT_SHORT_SHA
-  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
 
-cache:
-  paths:
-    - .m2/repository
-
-build-jar:
-  stage: build
-  image: maven:3.8-eclipse-temurin-17
-  script:
-    - echo "Building Spring Boot Application..."
-    - mvn clean package -DskipTests
-    - ls -lh target/
-  artifacts:
-    paths:
-      - target/account_online.jar
-    expire_in: 1 hour
-  tags:
-    - docker
-
+# ========== BUILD DOCKER IMAGE ==========
 build-docker:
   stage: docker
   image: docker:latest
   services:
     - docker:dind
-  dependencies:
-    - build-jar
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - echo "Building Docker image..."
+    - echo "========================================="
+    - echo "Building Docker Image"
+    - echo "========================================="
+    - echo "Using pre-built JAR from target/"
+    - ls -lh target/account_online.jar
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
-    - docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:$CI_COMMIT_REF_NAME-latest
+    - docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:dev-latest
     - docker push $IMAGE_NAME:$IMAGE_TAG
-    - docker push $IMAGE_NAME:$CI_COMMIT_REF_NAME-latest
+    - docker push $IMAGE_NAME:dev-latest
+    - echo "✅ Image pushed!"
   tags:
     - docker
+  only:
+    - development
 
+# ========== DEPLOY TO DEV SERVER ==========
 deploy-dev:
   stage: deploy
   image: alpine:latest
@@ -55,13 +42,16 @@ deploy-dev:
     - chmod 700 ~/.ssh
     - ssh-keyscan -p 22 $DEV_SERVER >> ~/.ssh/known_hosts
   script:
-    - echo "Deploying to Development Server..."
+    - echo "========================================="
+    - echo "Deploying to Development Server"
+    - echo "========================================="
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker pull $IMAGE_NAME:$IMAGE_TAG"
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker stop account_online || true"
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker rm account_online || true"
     - ssh -p 22 $DEV_USER@$DEV_SERVER "docker run -d --name account_online --restart unless-stopped -p 9393:9393 -v /app/customer-image:/app/customer-image $IMAGE_NAME:$IMAGE_TAG"
-    - echo "Deployed to http://$DEV_SERVER:9393"
+    - echo "✅ Deployment completed!"
+    - echo "App URL: http://$DEV_SERVER:9393"
   environment:
     name: development
     url: http://192.168.103.106:9393
