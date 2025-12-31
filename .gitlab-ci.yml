@@ -117,4 +117,4 @@ deploy-dev:
   tags:
     - docker
   only:
-    - development
+    - main
