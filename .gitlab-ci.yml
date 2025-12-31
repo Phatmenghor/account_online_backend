@@ -1,124 +1,120 @@
-variables:
-  # =========================================
-  # PROJECT CONFIGURATION
-  # =========================================
-  PROJECT_NAME: "account_online_dev"
-  JAR_NAME: "account_online"
-  APP_PORT: "3939"
-
-  # Database Settings (Should be overridden in GitLab CI/CD Variables for security)
-  DB_HOST: "192.168.103.106"
-  DB_PORT: "5432" 
-  DB_NAME: "account_online_dev"
-  DB_USERNAME: "postgres"
-  # DB_PASSWORD: Defined in GitLab CI/CD Secret Variables
-
-  # Java Settings
-  JAVA_VERSION: "17" # Updated to 17 as per project upgrade
-
-  # Directory Settings
-  UPLOADS_DIR: "uploads"
-  LOGS_DIR: "logs"
-  CUSTOMER_IMAGE_DIR: "/DATA/files/account_online_dev/customer-image"
-
-  # Docker Settings
-  DOCKER_IMAGE_TAG: "1.0"
-  CONTAINER_NAME: "${PROJECT_NAME}_service_container"
-
-  # Maven Settings
-  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
-
 stages:
   - build
+  - docker
   - deploy
 
-# Cache downloaded dependencies and plugins between builds.
+variables:
+  IMAGE_NAME: $CI_REGISTRY_IMAGE
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
 cache:
   paths:
     - .m2/repository
 
-# =========================================
-# BUILD STAGE
-# =========================================
-build_app:
+# ========== BUILD SPRING BOOT JAR ==========
+build-jar:
   stage: build
-  image: maven:3.8.5-openjdk-17
+  image: maven:3.8-eclipse-temurin-17
   script:
-    - echo "Building application with Maven..."
+    - echo "========================================="
+    - echo "Building Spring Boot Application"
+    - echo "Project account-online-backend"
+    - echo "========================================="
     - mvn clean package -DskipTests
+    - ls -lh target/
+    - echo "Build completed account_online.jar"
   artifacts:
     paths:
-      - target/*.jar
+      - target/account_online.jar
     expire_in: 1 hour
-  only:
-    - development # Matches GIT_BRANCH="development" from script
-
-# =========================================
-# DEPLOY STAGE
-# =========================================
-deploy_local:
-  stage: deploy
-  # This job requires a GitLab Runner with Shell executor installed on the target server
-  # and Docker installed/accessible by the runner user.
   tags:
-    - shell-runner # Tag to select the specific runner on your deployment server
+    - docker
+  only:
+    - development
+
+# ========== BUILD DOCKER IMAGE ==========
+build-docker:
+  stage: docker
+  image: docker:latest
+  services:
+    - docker:dind
+  dependencies:
+    - build-jar
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - echo "Starting deployment..."
-    
-    # 1. Manage Artifacts
-    - JAR_FILE=$(find target -name "*.jar" -not -name "*-sources.jar" -not -name "*-javadoc.jar" | head -1)
-    - if [ -z "$JAR_FILE" ]; then echo "JAR file not found!"; exit 1; fi
-    - echo "Found JAR: $JAR_FILE"
-    - cp "$JAR_FILE" "${JAR_NAME}.jar"
+    - echo "========================================="
+    - echo "Building Docker Image"
+    - echo "========================================="
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:dev-latest
+    - echo "Pushing to registry..."
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+    - docker push $IMAGE_NAME:dev-latest
+    - echo "Image pushed successfully!"
+    - echo "Image $IMAGE_NAME:$IMAGE_TAG"
+  tags:
+    - docker
+  only:
+    - development
 
-    # 2. Port Management & Cleanup
-    - echo "Checking for existing container $CONTAINER_NAME..."
-    - >
-      if docker ps -a --format '{{.Names}}' | grep -Eq "^${CONTAINER_NAME}\$"; then
-        echo "Stopping and removing existing container..."
-        docker stop "$CONTAINER_NAME" || true
-        docker rm "$CONTAINER_NAME" || true
-      fi
+# ========== DEPLOY TO DEVELOPMENT SERVER ==========
+deploy-dev:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - cat "$SSH_PRIVATE_KEY_DEV" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -p 22 $DEV_SERVER >> ~/.ssh/known_hosts
+  script:
+    - echo "========================================="
+    - echo "Deploying to Development Server"
+    - echo "========================================="
+    - echo "Server $DEV_SERVER"
+    - echo "Port 9393"
+    - echo "Image $IMAGE_NAME:$IMAGE_TAG"
+    - echo ""
 
-    # 3. Create Dockerfile (Dynamic creation to match script logic)
-    - echo "Creating Dockerfile..."
-    - |
-      cat > Dockerfile << EOF
-      FROM openjdk:${JAVA_VERSION}
-      RUN mkdir /app
-      ADD ${JAR_NAME}.jar /app/${JAR_NAME}.jar
-      WORKDIR /app
-      EXPOSE ${APP_PORT}
-      ENTRYPOINT ["java","-jar","${JAR_NAME}.jar"]
-      EOF
+    # Login to registry
+    - ssh -p 22 $DEV_USER@$DEV_SERVER "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
 
-    # 4. Build Docker Image
-    - echo "Building Docker image..."
-    - docker build --tag="${PROJECT_NAME}:${DOCKER_IMAGE_TAG}" .
+    # Pull new image
+    - echo "Pulling new image..."
+    - ssh -p 22 $DEV_USER@$DEV_SERVER "docker pull $IMAGE_NAME:$IMAGE_TAG"
 
-    # 5. Setup Directories
-    - mkdir -p "${UPLOADS_DIR}"
-    - mkdir -p "${LOGS_DIR}"
-    - chmod 755 "${LOGS_DIR}"
-    # Ensure external directory exists (may require sudo or pre-creation on host)
-    - mkdir -p "${CUSTOMER_IMAGE_DIR}" || echo "Warning: Could not create ${CUSTOMER_IMAGE_DIR}, assuming it exists or volume mount might fail if not present."
+    # Stop old container
+    - echo "Stopping old container..."
+    - ssh -p 22 $DEV_USER@$DEV_SERVER "docker stop account_online || true"
+    - ssh -p 22 $DEV_USER@$DEV_SERVER "docker rm account_online || true"
 
-    # 6. Start Application Container
-    - echo "Starting container..."
-    - >
-      docker run 
-      -v "$(pwd)/${UPLOADS_DIR}:/${UPLOADS_DIR}" 
-      -v "$(pwd)/${LOGS_DIR}:/app/logs" 
-      -v "${CUSTOMER_IMAGE_DIR}:/app/customer-images" 
-      -e SPRING_DATASOURCE_URL=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME} 
-      -e SPRING_DATASOURCE_USERNAME=${DB_USERNAME} 
-      -e SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD} 
-      -e SPRING_PROFILES_ACTIVE=dev 
-      -itd -p ${APP_PORT}:${APP_PORT} 
-      --name ${CONTAINER_NAME} 
-      ${PROJECT_NAME}:${DOCKER_IMAGE_TAG}
+    # Start new container
+    - echo "Starting new container..."
+    - ssh -p 22 $DEV_USER@$DEV_SERVER "docker run -d --name account_online --restart unless-stopped -p 9393:9393 -v /app/customer-image:/app/customer-image $IMAGE_NAME:$IMAGE_TAG"
 
-    - echo "Deployment complete! Application running on port ${APP_PORT}"
-  
+    # Wait for app to start
+    - sleep 10
+
+    # Check container status
+    - ssh -p 22 $DEV_USER@$DEV_SERVER "docker ps | grep account_online"
+
+    - echo ""
+    - echo "========================================="
+    - echo "Deployment Completed Successfully!"
+    - echo "========================================="
+    - echo "App URL http://$DEV_SERVER:9393"
+    - echo "Swagger http://$DEV_SERVER:9393/swagger-ui.html"
+    - echo "Health http://$DEV_SERVER:9393/actuator/health"
+    - echo ""
+    - echo "Check logs docker logs -f account_online"
+
+  environment:
+    name: development
+    url: http://192.168.103.106:9393
+  tags:
+    - docker
   only:
     - development
