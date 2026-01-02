@@ -57,6 +57,8 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
             CustomerImageUploadResponseDto imagePaths
     ) {
         try {
+            log.info("Attempting to save AccountOnlineFinal for Legal ID: {}", request.getLegalId());
+
             LocalDate dob = parseDate(request.getDateOfBirth());
             LocalDate issueDate = parseDate(request.getLegalIssueDate());
             LocalDate expireDate = parseDate(request.getLegalExpireDate());
@@ -73,7 +75,10 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
             ClsVillageDto pobVillage = safeVillageLookup(request.getCustomerPobVillage());
 
             ClsBranchDto branch = safeBranchLookup(request.getBranchCode());
-            assert branch != null;
+
+            if (branch == null) {
+                log.warn("Branch lookup returned null for code: {}", request.getBranchCode());
+            }
 
             // === Build entity ===
             AccountOnlineFinal finalLog = AccountOnlineFinal.builder()
@@ -106,7 +111,7 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
 
                     // Branch
                     .branchCode(request.getBranchCode())
-                    .branchNameKh(branch.getBranchkh())
+                    .branchNameKh(branch != null ? branch.getBranchkh() : null)
 
                     // Current address
                     .customerProvinceCode(request.getCustomerCurrentProvince())
@@ -159,13 +164,15 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                     .selfieImage(imagePaths != null ? imagePaths.getSelfieImagePath() : request.getSelfieImage())
                     .build();
 
-            accountOnlineFinalRepository.save(finalLog);
+            AccountOnlineFinal savedLog = accountOnlineFinalRepository.save(finalLog);
             log.info("✔ AccountOnlineFinal saved successfully for Legal ID: {}", request.getLegalId());
-            return finalLog;
+            return savedLog;
 
         } catch (Exception e) {
-            log.error("✘ Failed to save AccountOnlineFinal for Legal ID {}: {}", request.getLegalId(), e.getMessage(), e);
-            throw new RuntimeException("Failed to save AccountOnlineFinal", e);
+            log.error("✘ Failed to save AccountOnlineFinal for Legal ID {}: {}",
+                    request.getLegalId(), e.getMessage(), e);
+            // Return null instead of throwing exception - this makes it non-blocking
+            return null;
         }
     }
 
@@ -226,14 +233,14 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
         onlineFinalAuditRepository.save(audit);
         log.info("Saved account access audit for CIF: {} and Legal ID: {}", requestDto.getCif(), requestDto.getLegalId());
 
-        
+
         AccountOnlineFinalResponseDto responseDto = mapper.toDto(onlineFinal);
 
-            // Populate images
+        // Populate images
         try {
             String legalId = onlineFinal.getLegalId();
             log.info("Attempting to fetch images for Legal ID: {}", legalId);
-            
+
             if (legalId != null) {
                 byte[] nidBytes = customerImageService.getNidImageBytes(legalId);
                 if (nidBytes != null) {
