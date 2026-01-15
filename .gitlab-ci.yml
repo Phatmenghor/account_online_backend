@@ -1,11 +1,6 @@
-# ============================================
-# GitLab CI/CD - Simple & Clean Configuration
-# ============================================
-
 variables:
   DOCKER_IMAGE_NAME: "account-online-springboot"
   DOCKER_IMAGE_VERSION: "1.0.0"
-  JAVA_VERSION: "17"
   MAVEN_BUILD_IMAGE: "maven:3.8-eclipse-temurin-17"
   JAVA_RUNTIME_IMAGE: "eclipse-temurin:17-jre-jammy"
   JAR_FILE_NAME: "account_online.jar"
@@ -34,13 +29,13 @@ build:maven:
   artifacts:
     paths:
       - target/*.jar
-    expire_in: 1 day
+    expire_in: 30 days
   tags:
     - docker
 
 docker:build-push:
   stage: docker
-  image: docker:24-dind
+  image: docker:29
   before_script:
     - echo "🔐 Logging into GitLab Container Registry..."
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
@@ -58,12 +53,17 @@ docker:build-push:
       DOCKERFILE
     - echo "📄 Generated Dockerfile:"
     - cat Dockerfile
+    - echo ""
+    - echo "🔨 Building images..."
     - docker build -t ${FULL_IMAGE_NAME}:${DOCKER_IMAGE_VERSION} .
     - docker build -t ${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA} .
     - docker build -t ${FULL_IMAGE_NAME}:latest .
+    - echo ""
+    - echo "⬆️  Pushing to GitLab Container Registry..."
     - docker push ${FULL_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}
     - docker push ${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}
     - docker push ${FULL_IMAGE_NAME}:latest
+    - echo ""
     - echo "✅ Successfully Published!"
   after_script:
     - docker image prune -af --filter "until=24h" || true
