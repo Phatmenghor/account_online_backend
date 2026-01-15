@@ -43,9 +43,9 @@ build:maven:
 
 docker:build-push:
   stage: docker
-  image: docker:latest
+  image: docker:24-dind
   services:
-    - docker:latest
+    - docker:24-dind
   variables:
     DOCKER_TLS_CERTDIR: ${DOCKER_TLS_CERTDIR}
     DOCKER_DRIVER: ${DOCKER_DRIVER}
