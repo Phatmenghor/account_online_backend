@@ -1,42 +1,52 @@
-HELP.md
-target/*
-!target/account_online.jar
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+# Maven
+target/
+.m2/
+*.jar
+*.war
+*.zip
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# IDE - IntelliJ
+.idea/
 *.iml
+*.iws
 *.ipr
+.gradle/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
+# IDE - VS Code
 .vscode/
+*.code-workspace
 
-### Log files ###
-logs/
+# IDE - Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# macOS
+.DS_Store
+
+# Java
+*.class
 *.log
-*.log.*
+*.ctxt
+.mtj.tmp/
+*.jar.asc
 
-#ignore mock image
-mock_images/
+# Environment
+.env
+.env.local
+
+# Generated Docker file (since you create it dynamically in CI/CD)
+Dockerfile
+
+# OS
+Thumbs.db
+.AppleDouble
+.LSOverride
+```
+
+**The "one more" you might be thinking of:**
+
+Looking at your CI/CD, you're generating the `Dockerfile` dynamically in the pipeline, so you should ignore it locally:
+```
+Dockerfile
