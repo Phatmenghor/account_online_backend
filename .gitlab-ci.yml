@@ -1,87 +1,39 @@
 # ============================================
 # GitLab CI/CD - Simple & Clean Configuration
-# Change only what you need at the top!
 # ============================================
 
-# ⚙️ CUSTOMIZE YOUR SETTINGS HERE ⚙️
 variables:
-  # ==========================================
-  # 🐳 DOCKER IMAGE SETTINGS
-  # ==========================================
-  DOCKER_IMAGE_NAME: "account-online-springboot"     # Your Docker image name
-  DOCKER_IMAGE_VERSION: "1.0.0"                      # Your version number
-  
-  # ==========================================
-  # ☕ JAVA SETTINGS
-  # ==========================================
-  JAVA_VERSION: "17"                                 # Java version: 8, 11, 17, 21
-  MAVEN_VERSION: "3.8"                               # Maven version
-  
-  # Auto-generated images (change if needed)
+  DOCKER_IMAGE_NAME: "account-online-springboot"
+  DOCKER_IMAGE_VERSION: "1.0.0"
+  JAVA_VERSION: "17"
+  MAVEN_VERSION: "3.8"
   MAVEN_BUILD_IMAGE: "maven:3.8-eclipse-temurin-17"
   JAVA_RUNTIME_IMAGE: "eclipse-temurin:17-jre-jammy"
-  
-  # ==========================================
-  # 📦 APPLICATION SETTINGS
-  # ==========================================
-  JAR_FILE_NAME: "account_online.jar"                # JAR filename in target/
-  APP_PORT: "9000"                                   # Application port
-  
-  # ==========================================
-  # 🔨 BUILD SETTINGS
-  # ==========================================
+  JAR_FILE_NAME: "account_online.jar"
+  APP_PORT: "9000"
   MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version"
-  
-  # ==========================================
-  # 🎯 DOCKER SETTINGS
-  # ==========================================
   DOCKER_DRIVER: "overlay2"
   DOCKER_TLS_CERTDIR: "/certs"
-  
-  # Full image name (auto-generated)
   FULL_IMAGE_NAME: "$CI_REGISTRY/$CI_PROJECT_NAMESPACE/$DOCKER_IMAGE_NAME"
 
-# ==========================================
-# PIPELINE STAGES
-# ==========================================
 stages:
   - build
   - docker
 
-# ==========================================
-# CACHE MAVEN DEPENDENCIES
-# ==========================================
 cache:
   paths:
     - .m2/repository/
   key: ${CI_COMMIT_REF_SLUG}
 
-# ==========================================
-# STAGE 1: BUILD APPLICATION
-# ==========================================
 build:maven:
   stage: build
   image: ${MAVEN_BUILD_IMAGE}
   script:
-    - echo "============================================"
     - echo "🔨 Building Application"
-    - echo "============================================"
-    - echo "Java Version:    ${JAVA_VERSION}"
-    - echo "Image Name:      ${DOCKER_IMAGE_NAME}"
-    - echo "Image Version:   ${DOCKER_IMAGE_VERSION}"
-    - echo "JAR Output:      ${JAR_FILE_NAME}"
-    - echo "============================================"
-    
-    # Build without tests
     - mvn $MAVEN_CLI_OPTS clean package -DskipTests
-    
-    # Verify JAR created
-    - echo ""
     - echo "✅ Build Complete!"
-    - echo "📦 Generated files:"
     - ls -lh target/*.jar
-
   artifacts:
     paths:
       - target/*.jar
@@ -89,9 +41,6 @@ build:maven:
   tags:
     - docker
 
-# ==========================================
-# STAGE 2: BUILD & PUSH DOCKER IMAGE
-# ==========================================
 docker:build-push:
   stage: docker
   image: docker:24-dind
@@ -104,81 +53,34 @@ docker:build-push:
     - echo "🔐 Logging into GitLab Container Registry..."
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
-    - echo "============================================"
     - echo "🐳 Building Docker Image"
-    - echo "============================================"
-    - echo "Image:           ${FULL_IMAGE_NAME}"
-    - echo "Version:         ${DOCKER_IMAGE_VERSION}"
-    - echo "Commit:          ${CI_COMMIT_SHORT_SHA}"
-    - echo "Port:            ${APP_PORT}"
-    - echo "============================================"
-    
-    # Create Dockerfile dynamically
-    - |
-      cat > Dockerfile << 'EOF'
-      FROM ${JAVA_RUNTIME_IMAGE}
-      WORKDIR /app
-      COPY target/${JAR_FILE_NAME} app.jar
-      RUN useradd -r -u 1001 -g root appuser && chown -R appuser:root /app
-      USER appuser
-      EXPOSE ${APP_PORT}
-      ENTRYPOINT ["java", "-jar", "app.jar"]
-      EOF
-    
-    # Replace variables
-    - sed -i "s|\${JAVA_RUNTIME_IMAGE}|${JAVA_RUNTIME_IMAGE}|g" Dockerfile
-    - sed -i "s|\${JAR_FILE_NAME}|${JAR_FILE_NAME}|g" Dockerfile
-    - sed -i "s|\${APP_PORT}|${APP_PORT}|g" Dockerfile
-
-    - echo ""
-    - echo "📄 Generated Dockerfile:"
-    - cat Dockerfile
-    - echo ""
-    
-    # Build Docker images
-    - echo "🔨 Building images..."
-    - docker build -t ${FULL_IMAGE_NAME}:${DOCKER_IMAGE_VERSION} .
-    - docker build -t ${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA} .
-    - docker build -t ${FULL_IMAGE_NAME}:latest .
-    
-    # Show images
-    - echo ""
-    - echo "📋 Built images:"
-    - docker images | grep ${DOCKER_IMAGE_NAME} || docker images | head -5
-    
-    # Push to registry
-    - echo ""
-    - echo "⬆️  Pushing to GitLab Container Registry..."
-    - docker push ${FULL_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}
-    - docker push ${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}
-    - docker push ${FULL_IMAGE_NAME}:latest
-
-    - echo ""
-    - echo "============================================"
-    - echo "✅ Successfully Published!"
-    - echo "============================================"
-    - echo ""
-    - echo "📦 Your images:"
-    - echo "   🏷️  ${FULL_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
-    - echo "   🏷️  ${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}"
-    - echo "   🏷️  ${FULL_IMAGE_NAME}:latest"
-    - echo ""
-    - echo "🚀 To use:"
-    - echo "   docker login ${CI_REGISTRY}"
-    - echo "   docker pull ${FULL_IMAGE_NAME}:latest"
-    - echo "   docker run -d -p ${APP_PORT}:${APP_PORT} ${FULL_IMAGE_NAME}:latest"
-    - echo ""
-
-  after_script:
-    - echo "🧹 Cleaning up old images..."
-    - docker image prune -af --filter "until=24h" || true
-
-  dependencies:
-    - build:maven
-  tags:
-    - docker
-  only:
-    - master
-    - main
-    - development
-    - tags
+    - mkdir -p dockerfile_temp
+    - cat > dockerfile_temp/Dockerfile << 'DOCKERFILE'
+  FROM ${JAVA_RUNTIME_IMAGE}
+  WORKDIR /app
+  COPY target/${JAR_FILE_NAME} app.jar
+  RUN useradd -r -u 1001 -g root appuser && chown -R appuser:root /app
+  USER appuser
+  EXPOSE ${APP_PORT}
+  ENTRYPOINT ["java", "-jar", "app.jar"]
+  DOCKERFILE
+- cp dockerfile_temp/Dockerfile .
+- cat Dockerfile
+- docker build -t ${FULL_IMAGE_NAME}:${DOCKER_IMAGE_VERSION} .
+- docker build -t ${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA} .
+- docker build -t ${FULL_IMAGE_NAME}:latest .
+- docker push ${FULL_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}
+- docker push ${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}
+- docker push ${FULL_IMAGE_NAME}:latest
+- echo "✅ Successfully Published!"
+after_script:
+  - docker image prune -af --filter "until=24h" || true
+dependencies:
+  - build:maven
+tags:
+  - docker
+only:
+  - master
+  - main
+  - development
+  - tags
