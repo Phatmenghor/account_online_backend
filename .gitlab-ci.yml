@@ -25,7 +25,7 @@ variables:
   # 📦 APPLICATION SETTINGS
   # ==========================================
   JAR_FILE_NAME: "account_online.jar"                # JAR filename in target/
-  APP_PORT: "8080"                                   # Application port
+  APP_PORT: "9000"                                   # Application port
   
   # ==========================================
   # 🔨 BUILD SETTINGS
