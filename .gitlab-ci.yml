@@ -43,6 +43,10 @@ docker:build-push:
     - echo "🐳 Building Docker Image"
     - |
       cat > Dockerfile << 'DOCKERFILE'
+      ARG JAVA_RUNTIME_IMAGE=eclipse-temurin:17-jre-jammy
+      ARG JAR_FILE_NAME=account_online.jar
+      ARG APP_PORT=9000
+      
       FROM ${JAVA_RUNTIME_IMAGE}
       WORKDIR /app
       COPY target/${JAR_FILE_NAME} app.jar
@@ -55,9 +59,9 @@ docker:build-push:
     - cat Dockerfile
     - echo ""
     - echo "🔨 Building images..."
-    - docker build -t ${FULL_IMAGE_NAME}:${DOCKER_IMAGE_VERSION} .
-    - docker build -t ${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA} .
-    - docker build -t ${FULL_IMAGE_NAME}:latest .
+    - docker build --build-arg JAVA_RUNTIME_IMAGE=$JAVA_RUNTIME_IMAGE --build-arg JAR_FILE_NAME=$JAR_FILE_NAME --build-arg APP_PORT=$APP_PORT -t ${FULL_IMAGE_NAME}:${DOCKER_IMAGE_VERSION} .
+    - docker build --build-arg JAVA_RUNTIME_IMAGE=$JAVA_RUNTIME_IMAGE --build-arg JAR_FILE_NAME=$JAR_FILE_NAME --build-arg APP_PORT=$APP_PORT -t ${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA} .
+    - docker build --build-arg JAVA_RUNTIME_IMAGE=$JAVA_RUNTIME_IMAGE --build-arg JAR_FILE_NAME=$JAR_FILE_NAME --build-arg APP_PORT=$APP_PORT -t ${FULL_IMAGE_NAME}:latest .
     - echo ""
     - echo "⬆️  Pushing to GitLab Container Registry..."
     - docker push ${FULL_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}
