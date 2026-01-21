@@ -59,7 +59,6 @@ public final class AppConstants {
     public static final String ACCOUNT_ALREADY_EXIST = "ACCOUNT_ALREADY_EXIST"; // ID
     public static final String SYSTEM_ERROR = "SYSTEM_ERROR"; // ID
     public static final String ACCOUNT_RISK = "ACCOUNT_RISK"; // ID
-    public static final String AML_HIT = "AML_RE"; // ID
     public static final String ACCOUNT_CREATE_FAIL = "ACCOUNT_CREATE_FAIL"; // ID
 
     public static final String FAIL_CREATE_ANY_ACCOUNT = "មិនអាចបង្កើតគណនីបានទេ។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។ ប្រសិនបើបញ្ហានៅតែបន្ត សូមទំនាក់ទំនងសេវាបម្រើអតិថិជន។";
