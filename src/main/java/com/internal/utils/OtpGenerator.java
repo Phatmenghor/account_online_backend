@@ -19,7 +19,7 @@ public class OtpGenerator {
     private final Environment env;
 
     /**
-     * Generate a 6-digit OTP code
+     * Generate a 6-digit OTP codes
      * @return 6-digit OTP string
      */
     public String generate() {

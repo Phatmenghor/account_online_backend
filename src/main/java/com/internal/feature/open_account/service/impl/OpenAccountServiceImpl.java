@@ -36,6 +36,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -104,7 +105,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             Map<String, String> customerInfo = getCustomerInfo(request);
 
             // Step 3: validate existing account
-//            validateExistingAccounts(customerInfo);
+            validateExistingAccounts(customerInfo);
 
             // Step 4: Process AML (before account creation)
             currentStep = AppConstants.PROCESS_AML;
@@ -134,21 +135,17 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             currentStep = AppConstants.ACTIVATE_MOBILE_BANKING;
             activateMobileBanking(request, cif, khrAccount, usdAccount);
 
-            // Step 10: Save customer images (non-blocking)
-            currentStep = AppConstants.SAVE_CUSTOMER_IMAGES;
+            // BUILD RESPONSE BEFORE OPTIONAL LOGGING STEPS
+            CustomerResponse accInfo = openAccountAmlStatusMapper.buildCustomerAccInfo(cif, khrAccount, usdAccount, mnemonic);
+
+            // Step 10: Save customer images (non-blocking, optional)
             CustomerImageUploadResponseDto imagePaths = safeSaveCustomerImages(request);
 
-            // Step 11: Save success log (non-blocking)
-            currentStep = AppConstants.SAVE_FINAL_LOG;
-            CustomerResponse accInfo = openAccountAmlStatusMapper.buildCustomerAccInfo(cif, khrAccount, usdAccount, mnemonic);
+            // Step 11: Save success log (non-blocking, optional)
             safeSaveSuccessLog(request, accInfo, amlProcessResult, imagePaths);
 
-            // Step 12: Report log
-            reportLogService.saveLogReport(
-                    request.getLegalId(),
-                    OpenAccStatusEnum.SUCCESS,
-                    "Open account online Successfully"
-            );
+            // Step 12: Report log (non-blocking, optional)
+            safeReportLog(request.getLegalId());
 
             log.info("========== ACCOUNT OPENING COMPLETED ==========");
             log.info("CIF: {}", cif);
@@ -275,63 +272,67 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
     private AmlStatusDto processAml(CustomerRequest request) throws Exception {
 
-            // Check for existing AML
-            Optional<AmlStatus> existingAmlOpt = amlService.findByLegalId(request.getLegalId());
+        // Check for existing AML
+        Optional<AmlStatus> existingAmlOpt = amlService.findByLegalId(request.getLegalId());
 
-            if (existingAmlOpt.isPresent()) {
-                return handleExistingAml(existingAmlOpt.get(), request.getLegalId());
-            }
+        if (existingAmlOpt.isPresent()) {
+            return handleExistingAml(existingAmlOpt.get(), request.getLegalId());
+        }
 
-            // Build request and call AML middleware
-            CustomerAmlRequest amlRequestDto = openAccountAmlStatusMapper.buildAmlRequestDto(request);
-            AmlExternalResponseDto amlResponse = callAmlMiddleware(amlRequestDto, request.getLegalId());
+        // Build request and call AML middleware
+        CustomerAmlRequest amlRequestDto = openAccountAmlStatusMapper.buildAmlRequestDto(request);
+        AmlExternalResponseDto amlResponse = callAmlMiddleware(amlRequestDto, request.getLegalId());
 
-            // Build occupation status string
-            String occupationStatus = buildOccupationStatus(request.getOccupation());
+        // Build occupation status string
+        String occupationStatus = buildOccupationStatus(request.getOccupation());
 
-            // Determine AML status based on risk
-            boolean isHighRisk = AppConstants.HIGH_RISK.equalsIgnoreCase(amlResponse.getRiskLevel());
+        // Determine AML status based on risk
+        boolean isHighRisk = AppConstants.HIGH_RISK.equalsIgnoreCase(amlResponse.getRiskLevel());
 
-            // --- TEST PROBE ---
-            if (TestConfig.FORCE_AML_HIGH_RISK) {
-                log.warn(">>> FORCING AML HIGH RISK (TEST_CONFIG)");
-                isHighRisk = true;
-            }
-            // ------------------
-            AmlStatusEnum amlStatusEnum = isHighRisk ? AmlStatusEnum.PENDING : AmlStatusEnum.APPROVE;
+        // --- TEST PROBE ---
+        if (TestConfig.FORCE_AML_HIGH_RISK) {
+            log.warn(">>> FORCING AML HIGH RISK (TEST_CONFIG)");
+            isHighRisk = true;
+        }
+        // ------------------
+        AmlStatusEnum amlStatusEnum = isHighRisk ? AmlStatusEnum.PENDING : AmlStatusEnum.APPROVE;
 
-            // Map to CreateAmlRequestDto
-            CreateAmlRequestDto createRequest = openAccountAmlStatusMapper.toCreateRequest(
-                    amlRequestDto,
-                    amlResponse,
-                    request,
-                    occupationStatus,
-                    amlStatusEnum,
-                    objectMapper
-            );
+        // Map to CreateAmlRequestDto
+        CreateAmlRequestDto createRequest = openAccountAmlStatusMapper.toCreateRequest(
+                amlRequestDto,
+                amlResponse,
+                request,
+                occupationStatus,
+                amlStatusEnum,
+                objectMapper
+        );
 
-            // Handle high-risk customers
-            if (isHighRisk) {
-                amlService.createAmlStatus(createRequest);
-                sendAmlNotification(amlRequestDto, amlResponse, request);
-            }
+        // Handle high-risk customers
+        if (isHighRisk) {
+            amlService.createAmlStatus(createRequest);
+            sendAmlNotification(amlRequestDto, amlResponse, request);
+        }
 
-            // Low-risk → return mapped DTO
-            return openAccountAmlStatusMapper.fromRequestAndResponse(request, amlResponse, amlStatusEnum);
+        // Low-risk → return mapped DTO
+        return openAccountAmlStatusMapper.fromRequestAndResponse(request, amlResponse, amlStatusEnum);
     }
 
     private AmlStatusDto handleExistingAml(AmlStatus existing, String legalId) {
         switch (existing.getStatus()) {
-            case APPROVE: return openAccountAmlStatusMapper.toDto(existing);
-            case PENDING: throw new AccountCreationException(
-                    String.format(AppConstants.AML_NEED_REVIEW_MSG, legalId)
-            );
-            case REJECT: throw new AccountCreationException(
-                    String.format(AppConstants.AML_REJECTED_MSG, legalId)
-            );
-            default: throw new AccountCreationException(
-                    String.format(AppConstants.AML_UNKNOWN_MSG, legalId)
-            );
+            case APPROVE:
+                return openAccountAmlStatusMapper.toDto(existing);
+            case PENDING:
+                throw new AccountCreationException(
+                        String.format(AppConstants.AML_NEED_REVIEW_MSG, legalId)
+                );
+            case REJECT:
+                throw new AccountCreationException(
+                        String.format(AppConstants.AML_REJECTED_MSG, legalId)
+                );
+            default:
+                throw new AccountCreationException(
+                        String.format(AppConstants.AML_UNKNOWN_MSG, legalId)
+                );
         }
     }
 
@@ -341,14 +342,9 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     }
 
     private void validateExistingAccounts(Map<String, String> customerInfo) {
-        // Only run in 'uat' profile
-        if (Arrays.asList(env.getActiveProfiles()).contains("uat")) {
-            log.info(">>> Step 3: VALIDATE_EXISTING_ACCOUNTS (UAT profile)");
-            validationService.validateExistingAccounts(customerInfo);
-            log.info("Existing accounts validation passed");
-        } else {
-            log.info(">>> Step 3: VALIDATE_EXISTING_ACCOUNTS skipped for non-UAT profile");
-        }
+        log.info(">>> Step 3: VALIDATE_EXISTING_ACCOUNTS (UAT profile)");
+        validationService.validateExistingAccounts(customerInfo);
+        log.info("Existing accounts validation passed");
     }
 
     private String createCustomerIfNeeded(CustomerRequest request, Map<String, String> customerInfo) {
@@ -418,7 +414,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     }
 
     private CustomerImageUploadResponseDto safeSaveCustomerImages(CustomerRequest request) {
-        log.info(">>> Step 11: SAVE_CUSTOMER_IMAGES");
+        log.info(">>> Step 10: SAVE_CUSTOMER_IMAGES");
         try {
             CustomerFileUploadRequestDto fileRequest = CustomerFileUploadRequestDto.builder()
                     .legal_id(request.getLegalId())
@@ -427,10 +423,10 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                     .build();
 
             CustomerImageUploadResponseDto imagePaths = customerImageService.saveCustomerImages(fileRequest);
-            log.info("Step 11 SUCCESS: Images saved");
+            log.info("Step 10 SUCCESS: Images saved");
             return imagePaths;
         } catch (Exception e) {
-            log.warn("Step 11 WARNING: Failed to save images (non-critical): {}", e.getMessage());
+            log.warn("Step 10 WARNING: Failed to save images (non-critical): {}", e.getMessage());
             return null;
         }
     }
@@ -441,12 +437,26 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             AmlStatusDto amlStatusResponseDto,
             CustomerImageUploadResponseDto imagePaths
     ) {
-        log.info(">>> Step 12: SAVE_SUCCESS_LOG");
+        log.info(">>> Step 11: SAVE_SUCCESS_LOG");
         try {
             accountOnlineOpenSuccessService.saveFinalLog(request, accountInfo, amlStatusResponseDto, imagePaths);
-            log.info("Step 12 SUCCESS: Success log saved");
+            log.info("Step 11 SUCCESS: Success log saved");
         } catch (Exception e) {
-            log.warn("Step 12 WARNING: Failed to save success log (non-critical): {}", e.getMessage());
+            log.warn("Step 11 WARNING: Failed to save success log (non-critical): {}", e.getMessage());
+        }
+    }
+
+    private void safeReportLog(String legalId) {
+        log.info(">>> Step 12: SAVE_REPORT_LOG");
+        try {
+            reportLogService.saveLogReport(
+                    legalId,
+                    OpenAccStatusEnum.SUCCESS,
+                    "Open account online Successfully"
+            );
+            log.info("Step 12 SUCCESS: Report log saved");
+        } catch (Exception e) {
+            log.warn("Step 12 WARNING: Failed to save report log (non-critical): {}", e.getMessage());
         }
     }
 
@@ -546,7 +556,11 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     }
 
     private OccupationDto safeOccupationLookup(String code) {
-        try { return code != null ? occupationService.getOccupationByCode(code) : null; }
-        catch (Exception e) { log.warn("⚠️ Occupation lookup failed for code {}", code); return null; }
+        try {
+            return code != null ? occupationService.getOccupationByCode(code) : null;
+        } catch (Exception e) {
+            log.warn("⚠️ Occupation lookup failed for code {}", code);
+            return null;
+        }
     }
 }

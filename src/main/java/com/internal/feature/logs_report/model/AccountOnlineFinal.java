@@ -35,7 +35,7 @@ public class AccountOnlineFinal extends BaseNoIdEntity {
     private String mnemonic;
 
     // === LEGAL / NID INFO ===
-    @Column(name = "legal_id", nullable = false, unique = true)
+    @Column(name = "legal_id", nullable = false)
     private String legalId;
 
     @Column(name = "legal_doc_name")

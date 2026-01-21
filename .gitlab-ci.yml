@@ -1,124 +1,82 @@
 variables:
-  # =========================================
-  # PROJECT CONFIGURATION
-  # =========================================
-  PROJECT_NAME: "account_online_dev"
-  JAR_NAME: "account_online"
-  APP_PORT: "3939"
-
-  # Database Settings (Should be overridden in GitLab CI/CD Variables for security)
-  DB_HOST: "192.168.103.106"
-  DB_PORT: "5432" 
-  DB_NAME: "account_online_dev"
-  DB_USERNAME: "postgres"
-  # DB_PASSWORD: Defined in GitLab CI/CD Secret Variables
-
-  # Java Settings
-  JAVA_VERSION: "17" # Updated to 17 as per project upgrade
-
-  # Directory Settings
-  UPLOADS_DIR: "uploads"
-  LOGS_DIR: "logs"
-  CUSTOMER_IMAGE_DIR: "/DATA/files/account_online_dev/customer-image"
-
-  # Docker Settings
-  DOCKER_IMAGE_TAG: "1.0"
-  CONTAINER_NAME: "${PROJECT_NAME}_service_container"
-
-  # Maven Settings
-  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  DOCKER_IMAGE_NAME: "account-online-springboot"
+  DOCKER_IMAGE_VERSION: "1.0.0"
+  MAVEN_BUILD_IMAGE: "maven:3.8-eclipse-temurin-17"
+  JAVA_RUNTIME_IMAGE: "eclipse-temurin:17-jre-jammy"
+  JAR_FILE_NAME: "account_online.jar"
+  APP_PORT: "9000"
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version"
+  FULL_IMAGE_NAME: "$CI_REGISTRY/$CI_PROJECT_NAMESPACE/$DOCKER_IMAGE_NAME"
 
 stages:
   - build
-  - deploy
+  - docker
 
-# Cache downloaded dependencies and plugins between builds.
 cache:
   paths:
-    - .m2/repository
+    - .m2/repository/
+  key: ${CI_COMMIT_REF_SLUG}
 
-# =========================================
-# BUILD STAGE
-# =========================================
-build_app:
+build:maven:
   stage: build
-  image: maven:3.8.5-openjdk-17
+  image: ${MAVEN_BUILD_IMAGE}
   script:
-    - echo "Building application with Maven..."
-    - mvn clean package -DskipTests
+    - echo "🔨 Building Application"
+    - mvn $MAVEN_CLI_OPTS clean package -DskipTests
+    - echo "✅ Build Complete!"
+    - ls -lh target/*.jar
   artifacts:
     paths:
       - target/*.jar
-    expire_in: 1 hour
-  only:
-    - development # Matches GIT_BRANCH="development" from script
-
-# =========================================
-# DEPLOY STAGE
-# =========================================
-deploy_local:
-  stage: deploy
-  # This job requires a GitLab Runner with Shell executor installed on the target server
-  # and Docker installed/accessible by the runner user.
+    expire_in: 30 days
   tags:
-    - shell-runner # Tag to select the specific runner on your deployment server
+    - docker
+
+docker:build-push:
+  stage: docker
+  image: docker:29
+  before_script:
+    - echo "🔐 Logging into GitLab Container Registry..."
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
-    - echo "Starting deployment..."
-    
-    # 1. Manage Artifacts
-    - JAR_FILE=$(find target -name "*.jar" -not -name "*-sources.jar" -not -name "*-javadoc.jar" | head -1)
-    - if [ -z "$JAR_FILE" ]; then echo "JAR file not found!"; exit 1; fi
-    - echo "Found JAR: $JAR_FILE"
-    - cp "$JAR_FILE" "${JAR_NAME}.jar"
-
-    # 2. Port Management & Cleanup
-    - echo "Checking for existing container $CONTAINER_NAME..."
-    - >
-      if docker ps -a --format '{{.Names}}' | grep -Eq "^${CONTAINER_NAME}\$"; then
-        echo "Stopping and removing existing container..."
-        docker stop "$CONTAINER_NAME" || true
-        docker rm "$CONTAINER_NAME" || true
-      fi
-
-    # 3. Create Dockerfile (Dynamic creation to match script logic)
-    - echo "Creating Dockerfile..."
+    - echo "🐳 Building Docker Image"
     - |
-      cat > Dockerfile << EOF
-      FROM openjdk:${JAVA_VERSION}
-      RUN mkdir /app
-      ADD ${JAR_NAME}.jar /app/${JAR_NAME}.jar
+      cat > Dockerfile << 'DOCKERFILE'
+      ARG JAVA_RUNTIME_IMAGE=eclipse-temurin:17-jre-jammy
+      ARG JAR_FILE_NAME=account_online.jar
+      ARG APP_PORT=9000
+      
+      FROM ${JAVA_RUNTIME_IMAGE}
       WORKDIR /app
+      COPY target/${JAR_FILE_NAME} app.jar
+      RUN useradd -r -u 1001 -g root appuser && chown -R appuser:root /app
+      USER appuser
       EXPOSE ${APP_PORT}
-      ENTRYPOINT ["java","-jar","${JAR_NAME}.jar"]
-      EOF
-
-    # 4. Build Docker Image
-    - echo "Building Docker image..."
-    - docker build --tag="${PROJECT_NAME}:${DOCKER_IMAGE_TAG}" .
-
-    # 5. Setup Directories
-    - mkdir -p "${UPLOADS_DIR}"
-    - mkdir -p "${LOGS_DIR}"
-    - chmod 755 "${LOGS_DIR}"
-    # Ensure external directory exists (may require sudo or pre-creation on host)
-    - mkdir -p "${CUSTOMER_IMAGE_DIR}" || echo "Warning: Could not create ${CUSTOMER_IMAGE_DIR}, assuming it exists or volume mount might fail if not present."
-
-    # 6. Start Application Container
-    - echo "Starting container..."
-    - >
-      docker run 
-      -v "$(pwd)/${UPLOADS_DIR}:/${UPLOADS_DIR}" 
-      -v "$(pwd)/${LOGS_DIR}:/app/logs" 
-      -v "${CUSTOMER_IMAGE_DIR}:/app/customer-images" 
-      -e SPRING_DATASOURCE_URL=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME} 
-      -e SPRING_DATASOURCE_USERNAME=${DB_USERNAME} 
-      -e SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD} 
-      -e SPRING_PROFILES_ACTIVE=dev 
-      -itd -p ${APP_PORT}:${APP_PORT} 
-      --name ${CONTAINER_NAME} 
-      ${PROJECT_NAME}:${DOCKER_IMAGE_TAG}
-
-    - echo "Deployment complete! Application running on port ${APP_PORT}"
-  
+      ENTRYPOINT ["java", "-jar", "app.jar"]
+      DOCKERFILE
+    - echo "📄 Generated Dockerfile:"
+    - cat Dockerfile
+    - echo ""
+    - echo "🔨 Building images..."
+    - docker build --build-arg JAVA_RUNTIME_IMAGE=$JAVA_RUNTIME_IMAGE --build-arg JAR_FILE_NAME=$JAR_FILE_NAME --build-arg APP_PORT=$APP_PORT -t ${FULL_IMAGE_NAME}:${DOCKER_IMAGE_VERSION} .
+    - docker build --build-arg JAVA_RUNTIME_IMAGE=$JAVA_RUNTIME_IMAGE --build-arg JAR_FILE_NAME=$JAR_FILE_NAME --build-arg APP_PORT=$APP_PORT -t ${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA} .
+    - docker build --build-arg JAVA_RUNTIME_IMAGE=$JAVA_RUNTIME_IMAGE --build-arg JAR_FILE_NAME=$JAR_FILE_NAME --build-arg APP_PORT=$APP_PORT -t ${FULL_IMAGE_NAME}:latest .
+    - echo ""
+    - echo "⬆️  Pushing to GitLab Container Registry..."
+    - docker push ${FULL_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}
+    - docker push ${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}
+    - docker push ${FULL_IMAGE_NAME}:latest
+    - echo ""
+    - echo "✅ Successfully Published!"
+  after_script:
+    - docker image prune -af --filter "until=24h" || true
+  dependencies:
+    - build:maven
+  tags:
+    - docker
   only:
+    - master
+    - main
     - development
+    - tags
