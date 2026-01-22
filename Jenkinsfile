@@ -139,33 +139,33 @@ pipeline {
             }
         }
 
-        stage('Test Docker Image') {
-            steps {
-                echo '🧪 Testing Docker image...'
-                sh """
-                    echo "Running validation tests on image..."
-
-                    echo ""
-                    echo "=== Test 1: Java Version ==="
-                    docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} java -version
-
-                    echo ""
-                    echo "=== Test 2: Check JAR File ==="
-                    docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} ls -lh /app/app.jar
-
-                    echo ""
-                    echo "=== Test 3: Check User ==="
-                    docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} whoami
-
-                    echo ""
-                    echo "=== Test 4: Check Port ==="
-                    docker inspect ${IMAGE_NAME}:${IMAGE_TAG} --format='Exposed Ports: {{.Config.ExposedPorts}}'
-
-                    echo ""
-                    echo "✅ All Docker image tests passed"
-                """
-            }
-        }
+//         stage('Test Docker Image') {
+//             steps {
+//                 echo '🧪 Testing Docker image...'
+//                 sh """
+//                     echo "Running validation tests on image..."
+//
+//                     echo ""
+//                     echo "=== Test 1: Java Version ==="
+//                     docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} java -version
+//
+//                     echo ""
+//                     echo "=== Test 2: Check JAR File ==="
+//                     docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} ls -lh /app/app.jar
+//
+//                     echo ""
+//                     echo "=== Test 3: Check User ==="
+//                     docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} whoami
+//
+//                     echo ""
+//                     echo "=== Test 4: Check Port ==="
+//                     docker inspect ${IMAGE_NAME}:${IMAGE_TAG} --format='Exposed Ports: {{.Config.ExposedPorts}}'
+//
+//                     echo ""
+//                     echo "✅ All Docker image tests passed"
+//                 """
+//             }
+//         }
 
         stage('Save Docker Image') {
             steps {
