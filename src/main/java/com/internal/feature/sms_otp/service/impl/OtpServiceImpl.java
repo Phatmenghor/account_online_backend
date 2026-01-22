@@ -212,7 +212,7 @@ public class OtpServiceImpl implements OtpService {
             }
 
         } catch (Exception e) {
-            log.error("Failed to send SOAP SMS - Phone: {}, RequestID: {}", phone, requestID, e);
+            log.info("Failed to send SOAP SMS - Phone: {}, RequestID: {}", phone, requestID, e);
         }
     }
 }
