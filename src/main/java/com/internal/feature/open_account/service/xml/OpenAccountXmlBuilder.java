@@ -2,6 +2,7 @@ package com.internal.feature.open_account.service.xml;
 
 import com.internal.config.CpbProperties;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
+import com.internal.utils.constants.DefaultConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,31 +16,6 @@ public class OpenAccountXmlBuilder {
 
     private final CpbProperties cpbProperties;
 
-    // === Constants - Updated to match production example ===
-    private static final String DEFAULT_BRANCH_CODE = "KH0012011";
-    private static final String DEFAULT_SECTOR = "4501";
-    private static final String DEFAULT_COST_CENTER = "1000";
-    private static final String DEFAULT_INDUSTRY = "4500";
-    private static final String DEFAULT_TARGET = "220";
-    private static final String DEFAULT_LANGUAGE = "2";
-    private static final String DEFAULT_CUSTOMER_RATING = "1";
-    private static final String DEFAULT_CUSTOMER_STATUS = "1";
-    private static final String DEFAULT_CUSTOMER_TYPE = "ACTIVE";
-    private static final String DEFAULT_OWNERSHIP = "304";
-    private static final String DEFAULT_LEGAL_HOLDER_NAME = "NATIONAL.ID";
-    private static final String DEFAULT_NATIONALITY = "KH";
-
-    // Namespace URIs
-    private static final String SOAP_ENV_NS = "http://schemas.xmlsoap.org/soap/envelope/";
-    private static final String OAOW_NS = "http://temenos.com/OAOWAR";
-    private static final String CUSTOMER_NS = "http://temenos.com/CUSTOMERCPBCREATEOAO";
-    private static final String ACCOUNT_NS = "http://temenos.com/AAARRANGEMENTACTIVITYAANEWOAO";
-
-    // Product and activity constants
-    private static final String NEW_ARRANGEMENT = "NEW";
-    private static final String ACCOUNT_ACTIVITY = "ACCOUNTS-NEW-ARRANGEMENT";
-    private static final String PRODUCT_CODE = "SAVE.ACCT.ONLINE";
-
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter T24_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
@@ -52,7 +28,7 @@ public class OpenAccountXmlBuilder {
         String username = cpbProperties.getT24().getUsername();
         String password = cpbProperties.getT24().getPassword();
 
-        String branchCode = getOrDefault(request.getBranchCode(), DEFAULT_BRANCH_CODE);
+        String branchCode = getOrDefault(request.getBranchCode(), DefaultConstants.DEFAULT_BRANCH_CODE);
         String maritalStatus = getOrDefault(request.getMaritalStatus(), "");
         String legalAddress = getOrDefault(request.getLegalAddress(), "");
 
@@ -78,9 +54,9 @@ public class OpenAccountXmlBuilder {
         // Determine title from gender
         String title = determineTitle(request.getGender());
 
-        return "<soapenv:Envelope xmlns:soapenv=\"" + SOAP_ENV_NS + "\" "
-                + "xmlns:oaow=\"" + OAOW_NS + "\" "
-                + "xmlns:cus=\"" + CUSTOMER_NS + "\">"
+        return "<soapenv:Envelope xmlns:soapenv=\"" + DefaultConstants.SOAP_ENV_NS + "\" "
+                + "xmlns:oaow=\"" + DefaultConstants.OAOW_NS + "\" "
+                + "xmlns:cus=\"" + DefaultConstants.CUSTOMER_NS + "\">"
                 + "<soapenv:Header/>"
                 + "<soapenv:Body>"
                 + "<oaow:OAOCUSTOMERCREATION>"
@@ -99,28 +75,28 @@ public class OpenAccountXmlBuilder {
                 + "<cus:gSTREET g=\"1\"><cus:STREET>" + legalAddress + "</cus:STREET></cus:gSTREET>"
 
                 // Organizational fields
-                + "<cus:Sector>" + DEFAULT_SECTOR + "</cus:Sector>"
-                + "<cus:CostCenter>" + DEFAULT_COST_CENTER + "</cus:CostCenter>"
-                + "<cus:Industry>" + DEFAULT_INDUSTRY + "</cus:Industry>"
-                + "<cus:Target>" + DEFAULT_TARGET + "</cus:Target>"
-                + "<cus:Nationality>" + DEFAULT_NATIONALITY + "</cus:Nationality>"
-                + "<cus:CustomerStatus>" + DEFAULT_CUSTOMER_STATUS + "</cus:CustomerStatus>"
-                + "<cus:Residence>" + DEFAULT_NATIONALITY + "</cus:Residence>"
+                + "<cus:Sector>" + DefaultConstants.DEFAULT_SECTOR + "</cus:Sector>"
+                + "<cus:CostCenter>" + DefaultConstants.DEFAULT_COST_CENTER + "</cus:CostCenter>"
+                + "<cus:Industry>" + DefaultConstants.DEFAULT_INDUSTRY + "</cus:Industry>"
+                + "<cus:Target>" + DefaultConstants.DEFAULT_TARGET + "</cus:Target>"
+                + "<cus:Nationality>" + DefaultConstants.DEFAULT_NATIONALITY + "</cus:Nationality>"
+                + "<cus:CustomerStatus>" + DefaultConstants.DEFAULT_CUSTOMER_STATUS + "</cus:CustomerStatus>"
+                + "<cus:Residence>" + DefaultConstants.DEFAULT_NATIONALITY + "</cus:Residence>"
 
                 // Legal identification
                 + "<cus:gLEGALID g=\"1\"><cus:mLEGALID m=\"1\">"
                 + "<cus:LegalId>" + request.getLegalId() + "</cus:LegalId>"
                 + "<cus:LegalDocName>" + request.getLegalDocType() + "</cus:LegalDocName>"
-                + "<cus:LegalHolderName>" + DEFAULT_LEGAL_HOLDER_NAME + "</cus:LegalHolderName>"
+                + "<cus:LegalHolderName>" + DefaultConstants.DEFAULT_LEGAL_HOLDER_NAME + "</cus:LegalHolderName>"
                 + "<cus:LegalIssAuth>" + request.getGivenName() + "</cus:LegalIssAuth>"
                 + "<cus:LegalIssDate>" + legalIssueDate + "</cus:LegalIssDate>"
                 + "</cus:mLEGALID></cus:gLEGALID>"
 
                 // Language
-                + "<cus:Language>" + DEFAULT_LANGUAGE + "</cus:Language>"
+                + "<cus:Language>" + DefaultConstants.DEFAULT_LANGUAGE + "</cus:Language>"
 
                 // Customer rating
-                + "<cus:gCUSTOMERRATING g=\"1\"><cus:CustomerRating>" + DEFAULT_CUSTOMER_RATING + "</cus:CustomerRating></cus:gCUSTOMERRATING>"
+                + "<cus:gCUSTOMERRATING g=\"1\"><cus:CustomerRating>" + DefaultConstants.DEFAULT_CUSTOMER_RATING + "</cus:CustomerRating></cus:gCUSTOMERRATING>"
 
                 // Personal details
                 + "<cus:TITLE>" + title + "</cus:TITLE>"
@@ -138,7 +114,7 @@ public class OpenAccountXmlBuilder {
                 + "</cus:mPHONE1></cus:gPHONE1>"
 
                 // Customer type
-                + "<cus:CustomerType>" + DEFAULT_CUSTOMER_TYPE + "</cus:CustomerType>"
+                + "<cus:CustomerType>" + DefaultConstants.DEFAULT_CUSTOMER_TYPE + "</cus:CustomerType>"
 
                 // Current address (administrative codes)
                 + "<cus:CustProvince>" + custProvince + "</cus:CustProvince>"
@@ -147,7 +123,7 @@ public class OpenAccountXmlBuilder {
                 + "<cus:CustVillage>" + custVillage + "</cus:CustVillage>"
 
                 // Ownership and staff
-                + "<cus:Ownership>" + DEFAULT_OWNERSHIP + "</cus:Ownership>"
+                + "<cus:Ownership>" + DefaultConstants.DEFAULT_OWNERSHIP + "</cus:Ownership>"
                 + "<cus:RelationManager>" + referralId + "</cus:RelationManager>"
                 + "<cus:LoanOfficer/>"
                 + "<cus:Staff>" + releasedBy + "</cus:Staff>"
@@ -171,12 +147,12 @@ public class OpenAccountXmlBuilder {
     public String buildAccountCreationXml(CustomerRequest request, String cif, String currency) {
         String username = cpbProperties.getT24().getUsername();
         String password = cpbProperties.getT24().getPassword();
-        String branchCode = getOrDefault(request.getBranchCode(), DEFAULT_BRANCH_CODE);
+        String branchCode = getOrDefault(request.getBranchCode(), DefaultConstants.DEFAULT_BRANCH_CODE);
         String effectiveDate = LocalDate.now().format(DATE_FORMATTER);
 
-        return "<soapenv:Envelope xmlns:soapenv=\"" + SOAP_ENV_NS + "\" "
-                + "xmlns:oaow=\"" + OAOW_NS + "\" "
-                + "xmlns:aaar=\"" + ACCOUNT_NS + "\">"
+        return "<soapenv:Envelope xmlns:soapenv=\"" + DefaultConstants.SOAP_ENV_NS + "\" "
+                + "xmlns:oaow=\"" + DefaultConstants.OAOW_NS + "\" "
+                + "xmlns:aaar=\"" + DefaultConstants.ACCOUNT_NS + "\">"
                 + "<soapenv:Header/>"
                 + "<soapenv:Body>"
                 + "<oaow:ACCREATIONOAO>"
@@ -187,8 +163,8 @@ public class OpenAccountXmlBuilder {
                 + "</WebRequestCommon>"
                 + "<OfsFunction/>"
                 + "<AAARRANGEMENTACTIVITYAANEWOAOType id=\"\">"
-                + "<aaar:Arrangement>" + NEW_ARRANGEMENT + "</aaar:Arrangement>"
-                + "<aaar:Activity>" + ACCOUNT_ACTIVITY + "</aaar:Activity>"
+                + "<aaar:Arrangement>" + DefaultConstants.NEW_ARRANGEMENT + "</aaar:Arrangement>"
+                + "<aaar:Activity>" + DefaultConstants.ACCOUNT_ACTIVITY + "</aaar:Activity>"
                 + "<aaar:EffectiveDate>" + effectiveDate + "</aaar:EffectiveDate>"
                 + "<aaar:gCUSTOMER g=\"1\">"
                 + "<aaar:mCUSTOMER m=\"1\">"
@@ -196,7 +172,7 @@ public class OpenAccountXmlBuilder {
                 + "<aaar:CustomerRole>OWNER</aaar:CustomerRole>"
                 + "</aaar:mCUSTOMER>"
                 + "</aaar:gCUSTOMER>"
-                + "<aaar:Product>" + PRODUCT_CODE + "</aaar:Product>"
+                + "<aaar:Product>" + DefaultConstants.PRODUCT_CODE + "</aaar:Product>"
                 + "<aaar:Currency>" + currency + "</aaar:Currency>"
                 + "<aaar:gPROPERTY g=\"1\">"
                 + "<aaar:mPROPERTY m=\"1\">"
@@ -246,10 +222,10 @@ public class OpenAccountXmlBuilder {
             return "";
         }
         String genderUpper = gender.toUpperCase();
-        if (genderUpper.contains("MALE") && !genderUpper.contains("FEMALE")) {
-            return "MR";
-        } else if (genderUpper.contains("FEMALE")) {
-            return "MS";
+        if (genderUpper.contains(DefaultConstants.MALE) && !genderUpper.contains(DefaultConstants.FEMALE)) {
+            return DefaultConstants.MR;
+        } else if (genderUpper.contains(DefaultConstants.FEMALE)) {
+            return DefaultConstants.MS;
         }
         return "";
     }

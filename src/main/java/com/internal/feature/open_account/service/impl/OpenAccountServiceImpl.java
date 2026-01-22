@@ -5,17 +5,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.internal.config.TestProperties;
 import com.internal.enumation.AmlStatusEnum;
 import com.internal.enumation.OpenAccStatusEnum;
+import com.internal.exceptions.error.custom.NidValidationException;
+import com.internal.exceptions.error.custom.ValidateServiceException;
 import com.internal.exceptions.error.openaccount.AccountCreationException;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.aml.model.AmlStatus;
+import com.internal.feature.aml.service.AmlNotificationService;
 import com.internal.feature.aml.service.AmlService;
 import com.internal.feature.logs_report.dto.request.CustomerFileUploadRequestDto;
 import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
 import com.internal.feature.logs_report.service.AccountOnlineOpenFinalService;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
 import com.internal.feature.logs_report.service.CustomerImageService;
-import com.internal.feature.aml.service.AmlNotificationService;
+import com.internal.feature.master_data.dto.response.OccupationDto;
+import com.internal.feature.master_data.service.OccupationService;
 import com.internal.feature.open_account.dto.request.CustomerAmlRequest;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.response.AmlExternalResponseDto;
@@ -23,10 +27,6 @@ import com.internal.feature.open_account.dto.response.CustomerResponse;
 import com.internal.feature.open_account.mapper.OpenAccountAmlStatusMapper;
 import com.internal.feature.open_account.service.OpenAccountService;
 import com.internal.feature.open_account.service.external.*;
-import com.internal.exceptions.error.custom.NidValidationException;
-import com.internal.exceptions.error.custom.ValidateServiceException;
-import com.internal.feature.master_data.dto.response.OccupationDto;
-import com.internal.feature.master_data.service.OccupationService;
 import com.internal.feature.telegram_alerts.service.serviceImpl.OpenAccountTelegramAlertServiceImpl;
 import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
@@ -169,13 +168,10 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             // AML process result used here for logging high-risk or failure
             String failureRemark = buildFailureRemark(currentStep, cif, khrAccount, usdAccount, amlProcessResult);
 
-            boolean skipTelegramAlert = false;
-            // Skip generic alert if AML specific alert was likely sent (High Risk/Reject)
-            if (AppConstants.PROCESS_AML.equals(currentStep)
+            boolean skipTelegramAlert = AppConstants.PROCESS_AML.equals(currentStep)
                     && amlProcessResult != null
-                    && (AmlStatusEnum.PENDING.equals(amlProcessResult.getStatus()) || AmlStatusEnum.REJECT.equals(amlProcessResult.getStatus()))) {
-                skipTelegramAlert = true;
-            }
+                    && (AmlStatusEnum.PENDING.equals(amlProcessResult.getStatus()) || AmlStatusEnum.REJECT.equals(amlProcessResult.getStatus()));
+            // Skip generic alert if AML specific alert was likely sent (High Risk/Reject)
 
             saveFailureLogs(request, e, currentStep, failureRemark, skipTelegramAlert);
 
@@ -318,22 +314,18 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     }
 
     private AmlStatusDto handleExistingAml(AmlStatus existing, String legalId) {
-        switch (existing.getStatus()) {
-            case APPROVE:
-                return openAccountAmlStatusMapper.toDto(existing);
-            case PENDING:
-                throw new AccountCreationException(
-                        String.format(AppConstants.AML_NEED_REVIEW_MSG, legalId)
-                );
-            case REJECT:
-                throw new AccountCreationException(
-                        String.format(AppConstants.AML_REJECTED_MSG, legalId)
-                );
-            default:
-                throw new AccountCreationException(
-                        String.format(AppConstants.AML_UNKNOWN_MSG, legalId)
-                );
-        }
+        return switch (existing.getStatus()) {
+            case APPROVE -> openAccountAmlStatusMapper.toDto(existing);
+            case PENDING -> throw new AccountCreationException(
+                    String.format(AppConstants.AML_NEED_REVIEW_MSG, legalId)
+            );
+            case REJECT -> throw new AccountCreationException(
+                    String.format(AppConstants.AML_REJECTED_MSG, legalId)
+            );
+            default -> throw new AccountCreationException(
+                    String.format(AppConstants.AML_UNKNOWN_MSG, legalId)
+            );
+        };
     }
 
     private String buildOccupationStatus(String occupationCode) {
@@ -349,11 +341,11 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
     private String createCustomerIfNeeded(CustomerRequest request, Map<String, String> customerInfo) {
 
-        if (isTestMode.isSkipCheckCif()) {
-            log.info("TEST MODE ENABLED — Always creating new customer, ignoring existing CIF.");
-            Document resp = t24Service.createCustomer(request);
-            return XmlParser.extractCif(resp);
-        }
+//        if (isTestMode.isSkipCheckCif()) {
+//            log.info("TEST MODE ENABLED — Always creating new customer, ignoring existing CIF.");
+//            Document resp = t24Service.createCustomer(request);
+//            return XmlParser.extractCif(resp);
+//        }
 
         // Normal production logic
         String existingCif = customerInfo.get("CIF");

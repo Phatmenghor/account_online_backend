@@ -73,7 +73,7 @@ public class MobileBankingService {
             .build();
     }
 
-    private MobileBankingResponse callActivatorApi(MobileBankingRequest request) {
+    private void callActivatorApi(MobileBankingRequest request) {
         String url = properties.getMb().getRegisterCodeUrl();
         
         HttpHeaders headers = new HttpHeaders();
@@ -87,8 +87,7 @@ public class MobileBankingService {
             entity,
             MobileBankingResponse.class
         );
-        
-        return response.getBody();
+
     }
 
 
