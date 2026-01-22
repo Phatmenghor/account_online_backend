@@ -1,6 +1,5 @@
 package com.internal.feature.open_account.repository;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -54,32 +53,11 @@ public class CustomerInfoRepository {
 //        try {
 //            log.debug("Testing DWH Oracle database connection...");
 //            Integer result = dwhJdbcTemplate.queryForObject("SELECT 1 FROM DUAL", Integer.class);
-//            log.info("âœ… DWH Oracle connection test successful, result: {}", result);
+//            log.info(" DWH Oracle connection test successful, result: {}", result);
 //        } catch (Exception e) {
-//            log.error("âŒ DWH Oracle connection test failed: {}", e.getMessage());
+//            log.error(" DWH Oracle connection test failed: {}", e.getMessage());
 //            throw e;
 //        }
 //    }
 
-    /**
-     * Test STG database connection
-     */
-    public void testStgConnection() {
-        try {
-            log.debug("Testing STG Oracle database connection...");
-            Integer result = stgJdbcTemplate.queryForObject("SELECT 1 FROM DUAL", Integer.class);
-            log.info("âœ… STG Oracle connection test successful, result: {}", result);
-        } catch (Exception e) {
-            log.error("âŒ STG Oracle connection test failed: {}", e.getMessage());
-            throw e;
-        }
-    }
-
-    /**
-     * Test both database connections
-     */
-    public void testAllConnections() {
-//        testDwhConnection();
-        testStgConnection();
-    }
 }

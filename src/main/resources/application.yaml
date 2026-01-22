@@ -1,5 +1,5 @@
 server:
-  port: 9393
+  port: 9000
   servlet:
     context-path: /
   compression:
@@ -178,8 +178,8 @@ cpb:
 
 # Open account TEST Config
 test:
-  skip-check-account: true
-  skip-check-cif: true
+  skip-check-account: false
+  skip-check-cif: false
 
 aml:
   dashboard:
@@ -224,8 +224,14 @@ app:
 telegram:
   bot:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
-    uat-acl-chat-id: "-1002740302492"
-    uat-monitor-chat-id: "-1003115792160"
+
+    #TEST
+    uat-acl-chat-id: "-4886328332"
+    uat-monitor-chat-id: "-4886328332"
+
+    #UAT
+#     uat-acl-chat-id: "-1002740302492"
+#    uat-monitor-chat-id: "-1003115792160"
     enabled: true
 
 # Logging

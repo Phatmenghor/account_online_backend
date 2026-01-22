@@ -6,10 +6,7 @@ public final class AppConstants {
     // 1. ENVIRONMENT & CONFIGURATION
     // Used in: OtpGenerator, etc.
     // ==================================================================================
-    public static final String ENV_DEVELOPMENT = "development";
-    public static final String ENV_PRODUCTION = "production";
     public static final String HIGH_RISK = "High";
-
     public static final String DEFAULT_DEV_OTP = "123456";
     public static final int DEFAULT_OTP_LENGTH = 6;
     public static final int MAX_ATTEMPTS = 3;
@@ -21,23 +18,12 @@ public final class AppConstants {
     // ==================================================================================
     public static final String SUPPORT_PHONE_PRIMARY = "070 200 002";
     public static final String SUPPORT_PHONE_SECONDARY = "1800 200 888";
-    
     public static final String SUPPORT_CONTACT = "សូមទំនាក់ទំនងសេវាបម្រើអតិថិជនតាមរយៈលេខ " + SUPPORT_PHONE_PRIMARY + " ឬ " + SUPPORT_PHONE_SECONDARY + " ដើម្បីទទួលបានជំនួយបន្ថែម។";
 
     // ==================================================================================
     // 3. NID VALIDATION ERRORS (Generic)
     // Used in: CamdxServiceImp, internal validations
     // ==================================================================================
-    public static final String NID_ERROR_400 = "ព័ត៌មានអត្តសញ្ញាណប័ណ្ណមិនត្រឹមត្រូវ។ សូមពិនិត្យមើលលេខអត្តសញ្ញាណប័ណ្ណជាតិរបស់អ្នក។ " + SUPPORT_CONTACT;
-    public static final String NID_ERROR_401 = "ការផ្ទៀងផ្ទាត់មិនបានជោគជ័យ។ " + SUPPORT_CONTACT;
-    public static final String NID_ERROR_403 = "ការចូលប្រើត្រូវបានបដិសេធ។ អ្នកមិនមានសិទ្ធិក្នុងការផ្ទៀងផ្ទាត់អត្តសញ្ញាណប័ណ្ណនេះទេ។ " + SUPPORT_CONTACT;
-    public static final String NID_ERROR_404 = "រកមិនឃើញសេវាកម្មផ្ទៀងផ្ទាត់អត្តសញ្ញាណប័ណ្ណទេ។ " + SUPPORT_CONTACT;
-    public static final String NID_ERROR_408 = "ការស្នើសុំលើសម៉ោងកំណត់។ សូមព្យាយាមម្តងទៀត។ ប្រសិនបើបញ្ហានៅតែបន្ត សូមទំនាក់ទំនងសេវាបម្រើអតិថិជន។";
-    public static final String NID_ERROR_429 = "ការព្យាយាមផ្ទៀងផ្ទាត់ច្រើនដងពេក។ សូមរង់ចាំហើយព្យាយាមម្តងទៀត។ " + SUPPORT_CONTACT;
-    public static final String NID_ERROR_500 = "មានបញ្ហាសេវាកម្ម។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ ឬទំនាក់ទំនងសេវាបម្រើអតិថិជន។";
-    public static final String NID_ERROR_502_503 = "សេវាកម្មមិនដំណើរការជាបណ្តោះអាសន្ន។ សូមព្យាយាមម្តងទៀតក្នុងរយៈពេលពីរបីនាទី។ " + SUPPORT_CONTACT;
-    public static final String NID_ERROR_504 = "ការស្នើសុំលើសម៉ោងកំណត់។ សូមព្យាយាមម្តងទៀត។ " + SUPPORT_CONTACT;
-    public static final String NID_ERROR_DEFAULT = "មិនអាចផ្ទៀងផ្ទាត់អត្តសញ្ញាណប័ណ្ណនៅពេលនេះបានទេ។ " + SUPPORT_CONTACT;
     public static final String NID_ERROR_SYSTEM = "មានបញ្ហាបច្ចេកទេស។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ ឬទំនាក់ទំនងសេវាបម្រើអតិថិជន។";
 
     // ==================================================================================
@@ -57,18 +43,12 @@ public final class AppConstants {
     // Used in: OpenAccountServiceImpl, OpenAcctController (legacy logic)
     // ==================================================================================
     public static final String ACCOUNT_ALREADY_EXIST = "ACCOUNT_ALREADY_EXIST"; // ID
-    public static final String SYSTEM_ERROR = "SYSTEM_ERROR"; // ID
     public static final String ACCOUNT_RISK = "ACCOUNT_RISK"; // ID
-    public static final String AML_HIT = "AML_RE"; // ID
-    public static final String ACCOUNT_CREATE_FAIL = "ACCOUNT_CREATE_FAIL"; // ID
-
     public static final String FAIL_CREATE_ANY_ACCOUNT = "មិនអាចបង្កើតគណនីបានទេ។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។ ប្រសិនបើបញ្ហានៅតែបន្ត សូមទំនាក់ទំនងសេវាបម្រើអតិថិជន។";
     public static final String MSG_DB_CONNECTION_ERR = "មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ប្រព័ន្ធ សូមព្យាយាមម្តងទៀត";
     public static final String MSG_HIGH_RISK_ERR = "សំណើរបស់អ្នកមិនអាចដំណើរការបានទេ ពីព្រោះការវាយតម្លៃអតិថិជនមានការហានិភ័យ";
     public static final String MSG_ACCOUNT_EXISTS_ERR = "លោកអ្នកមានគណនីជាមួយធនាគាររួចហើយ។ សូមប្រើប្រាស់ជាមួយគណនីរបស់លោកអ្នក។";
-    public static final String MSG_CREATE_CUSTOMER_ERR = "ការស្នើសុំរបស់លោកអ្នកមិនអាចដំណើរការបានទេ។ សូមព្យាយាមម្តងទៀត";
     public static final String MSG_GENERIC_ERROR = "ការស្នើសុំរបស់លោកអ្នកមិនអាចដំណើរការបានទេ។ សូមព្យាយាមម្តងទៀត"; // For 500, 503, 504, 505, 506
-    public static final String MSG_CREATE_ACCOUNT_ERR = "មិនអាចបង្កើតគណនីណាមួយបានទេ។ សូមព្យាយាមម្តងទៀត។";
     public static final String MSG_SUCCESS = "ការស្នើសុំជោគជ័យ។ លោកអ្នកនឹងទទួលបានលេខគណនី តាមសារទូរស័ព្ទ។ សូមភ្ជាប់សេវាធនាគារចល័តដើម្បីរីករាយជាមួយប្រតិបត្តិការដ៏សម្បូរបែប។";
 
 
@@ -93,8 +73,7 @@ public final class AppConstants {
     public static final String VALIDATE_ACCOUNT_CREATION = "VALIDATE_ACCOUNT_CREATION";
     public static final String ACTIVATE_MOBILE_BANKING = "ACTIVATE_MOBILE_BANKING";
     public static final String SAVE_CUSTOMER_IMAGES = "SAVE_CUSTOMER_IMAGES";
-    public static final String SAVE_FINAL_LOG = "SAVE_FINAL_LOG";
-    
+
     // ==================================================================================
     // 8. FIELD NAME TRANSLATIONS
     // Used in: CamdxErrorCheckServiceImpl
@@ -103,6 +82,10 @@ public final class AppConstants {
     public static final String FIELD_KH_FIRSTNAME_EN = "នាមខ្លួន (អង់គ្លេស)";
     public static final String FIELD_KH_DOB = "ថ្ងៃខែឆ្នាំកំណើត";
     public static final String FIELD_KH_GENDER = "ភេទ";
+
+
+    //T24 ERROR RESPONSE
+    public static final String T24_ACCOUNT_ERROR = "SECURITY VIOLATION DURING SIGN ON PROCESS";
 
     private AppConstants() {
         // Prevent instantiation
