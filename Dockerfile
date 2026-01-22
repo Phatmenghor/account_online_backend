@@ -1,41 +1,53 @@
-# Build stage - Maven builds the JAR inside Docker
-FROM maven:3.9-eclipse-temurin-17-alpine AS build
-WORKDIR /app
+# Use the Spring Boot Java 17 image you already have
+FROM springboot-java17-app:1.0.0
 
-# Copy pom.xml and download dependencies (cached layer)
+USER root
+WORKDIR /build
+
+# Try to find and use Maven if it exists, or download it
+RUN MAVEN_VERSION=3.9.9 && \
+    if ! command -v mvn &> /dev/null; then \
+        echo "Maven not found, downloading..."; \
+        mkdir -p /usr/share/maven /usr/share/maven/ref && \
+        wget -q https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz -O /tmp/maven.tar.gz || \
+        curl -fsSL https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz -o /tmp/maven.tar.gz && \
+        tar xzf /tmp/maven.tar.gz -C /usr/share/maven --strip-components=1 && \
+        ln -s /usr/share/maven/bin/mvn /usr/bin/mvn && \
+        rm -f /tmp/maven.tar.gz; \
+    else \
+        echo "Maven found: $(mvn -version)"; \
+    fi
+
+# Verify Maven is available
+RUN mvn -version
+
+# Copy project files
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
-# Copy source code and build
 COPY src ./src
-RUN mvn package -DskipTests
 
-# List the target directory to verify JAR was created
-RUN ls -lh /app/target/
+# Build the application
+RUN mvn clean package -DskipTests
 
-# Runtime stage - Run the application
-FROM eclipse-temurin:17-jre-alpine
+# Prepare app directory
+RUN mkdir -p /app && \
+    cp target/account_online.jar /app/app.jar && \
+    ls -lh /app/app.jar
+
+# Switch to app directory
 WORKDIR /app
+RUN rm -rf /build
 
-# Create non-root user
-RUN addgroup -S spring && adduser -S spring -G spring
+# Create spring user if it doesn't exist
+RUN addgroup -S spring 2>/dev/null || groupadd spring 2>/dev/null || true
+RUN adduser -S spring -G spring 2>/dev/null || useradd -r -g spring spring 2>/dev/null || true
+RUN chown -R spring:spring /app 2>/dev/null || true
 
-# Copy JAR from build stage (using the finalName from pom.xml)
-COPY --from=build /app/target/account_online.jar app.jar
+USER spring
 
-# Verify JAR was copied
-RUN ls -lh /app/
-
-# Set ownership
-RUN chown -R spring:spring /app
-USER spring:spring
-
-# Expose port
 EXPOSE 9000
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:9000/actuator/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:9000/actuator/health 2>/dev/null || \
+        curl -f http://localhost:9000/actuator/health 2>/dev/null || exit 1
 
-# Run application
 ENTRYPOINT ["java", "-jar", "app.jar"]
