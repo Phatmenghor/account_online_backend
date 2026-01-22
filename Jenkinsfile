@@ -131,8 +131,8 @@ pipeline {
                         docker images | grep ${IMAGE_NAME} || docker images | head -5
 
                         echo ""
-                        echo "=== Image Details ==="
-                        docker inspect ${IMAGE_NAME}:${IMAGE_TAG} --format='Size: {{.Size}} bytes ({{ div .Size 1048576 }} MB)'
+                        echo "=== Image Created Successfully ==="
+                        docker inspect ${IMAGE_NAME}:${IMAGE_TAG} --format='Image ID: {{.Id}}'
                         docker inspect ${IMAGE_NAME}:${IMAGE_TAG} --format='Created: {{.Created}}'
                     """
                 }
