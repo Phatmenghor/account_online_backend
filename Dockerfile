@@ -5,12 +5,23 @@ USER root
 WORKDIR /build
 
 # Install JDK (needed for Maven compilation)
-RUN apk add --no-cache openjdk17 || \
-    yum install -y java-17-openjdk-devel || \
-    apt-get update && apt-get install -y openjdk-17-jdk
+RUN apt-get update && \
+    apt-get install -y openjdk-17-jdk wget curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Verify JDK is installed
-RUN javac -version && java -version
+# Find and set correct JAVA_HOME
+RUN JAVA_PATH=$(dirname $(dirname $(readlink -f $(which java)))) && \
+    echo "JAVA_HOME found at: $JAVA_PATH" && \
+    echo "export JAVA_HOME=$JAVA_PATH" >> /etc/environment && \
+    echo "export PATH=\$JAVA_HOME/bin:\$PATH" >> /etc/environment
+
+# Set JAVA_HOME for this build
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+
+# Verify Java and Javac
+RUN java -version && javac -version
 
 # Download and install Maven
 RUN MAVEN_VERSION=3.9.9 && \
@@ -21,15 +32,14 @@ RUN MAVEN_VERSION=3.9.9 && \
     ln -s /usr/share/maven/bin/mvn /usr/bin/mvn && \
     rm -f /tmp/maven.tar.gz
 
-# Verify Maven
+# Verify Maven with correct Java
 RUN mvn -version
 
 # Copy project files
 COPY pom.xml .
 COPY src ./src
 
-# Build with JDK
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+# Build with correct JAVA_HOME
 RUN mvn clean package -DskipTests
 
 # Verify JAR was created
@@ -45,9 +55,9 @@ WORKDIR /app
 RUN rm -rf /build
 
 # Create user
-RUN addgroup -S spring 2>/dev/null || groupadd spring 2>/dev/null || true
-RUN adduser -S spring -G spring 2>/dev/null || useradd -r -g spring spring 2>/dev/null || true
-RUN chown -R spring:spring /app
+RUN groupadd -r spring 2>/dev/null || true && \
+    useradd -r -g spring spring 2>/dev/null || true && \
+    chown -R spring:spring /app
 
 USER spring
 
