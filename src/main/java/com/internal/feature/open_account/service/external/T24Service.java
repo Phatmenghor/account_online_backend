@@ -4,6 +4,7 @@ import com.internal.config.CpbProperties;
 import com.internal.exceptions.error.openaccount.T24ServiceException;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.service.xml.OpenAccountXmlBuilder;
+import com.internal.feature.telegram_alerts.config.TelegramService;
 import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,7 @@ public class T24Service {
     private final CpbProperties properties;
     private final RestTemplate restTemplate;
     private final OpenAccountXmlBuilder xmlBuilder;
-    private final com.internal.feature.telegram_alerts.config.TelegramService telegramService;
+    private final TelegramService telegramService;
 
     public Document createCustomer(CustomerRequest request) {
         log.info("Creating customer in T24 for Legal ID: {}", request.getLegalId());
@@ -70,7 +71,7 @@ public class T24Service {
                     operation, response.getStatusCode(), responseSize, duration
             );
             log.info("T24 Response Body: {}", responseBody);
-            
+
             checkAndAlertSecurityViolation(responseBody, operation);
 
             if (responseBody == null || responseBody.isEmpty()) {

@@ -126,7 +126,7 @@ public class OtpServiceImpl implements OtpService {
 
     private void checkAttemptLockout(String phone) {
         Optional<OtpSms> latestOtp = otpRepository.findLatestActiveOtpByPhone(phone);
-        if (!latestOtp.isPresent()) return;
+        if (latestOtp.isEmpty()) return;
 
         OtpSms otp = latestOtp.get();
 
@@ -146,7 +146,7 @@ public class OtpServiceImpl implements OtpService {
 
     private void checkCooldownPeriod(String phone) {
         Optional<LocalDateTime> lastOtpTime = otpRepository.findLastOtpCreationTime(phone);
-        if (!lastOtpTime.isPresent()) return;
+        if (lastOtpTime.isEmpty()) return;
 
         long elapsedSeconds = Duration.between(lastOtpTime.get(), LocalDateTime.now()).getSeconds();
         long cooldownSeconds = cpbProperties.getOtp().getCooldownSeconds();
@@ -193,10 +193,10 @@ public class OtpServiceImpl implements OtpService {
         try {
             log.info("Sending SOAP SMS request - Phone: {}, RequestID: {}", phone, requestID);
 
-            // ðŸ”¹ Use raw XML POST, return response as String (no JSON parsing)
+            // Use raw XML POST, return response as String (no JSON parsing)
             String responseXml = httpClient.postForString(otpUrl, soapXml, "application/soap+xml");
 
-            // ðŸ”¹ Extract <return> JSON payload from SOAP response
+            // Extract <return> JSON payload from SOAP response
             Matcher matcher = Pattern.compile("<return>(.*?)</return>").matcher(responseXml);
             String jsonPayload = matcher.find() ? matcher.group(1) : null;
 

@@ -12,6 +12,7 @@ import com.internal.utils.constants.ErrorMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.ZoneId;
@@ -189,21 +190,26 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
         if (incorrectFields != null && !incorrectFields.isEmpty()) {
             StringBuilder sbIncorrect = new StringBuilder();
             for (String field : incorrectFields) {
-                String translatedField = field;
-                if ("lastNameEn".equalsIgnoreCase(field)) {
-                    translatedField = AppConstants.FIELD_KH_LASTNAME_EN;
-                } else if ("firstNameEn".equalsIgnoreCase(field)) {
-                    translatedField = AppConstants.FIELD_KH_FIRSTNAME_EN;
-                } else if ("dob".equalsIgnoreCase(field)) {
-                    translatedField = AppConstants.FIELD_KH_DOB;
-                } else if ("gender".equalsIgnoreCase(field)) {
-                    translatedField = AppConstants.FIELD_KH_GENDER;
-                }
-                sbIncorrect.append("- ").append(translatedField).append("\n");
+                String translatedField = checkField(field);
+                sbIncorrect.append(AppConstants.BULLET_PREFIX).append(translatedField).append(AppConstants.NEW_LINE);
             }
             return sbIncorrect.toString().trim();
         } else {
-            return "None";
+            return AppConstants.FIELD_NONE;
         }
+    }
+
+    private static String checkField(String field) {
+        String translatedField = field;
+        if (AppConstants.FIELD_LAST_NAME_EN.equalsIgnoreCase(field)) {
+            translatedField = AppConstants.FIELD_KH_LASTNAME_EN;
+        } else if (AppConstants.FIELD_FIRST_NAME_EN.equalsIgnoreCase(field)) {
+            translatedField = AppConstants.FIELD_KH_FIRSTNAME_EN;
+        } else if (AppConstants.FIELD_DOB.equalsIgnoreCase(field)) {
+            translatedField = AppConstants.FIELD_KH_DOB;
+        } else if (AppConstants.FIELD_GENDER.equalsIgnoreCase(field)) {
+            translatedField = AppConstants.FIELD_KH_GENDER;
+        }
+        return translatedField;
     }
 }

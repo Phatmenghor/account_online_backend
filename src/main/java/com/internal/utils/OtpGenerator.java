@@ -20,6 +20,7 @@ public class OtpGenerator {
 
     /**
      * Generate a 6-digit OTP codes
+     *
      * @return 6-digit OTP string
      */
     public String generate() {

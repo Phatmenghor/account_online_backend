@@ -52,8 +52,7 @@ public class CamdxServiceImp implements CamdxService {
             return response;
 
         } catch (ValidateServiceException ex) {
-            if (ex.getCause() instanceof HttpStatusCodeException) {
-                HttpStatusCodeException httpEx = (HttpStatusCodeException) ex.getCause();
+            if (ex.getCause() instanceof HttpStatusCodeException httpEx) {
                 String rawBody = httpEx.getResponseBodyAsString();
                 int statusCode = httpEx.getStatusCode().value();
 
@@ -101,17 +100,17 @@ public class CamdxServiceImp implements CamdxService {
         }
 
         // fallback to predefined constants if API message is missing
-        switch (statusCode) {
-            case 400: return AppConstants.MSG_400;
-            case 420: return AppConstants.MSG_420;
-            case 500: return AppConstants.MSG_500;
-            case 501: return AppConstants.MSG_501;
-            case 502: return AppConstants.MSG_502;
-            case 503: return AppConstants.MSG_503;
-            case 504: return AppConstants.MSG_504;
-            case 505: return AppConstants.MSG_502; // generic system error
-            default: return "Unknown error occurred. " + AppConstants.SUPPORT_CONTACT;
-        }
+        return switch (statusCode) {
+            case 400 -> AppConstants.MSG_400;
+            case 420 -> AppConstants.MSG_420;
+            case 500 -> AppConstants.MSG_500;
+            case 501 -> AppConstants.MSG_501;
+            case 502 -> AppConstants.MSG_502;
+            case 503 -> AppConstants.MSG_503;
+            case 504 -> AppConstants.MSG_504;
+            case 505 -> AppConstants.MSG_502; // generic system error
+            default -> "Unknown error occurred. " + AppConstants.SUPPORT_CONTACT;
+        };
     }
 
     @Override

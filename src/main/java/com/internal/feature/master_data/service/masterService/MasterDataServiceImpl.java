@@ -8,6 +8,7 @@ import com.internal.feature.master_data.models.*;
 import com.internal.feature.master_data.repository.*;
 import com.internal.feature.master_data.service.MasterDataService;
 import com.internal.feature.master_data.specification.*;
+import com.internal.utils.constants.MasterDataConstants;
 import com.internal.utils.pagination.PaginationResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,12 +18,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class MasterDataDataServiceImpl implements MasterDataService {
+public class MasterDataServiceImpl implements MasterDataService {
 
     private final ProvinceRepository provinceRepository;
     private final DistrictRepository districtRepository;
@@ -39,7 +41,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     // ---------------------- Province ----------------------
     @Override
     public PaginationResponse<ClsProvinceDto> getProvince(AllMasterDataRequest request) {
-        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, MasterDataConstants.SORT_CREATED_AT));
         Specification<Province> spec = ProvinceSpec.searchByName(request.getSearch());
 
         Page<Province> page = provinceRepository.findAll(spec, pageable);
@@ -51,11 +53,11 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     // ---------------------- District ----------------------
     @Override
     public PaginationResponse<ClsDistrictDto> getDistrict(AllMasterDataRequest request, String provinceCode) {
-        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, MasterDataConstants.SORT_CREATED_AT));
         Specification<District> spec = DistrictSpec.searchByName(request.getSearch());
 
         if (provinceCode != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("province").get("provinceCode"), provinceCode));
+            spec = spec.and((root, query, cb) -> cb.equal(root.get(MasterDataConstants.FIELD_PROVINCE).get(MasterDataConstants.FIELD_PROVINCE_CODE), provinceCode));
         }
 
         Page<District> page = districtRepository.findAll(spec, pageable);
@@ -67,11 +69,11 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     // ---------------------- Commune ----------------------
     @Override
     public PaginationResponse<ClsCommuneDto> getCommune(AllMasterDataRequest request, String districtCode) {
-        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, MasterDataConstants.SORT_CREATED_AT));
         Specification<Commune> spec = CommuneSpec.searchByName(request.getSearch());
 
         if (districtCode != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("district").get("districtCode"), districtCode));
+            spec = spec.and((root, query, cb) -> cb.equal(root.get(MasterDataConstants.FIELD_DISTRICT).get(MasterDataConstants.FIELD_DISTRICT_CODE), districtCode));
         }
 
         Page<Commune> page = communeRepository.findAll(spec, pageable);
@@ -83,11 +85,11 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     // ---------------------- Village ----------------------
     @Override
     public PaginationResponse<ClsVillageDto> getVillage(AllMasterDataRequest request, String communeCode) {
-        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, MasterDataConstants.SORT_CREATED_AT));
         Specification<Village> spec = VillageSpec.searchByName(request.getSearch());
 
         if (communeCode != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("commune").get("communeCode"), communeCode));
+            spec = spec.and((root, query, cb) -> cb.equal(root.get(MasterDataConstants.FIELD_COMMUNE).get(MasterDataConstants.FIELD_COMMUNE_CODE), communeCode));
         }
 
         Page<Village> page = villageRepository.findAll(spec, pageable);
@@ -99,7 +101,7 @@ public class MasterDataDataServiceImpl implements MasterDataService {
     // ---------------------- Branch ----------------------
     @Override
     public PaginationResponse<ClsBranchDto> getBranch(AllMasterDataRequest request) {
-        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, MasterDataConstants.SORT_CREATED_AT));
         // Assuming Branch has a similar search spec or we create a simple one
         Specification<Branch> spec = (root, query, cb) -> {
             if (request.getSearch() == null || request.getSearch().isEmpty()) {
@@ -107,8 +109,8 @@ public class MasterDataDataServiceImpl implements MasterDataService {
             }
             String search = "%" + request.getSearch().toLowerCase() + "%";
             return cb.or(
-                    cb.like(cb.lower(root.get("branchCode")), search),
-                    cb.like(cb.lower(root.get("branchKh")), search)
+                    cb.like(cb.lower(root.get(MasterDataConstants.FIELD_BRANCH_CODE)), search),
+                    cb.like(cb.lower(root.get(MasterDataConstants.FIELD_BRANCH_KH)), search)
             );
         };
 
@@ -140,21 +142,21 @@ public class MasterDataDataServiceImpl implements MasterDataService {
             if (index >= 0) provinceName = parts[index--];
 
             // District prefixes
-            if (index >= 0 && (parts[index].startsWith("ស្រុក") ||
-                    parts[index].startsWith("ក្រុង") ||
-                    parts[index].startsWith("ខណ្ឌ"))) {
-                districtName = removePrefix(parts[index--], "ស្រុក", "ក្រុង", "ខណ្ឌ");
+            if (index >= 0 && (parts[index].startsWith(MasterDataConstants.PREFIX_DISTRICT_1) ||
+                    parts[index].startsWith(MasterDataConstants.PREFIX_DISTRICT_2) ||
+                    parts[index].startsWith(MasterDataConstants.PREFIX_DISTRICT_3))) {
+                districtName = removePrefix(parts[index--], MasterDataConstants.PREFIX_DISTRICT_1, MasterDataConstants.PREFIX_DISTRICT_2, MasterDataConstants.PREFIX_DISTRICT_3);
             }
 
             // Commune prefixes
-            if (index >= 0 && (parts[index].startsWith("ឃុំ") ||
-                    parts[index].startsWith("សង្កាត់"))) {
-                communeName = removePrefix(parts[index--], "ឃុំ", "សង្កាត់");
+            if (index >= 0 && (parts[index].startsWith(MasterDataConstants.PREFIX_COMMUNE_1) ||
+                    parts[index].startsWith(MasterDataConstants.PREFIX_COMMUNE_2))) {
+                communeName = removePrefix(parts[index--], MasterDataConstants.PREFIX_COMMUNE_1, MasterDataConstants.PREFIX_COMMUNE_2);
             }
 
             // Village prefix
-            if (index >= 0 && parts[index].startsWith("ភូមិ")) {
-                villageName = removePrefix(parts[index--], "ភូមិ");
+            if (index >= 0 && parts[index].startsWith(MasterDataConstants.PREFIX_VILLAGE)) {
+                villageName = removePrefix(parts[index--], MasterDataConstants.PREFIX_VILLAGE);
             }
 
             log.info("Resolving location - Province: {}, District: {}, Commune: {}, Village: {}",
@@ -200,20 +202,20 @@ public class MasterDataDataServiceImpl implements MasterDataService {
 
             if (index >= 0) provinceName = parts[index--];
 
-            if (index >= 0 && (parts[index].startsWith("ស្រុក") ||
-                    parts[index].startsWith("ក្រុង") ||
-                    parts[index].startsWith("ខណ្ឌ"))) {
-                districtName = removePrefix(parts[index--], "ស្រុក", "ក្រុង", "ខណ្ឌ");
+            if (index >= 0 && (parts[index].startsWith(MasterDataConstants.PREFIX_DISTRICT_1) ||
+                    parts[index].startsWith(MasterDataConstants.PREFIX_DISTRICT_2) ||
+                    parts[index].startsWith(MasterDataConstants.PREFIX_DISTRICT_3))) {
+                districtName = removePrefix(parts[index--], MasterDataConstants.PREFIX_DISTRICT_1, MasterDataConstants.PREFIX_DISTRICT_2, MasterDataConstants.PREFIX_DISTRICT_3);
             }
 
-            if (index >= 0 && (parts[index].startsWith("ឃុំ") ||
-                    parts[index].startsWith("សង្កាត់"))) {
-                communeName = removePrefix(parts[index--], "ឃុំ", "សង្កាត់");
+            if (index >= 0 && (parts[index].startsWith(MasterDataConstants.PREFIX_COMMUNE_1) ||
+                    parts[index].startsWith(MasterDataConstants.PREFIX_COMMUNE_2))) {
+                communeName = removePrefix(parts[index--], MasterDataConstants.PREFIX_COMMUNE_1, MasterDataConstants.PREFIX_COMMUNE_2);
             }
 
             // Village prefix
-            if (index >= 0 && parts[index].startsWith("ភូមិ")) {
-                villageName = removePrefix(parts[index--], "ភូមិ");
+            if (index >= 0 && parts[index].startsWith(MasterDataConstants.PREFIX_VILLAGE)) {
+                villageName = removePrefix(parts[index--], MasterDataConstants.PREFIX_VILLAGE);
             }
 
             log.info("Resolving POB - Province: {}, District: {}, Commune: {}",

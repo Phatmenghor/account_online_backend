@@ -63,7 +63,7 @@ public class OpenAccountExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.CONFLICT.value())
-                .message(AppConstants.MSG_ACCOUNT_EXISTS_ERR)
+                .message(AppConstants.ACCOUNT_ALREADY_EXIST)
                 .details(details)
                 .build();
 

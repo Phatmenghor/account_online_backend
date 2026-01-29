@@ -23,23 +23,23 @@ public class XmlParser {
             if (customerNodes.getLength() > 0) {
                 Element customerElement = (Element) customerNodes.item(0);
                 String cif = customerElement.getAttribute("id");
-                if (cif != null && !cif.trim().isEmpty()) {
+                if (!cif.trim().isEmpty()) {
                     log.info("Extracted CIF: {}", cif);
                     return cif.trim();
                 }
             }
-            
+
             // Alternative: Try to find CUSTOMER element
             customerNodes = document.getElementsByTagName("CUSTOMER");
             if (customerNodes.getLength() > 0) {
                 Element customerElement = (Element) customerNodes.item(0);
                 String cif = customerElement.getAttribute("id");
-                if (cif != null && !cif.trim().isEmpty()) {
+                if (!cif.trim().isEmpty()) {
                     log.info("Extracted CIF from CUSTOMER: {}", cif);
                     return cif.trim();
                 }
             }
-            
+
             // Alternative: Try to find id element directly
             NodeList idNodes = document.getElementsByTagName("id");
             if (idNodes.getLength() > 0) {
@@ -49,10 +49,10 @@ public class XmlParser {
                     return cif.trim();
                 }
             }
-            
+
             log.warn("No CIF found in XML response");
             return null;
-            
+
         } catch (Exception e) {
             log.error("Failed to extract CIF from XML: {}", e.getMessage(), e);
             return null;
@@ -105,7 +105,7 @@ public class XmlParser {
             NodeList statusNodes = document.getElementsByTagName("Status");
             for (int i = 0; i < statusNodes.getLength(); i++) {
                 Element statusElement = (Element) statusNodes.item(i);
-                
+
                 // Check if this is an ACCOUNT application
                 NodeList appNodes = statusElement.getElementsByTagName("application");
                 if (appNodes.getLength() > 0 && "ACCOUNT".equals(appNodes.item(0).getTextContent())) {
@@ -117,7 +117,7 @@ public class XmlParser {
                     }
                 }
             }
-            
+
             // Alternative: Direct transactionId lookup
             NodeList transIdNodes = document.getElementsByTagName("transactionId");
             if (transIdNodes.getLength() > 0) {
@@ -125,21 +125,21 @@ public class XmlParser {
                 log.info("Extracted account number from transactionId: {}", accountNumber);
                 return accountNumber;
             }
-            
+
             // Alternative: Try to find ACCOUNTType element
             NodeList accountNodes = document.getElementsByTagName("ACCOUNTType");
             if (accountNodes.getLength() > 0) {
                 Element accountElement = (Element) accountNodes.item(0);
                 String accountNumber = accountElement.getAttribute("id");
-                if (accountNumber != null && !accountNumber.trim().isEmpty()) {
+                if (!accountNumber.trim().isEmpty()) {
                     log.info("Extracted account number from ACCOUNTType: {}", accountNumber);
                     return accountNumber.trim();
                 }
             }
-            
+
             log.warn("No account number found in XML response");
             return null;
-            
+
         } catch (Exception e) {
             log.error("Failed to extract account number from XML: {}", e.getMessage(), e);
             return null;
@@ -155,7 +155,7 @@ public class XmlParser {
             if (errorNodes.getLength() > 0) {
                 return true;
             }
-            
+
             NodeList faultNodes = document.getElementsByTagName("faultstring");
             return faultNodes.getLength() > 0;
         } catch (Exception e) {
@@ -173,12 +173,12 @@ public class XmlParser {
             if (errorNodes.getLength() > 0) {
                 return errorNodes.item(0).getTextContent();
             }
-            
+
             NodeList faultNodes = document.getElementsByTagName("faultstring");
             if (faultNodes.getLength() > 0) {
                 return faultNodes.item(0).getTextContent();
             }
-            
+
             return "Unknown error";
         } catch (Exception e) {
             log.error("Failed to extract error message: {}", e.getMessage());

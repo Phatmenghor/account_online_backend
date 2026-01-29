@@ -82,8 +82,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     public CustomerResponse openAccount(CustomerRequest request) throws Exception {
         log.info("========== ACCOUNT OPENING STARTED ==========");
         log.info("Legal ID: {}", request.getLegalId());
-        log.info("Name: {} {} ({} {})", request.getGivenName(), request.getFamilyName(),
-                request.getFirstNameKh(), request.getLastNameKh());
+        log.info("Name: {} {} ({} {})", request.getGivenName(), request.getFamilyName(), request.getFirstNameKh(), request.getLastNameKh());
         log.info("Phone: {}", request.getPhoneNumber());
         log.info("==============================================");
 
@@ -168,9 +167,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             // AML process result used here for logging high-risk or failure
             String failureRemark = buildFailureRemark(currentStep, cif, khrAccount, usdAccount, amlProcessResult);
 
-            boolean skipTelegramAlert = AppConstants.PROCESS_AML.equals(currentStep)
-                    && amlProcessResult != null
-                    && (AmlStatusEnum.PENDING.equals(amlProcessResult.getStatus()) || AmlStatusEnum.REJECT.equals(amlProcessResult.getStatus()));
+            boolean skipTelegramAlert = AppConstants.PROCESS_AML.equals(currentStep) && amlProcessResult != null && (AmlStatusEnum.PENDING.equals(amlProcessResult.getStatus()) || AmlStatusEnum.REJECT.equals(amlProcessResult.getStatus()));
             // Skip generic alert if AML specific alert was likely sent (High Risk/Reject)
 
             saveFailureLogs(request, e, currentStep, failureRemark, skipTelegramAlert);
@@ -181,13 +178,9 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
     private static void sentMessageOnHighRisk(CustomerRequest request, AmlStatusDto amlProcessResult) {
         if (amlProcessResult.getStatus() == AmlStatusEnum.PENDING) {
-            throw new AccountCreationException(
-                    String.format(AppConstants.AML_NEED_REVIEW_MSG, request.getLegalId())
-            );
+            throw new AccountCreationException(String.format(AppConstants.AML_NEED_REVIEW_MSG, request.getLegalId()));
         } else if (amlProcessResult.getStatus() == AmlStatusEnum.REJECT) {
-            throw new AccountCreationException(
-                    String.format(AppConstants.AML_REJECTED_MSG, request.getLegalId())
-            );
+            throw new AccountCreationException(String.format(AppConstants.AML_REJECTED_MSG, request.getLegalId()));
         }
     }
 
@@ -197,12 +190,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             status = OpenAccStatusEnum.AML;
         }
 
-        reportLogService.createAccountOpeningLog(
-                request.getLegalId(),
-                status,
-                failureRemark,
-                e
-        );
+        reportLogService.createAccountOpeningLog(request.getLegalId(), status, failureRemark, e);
 
         if (skipTelegramAlert) {
             log.info("Skipping generic Telegram alert for step {} as strictly handled by specific logic.", currentStep);
@@ -222,8 +210,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     }
 
     private boolean isMonitorAlertStep(String step) {
-        return AppConstants.PROCESS_AML.equals(step) ||
-                AppConstants.GET_CUSTOMER_INFO.equals(step);
+        return AppConstants.PROCESS_AML.equals(step) || AppConstants.GET_CUSTOMER_INFO.equals(step);
     }
 
     /**
@@ -244,10 +231,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             log.info("Step 1 SUCCESS: Database connection is healthy");
         } catch (Exception e) {
             log.error("Step 1 FAILED: Database connection test failed", e);
-            throw new RuntimeException(
-                    "Unable to connect to the server. Please try again later. " +
-                            "If the issue continues, contact our support team at 070 200 002 or 1800 200 888."
-            );
+            throw new RuntimeException("Unable to connect to the server. Please try again later. " + "If the issue continues, contact our support team at 070 200 002 or 1800 200 888.");
         }
     }
 
@@ -294,14 +278,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         AmlStatusEnum amlStatusEnum = isHighRisk ? AmlStatusEnum.PENDING : AmlStatusEnum.APPROVE;
 
         // Map to CreateAmlRequestDto
-        CreateAmlRequestDto createRequest = openAccountAmlStatusMapper.toCreateRequest(
-                amlRequestDto,
-                amlResponse,
-                request,
-                occupationStatus,
-                amlStatusEnum,
-                objectMapper
-        );
+        CreateAmlRequestDto createRequest = openAccountAmlStatusMapper.toCreateRequest(amlRequestDto, amlResponse, request, occupationStatus, amlStatusEnum, objectMapper);
 
         // Handle high-risk customers
         if (isHighRisk) {
@@ -316,15 +293,10 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private AmlStatusDto handleExistingAml(AmlStatus existing, String legalId) {
         return switch (existing.getStatus()) {
             case APPROVE -> openAccountAmlStatusMapper.toDto(existing);
-            case PENDING -> throw new AccountCreationException(
-                    String.format(AppConstants.AML_NEED_REVIEW_MSG, legalId)
-            );
-            case REJECT -> throw new AccountCreationException(
-                    String.format(AppConstants.AML_REJECTED_MSG, legalId)
-            );
-            default -> throw new AccountCreationException(
-                    String.format(AppConstants.AML_UNKNOWN_MSG, legalId)
-            );
+            case PENDING ->
+                    throw new AccountCreationException(String.format(AppConstants.AML_NEED_REVIEW_MSG, legalId));
+            case REJECT -> throw new AccountCreationException(String.format(AppConstants.AML_REJECTED_MSG, legalId));
+            default -> throw new AccountCreationException(String.format(AppConstants.AML_UNKNOWN_MSG, legalId));
         };
     }
 
@@ -367,29 +339,23 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
         // Normal production check
         if (validationService.hasAccount(customerInfo, currency)) {
-            log.info(">>> Step {}: CREATE_{}_ACCOUNT - SKIPPED (already exists)",
-                    currency.equals("KHR") ? 6 : 7, currency);
+            log.info(">>> Step {}: CREATE_{}_ACCOUNT - SKIPPED (already exists)", currency.equals("KHR") ? 6 : 7, currency);
             return null;
         }
 
-        log.info(">>> Step {}: CREATE_{}_ACCOUNT",
-                currency.equals("KHR") ? 6 : 7, currency);
+        log.info(">>> Step {}: CREATE_{}_ACCOUNT", currency.equals("KHR") ? 6 : 7, currency);
         String account = createAccount(request, cif, currency);
         if (account != null) {
-            log.info("Step {} SUCCESS: {} account created: {}",
-                    currency.equals("KHR") ? 6 : 7, currency, account);
+            log.info("Step {} SUCCESS: {} account created: {}", currency.equals("KHR") ? 6 : 7, currency, account);
         } else {
-            log.warn("Step {} FAILED: {} account creation returned null",
-                    currency.equals("KHR") ? 6 : 7, currency);
+            log.warn("Step {} FAILED: {} account creation returned null", currency.equals("KHR") ? 6 : 7, currency);
         }
         return account;
     }
 
     private void validateAtLeastOneAccountExists(Map<String, String> customerInfo, String khrAccount, String usdAccount) {
         log.info(">>> Step 8: VALIDATE_ACCOUNT_CREATION");
-        if (khrAccount == null && usdAccount == null &&
-                !validationService.hasAccount(customerInfo, "KHR") &&
-                !validationService.hasAccount(customerInfo, "USD")) {
+        if (khrAccount == null && usdAccount == null && !validationService.hasAccount(customerInfo, "KHR") && !validationService.hasAccount(customerInfo, "USD")) {
             throw new AccountCreationException(AppConstants.FAIL_CREATE_ANY_ACCOUNT);
         }
         log.info("Step 8 SUCCESS: At least one account exists");
@@ -408,11 +374,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private CustomerImageUploadResponseDto safeSaveCustomerImages(CustomerRequest request) {
         log.info(">>> Step 10: SAVE_CUSTOMER_IMAGES");
         try {
-            CustomerFileUploadRequestDto fileRequest = CustomerFileUploadRequestDto.builder()
-                    .legal_id(request.getLegalId())
-                    .NidImage(request.getNidImage())
-                    .SelfieImage(request.getSelfieImage())
-                    .build();
+            CustomerFileUploadRequestDto fileRequest = CustomerFileUploadRequestDto.builder().legal_id(request.getLegalId()).NidImage(request.getNidImage()).SelfieImage(request.getSelfieImage()).build();
 
             CustomerImageUploadResponseDto imagePaths = customerImageService.saveCustomerImages(fileRequest);
             log.info("Step 10 SUCCESS: Images saved");
@@ -423,12 +385,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         }
     }
 
-    private void safeSaveSuccessLog(
-            CustomerRequest request,
-            CustomerResponse accountInfo,
-            AmlStatusDto amlStatusResponseDto,
-            CustomerImageUploadResponseDto imagePaths
-    ) {
+    private void safeSaveSuccessLog(CustomerRequest request, CustomerResponse accountInfo, AmlStatusDto amlStatusResponseDto, CustomerImageUploadResponseDto imagePaths) {
         log.info(">>> Step 11: SAVE_SUCCESS_LOG");
         try {
             accountOnlineOpenSuccessService.saveFinalLog(request, accountInfo, amlStatusResponseDto, imagePaths);
@@ -441,11 +398,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     private void safeReportLog(String legalId) {
         log.info(">>> Step 12: SAVE_REPORT_LOG");
         try {
-            reportLogService.saveLogReport(
-                    legalId,
-                    OpenAccStatusEnum.SUCCESS,
-                    "Open account online Successfully"
-            );
+            reportLogService.saveLogReport(legalId, OpenAccStatusEnum.SUCCESS, "Open account online Successfully");
             log.info("Step 12 SUCCESS: Report log saved");
         } catch (Exception e) {
             log.warn("Step 12 WARNING: Failed to save report log (non-critical): {}", e.getMessage());
@@ -454,8 +407,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
     private AmlExternalResponseDto callAmlMiddleware(CustomerAmlRequest amlRequest, String legalId) throws JsonProcessingException {
         AmlExternalResponseDto response = amlMiddlewareService.CheckAml(amlRequest);
-        log.info("AML Middleware response received | RiskLevel: {} | TrxnID: {}",
-                response.getRiskLevel(), response.getTrxnID());
+        log.info("AML Middleware response received | RiskLevel: {} | TrxnID: {}", response.getRiskLevel(), response.getTrxnID());
         return response;
     }
 
@@ -463,9 +415,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
      * Send Email/Telegram notification
      * Called ONLY when Risk Level is HIGH
      */
-    private void sendAmlNotification(CustomerAmlRequest amlRequest,
-                                     AmlExternalResponseDto amlResponse,
-                                     CustomerRequest request) {
+    private void sendAmlNotification(CustomerAmlRequest amlRequest, AmlExternalResponseDto amlResponse, CustomerRequest request) {
 
         log.info(">>> ENTER sendAmlNotification() for Legal ID: {}", request.getLegalId());
         log.info("AML Risk Level: {}", amlResponse.getRiskLevel());
@@ -473,11 +423,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
         try {
             // Use mapper to build the AML DTO payload
-            AmlStatusDto amlDto = openAccountAmlStatusMapper.fromRequestAndResponse(
-                    request,
-                    amlResponse,
-                    AmlStatusEnum.PENDING
-            );
+            AmlStatusDto amlDto = openAccountAmlStatusMapper.fromRequestAndResponse(request, amlResponse, AmlStatusEnum.PENDING);
 
             // Telegram Notification
             log.info(">>> Attempting Telegram notification for Legal ID: {}", request.getLegalId());
@@ -508,8 +454,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         StringBuilder remark = new StringBuilder("Account opening failed at: ").append(failedStep);
 
         // Append AML status if it's not APPROVE and amlProcessResult is not null
-        if (amlProcessResult != null && amlProcessResult.getStatus() != null
-                && !amlProcessResult.getStatus().equals(AmlStatusEnum.APPROVE)) {
+        if (amlProcessResult != null && amlProcessResult.getStatus() != null && !amlProcessResult.getStatus().equals(AmlStatusEnum.APPROVE)) {
             remark.append(" | AML Status: ").append(amlProcessResult.getStatus());
         }
 

@@ -59,7 +59,8 @@ public class AmlServiceImp implements AmlService {
     // ------------------------------- FIND BY LEGAL ID -------------------------------
     @Override
     public Optional<AmlStatus> findByLegalId(String legalId) {
-        return amlStatusRepository.findByLegalId(legalId);
+        return Optional.ofNullable(amlStatusRepository.findByLegalId(legalId)
+                .orElseThrow(() -> new NotFoundException("Legal Id: " + legalId + " Not found!")));
     }
 
     // ------------------------------- CREATE AML STATUS -------------------------------
@@ -90,7 +91,7 @@ public class AmlServiceImp implements AmlService {
         UserEntity currentUser = securityUtils.getCurrentUser();
 
         AmlStatus status = amlStatusRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("AML Status not found"));
+                .orElseThrow(() -> new NotFoundException("AML Status not found"));
 
         // Update based on new status
         updateStatusByEnum(status, req.getStatus(), currentUser);

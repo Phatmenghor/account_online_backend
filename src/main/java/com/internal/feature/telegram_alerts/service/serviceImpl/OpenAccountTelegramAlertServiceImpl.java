@@ -141,28 +141,28 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
     private String getProcessedUserName(AmlStatusDto amlDto) {
         if (amlDto == null || amlDto.getStatus() == null) return "N/A";
 
-        switch (amlDto.getStatus()) {
-            case PENDING:
-                return ""; // Hide "By" for pending
-            case APPROVE:
+        return switch (amlDto.getStatus()) {
+            case PENDING -> ""; // Hide "By" for pending
+            case APPROVE -> {
                 if (amlDto.getApprovedBy() != null) {
                     if (amlDto.getApprovedBy().getFullName() != null && !amlDto.getApprovedBy().getFullName().isEmpty())
-                        return amlDto.getApprovedBy().getFullName();
+                        yield amlDto.getApprovedBy().getFullName();
                     if (amlDto.getApprovedBy().getIdCard() != null && !amlDto.getApprovedBy().getIdCard().isEmpty())
-                        return amlDto.getApprovedBy().getIdCard();
+                        yield amlDto.getApprovedBy().getIdCard();
                 }
-                return "";
-            case REJECT:
+                yield "";
+            }
+            case REJECT -> {
                 if (amlDto.getRejectedBy() != null) {
                     if (amlDto.getRejectedBy().getFullName() != null && !amlDto.getRejectedBy().getFullName().isEmpty())
-                        return amlDto.getRejectedBy().getFullName();
+                        yield amlDto.getRejectedBy().getFullName();
                     if (amlDto.getRejectedBy().getIdCard() != null && !amlDto.getRejectedBy().getIdCard().isEmpty())
-                        return amlDto.getRejectedBy().getIdCard();
+                        yield amlDto.getRejectedBy().getIdCard();
                 }
-                return "";
-            default:
-                return "";
-        }
+                yield "";
+            }
+            default -> "";
+        };
     }
 
     private void appendIfNotEmpty(StringBuilder sb, String fieldName, String value) {
@@ -180,12 +180,11 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
                 .replace("`", "\\`");
     }
 
-
     private String joinNonNull(String a, String b) {
         StringBuilder sb = new StringBuilder();
         if (a != null && !a.isEmpty()) sb.append(a.trim());
         if (b != null && !b.isEmpty()) {
-            if (sb.length() > 0) sb.append(" ");
+            if (!sb.isEmpty()) sb.append(" ");
             sb.append(b.trim());
         }
         return sb.toString();

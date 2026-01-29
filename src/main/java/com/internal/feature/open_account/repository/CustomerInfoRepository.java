@@ -16,7 +16,7 @@ public class CustomerInfoRepository {
     private final JdbcTemplate stgJdbcTemplate;
 
     public CustomerInfoRepository(@Qualifier("stgJdbcTemplate") JdbcTemplate stgJdbcTemplate) {
-        this.stgJdbcTemplate = stgJdbcTemplate;  // âœ… New way
+        this.stgJdbcTemplate = stgJdbcTemplate;
     }
 
     public Map<String, String> findByLegalId(String legalId) {
@@ -45,19 +45,4 @@ public class CustomerInfoRepository {
             throw e;
         }
     }
-
-    /**
-     * Test DWH database connection
-     */
-//    public void testDwhConnection() {
-//        try {
-//            log.debug("Testing DWH Oracle database connection...");
-//            Integer result = dwhJdbcTemplate.queryForObject("SELECT 1 FROM DUAL", Integer.class);
-//            log.info(" DWH Oracle connection test successful, result: {}", result);
-//        } catch (Exception e) {
-//            log.error(" DWH Oracle connection test failed: {}", e.getMessage());
-//            throw e;
-//        }
-//    }
-
 }

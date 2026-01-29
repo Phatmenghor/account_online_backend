@@ -13,9 +13,7 @@ import javax.validation.constraints.NotBlank;
 public class MaritalStatusCreateRequestDto {
     @NotBlank(message = "English name must not be blank")
     private String nameEn;
-
     @NotBlank(message = "Khmer name must not be blank")
     private String nameKh;
-
     private StatusData status = StatusData.ACTIVE;
 }

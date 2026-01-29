@@ -18,14 +18,22 @@ public class XmlParser {
                 @Override
                 public String getNamespaceURI(String prefix) {
                     switch (prefix) {
-                        case "ns0": return "http://temenos.com/OAOWAR";
-                        default: return null;
+                        case "ns0":
+                            return "http://temenos.com/OAOWAR";
+                        default:
+                            return null;
                     }
                 }
+
                 @Override
-                public String getPrefix(String namespaceURI) { return null; }
+                public String getPrefix(String namespaceURI) {
+                    return null;
+                }
+
                 @Override
-                public Iterator getPrefixes(String namespaceURI) { return null; }
+                public Iterator getPrefixes(String namespaceURI) {
+                    return null;
+                }
             });
 
             Node node = (Node) xpath.evaluate(
@@ -47,16 +55,22 @@ public class XmlParser {
             xpath.setNamespaceContext(new NamespaceContext() {
                 @Override
                 public String getNamespaceURI(String prefix) {
-                    switch (prefix) {
-                        case "ns0": return "http://temenos.com/OAOWAR";
-                        case "ns3": return "http://temenos.com/CUSTOMER";
-                        default: return null;
-                    }
+                    return switch (prefix) {
+                        case "ns0" -> "http://temenos.com/OAOWAR";
+                        case "ns3" -> "http://temenos.com/CUSTOMER";
+                        default -> null;
+                    };
                 }
+
                 @Override
-                public String getPrefix(String namespaceURI) { return null; }
+                public String getPrefix(String namespaceURI) {
+                    return null;
+                }
+
                 @Override
-                public Iterator getPrefixes(String namespaceURI) { return null; }
+                public Iterator getPrefixes(String namespaceURI) {
+                    return null;
+                }
             });
 
             Node node = (Node) xpath.evaluate(

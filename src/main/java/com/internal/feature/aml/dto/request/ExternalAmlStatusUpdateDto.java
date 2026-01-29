@@ -12,6 +12,5 @@ import javax.validation.constraints.NotBlank;
 public class ExternalAmlStatusUpdateDto {
     @NotBlank(message = "customerId (Legal ID) is required")
     private String customerId;
-    
     private String updateFrom;
 }

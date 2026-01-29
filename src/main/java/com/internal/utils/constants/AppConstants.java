@@ -83,6 +83,14 @@ public final class AppConstants {
     public static final String FIELD_KH_DOB = "ថ្ងៃខែឆ្នាំកំណើត";
     public static final String FIELD_KH_GENDER = "ភេទ";
 
+    public static final String FIELD_LAST_NAME_EN = "lastNameEn";
+    public static final String FIELD_FIRST_NAME_EN = "firstNameEn";
+    public static final String FIELD_DOB = "dob";
+    public static final String FIELD_GENDER = "gender";
+
+    public static final String FIELD_NONE = "None";
+    public static final String BULLET_PREFIX = "- ";
+    public static final String NEW_LINE = "\n";
 
     //T24 ERROR RESPONSE
     public static final String T24_ACCOUNT_ERROR = "SECURITY VIOLATION DURING SIGN ON PROCESS";

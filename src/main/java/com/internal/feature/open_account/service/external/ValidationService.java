@@ -55,7 +55,7 @@ public class ValidationService {
         if (accounts == null || accounts.isEmpty()) {
             return false;
         }
-        
+
         String[] accountArray = accounts.split("#");
         for (String account : accountArray) {
             if (currency.equals(account)) {
