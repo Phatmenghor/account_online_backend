@@ -90,7 +90,6 @@ public class MobileBankingService {
 
     }
 
-
     private String formatDateOfBirth(String dob) {
         try {
             DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");

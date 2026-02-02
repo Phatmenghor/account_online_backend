@@ -67,6 +67,7 @@ public final class AppConstants {
     public static final String TEST_CONNECTION = "TEST_CONNECTION";
     public static final String PROCESS_AML = "PROCESS_AML";
     public static final String GET_CUSTOMER_INFO = "GET_CUSTOMER_INFO";
+    public static final String VALIDATE_EXISTING_ACCOUNT = "VALIDATE_EXISTING_ACCOUNT";
     public static final String CREATE_CUSTOMER = "CREATE_CUSTOMER";
     public static final String CREATE_KHR_ACCOUNT = "CREATE_KHR_ACCOUNT";
     public static final String CREATE_USD_ACCOUNT = "CREATE_USD_ACCOUNT";
