@@ -34,7 +34,7 @@ public class AmlNotificationService {
     @Value("${email.sender.address:ithelpdesk@cambodiapostbank.com.kh}")
     private String senderEmail;
 
-    @Value("${email.aml.recipients:aml@yourbank.com.kh,compliance@yourbank.com.kh}")
+    @Value("${email.aml.recipients}")
     private String amlRecipients;
 
     /**

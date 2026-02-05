@@ -20,7 +20,6 @@ import javax.validation.Valid;
 @RequiredArgsConstructor
 @CrossOrigin
 @Slf4j
-@Tag(name = "User Management")
 public class UserController {
 
     private final UserService userService;

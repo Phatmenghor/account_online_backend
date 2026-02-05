@@ -1,8 +1,9 @@
-package com.internal.feature.auth.service;
+package com.internal.feature.auth.service.impl;
 
 import com.internal.feature.auth.dto.response.ApiKeyResponseDto;
 import com.internal.feature.auth.models.ApiKeyEntity;
 import com.internal.feature.auth.repository.ApiKeyRepository;
+import com.internal.feature.auth.service.ApiKeyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

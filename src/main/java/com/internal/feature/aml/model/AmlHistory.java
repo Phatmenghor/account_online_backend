@@ -4,9 +4,11 @@ import com.internal.config.entity.BaseEntity;
 import com.internal.enumation.AmlStatusEnum;
 import com.internal.feature.auth.models.UserEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "acc_online_aml_history")
 @Data
