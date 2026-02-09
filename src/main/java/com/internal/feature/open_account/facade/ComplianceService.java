@@ -7,7 +7,6 @@ import com.internal.exceptions.error.openaccount.AccountCreationException;
 import com.internal.feature.aml.dto.request.CreateAmlRequestDto;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.aml.model.AmlStatus;
-import com.internal.feature.aml.service.AmlNotificationService;
 import com.internal.feature.aml.service.AmlService;
 import com.internal.feature.master_data.dto.response.OccupationDto;
 import com.internal.feature.master_data.service.OccupationService;
@@ -32,7 +31,6 @@ public class ComplianceService {
 
     private final AmlService amlService;
     private final AmlMiddlewareService amlMiddlewareService;
-    private final AmlNotificationService amlNotificationService;
     private final OccupationService occupationService;
     private final OpenAccountAmlStatusMapper openAccountAmlStatusMapper;
     private final ObjectMapper objectMapper;
@@ -138,12 +136,6 @@ public class ComplianceService {
                 log.error("Telegram notification failed: {}", e.getMessage());
             }
 
-            try {
-                amlNotificationService.sendAmlStatusNotification(amlDto);
-                log.info("Email AML notification sent successfully.");
-            } catch (Exception e) {
-                log.error("Email notification failed: {}", e.getMessage());
-            }
         } catch (Exception e) {
             log.error("Notification logic failed for Legal ID {}: {}", request.getLegalId(), e.getMessage());
         }
