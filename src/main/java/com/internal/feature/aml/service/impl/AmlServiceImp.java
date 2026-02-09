@@ -20,8 +20,6 @@ import com.internal.feature.aml.model.AmlStatus;
 import com.internal.feature.aml.repository.AmlHistoryRepository;
 import com.internal.feature.aml.repository.AmlStatusRepository;
 import com.internal.feature.aml.service.AmlService;
-import com.internal.feature.aml.specification.AmlHistorySpecification;
-import com.internal.feature.aml.specification.AmlStatusSpecification;
 import com.internal.feature.auth.models.UserEntity;
 import com.internal.feature.master_data.dto.response.LocationCodesDto;
 import com.internal.feature.open_account.mapper.MasterDataServiceHelper;
@@ -32,12 +30,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -55,18 +52,16 @@ public class AmlServiceImp implements AmlService {
     private final ApplicationEventPublisher eventPublisher;
     private final MasterDataServiceHelper masterDataServiceHelper;
 
-    // ------------------------------- FIND BY LEGAL ID
-    // -------------------------------
     @Override
     public Optional<AmlStatus> findByLegalId(String legalId) {
+        log.debug("Finding AML status by legalId: {}", legalId);
         return amlStatusRepository.findByLegalId(legalId);
     }
 
-    // ------------------------------- CREATE AML STATUS
-    // -------------------------------
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public AmlStatus createAmlStatus(CreateAmlRequestDto requestDto) throws JsonProcessingException {
+        log.info("Creating new AML status for legalId: {}", requestDto.getLegalId());
         AmlStatus status = amlStatusMapper.fromCreateDto(requestDto);
         status.setRejectedBy(null);
 
@@ -84,11 +79,10 @@ public class AmlServiceImp implements AmlService {
         return status;
     }
 
-    // ------------------------------- UPDATE AML STATUS
-    // -------------------------------
     @Override
     @Transactional
     public AmlStatusDto updateAmlStatus(Long id, UpdateAmlStatusDto req) {
+        log.info("Updating AML status with id: {} to status: {}", id, req.getStatus());
         UserEntity currentUser = securityUtils.getCurrentUser();
 
         AmlStatus status = amlStatusRepository.findById(id)
@@ -115,26 +109,24 @@ public class AmlServiceImp implements AmlService {
         return amlDto;
     }
 
-    // ------------------------------- GET ALL AML STATUS
-    // -------------------------------
     @Override
     public AllAmlResponseDto getAllAml(AllAmlRequestDto request) {
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(),
-                Sort.by(Sort.Direction.DESC, "createdAt"));
-        Specification<AmlStatus> spec = AmlStatusSpecification.hasStatus(request.getStatus())
-                .and(AmlStatusSpecification.search(request.getSearch()));
+        log.info("Fetching all AML statuses with status: {} and search: {}", request.getStatus(), request.getSearch());
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
 
-        Page<AmlStatus> page = amlStatusRepository.findAll(spec, pageable);
+        Page<AmlStatus> page = amlStatusRepository.findByStatusAndSearch(request.getStatus(), request.getSearch(), pageable);
 
         List<AmlStatusDto> content = page.stream()
                 .map(amlStatusMapper::toStatusDto)
                 .collect(Collectors.toList());
 
+        log.info("Found {} AML statuses", page.getTotalElements());
         return amlStatusMapper.mapToListDto(content, page);
     }
 
     @Override
     public AmlStatusDto getAmlById(Long id) {
+        log.debug("Fetching AML status by id: {}", id);
         AmlStatus aml = amlStatusRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Aml not found with Id: " + id));
         return amlStatusMapper.toStatusDto(aml);
@@ -142,36 +134,35 @@ public class AmlServiceImp implements AmlService {
 
     @Override
     public AmlHistoryDto getAmlHistoryById(Long id) {
+        log.debug("Fetching AML history by id: {}", id);
         AmlHistory aml = amlHistoryRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Aml history not found with Id: " + id));
         return amlHistoryMapper.toDto(aml);
     }
 
-    // ------------------------------- GET ALL AML HISTORY
-    // -------------------------------
     @Override
     public AllAmlHistoryResponseDto getAllAmlHistory(AllAmlHistoryRequestDto request) {
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(),
-                Sort.by(Sort.Direction.DESC, "createdAt"));
-        Specification<AmlHistory> spec = AmlHistorySpecification
-                .createdBetween(request.getStartDate(), request.getEndDate())
-                .and(AmlHistorySpecification.search(request.getSearch()))
-                .and(AmlHistorySpecification.hasStatus(request.getStatus()));
+        log.info("Fetching AML history with status: {}, search: {}, startDate: {}, endDate: {}",
+                request.getStatus(), request.getSearch(), request.getStartDate(), request.getEndDate());
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
 
-        Page<AmlHistory> page = amlHistoryRepository.findAll(spec, pageable);
+        LocalDateTime startDateTime = request.getStartDate() != null ? request.getStartDate().atStartOfDay() : null;
+        LocalDateTime endDateTime = request.getEndDate() != null ? request.getEndDate().atTime(23, 59, 59) : null;
+
+        Page<AmlHistory> page = amlHistoryRepository.findByFilters(startDateTime, endDateTime, request.getStatus(), request.getSearch(), pageable);
 
         List<AmlHistoryDto> content = page.stream()
                 .map(amlHistoryMapper::toDto)
                 .collect(Collectors.toList());
 
+        log.info("Found {} AML history records", page.getTotalElements());
         return amlHistoryMapper.mapToListDto(content, page);
     }
 
-    // ------------------------------- UPDATE EXTERNAL AML STATUS
-    // -------------------------------
     @Override
     @Transactional
     public void updateExternalAmlStatus(ExternalAmlStatusUpdateDto request) {
+        log.info("Updating external AML status for customerId: {}", request.getCustomerId());
         String legalId = request.getCustomerId();
         if (legalId != null && legalId.toUpperCase().startsWith("OAO")) {
             legalId = legalId.substring(3); // Remove "OAO" prefix
@@ -191,9 +182,6 @@ public class AmlServiceImp implements AmlService {
             throw new NotFoundException("AML Status not found for Legal ID: " + legalId);
         }
     }
-
-    // ------------------------------- PRIVATE METHODS
-    // -------------------------------
 
     private void populateAddressFields(AmlStatus status, CreateAmlRequestDto requestDto) {
         // ------------------ Current Address ------------------

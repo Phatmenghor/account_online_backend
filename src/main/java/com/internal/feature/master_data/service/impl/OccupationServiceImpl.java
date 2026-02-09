@@ -1,5 +1,6 @@
 package com.internal.feature.master_data.service.impl;
 
+import com.internal.enumation.StatusData;
 import com.internal.exceptions.error.custom.DuplicateNameException;
 import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.master_data.dto.request.GetAllOccupationRequest;
@@ -11,14 +12,11 @@ import com.internal.feature.master_data.mapper.OccupationMapper;
 import com.internal.feature.master_data.models.Occupation;
 import com.internal.feature.master_data.repository.OccupationRepository;
 import com.internal.feature.master_data.service.OccupationService;
-import com.internal.feature.master_data.specification.OccupationSpec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -48,13 +46,11 @@ public class OccupationServiceImpl implements OccupationService {
 
     @Override
     public AllOccupationResponseDto getAllOccupations(GetAllOccupationRequest request) {
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
 
-        // Build specification dynamically
-        Specification<Occupation> spec = OccupationSpec.hasStatus(request.getStatus())
-                .and(OccupationSpec.searchByName(request.getSearch()));
+        log.info("Fetching occupations - status: {}, search: {}", request.getStatus(), request.getSearch());
 
-        Page<Occupation> page = repository.findAll(spec, pageable);
+        Page<Occupation> page = repository.findByStatusAndSearch(request.getStatus(), request.getSearch(), pageable);
 
         List<OccupationDto> content = page.stream()
                 .map(mapper::toDto)
@@ -65,11 +61,9 @@ public class OccupationServiceImpl implements OccupationService {
 
     @Override
     public List<OccupationDto> getAllOccupationsPublic(String search) {
-        // Build specification dynamically - FORCE ACTIVE STATUS
-        Specification<Occupation> spec = OccupationSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
-                .and(OccupationSpec.searchByName(search));
+        log.info("Fetching occupations - status: {}, search: {}", StatusData.ACTIVE, search);
 
-        List<Occupation> occupations = repository.findAll(spec);
+        List<Occupation> occupations = repository.findActiveBySearch(StatusData.ACTIVE, search);
         return mapper.toDtoList(occupations);
     }
 

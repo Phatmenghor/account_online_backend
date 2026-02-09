@@ -9,7 +9,6 @@ import com.internal.feature.logs_report.mapper.AccountOnlineReportMapper;
 import com.internal.feature.logs_report.model.AccountOnlineReportLog;
 import com.internal.feature.logs_report.repository.AccountOnlineReportLogRepository;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
-import com.internal.feature.logs_report.specification.AccountOnlineReportLogSpecification;
 import com.internal.feature.telegram_alerts.service.AlertsOpenAccOnlineService;
 import com.internal.utils.pagination.PaginationResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -91,14 +88,11 @@ public class AccountOnlineReportLogImpl implements AccountOnlineReportLogService
         log.info("Fetching all logs - From: {}, To: {}, Status: {}",
                 request.getFromDate(), request.getToDate(), request.getStatus());
 
-        Specification<AccountOnlineReportLog> spec = AccountOnlineReportLogSpecification
-                .filterByDateRangeAndStatus(
-                        request.getFromDate(),
-                        request.getToDate(),
-                        request.getStatus()
-                );
+        LocalDateTime fromDateTime = request.getFromDate() != null ? request.getFromDate().atStartOfDay() : null;
+        LocalDateTime toDateTime = request.getToDate() != null ? request.getToDate().plusDays(1).atStartOfDay() : null;
+        List<OpenAccStatusEnum> statuses = request.getStatus() != null ? List.of(request.getStatus()) : null;
 
-        List<AccountOnlineReportLog> logs = repository.findAll(spec, Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<AccountOnlineReportLog> logs = repository.findByDateRangeAndStatuses(fromDateTime, toDateTime, statuses);
 
         log.info("Found {} logs", logs.size());
         return accountOnlineReportMapper.toResponseList(logs);
@@ -113,17 +107,14 @@ public class AccountOnlineReportLogImpl implements AccountOnlineReportLogService
         // Convert page number from 1-indexed to 0-indexed for Spring Data
         int pageIndex = request.getPageNo() - 1;
 
-        Specification<AccountOnlineReportLog> spec = AccountOnlineReportLogSpecification
-                .filterByDateRangeAndStatus(
-                        request.getFromDate(),
-                        request.getToDate(),
-                        request.getStatus()
-                );
+        LocalDateTime fromDateTime = request.getFromDate() != null ? request.getFromDate().atStartOfDay() : null;
+        LocalDateTime toDateTime = request.getToDate() != null ? request.getToDate().plusDays(1).atStartOfDay() : null;
+        List<OpenAccStatusEnum> statuses = request.getStatus() != null ? List.of(request.getStatus()) : null;
 
-        Pageable pageable = PageRequest.of(pageIndex, request.getPageSize(),
-                Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(pageIndex, request.getPageSize());
 
-        Page<AccountOnlineReportLog> page = repository.findAll(spec, pageable);
+        Page<AccountOnlineReportLog> page = repository.findByDateRangeAndStatusesPaged(
+                fromDateTime, toDateTime, statuses, pageable);
 
         List<AccountOnlineReportLogResponse> responseList = accountOnlineReportMapper.toResponseList(page.getContent());
 

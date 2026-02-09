@@ -1,5 +1,6 @@
 package com.internal.feature.master_data.service.impl;
 
+import com.internal.enumation.StatusData;
 import com.internal.exceptions.error.custom.DuplicateNameException;
 import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.master_data.dto.request.GetAllLegalTypeRequest;
@@ -11,14 +12,11 @@ import com.internal.feature.master_data.mapper.LegalTypeMapper;
 import com.internal.feature.master_data.models.LegalType;
 import com.internal.feature.master_data.repository.LegalTypeRepository;
 import com.internal.feature.master_data.service.LegalTypeService;
-import com.internal.feature.master_data.specification.LegalTypeSpec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -40,12 +38,11 @@ public class LegalTypeServiceImpl implements LegalTypeService {
 
     @Override
     public AllLegalTypeResponseDto getAllLegalType(GetAllLegalTypeRequest request) {
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
 
-        Specification<LegalType> spec = LegalTypeSpec.hasStatus(request.getStatus())
-                .and(LegalTypeSpec.searchByName(request.getSearch()));
+        log.info("Fetching legal types - status: {}, search: {}", request.getStatus(), request.getSearch());
 
-        Page<LegalType> page = repository.findAll(spec,pageable);
+        Page<LegalType> page = repository.findByStatusAndSearch(request.getStatus(), request.getSearch(), pageable);
         List<LegalTypeDto> content = page.stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
@@ -56,11 +53,9 @@ public class LegalTypeServiceImpl implements LegalTypeService {
 
     @Override
     public List<LegalTypeDto> getAllLegalTypePublic(String search) {
-        // FORCE ACTIVE STATUS
-        Specification<LegalType> spec = LegalTypeSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
-                .and(LegalTypeSpec.searchByName(search));
+        log.info("Fetching legal types - status: {}, search: {}", StatusData.ACTIVE, search);
 
-        List<LegalType> list = repository.findAll(spec);
+        List<LegalType> list = repository.findActiveBySearch(StatusData.ACTIVE, search);
         return mapper.toDtoList(list);
     }
 
