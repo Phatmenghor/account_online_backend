@@ -175,7 +175,7 @@ public class CustomerImageServiceImpl implements CustomerImageService {
         }
     }
 
-    /** Check if NID image exists */
+    /** Check if NID image exist */
     @Override
     public boolean nidImageExists(String customerId) {
         String fileName = "nid_" + customerId + ".jpg";
