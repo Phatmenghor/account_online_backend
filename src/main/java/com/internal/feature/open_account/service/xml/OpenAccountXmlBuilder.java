@@ -1,6 +1,7 @@
 package com.internal.feature.open_account.service.xml;
 
 import com.internal.config.CpbProperties;
+import com.internal.config.DefaultProperties;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.utils.constants.DefaultConstants;
 import lombok.RequiredArgsConstructor;
@@ -16,20 +17,18 @@ import java.time.format.DateTimeFormatter;
 public class OpenAccountXmlBuilder {
 
     private final CpbProperties cpbProperties;
+    private final DefaultProperties defaultProperties;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter T24_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-    /**
-     * Build XML for creating a customer in T24
-     */
     public String buildCustomerCreationXml(CustomerRequest request) {
         log.debug("Building customer creation XML for Legal ID: {}", request.getLegalId());
 
         String username = cpbProperties.getT24().getUsername();
         String password = cpbProperties.getT24().getPassword();
 
-        String branchCode = getOrDefault(request.getBranchCode(), DefaultConstants.DEFAULT_BRANCH_CODE);
+        String branchCode = getOrDefault(request.getBranchCode(), defaultProperties.getBranchCode());
         String maritalStatus = getOrDefault(request.getMaritalStatus(), "");
         String legalAddress = getOrDefault(request.getLegalAddress(), "");
 
@@ -76,28 +75,28 @@ public class OpenAccountXmlBuilder {
                 + "<cus:gSTREET g=\"1\"><cus:STREET>" + legalAddress + "</cus:STREET></cus:gSTREET>"
 
                 // Organizational fields
-                + "<cus:Sector>" + DefaultConstants.DEFAULT_SECTOR + "</cus:Sector>"
-                + "<cus:CostCenter>" + DefaultConstants.DEFAULT_COST_CENTER + "</cus:CostCenter>"
-                + "<cus:Industry>" + DefaultConstants.DEFAULT_INDUSTRY + "</cus:Industry>"
-                + "<cus:Target>" + DefaultConstants.DEFAULT_TARGET + "</cus:Target>"
-                + "<cus:Nationality>" + DefaultConstants.DEFAULT_NATIONALITY + "</cus:Nationality>"
-                + "<cus:CustomerStatus>" + DefaultConstants.DEFAULT_CUSTOMER_STATUS + "</cus:CustomerStatus>"
-                + "<cus:Residence>" + DefaultConstants.DEFAULT_NATIONALITY + "</cus:Residence>"
+                + "<cus:Sector>" + defaultProperties.getSector() + "</cus:Sector>"
+                + "<cus:CostCenter>" + defaultProperties.getCostCenter() + "</cus:CostCenter>"
+                + "<cus:Industry>" + defaultProperties.getIndustry() + "</cus:Industry>"
+                + "<cus:Target>" + defaultProperties.getTarget() + "</cus:Target>"
+                + "<cus:Nationality>" + defaultProperties.getNationality() + "</cus:Nationality>"
+                + "<cus:CustomerStatus>" + defaultProperties.getCustomerStatus() + "</cus:CustomerStatus>"
+                + "<cus:Residence>" + defaultProperties.getNationality() + "</cus:Residence>"
 
                 // Legal identification
                 + "<cus:gLEGALID g=\"1\"><cus:mLEGALID m=\"1\">"
                 + "<cus:LegalId>" + request.getLegalId() + "</cus:LegalId>"
                 + "<cus:LegalDocName>" + request.getLegalDocType() + "</cus:LegalDocName>"
-                + "<cus:LegalHolderName>" + DefaultConstants.DEFAULT_LEGAL_HOLDER_NAME + "</cus:LegalHolderName>"
+                + "<cus:LegalHolderName>" + defaultProperties.getLegalHolderName() + "</cus:LegalHolderName>"
                 + "<cus:LegalIssAuth>" + request.getGivenName() + "</cus:LegalIssAuth>"
                 + "<cus:LegalIssDate>" + legalIssueDate + "</cus:LegalIssDate>"
                 + "</cus:mLEGALID></cus:gLEGALID>"
 
                 // Language
-                + "<cus:Language>" + DefaultConstants.DEFAULT_LANGUAGE + "</cus:Language>"
+                + "<cus:Language>" + defaultProperties.getLanguage() + "</cus:Language>"
 
                 // Customer rating
-                + "<cus:gCUSTOMERRATING g=\"1\"><cus:CustomerRating>" + DefaultConstants.DEFAULT_CUSTOMER_RATING + "</cus:CustomerRating></cus:gCUSTOMERRATING>"
+                + "<cus:gCUSTOMERRATING g=\"1\"><cus:CustomerRating>" + defaultProperties.getCustomerRating() + "</cus:CustomerRating></cus:gCUSTOMERRATING>"
 
                 // Personal details
                 + "<cus:TITLE>" + title + "</cus:TITLE>"
@@ -115,7 +114,7 @@ public class OpenAccountXmlBuilder {
                 + "</cus:mPHONE1></cus:gPHONE1>"
 
                 // Customer type
-                + "<cus:CustomerType>" + DefaultConstants.DEFAULT_CUSTOMER_TYPE + "</cus:CustomerType>"
+                + "<cus:CustomerType>" + defaultProperties.getCustomerType() + "</cus:CustomerType>"
 
                 // Current address (administrative codes)
                 + "<cus:CustProvince>" + custProvince + "</cus:CustProvince>"
@@ -124,7 +123,7 @@ public class OpenAccountXmlBuilder {
                 + "<cus:CustVillage>" + custVillage + "</cus:CustVillage>"
 
                 // Ownership and staff
-                + "<cus:Ownership>" + DefaultConstants.DEFAULT_OWNERSHIP + "</cus:Ownership>"
+                + "<cus:Ownership>" + defaultProperties.getOwnership() + "</cus:Ownership>"
                 + "<cus:RelationManager>" + referralId + "</cus:RelationManager>"
                 + "<cus:LoanOfficer/>"
                 + "<cus:Staff>" + releasedBy + "</cus:Staff>"
@@ -142,13 +141,10 @@ public class OpenAccountXmlBuilder {
                 + "</soapenv:Envelope>";
     }
 
-    /**
-     * Build XML for opening a new account (KHR/USD)
-     */
     public String buildAccountCreationXml(CustomerRequest request, String cif, String currency) {
         String username = cpbProperties.getT24().getUsername();
         String password = cpbProperties.getT24().getPassword();
-        String branchCode = getOrDefault(request.getBranchCode(), DefaultConstants.DEFAULT_BRANCH_CODE);
+        String branchCode = getOrDefault(request.getBranchCode(), defaultProperties.getBranchCode());
         String effectiveDate = LocalDate.now().format(DATE_FORMATTER);
 
         return "<soapenv:Envelope xmlns:soapenv=\"" + DefaultConstants.SOAP_ENV_NS + "\" "
@@ -164,8 +160,8 @@ public class OpenAccountXmlBuilder {
                 + "</WebRequestCommon>"
                 + "<OfsFunction/>"
                 + "<AAARRANGEMENTACTIVITYAANEWOAOType id=\"\">"
-                + "<aaar:Arrangement>" + DefaultConstants.NEW_ARRANGEMENT + "</aaar:Arrangement>"
-                + "<aaar:Activity>" + DefaultConstants.ACCOUNT_ACTIVITY + "</aaar:Activity>"
+                + "<aaar:Arrangement>" + defaultProperties.getNewArrangement() + "</aaar:Arrangement>"
+                + "<aaar:Activity>" + defaultProperties.getAccountActivity() + "</aaar:Activity>"
                 + "<aaar:EffectiveDate>" + effectiveDate + "</aaar:EffectiveDate>"
                 + "<aaar:gCUSTOMER g=\"1\">"
                 + "<aaar:mCUSTOMER m=\"1\">"
@@ -173,7 +169,7 @@ public class OpenAccountXmlBuilder {
                 + "<aaar:CustomerRole>OWNER</aaar:CustomerRole>"
                 + "</aaar:mCUSTOMER>"
                 + "</aaar:gCUSTOMER>"
-                + "<aaar:Product>" + DefaultConstants.PRODUCT_CODE + "</aaar:Product>"
+                + "<aaar:Product>" + defaultProperties.getProductCode() + "</aaar:Product>"
                 + "<aaar:Currency>" + currency + "</aaar:Currency>"
                 + "<aaar:gPROPERTY g=\"1\">"
                 + "<aaar:mPROPERTY m=\"1\">"
@@ -194,9 +190,6 @@ public class OpenAccountXmlBuilder {
 
     // === Utility Methods ===
 
-    /**
-     * Format date to T24 format (YYYYMMDD)
-     */
     private String formatDateForT24(String date) {
         if (date == null || date.isEmpty()) {
             return "";
@@ -215,9 +208,6 @@ public class OpenAccountXmlBuilder {
         }
     }
 
-    /**
-     * Determine title based on gender
-     */
     private String determineTitle(String gender) {
         if (gender == null || gender.isEmpty()) {
             return "";

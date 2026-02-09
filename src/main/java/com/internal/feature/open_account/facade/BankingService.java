@@ -26,7 +26,6 @@ public class BankingService {
     private final JdbcTemplate jdbcTemplate;
     private final TestProperties isTestMode;
 
-    // Simulation flags (moved from OpenAccountServiceImpl)
     public static class TestConfig {
         public static final boolean SIMULATE_CAMDX_ERROR = false;
         public static final boolean SIMULATE_INTERNAL_ERROR = false;

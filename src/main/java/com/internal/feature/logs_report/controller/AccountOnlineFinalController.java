@@ -6,6 +6,7 @@ import com.internal.feature.logs_report.dto.request.AllAccountOnlineSuccessReque
 import com.internal.feature.logs_report.dto.response.AccountOnlineFinalResponseDto;
 import com.internal.feature.logs_report.dto.response.AllAccountOnlineFinalResponseDto;
 import com.internal.feature.logs_report.service.serviceImpl.AccountOnlineOpenFinalServiceImpl;
+import com.internal.utils.constants.ResponseMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +25,7 @@ public class AccountOnlineFinalController {
         log.info("Fetching Account By CIF : {} , Legal Id : {} ", request.getCif(),request.getLegalId());
         AccountOnlineFinalResponseDto dto = openFinalService.findAccountByCifOrLegalId(request);
         log.info("Successfully get Account By CIF : {} , Legal Id : {}",request.getCif(),request.getLegalId());
-        return ResponseEntity.ok(ApiResponse.success("Account retrieved successfully", dto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.ACCOUNT_RETRIEVED, dto));
 
     }
 
@@ -34,7 +35,7 @@ public class AccountOnlineFinalController {
                 request.getPageNo(), request.getPageSize(), request.getSearch());
         AllAccountOnlineFinalResponseDto response = openFinalService.getSuccessOpenAccount(request);
         log.info("Successfully retrieved {} success open accounts", response.getTotalElements());
-        return ResponseEntity.ok(ApiResponse.success("Success accounts retrieved successfully", response));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.SUCCESS_ACCOUNTS_RETRIEVED, response));
     }
 
 }

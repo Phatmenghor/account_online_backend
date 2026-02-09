@@ -7,7 +7,7 @@ import com.internal.feature.master_data.dto.request.MaritalStatusUpdateRequestDt
 import com.internal.feature.master_data.dto.response.AllMaritalStatusResponseDto;
 import com.internal.feature.master_data.dto.response.MaritalStatusDto;
 import com.internal.feature.master_data.service.MaritalStatusService;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.internal.utils.constants.ResponseMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/marital-status")
 @RequiredArgsConstructor
-@CrossOrigin
 @Slf4j
-@Tag(name = "Marital Status Management")
 public class MaritalStatusController {
 
     private final MaritalStatusService service;
@@ -28,7 +26,7 @@ public class MaritalStatusController {
         log.info("Fetching marital status with ID: {}", id);
         MaritalStatusDto dto = service.getById(id);
         log.info("Successfully retrieved marital status with ID: {}", id);
-        return ResponseEntity.ok(ApiResponse.success("Marital status retrieved successfully", dto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.retrieved(ResponseMessage.MARITAL_STATUS), dto));
     }
 
     @PostMapping("/all")
@@ -36,7 +34,7 @@ public class MaritalStatusController {
         log.info("Fetching all marital statuses");
         AllMaritalStatusResponseDto list = service.getAll(request);
         log.info("Successfully retrieved {} marital statuses", list.getContent().size());
-        return ResponseEntity.ok(ApiResponse.success("All marital statuses retrieved successfully", list));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.retrieved(ResponseMessage.ALL_MARITAL_STATUSES), list));
     }
 
     @PostMapping("/create")
@@ -44,7 +42,7 @@ public class MaritalStatusController {
         log.info("Creating new marital status: {}", request);
         MaritalStatusDto dto = service.create(request);
         log.info("Successfully created marital status with ID: {}", dto.getId());
-        return ResponseEntity.ok(ApiResponse.success("Marital status created successfully", dto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.created(ResponseMessage.MARITAL_STATUS), dto));
     }
 
     @PostMapping("/update/{id}")
@@ -53,7 +51,7 @@ public class MaritalStatusController {
         log.info("Updating marital status with ID: {} with data: {}", id, request);
         MaritalStatusDto dto = service.update(id, request);
         log.info("Successfully updated marital status with ID: {}", id);
-        return ResponseEntity.ok(ApiResponse.success("Marital status updated successfully", dto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.updated(ResponseMessage.MARITAL_STATUS), dto));
     }
 
     @PostMapping("/delete/{id}")
@@ -61,6 +59,6 @@ public class MaritalStatusController {
         log.info("Deleting marital status with ID: {}", id);
         MaritalStatusDto maritalStatusDto = service.delete(id);
         log.info("Successfully deleted marital status with ID: {}", id);
-        return ResponseEntity.ok(ApiResponse.success("Marital status deleted successfully", maritalStatusDto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.deleted(ResponseMessage.MARITAL_STATUS), maritalStatusDto));
     }
 }

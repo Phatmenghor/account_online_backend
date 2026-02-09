@@ -23,15 +23,15 @@ public class StartupLogger {
 
         log.info("");
         log.info("============================================================");
-        log.info("🚀 Account Online Application STARTED SUCCESSFULLY");
+        log.info("Account Online Application STARTED SUCCESSFULLY");
         log.info("------------------------------------------------------------");
         log.info("Active Profile(s): {}",
                 profiles.length > 0 ? String.join(", ", profiles) : "default");
         log.info("");
-        log.info("🌐 Access Points:");
-        log.info("• Application : http://localhost:{}", port);
-        log.info("• Swagger UI  : http://localhost:{}/swagger-ui.html", port);
-        log.info("• Health Check: http://localhost:{}/actuator/health", port);
+        log.info("Access Points:");
+        log.info("  Application : http://localhost:{}", port);
+        log.info("  Swagger UI  : http://localhost:{}/swagger-ui.html", port);
+        log.info("  Health Check: http://localhost:{}/actuator/health", port);
         log.info("============================================================");
         log.info("");
     }

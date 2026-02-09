@@ -18,18 +18,7 @@ public class OtpGenerator {
     private final CpbProperties cpbProperties;
     private final Environment env;
 
-    /**
-     * Generate a 6-digit OTP codes
-     *
-     * @return 6-digit OTP string
-     */
     public String generate() {
-//        String environment = cpbProperties.getEnvironment();
-//        if (AppConstants.ENV_DEVELOPMENT.equalsIgnoreCase(environment)) {
-//            return AppConstants.DEFAULT_DEV_OTP;
-//        }
-
-        // Return default OTP in UAT
         if (Arrays.asList(env.getActiveProfiles()).contains("uat") ||
                 Arrays.asList(env.getActiveProfiles()).contains("dev")) {
             return AppConstants.DEFAULT_DEV_OTP;

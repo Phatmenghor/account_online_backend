@@ -6,7 +6,7 @@ import com.internal.feature.auth.dto.request.UpdateUserRequestDto;
 import com.internal.feature.auth.dto.response.AuthResponseDTO;
 import com.internal.feature.auth.dto.response.UserResponseDto;
 import com.internal.feature.auth.service.AuthService;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.internal.utils.constants.ResponseMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -31,12 +31,12 @@ public class AuthController {
         log.info("Authentication attempt for user: {}", loginDto.getUsername());
         AuthResponseDTO authResponse = authService.login(loginDto);
         log.info("Authentication successful for user: {}", loginDto.getUsername());
-        return ResponseEntity.ok(ApiResponse.success("Login successful", authResponse));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.LOGIN_SUCCESS, authResponse));
     }
 
     @PostMapping("/refresh-token")
     public ResponseEntity<ApiResponse<com.internal.feature.auth.dto.response.TokenRefreshResponseDto>> refreshToken(@Valid @RequestBody com.internal.feature.auth.dto.request.TokenRefreshRequestDto requestDto) {
-        return ResponseEntity.ok(ApiResponse.success("Token refreshed successfully", authService.refreshToken(requestDto)));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.TOKEN_REFRESHED, authService.refreshToken(requestDto)));
     }
 
     @PostMapping("/logout")
@@ -44,7 +44,7 @@ public class AuthController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
         authService.logout(username); 
-        return ResponseEntity.ok(ApiResponse.success("Log out successful", null));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.LOGOUT_SUCCESS, null));
     }
 
     @PostMapping("/roles")
@@ -52,7 +52,7 @@ public class AuthController {
         log.debug("Fetching available roles");
         List<Map<String, Object>> roles = authService.getAvailableRoles();
         log.debug("Retrieved {} available roles", roles.size());
-        return ResponseEntity.ok(ApiResponse.success("Available roles retrieved successfully", roles));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.ROLES_RETRIEVED, roles));
     }
 
     @PostMapping("/validate-token")
@@ -60,8 +60,8 @@ public class AuthController {
         log.debug("Token validation request");
         boolean isValid = authService.validateToken();
         return ResponseEntity.ok(isValid
-                ? ApiResponse.success("Token is valid", true)
-                : ApiResponse.error("Token is invalid or user account is inactive", false));
+                ? ApiResponse.success(ResponseMessage.TOKEN_VALID, true)
+                : ApiResponse.error(ResponseMessage.TOKEN_INVALID, false));
     }
 
     @PostMapping("/token/update-profile")
@@ -70,6 +70,6 @@ public class AuthController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserResponseDto userResponse = authService.updateUserProfile(registerDto, authentication.getName());
         log.info("Admin update profile successful for: {}", registerDto.getUsername());
-        return ResponseEntity.ok(ApiResponse.success("User profile updated successfully", userResponse));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.PROFILE_UPDATED, userResponse));
     }
 }

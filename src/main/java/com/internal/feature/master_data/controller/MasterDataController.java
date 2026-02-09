@@ -5,8 +5,8 @@ import com.internal.feature.master_data.dto.request.AddressRequestDto;
 import com.internal.feature.master_data.dto.request.AllMasterDataRequest;
 import com.internal.feature.master_data.dto.response.*;
 import com.internal.feature.master_data.service.MasterDataService;
+import com.internal.utils.constants.ResponseMessage;
 import com.internal.utils.pagination.PaginationResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/public/master-data")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Master Data Management (public)")
 public class MasterDataController {
 
     private final MasterDataService masterDataService;
@@ -26,7 +25,7 @@ public class MasterDataController {
             @RequestBody AddressRequestDto address) {
 
         LocationCodesDto response = masterDataService.initAddress(address);
-        return ResponseEntity.ok(ApiResponse.success("Address init successfully!", response));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.ADDRESS_INIT, response));
     }
 
     @PostMapping("/init/place-of-birth")
@@ -34,7 +33,7 @@ public class MasterDataController {
             @RequestBody AddressRequestDto address) {
 
         LocationCodesDto response = masterDataService.initPob(address);
-        return ResponseEntity.ok(ApiResponse.success("Pob init successfully!", response));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.POB_INIT, response));
     }
 
     @PostMapping("/province")
@@ -42,7 +41,7 @@ public class MasterDataController {
             @RequestBody AllMasterDataRequest request) {
 
         PaginationResponse<ClsProvinceDto> response = masterDataService.getProvince(request);
-        return ResponseEntity.ok(ApiResponse.success("Provinces retrieved successfully!", response));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.PROVINCES_RETRIEVED, response));
     }
 
     @PostMapping("/district/{provinceCode}")
@@ -51,7 +50,7 @@ public class MasterDataController {
             @RequestBody AllMasterDataRequest request) {
 
         PaginationResponse<ClsDistrictDto> response = masterDataService.getDistrict(request, provinceCode);
-        return ResponseEntity.ok(ApiResponse.success("Districts retrieved successfully!", response));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.DISTRICTS_RETRIEVED, response));
     }
 
     @PostMapping("/commune/{districtCode}")
@@ -60,7 +59,7 @@ public class MasterDataController {
             @RequestBody AllMasterDataRequest request) {
 
         PaginationResponse<ClsCommuneDto> response = masterDataService.getCommune(request, districtCode);
-        return ResponseEntity.ok(ApiResponse.success("Communes retrieved successfully!", response));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.COMMUNES_RETRIEVED, response));
     }
 
     @PostMapping("/village/{communeCode}")
@@ -69,7 +68,7 @@ public class MasterDataController {
             @RequestBody AllMasterDataRequest request) {
 
         PaginationResponse<ClsVillageDto> response = masterDataService.getVillage(request, communeCode);
-        return ResponseEntity.ok(ApiResponse.success("Villages retrieved successfully!", response));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.VILLAGES_RETRIEVED, response));
     }
 
     @PostMapping("/branch")
@@ -77,6 +76,6 @@ public class MasterDataController {
             @RequestBody AllMasterDataRequest request) {
 
         PaginationResponse<ClsBranchDto> response = masterDataService.getBranch(request);
-        return ResponseEntity.ok(ApiResponse.success("Branches retrieved successfully!", response));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.BRANCHES_RETRIEVED, response));
     }
 }

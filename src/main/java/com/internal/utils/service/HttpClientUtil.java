@@ -19,10 +19,6 @@ public class HttpClientUtil {
 
     private final RestTemplate restTemplate;
 
-    /**
-     * Sends a raw POST request (useful for SOAP/XML endpoints)
-     * Returns the full response body as a plain String.
-     */
     public String postForString(String url, String body, String contentType) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(contentType));
@@ -38,29 +34,14 @@ public class HttpClientUtil {
         return response.getBody();
     }
 
-    /**
-     * Make a POST request returning JsonNode
-     *
-     * @param url      The target URL
-     * @param request  The request body
-     * @param headers  Optional custom headers
-     * @param apiName  API name for logging
-     * @return JsonNode response
-     */
     public <T> JsonNode post(String url, T request, Map<String, String> headers, String apiName) {
         return executeRequest(url, HttpMethod.POST, request, headers, apiName, JsonNode.class);
     }
 
-    /**
-     * Make a POST request with just URL and request body
-     */
     public <T> JsonNode post(String url, T request, String apiName) {
         return post(url, request, null, apiName);
     }
 
-    /**
-     * Make a GET request returning JsonNode
-     */
     public JsonNode get(String url, Map<String, String> headers, String apiName) {
         return executeRequest(url, HttpMethod.GET, null, headers, apiName, JsonNode.class);
     }

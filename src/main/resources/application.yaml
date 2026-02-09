@@ -143,6 +143,25 @@ masterdata:
 
 cpb:
   environment: development
+
+  # Business defaults (overridable per environment)
+  defaults:
+    branch-code: KH0012011
+    sector: "4501"
+    cost-center: "1000"
+    industry: "4500"
+    target: "220"
+    language: "2"
+    customer-rating: "1"
+    customer-status: "1"
+    customer-type: ACTIVE
+    ownership: "304"
+    legal-holder-name: NATIONAL.ID
+    nationality: KH
+    product-code: SAVE.ACCT.ONLINE
+    account-activity: ACCOUNTS-NEW-ARRANGEMENT
+    new-arrangement: NEW
+
   camdx:
     url: http://192.168.103.106:8099/api/v1/
     auth:

@@ -16,27 +16,20 @@ public class SecurityUtils {
     private UserRepository userRepository;
 
     public UserEntity getCurrentUser() {
-        // Retrieve the Authentication object from the SecurityContext
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // If no authentication exists (e.g., anonymous user), log error and throw exception
         if (authentication == null || !authentication.isAuthenticated()) {
-            log.error("User not authenticated. Authentication object is null or not authenticated.");
+            log.error("User not authenticated");
             throw new NotFoundException("User not authenticated.");
         }
 
-        // Get the (username = Idcard) from the authentication object
         String username = authentication.getName();
-        log.info("Fetching  user with id card: {}", username);
+        log.debug("Fetching user: {}", username);
 
-        // Fetch the user from the repository
-        UserEntity user = userRepository.findByUsername(username)
+        return userRepository.findByUsername(username)
                 .orElseThrow(() -> {
-                    log.error("User with id card {} not found", username);
+                    log.error("User not found: {}", username);
                     return new NotFoundException("User with id card " + username + " not found");
                 });
-
-        log.info("User with id card {} successfully retrieved", username);
-        return user;
     }
 }

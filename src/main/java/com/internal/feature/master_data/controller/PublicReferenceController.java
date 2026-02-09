@@ -10,7 +10,7 @@ import com.internal.feature.master_data.service.MaritalStatusService;
 import com.internal.feature.master_data.service.OccupationService;
 import com.internal.feature.master_data.service.LegalTypeService;
 import com.internal.feature.master_data.service.ReferenceService;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.internal.utils.constants.ResponseMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/public/master-data")
 @RequiredArgsConstructor
-@CrossOrigin
 @Slf4j
-@Tag(name = "Master Data Management (public)")
 public class PublicReferenceController {
 
     private final OccupationService occupationService;
@@ -36,7 +34,7 @@ public class PublicReferenceController {
         log.info("Fetching all occupations (public)");
         List<OccupationDto> list = occupationService.getAllOccupationsPublic(request.getSearch());
         log.info("Successfully retrieved {} occupations", list.size());
-        return ResponseEntity.ok(ApiResponse.success("All occupations retrieved successfully", list));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.retrieved(ResponseMessage.ALL_OCCUPATIONS), list));
     }
 
     @PostMapping("/marital-status/all")
@@ -44,7 +42,7 @@ public class PublicReferenceController {
         log.info("Fetching all marital statuses (public)");
         List<MaritalStatusDto> list = maritalStatusService.getAllPublic(request.getSearch());
         log.info("Successfully retrieved {} marital statuses", list.size());
-        return ResponseEntity.ok(ApiResponse.success("All marital statuses retrieved successfully", list));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.retrieved(ResponseMessage.ALL_MARITAL_STATUSES), list));
     }
 
     @PostMapping("/bank/all")
@@ -52,7 +50,7 @@ public class PublicReferenceController {
         log.info("Fetching all banks (public)");
         List<ReferenceDto> list = referenceService.getAllPublic(request.getSearch());
         log.info("Successfully retrieved {} banks", list.size());
-        return ResponseEntity.ok(ApiResponse.success("All banks retrieved successfully", list));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.retrieved(ResponseMessage.ALL_BANKS), list));
     }
 
     @PostMapping("/legal-type/all")
@@ -60,6 +58,6 @@ public class PublicReferenceController {
         log.info("Fetching all legal types (public)");
         List<LegalTypeDto> list = legalTypeService.getAllLegalTypePublic(request.getSearch());
         log.info("Successfully retrieved {} legal types", list.size());
-        return ResponseEntity.ok(ApiResponse.success("All legal types retrieved successfully", list));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.retrieved(ResponseMessage.ALL_LEGAL_TYPES), list));
     }
 }

@@ -7,7 +7,7 @@ import com.internal.feature.master_data.dto.request.OccupationUpdateRequestDto;
 import com.internal.feature.master_data.dto.response.AllOccupationResponseDto;
 import com.internal.feature.master_data.dto.response.OccupationDto;
 import com.internal.feature.master_data.service.OccupationService;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.internal.utils.constants.ResponseMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/occupation")
 @RequiredArgsConstructor
-@CrossOrigin
 @Slf4j
-@Tag(name = "Occupation Management")
 public class OccupationController {
 
     private final OccupationService service;
@@ -28,7 +26,7 @@ public class OccupationController {
         log.info("Fetching occupation with ID: {}", id);
         OccupationDto dto = service.getOccupationById(id);
         log.info("Successfully retrieved occupation with ID: {}", id);
-        return ResponseEntity.ok(ApiResponse.success("Occupation retrieved successfully", dto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.retrieved(ResponseMessage.OCCUPATION), dto));
     }
 
     @PostMapping("/all")
@@ -36,7 +34,7 @@ public class OccupationController {
         log.info("Fetching all occupations");
         AllOccupationResponseDto list = service.getAllOccupations(request);
         log.info("Successfully retrieved {} occupations", list.getContent().size());
-        return ResponseEntity.ok(ApiResponse.success("All occupations retrieved successfully", list));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.retrieved(ResponseMessage.ALL_OCCUPATIONS), list));
     }
 
     @PostMapping("/create")
@@ -44,7 +42,7 @@ public class OccupationController {
         log.info("Creating new occupation: {}", request);
         OccupationDto dto = service.createOccupation(request);
         log.info("Successfully created occupation with ID: {}", dto.getId());
-        return ResponseEntity.ok(ApiResponse.success("Occupation created successfully", dto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.created(ResponseMessage.OCCUPATION), dto));
     }
 
     @PostMapping("/update/{id}")
@@ -53,7 +51,7 @@ public class OccupationController {
         log.info("Updating occupation with ID: {} with data: {}", id, request);
         OccupationDto dto = service.updateOccupation(id, request);
         log.info("Successfully updated occupation with ID: {}", id);
-        return ResponseEntity.ok(ApiResponse.success("Occupation updated successfully", dto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.updated(ResponseMessage.OCCUPATION), dto));
     }
 
     @PostMapping("/delete/{id}")
@@ -61,6 +59,6 @@ public class OccupationController {
         log.info("Deleting occupation with ID: {}", id);
         OccupationDto occupationDto = service.deleteOccupation(id);
         log.info("Successfully deleted occupation with ID: {}", id);
-        return ResponseEntity.ok(ApiResponse.success("Occupation deleted successfully", occupationDto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.deleted(ResponseMessage.OCCUPATION), occupationDto));
     }
 }

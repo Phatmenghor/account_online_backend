@@ -7,7 +7,7 @@ import com.internal.feature.auth.dto.response.AllUserResponseDto;
 import com.internal.feature.auth.dto.response.UserResponseDto;
 import com.internal.feature.auth.service.AuthService;
 import com.internal.feature.auth.service.UserService;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.internal.utils.constants.ResponseMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,6 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/api/v1/user")
 @RequiredArgsConstructor
-@CrossOrigin
 @Slf4j
 public class UserController {
 
@@ -31,7 +30,7 @@ public class UserController {
                 request.getPageNo(), request.getPageSize(), request.getSearch(), request.getStatus());
         AllUserResponseDto result = userService.getAllUser(request);
         log.info("Successfully retrieved {} users (page {}/{})", result.getContent().size(), result.getPageNo(), result.getTotalPages());
-        return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", result));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.USERS_RETRIEVED, result));
     }
 
     @PostMapping("/getById/{id}")
@@ -39,7 +38,7 @@ public class UserController {
         log.info("Fetching user details for ID: {}", id);
         UserResponseDto user = userService.getUserById(id);
         log.info("Successfully retrieved user details for ID: {}", id);
-        return ResponseEntity.ok(ApiResponse.success("User details retrieved successfully", user));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.USER_DETAIL_RETRIEVED, user));
     }
 
     @PostMapping("/token")
@@ -47,7 +46,7 @@ public class UserController {
         log.debug("Fetching current user from token");
         UserResponseDto user = userService.getUserByToken();
         log.debug("Successfully retrieved current user: {}", user.getIdCard());
-        return ResponseEntity.ok(ApiResponse.success("Current user details retrieved successfully", user));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.CURRENT_USER_RETRIEVED, user));
     }
 
     @PostMapping("/create-user")
@@ -55,7 +54,7 @@ public class UserController {
         log.info("Admin user creation request for ID card: {}", registerDto.getUsername());
         UserResponseDto userResponse = authService.createUserByAdmin(registerDto);
         log.info("Admin user creation successful for: {}", registerDto.getUsername());
-        return ResponseEntity.ok(ApiResponse.success("User created successfully", userResponse));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.USER_CREATED, userResponse));
     }
 
     @PostMapping("/deleteById/{id}")
@@ -63,7 +62,7 @@ public class UserController {
         log.info("Deleting user with ID: {}", userId);
         UserResponseDto deletedUser = userService.deleteUserId(userId);
         log.info("Successfully deleted user: {} (ID: {})", deletedUser.getIdCard(), userId);
-        return ResponseEntity.ok(ApiResponse.success("User deleted successfully", deletedUser));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.USER_DELETED, deletedUser));
     }
 
     @PostMapping("/updateById/{id}")
@@ -72,7 +71,7 @@ public class UserController {
         log.info("Updating user ID: {} with data: {}", userId, request);
         UserResponseDto updatedUser = userService.updateUserId(userId, request);
         log.info("Successfully updated user: {} (ID: {})", updatedUser.getIdCard(), userId);
-        return ResponseEntity.ok(ApiResponse.success("User updated successfully", updatedUser));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.USER_UPDATED, updatedUser));
     }
 
     @PostMapping("/change-password")
@@ -80,7 +79,7 @@ public class UserController {
         log.info("Password change request for current user");
         UserResponseDto userDto = userService.changePassword(changePasswordDto);
         log.info("Successfully changed password for user: {}", userDto.getIdCard());
-        return ResponseEntity.ok(ApiResponse.success("Password changed successfully.", userDto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.PASSWORD_CHANGED, userDto));
     }
 
     @PostMapping("/change-password-by-admin")
@@ -88,6 +87,6 @@ public class UserController {
         log.info("Admin password change request for user ID: {}", changePasswordDto.getId());
         UserResponseDto userDto = userService.changePasswordByAdmin(changePasswordDto);
         log.info("Admin successfully changed password for user ID: {}, username: {}", changePasswordDto.getId(), userDto.getIdCard());
-        return ResponseEntity.ok(ApiResponse.success("Password changed by admin successfully.", userDto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.PASSWORD_CHANGED_BY_ADMIN, userDto));
     }
 }

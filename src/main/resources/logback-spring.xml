@@ -2,13 +2,13 @@
 <configuration>
     <property name="LOG_PATH" value="logs" />
     <property name="LOG_FILE_NAME" value="account_online" />
-    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n" />
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{36}] - %msg%n" />
     <property name="MAX_FILE_SIZE" value="100MB" />
     <timestamp key="byDay" datePattern="yyyy-MM-dd" />
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{20} - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level [%logger{20}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -43,19 +43,46 @@
         </rollingPolicy>
     </appender>
 
-    <logger name="com.internal" level="INFO" additivity="false">
+    <!-- Async wrapper for FILE (performance: non-blocking I/O) -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>1024</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
         <appender-ref ref="FILE" />
+    </appender>
+
+    <!-- Async wrapper for ERROR_FILE -->
+    <appender name="ASYNC_ERROR_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>true</includeCallerData>
         <appender-ref ref="ERROR_FILE" />
+    </appender>
+
+    <!-- Application logging -->
+    <logger name="com.internal" level="INFO" additivity="false">
+        <appender-ref ref="ASYNC_FILE" />
+        <appender-ref ref="ASYNC_ERROR_FILE" />
         <appender-ref ref="CONSOLE" />
     </logger>
 
+    <!-- Feature-specific monitoring -->
+    <logger name="com.internal.feature.open_account" level="INFO" />
+    <logger name="com.internal.feature.aml" level="INFO" />
+    <logger name="com.internal.feature.camdx" level="INFO" />
+    <logger name="com.internal.feature.sms_otp" level="INFO" />
+    <logger name="com.internal.feature.auth.security" level="INFO" />
+    <logger name="com.internal.feature.telegram_alerts" level="INFO" />
+
+    <!-- Framework logging (reduce noise) -->
     <logger name="org.springframework" level="WARN" />
     <logger name="org.hibernate" level="WARN" />
     <logger name="com.zaxxer.hikari" level="WARN" />
+    <logger name="org.apache.http" level="WARN" />
 
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
-        <appender-ref ref="FILE" />
-        <appender-ref ref="ERROR_FILE" />
+        <appender-ref ref="ASYNC_FILE" />
+        <appender-ref ref="ASYNC_ERROR_FILE" />
     </root>
 </configuration>

@@ -7,6 +7,7 @@ import com.internal.feature.logs_report.dto.response.AccountOnlineReportResponse
 import com.internal.feature.logs_report.repository.AccountOnlineReportLogRepository;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
 import com.internal.feature.logs_report.service.serviceImpl.AccountOnlineReportLogImpl;
+import com.internal.utils.constants.ResponseMessage;
 import com.internal.utils.pagination.PaginationResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +50,7 @@ public class AccountOnlineReportLogController {
         log.info("Successfully retrieved {} account online report logs", logs.size());
 
         return ResponseEntity.ok(ApiResponse.success(
-                "Account online report logs retrieved successfully",
+                ResponseMessage.REPORT_LOGS_RETRIEVED,
                 logs
         ));
     }
@@ -69,7 +70,7 @@ public class AccountOnlineReportLogController {
                 pagedResponse.getPageNo(), pagedResponse.getTotalPages(), pagedResponse.getTotalElements());
 
         return ResponseEntity.ok(ApiResponse.success(
-                "Account online report logs retrieved successfully",
+                ResponseMessage.REPORT_LOGS_RETRIEVED,
                 pagedResponse
         ));
     }

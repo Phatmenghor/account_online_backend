@@ -119,7 +119,7 @@ public class ComplianceService {
         try {
             return code != null ? occupationService.getOccupationByCode(code) : null;
         } catch (Exception e) {
-            log.warn("⚠️ Occupation lookup failed for code {}", code);
+            log.warn("Occupation lookup failed for code: {}", code);
             return null;
         }
     }

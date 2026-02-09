@@ -7,7 +7,7 @@ import com.internal.feature.master_data.dto.request.ReferenceUpdateRequestDto;
 import com.internal.feature.master_data.dto.response.AllReferenceResponseDto;
 import com.internal.feature.master_data.dto.response.ReferenceDto;
 import com.internal.feature.master_data.service.ReferenceService;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.internal.utils.constants.ResponseMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/reference/banks")
 @RequiredArgsConstructor
-@CrossOrigin
 @Slf4j
-@Tag(name = "Bank Reference Management")
 public class ReferenceController {
 
     private final ReferenceService service;
@@ -28,7 +26,7 @@ public class ReferenceController {
         log.info("Fetching bank with ID: {}", id);
         ReferenceDto dto = service.getById(id);
         log.info("Successfully retrieved bank with ID: {}", id);
-        return ResponseEntity.ok(ApiResponse.success("Bank retrieved successfully", dto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.retrieved(ResponseMessage.BANK), dto));
     }
 
     @PostMapping("/all")
@@ -36,7 +34,7 @@ public class ReferenceController {
         log.info("Fetching all banks");
         AllReferenceResponseDto list = service.getAll(request);
         log.info("Successfully retrieved {} banks", list.getContent().size());
-        return ResponseEntity.ok(ApiResponse.success("All banks retrieved successfully", list));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.retrieved(ResponseMessage.ALL_BANKS), list));
     }
 
     @PostMapping("/create")
@@ -44,7 +42,7 @@ public class ReferenceController {
         log.info("Creating new bank: {}", request);
         ReferenceDto dto = service.create(request);
         log.info("Successfully created bank with ID: {}", dto.getId());
-        return ResponseEntity.ok(ApiResponse.success("Bank created successfully", dto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.created(ResponseMessage.BANK), dto));
     }
 
     @PostMapping("/update/{id}")
@@ -53,7 +51,7 @@ public class ReferenceController {
         log.info("Updating bank with ID: {} with data: {}", id, request);
         ReferenceDto dto = service.update(id, request);
         log.info("Successfully updated bank with ID: {}", id);
-        return ResponseEntity.ok(ApiResponse.success("Bank updated successfully", dto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.updated(ResponseMessage.BANK), dto));
     }
 
     @PostMapping("/delete/{id}")
@@ -61,6 +59,6 @@ public class ReferenceController {
         log.info("Deleting bank with ID: {}", id);
         ReferenceDto referenceDto = service.delete(id);
         log.info("Successfully deleted bank with ID: {}", id);
-        return ResponseEntity.ok(ApiResponse.success("Bank deleted successfully", referenceDto));
+        return ResponseEntity.ok(ApiResponse.success(ResponseMessage.deleted(ResponseMessage.BANK), referenceDto));
     }
 }

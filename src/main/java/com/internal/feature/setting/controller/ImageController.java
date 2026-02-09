@@ -4,7 +4,6 @@ import com.internal.feature.setting.dto.ImageDto;
 import com.internal.feature.setting.dto.ImageResponse;
 import com.internal.feature.setting.dto.ImageUploadRequest;
 import com.internal.feature.setting.service.ImageService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,7 +18,6 @@ import java.util.UUID;
 @RequestMapping("/api/images")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Image Management")
 public class ImageController {
     
     private final ImageService imageService;

@@ -8,10 +8,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Base64;
-
 @RestController
 @RequestMapping("/api/v1/customer-images")
 @RequiredArgsConstructor
@@ -20,7 +16,6 @@ public class CustomerImageController {
 
     private final CustomerImageService customerImageService;
 
-    // ðŸ”¹ Stream NID image by legal ID
     @PostMapping("/{legalId}/nid")
     public ResponseEntity<byte[]> getNidImage(@PathVariable String legalId) {
         try {
@@ -41,7 +36,6 @@ public class CustomerImageController {
         }
     }
 
-    // ðŸ”¹ Stream Selfie image by legal ID
     @PostMapping("/{legalId}/selfie")
     public ResponseEntity<byte[]> getSelfieImage(@PathVariable String legalId) {
         try {
@@ -61,18 +55,4 @@ public class CustomerImageController {
             return ResponseEntity.badRequest().build();
         }
     }
-
-    private String encodeFileToBase64(String filePath) throws Exception {
-        byte[] bytes = Files.readAllBytes(Paths.get(filePath));
-        return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(bytes);
-    }
-
-    // Optional: Upload API (if needed)
-//    @PostMapping("/upload")
-//    public ResponseEntity<CustomerImageUploadResponseDto> uploadCustomerImages(
-//            @RequestBody CustomerFileUploadRequestDto request
-//    ) {
-//        CustomerImageUploadResponseDto response = customerImageService.saveCustomerImages(request);
-//        return ResponseEntity.ok(response);
-//    }
 }
