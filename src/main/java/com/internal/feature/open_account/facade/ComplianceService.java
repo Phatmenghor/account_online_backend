@@ -58,7 +58,7 @@ public class ComplianceService {
         String occupationStatus = buildOccupationStatus(request.getOccupation());
 
         // Determine AML status based on risk
-        boolean isHighRisk = AppConstants.HIGH_RISK.equalsIgnoreCase(amlResponse.getRiskLevel());
+        boolean isHighRisk = AppConstants.RISK_HIGH.equalsIgnoreCase(amlResponse.getRiskLevel());
 
         if (TestConfig.FORCE_AML_HIGH_RISK) {
             log.warn(">>> FORCING AML HIGH RISK (TEST_CONFIG)");
