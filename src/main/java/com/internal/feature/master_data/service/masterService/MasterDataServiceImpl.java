@@ -7,7 +7,6 @@ import com.internal.feature.master_data.mapper.*;
 import com.internal.feature.master_data.models.*;
 import com.internal.feature.master_data.repository.*;
 import com.internal.feature.master_data.service.MasterDataService;
-import com.internal.feature.master_data.specification.*;
 import com.internal.utils.constants.MasterDataConstants;
 import com.internal.utils.pagination.PaginationResponse;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -42,9 +40,8 @@ public class MasterDataServiceImpl implements MasterDataService {
     @Override
     public PaginationResponse<ClsProvinceDto> getProvince(AllMasterDataRequest request) {
         Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, MasterDataConstants.SORT_CREATED_AT));
-        Specification<Province> spec = ProvinceSpec.searchByName(request.getSearch());
 
-        Page<Province> page = provinceRepository.findAll(spec, pageable);
+        Page<Province> page = provinceRepository.findBySearch(request.getSearch(), pageable);
         List<ClsProvinceDto> content = provinceMapper.toClsDtoList(page.getContent());
 
         return new PaginationResponse<>(content, page.getNumber() + 1, page.getSize(), page.getTotalElements());
@@ -54,13 +51,13 @@ public class MasterDataServiceImpl implements MasterDataService {
     @Override
     public PaginationResponse<ClsDistrictDto> getDistrict(AllMasterDataRequest request, String provinceCode) {
         Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, MasterDataConstants.SORT_CREATED_AT));
-        Specification<District> spec = DistrictSpec.searchByName(request.getSearch());
 
+        Page<District> page;
         if (provinceCode != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get(MasterDataConstants.FIELD_PROVINCE).get(MasterDataConstants.FIELD_PROVINCE_CODE), provinceCode));
+            page = districtRepository.findByProvinceCodeAndSearch(provinceCode, request.getSearch(), pageable);
+        } else {
+            page = districtRepository.findBySearch(request.getSearch(), pageable);
         }
-
-        Page<District> page = districtRepository.findAll(spec, pageable);
         List<ClsDistrictDto> content = districtMapper.toClsDtoList(page.getContent());
 
         return new PaginationResponse<>(content, page.getNumber() + 1, page.getSize(), page.getTotalElements());
@@ -70,13 +67,13 @@ public class MasterDataServiceImpl implements MasterDataService {
     @Override
     public PaginationResponse<ClsCommuneDto> getCommune(AllMasterDataRequest request, String districtCode) {
         Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, MasterDataConstants.SORT_CREATED_AT));
-        Specification<Commune> spec = CommuneSpec.searchByName(request.getSearch());
 
+        Page<Commune> page;
         if (districtCode != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get(MasterDataConstants.FIELD_DISTRICT).get(MasterDataConstants.FIELD_DISTRICT_CODE), districtCode));
+            page = communeRepository.findByDistrictCodeAndSearch(districtCode, request.getSearch(), pageable);
+        } else {
+            page = communeRepository.findBySearch(request.getSearch(), pageable);
         }
-
-        Page<Commune> page = communeRepository.findAll(spec, pageable);
         List<ClsCommuneDto> content = communeMapper.toClsDtoList(page.getContent());
 
         return new PaginationResponse<>(content, page.getNumber() + 1, page.getSize(), page.getTotalElements());
@@ -86,13 +83,13 @@ public class MasterDataServiceImpl implements MasterDataService {
     @Override
     public PaginationResponse<ClsVillageDto> getVillage(AllMasterDataRequest request, String communeCode) {
         Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, MasterDataConstants.SORT_CREATED_AT));
-        Specification<Village> spec = VillageSpec.searchByName(request.getSearch());
 
+        Page<Village> page;
         if (communeCode != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get(MasterDataConstants.FIELD_COMMUNE).get(MasterDataConstants.FIELD_COMMUNE_CODE), communeCode));
+            page = villageRepository.findByCommuneCodeAndSearch(communeCode, request.getSearch(), pageable);
+        } else {
+            page = villageRepository.findBySearch(request.getSearch(), pageable);
         }
-
-        Page<Village> page = villageRepository.findAll(spec, pageable);
         List<ClsVillageDto> content = villageMapper.toClsDtoList(page.getContent());
 
         return new PaginationResponse<>(content, page.getNumber() + 1, page.getSize(), page.getTotalElements());
@@ -102,19 +99,8 @@ public class MasterDataServiceImpl implements MasterDataService {
     @Override
     public PaginationResponse<ClsBranchDto> getBranch(AllMasterDataRequest request) {
         Pageable pageable = PageRequest.of(Math.max(request.getPageNo(), 1) - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, MasterDataConstants.SORT_CREATED_AT));
-        // Assuming Branch has a similar search spec or we create a simple one
-        Specification<Branch> spec = (root, query, cb) -> {
-            if (request.getSearch() == null || request.getSearch().isEmpty()) {
-                return cb.conjunction();
-            }
-            String search = "%" + request.getSearch().toLowerCase() + "%";
-            return cb.or(
-                    cb.like(cb.lower(root.get(MasterDataConstants.FIELD_BRANCH_CODE)), search),
-                    cb.like(cb.lower(root.get(MasterDataConstants.FIELD_BRANCH_KH)), search)
-            );
-        };
 
-        Page<Branch> page = branchRepository.findAll(spec, pageable);
+        Page<Branch> page = branchRepository.findBySearch(request.getSearch(), pageable);
         List<ClsBranchDto> content = branchMapper.toClsDtoList(page.getContent());
 
         return new PaginationResponse<>(content, page.getNumber() + 1, page.getSize(), page.getTotalElements());
