@@ -6,7 +6,15 @@ public final class AppConstants {
     // 1. ENVIRONMENT & CONFIGURATION
     // Used in: OtpGenerator, etc.
     // ==================================================================================
-    public static final String HIGH_RISK = "High";
+    // Risk Levels
+    public static final String RISK_HIGH = "High";
+    public static final String RISK_LOW = "Low";
+
+    // Currency
+    public static final String CURRENCY_KHR = "KHR";
+    public static final String CURRENCY_USD = "USD";
+
+    // OTP
     public static final String DEFAULT_DEV_OTP = "123456";
     public static final int DEFAULT_OTP_LENGTH = 6;
     public static final int MAX_ATTEMPTS = 3;

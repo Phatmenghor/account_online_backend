@@ -24,6 +24,7 @@ import com.internal.feature.auth.models.UserEntity;
 import com.internal.feature.master_data.dto.response.LocationCodesDto;
 import com.internal.feature.open_account.mapper.MasterDataServiceHelper;
 import com.internal.utils.SecurityUtils;
+import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -170,7 +171,7 @@ public class AmlServiceImp implements AmlService {
         Optional<AmlStatus> amlStatusOpt = amlStatusRepository.findByLegalId(legalId);
         if (amlStatusOpt.isPresent()) {
             AmlStatus amlStatus = amlStatusOpt.get();
-            amlStatus.setAmlExternalRiskLevel("Low");
+            amlStatus.setAmlExternalRiskLevel(AppConstants.RISK_LOW);
             amlStatus.setStatus(AmlStatusEnum.APPROVE);
             if (request.getUpdateFrom() != null) {
                 amlStatus.setAmlExternalServiceName(request.getUpdateFrom());
