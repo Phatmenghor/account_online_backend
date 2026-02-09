@@ -61,11 +61,11 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             // Step 6 & 7: Create Accounts (KHR & USD)
             currentStep = AppConstants.CREATE_KHR_ACCOUNT;
             context.setKhrAccount(bankingService.createAccountIfNeeded(request, context.getCustomerInfo(),
-                    context.getCif(), "KHR"));
+                    context.getCif(), AppConstants.CURRENCY_KHR));
 
             currentStep = AppConstants.CREATE_USD_ACCOUNT;
             context.setUsdAccount(bankingService.createAccountIfNeeded(request, context.getCustomerInfo(),
-                    context.getCif(), "USD"));
+                    context.getCif(), AppConstants.CURRENCY_USD));
 
             // Step 8: Final Validation
             currentStep = AppConstants.VALIDATE_ACCOUNT_CREATION;

@@ -17,15 +17,12 @@ import com.internal.feature.setting.mapper.MenuMapper;
 import com.internal.feature.setting.models.Menu;
 import com.internal.feature.setting.repository.MenuRepository;
 import com.internal.feature.setting.service.MenuService;
-import com.internal.feature.setting.specification.MenuSpec;
 import com.internal.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,15 +85,19 @@ public class MenuServiceImpl implements MenuService {
 
         Pageable pageable = PageRequest.of(
                 Math.max(request.getPageNo() - 1, 0),
-                Math.max(request.getPageSize(), 1),
-                Sort.by(Sort.Direction.ASC, "displayOrder")
+                Math.max(request.getPageSize(), 1)
         );
 
-        Specification<Menu> spec = MenuSpec.searchByTitle(request.getSearch())
-                .and(MenuSpec.hasStatus(request.getIsActive()))
-                .and(MenuSpec.hasParentId(request.getParentId()));
+        Page<Menu> page = menuRepository.findByFilters(
+                request.getSearch(),
+                request.getIsActive(),
+                request.getParentId(),
+                pageable
+        );
 
-        Page<Menu> page = menuRepository.findAll(spec, pageable);
+        log.debug("Found {} menus on page {} of {}", page.getNumberOfElements(),
+                request.getPageNo(), page.getTotalPages());
+
         List<MenuItemDto> content = menuMapper.toDtoList(page.getContent());
 
         return menuMapper.mapToListDto(content, page);

@@ -2,9 +2,11 @@
 package com.internal.feature.open_account.service.external;
 
 import com.internal.config.CpbProperties;
+import com.internal.config.DefaultProperties;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.request.MobileBankingRequest;
 import com.internal.feature.open_account.dto.response.MobileBankingResponse;
+import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -22,18 +24,15 @@ import java.time.format.DateTimeFormatter;
 public class MobileBankingService {
 
     private final CpbProperties properties;
+    private final DefaultProperties defaultProperties;
     private final RestTemplate restTemplate;
 
     public void activate(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
+        log.info("Activating mobile banking for CIF: {}", cif);
         try {
-//            if (!"production".equalsIgnoreCase(properties.getEnvironment())) {
-//                log.info("Skipping mobile banking activation in non-production");
-//                return;
-//            }
-            
             MobileBankingRequest mbRequest = buildRequest(request, cif, khrAccount, usdAccount);
             callActivatorApi(mbRequest);
-
+            log.info("Mobile banking activation successful for CIF: {}", cif);
         } catch (Exception e) {
             log.error("Mobile banking activation failed (non-critical): {}", e.getMessage());
         }
@@ -43,9 +42,9 @@ public class MobileBankingService {
                                               String khrAccount, String usdAccount) {
         String formattedDob = formatDateOfBirth(request.getDateOfBirth());
         String signData = generateSignature(cif, request.getPhoneNumber());
-        String branchCode = request.getBranchCode() != null ? request.getBranchCode() : "KH0012011";
+        String branchCode = request.getBranchCode() != null ? request.getBranchCode() : defaultProperties.getBranchCode();
         String accountNumber = usdAccount != null ? usdAccount : khrAccount;
-        String currency = usdAccount != null ? "USD" : "KHR";
+        String currency = usdAccount != null ? AppConstants.CURRENCY_USD : AppConstants.CURRENCY_KHR;
         
         return MobileBankingRequest.builder()
             .customerName(request.getFamilyName() + " " + request.getGivenName())

@@ -1,5 +1,6 @@
 package com.internal.feature.master_data.service.impl;
 
+import com.internal.enumation.StatusData;
 import com.internal.exceptions.error.custom.DuplicateNameException;
 import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.master_data.dto.request.GetAllMaritalStatusRequest;
@@ -11,14 +12,11 @@ import com.internal.feature.master_data.mapper.MaritalStatusMapper;
 import com.internal.feature.master_data.models.MaritalStatus;
 import com.internal.feature.master_data.repository.MaritalStatusRepository;
 import com.internal.feature.master_data.service.MaritalStatusService;
-import com.internal.feature.master_data.specification.MaritalStatusSpec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -41,13 +39,11 @@ public class MaritalStatusServiceImpl implements MaritalStatusService {
 
     @Override
     public AllMaritalStatusResponseDto getAll(GetAllMaritalStatusRequest request) {
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
 
-        // Build specification dynamically
-        Specification<MaritalStatus> spec = MaritalStatusSpec.hasStatus(request.getStatus())
-                .and(MaritalStatusSpec.searchByName(request.getSearch()));
+        log.info("Fetching marital statuses - status: {}, search: {}", request.getStatus(), request.getSearch());
 
-        Page<MaritalStatus> page = repository.findAll(spec, pageable);
+        Page<MaritalStatus> page = repository.findByStatusAndSearch(request.getStatus(), request.getSearch(), pageable);
 
         List<MaritalStatusDto> content = page.stream()
                 .map(mapper::toDto)
@@ -58,11 +54,9 @@ public class MaritalStatusServiceImpl implements MaritalStatusService {
 
     @Override
     public List<MaritalStatusDto> getAllPublic(String search) {
-        // Build specification dynamically - FORCE ACTIVE STATUS
-        Specification<MaritalStatus> spec = MaritalStatusSpec.hasStatus(com.internal.enumation.StatusData.ACTIVE)
-                .and(MaritalStatusSpec.searchByName(search));
+        log.info("Fetching marital statuses - status: {}, search: {}", StatusData.ACTIVE, search);
 
-        List<MaritalStatus> list = repository.findAll(spec);
+        List<MaritalStatus> list = repository.findActiveBySearch(StatusData.ACTIVE, search);
         return mapper.toDtoList(list);
     }
 

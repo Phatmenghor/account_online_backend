@@ -10,19 +10,19 @@ import com.internal.feature.master_data.models.District;
 import com.internal.feature.master_data.repository.CommuneRepository;
 import com.internal.feature.master_data.repository.DistrictRepository;
 import com.internal.feature.master_data.service.CommuneService;
-import com.internal.feature.master_data.specification.CommuneSpec;
 import com.internal.utils.pagination.PaginationResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CommuneServiceImpl implements CommuneService {
@@ -33,29 +33,31 @@ public class CommuneServiceImpl implements CommuneService {
 
     @Override
     public PaginationResponse<CommuneResponseDto> getAllCommunes(AllMasterDataRequest request) {
+        log.info("Fetching all communes with search: {}", request.getSearch());
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
-        Specification<Commune> spec = CommuneSpec.searchByName(request.getSearch());
 
-        Page<Commune> page = communeRepository.findAll(spec, pageable);
+        Page<Commune> page = communeRepository.findBySearch(request.getSearch(), pageable);
         List<CommuneResponseDto> content = communeMapper.toDtoList(page.getContent());
 
+        log.info("Found {} communes", page.getTotalElements());
         return new PaginationResponse<>(content, page.getNumber() + 1, page.getSize(), page.getTotalElements());
     }
 
     @Override
     public PaginationResponse<CommuneResponseDto> getCommunesByDistrict(AllMasterDataRequest request, String districtCode) {
+        log.info("Fetching communes by district code: {} with search: {}", districtCode, request.getSearch());
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
-        Specification<Commune> spec = CommuneSpec.searchByName(request.getSearch())
-                .and((root, query, cb) -> cb.equal(root.get("district").get("districtCode"), districtCode));
 
-        Page<Commune> page = communeRepository.findAll(spec, pageable);
+        Page<Commune> page = communeRepository.findByDistrictCodeAndSearch(districtCode, request.getSearch(), pageable);
         List<CommuneResponseDto> content = communeMapper.toDtoList(page.getContent());
 
+        log.info("Found {} communes for district: {}", page.getTotalElements(), districtCode);
         return new PaginationResponse<>(content, page.getNumber() + 1, page.getSize(), page.getTotalElements());
     }
 
     @Override
     public CommuneResponseDto getCommuneById(Long id) {
+        log.info("Fetching commune by id: {}", id);
         Commune commune = communeRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Commune not found with id: " + id));
         return communeMapper.toDto(commune);
@@ -64,6 +66,7 @@ public class CommuneServiceImpl implements CommuneService {
     @Override
     @Transactional
     public CommuneResponseDto createCommune(CommuneRequestDto request) {
+        log.info("Creating commune with code: {}", request.getCommuneCode());
         if (communeRepository.existsByCommuneCode(request.getCommuneCode())) {
             throw new RuntimeException("Commune with code " + request.getCommuneCode() + " already exists");
         }
@@ -78,6 +81,7 @@ public class CommuneServiceImpl implements CommuneService {
     @Override
     @Transactional
     public CommuneResponseDto updateCommune(Long id, CommuneRequestDto request) {
+        log.info("Updating commune with id: {}", id);
         Commune commune = communeRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Commune not found with id: " + id));
 
@@ -94,6 +98,7 @@ public class CommuneServiceImpl implements CommuneService {
     @Override
     @Transactional
     public void deleteCommune(Long id) {
+        log.info("Deleting commune with id: {}", id);
         Commune commune = communeRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Commune not found with id: " + id));
         communeRepository.delete(commune);

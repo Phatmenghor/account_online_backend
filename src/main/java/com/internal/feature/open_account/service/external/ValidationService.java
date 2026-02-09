@@ -3,6 +3,7 @@ package com.internal.feature.open_account.service.external;
 import com.internal.exceptions.error.openaccount.AccountExistsException;
 import com.internal.exceptions.error.openaccount.HighRiskCustomerException;
 import com.internal.feature.open_account.repository.CustomerInfoRepository;
+import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,8 +38,8 @@ public class ValidationService {
             boolean hasUSD = false;
 
             for (String account : accountArray) {
-                if ("KHR".equals(account)) hasKHR = true;
-                if ("USD".equals(account)) hasUSD = true;
+                if (AppConstants.CURRENCY_KHR.equals(account)) hasKHR = true;
+                if (AppConstants.CURRENCY_USD.equals(account)) hasUSD = true;
             }
 
             String cif = customerInfo.get("CIF");

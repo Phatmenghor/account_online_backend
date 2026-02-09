@@ -10,19 +10,19 @@ import com.internal.feature.master_data.models.Province;
 import com.internal.feature.master_data.repository.DistrictRepository;
 import com.internal.feature.master_data.repository.ProvinceRepository;
 import com.internal.feature.master_data.service.DistrictService;
-import com.internal.feature.master_data.specification.DistrictSpec;
 import com.internal.utils.pagination.PaginationResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DistrictServiceImpl implements DistrictService {
@@ -33,29 +33,31 @@ public class DistrictServiceImpl implements DistrictService {
 
     @Override
     public PaginationResponse<DistrictResponseDto> getAllDistricts(AllMasterDataRequest request) {
+        log.info("Fetching all districts with search: {}", request.getSearch());
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
-        Specification<District> spec = DistrictSpec.searchByName(request.getSearch());
 
-        Page<District> page = districtRepository.findAll(spec, pageable);
+        Page<District> page = districtRepository.findBySearch(request.getSearch(), pageable);
         List<DistrictResponseDto> content = districtMapper.toDtoList(page.getContent());
 
+        log.info("Found {} districts", page.getTotalElements());
         return new PaginationResponse<>(content, page.getNumber() + 1, page.getSize(), page.getTotalElements());
     }
 
     @Override
     public PaginationResponse<DistrictResponseDto> getDistrictsByProvince(AllMasterDataRequest request, String provinceCode) {
+        log.info("Fetching districts by province code: {} with search: {}", provinceCode, request.getSearch());
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
-        Specification<District> spec = DistrictSpec.searchByName(request.getSearch())
-                .and((root, query, cb) -> cb.equal(root.get("province").get("provinceCode"), provinceCode));
 
-        Page<District> page = districtRepository.findAll(spec, pageable);
+        Page<District> page = districtRepository.findByProvinceCodeAndSearch(provinceCode, request.getSearch(), pageable);
         List<DistrictResponseDto> content = districtMapper.toDtoList(page.getContent());
 
+        log.info("Found {} districts for province: {}", page.getTotalElements(), provinceCode);
         return new PaginationResponse<>(content, page.getNumber() + 1, page.getSize(), page.getTotalElements());
     }
 
     @Override
     public DistrictResponseDto getDistrictById(Long id) {
+        log.info("Fetching district by id: {}", id);
         District district = districtRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("District not found with id: " + id));
         return districtMapper.toDto(district);
@@ -64,6 +66,7 @@ public class DistrictServiceImpl implements DistrictService {
     @Override
     @Transactional
     public DistrictResponseDto createDistrict(DistrictRequestDto request) {
+        log.info("Creating district with code: {}", request.getDistrictCode());
         if (districtRepository.existsByDistrictCode(request.getDistrictCode())) {
             throw new RuntimeException("District with code " + request.getDistrictCode() + " already exists");
         }
@@ -78,6 +81,7 @@ public class DistrictServiceImpl implements DistrictService {
     @Override
     @Transactional
     public DistrictResponseDto updateDistrict(Long id, DistrictRequestDto request) {
+        log.info("Updating district with id: {}", id);
         District district = districtRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("District not found with id: " + id));
 
@@ -94,6 +98,7 @@ public class DistrictServiceImpl implements DistrictService {
     @Override
     @Transactional
     public void deleteDistrict(Long id) {
+        log.info("Deleting district with id: {}", id);
         District district = districtRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("District not found with id: " + id));
         districtRepository.delete(district);

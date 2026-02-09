@@ -14,7 +14,6 @@ import com.internal.feature.logs_report.repository.AccountOnlineFinalAuditReposi
 import com.internal.feature.logs_report.repository.AccountOnlineFinalRepository;
 import com.internal.feature.logs_report.service.AccountOnlineOpenFinalService;
 import com.internal.feature.logs_report.service.CustomerImageService;
-import com.internal.feature.logs_report.specification.AccountOnlineFinalSpecification;
 import com.internal.feature.master_data.dto.response.*;
 import com.internal.feature.master_data.service.MasterDataService;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
@@ -26,7 +25,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -178,11 +176,15 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
 
     @Override
     public AllAccountOnlineFinalResponseDto getSuccessOpenAccount(AllAccountOnlineSuccessRequestDto request) {
+        log.info("Fetching success open accounts - Search: {}, Page: {}, Size: {}",
+                request.getSearch(), request.getPageNo(), request.getPageSize());
+
         Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        Specification<AccountOnlineFinal> spec = AccountOnlineFinalSpecification.searchByName(request.getSearch());
+        Page<AccountOnlineFinal> page = accountOnlineFinalRepository.findBySearch(request.getSearch(), pageable);
 
-        Page<AccountOnlineFinal> page = accountOnlineFinalRepository.findAll(spec, pageable);
+        log.info("Found {} accounts on page {} of {}", page.getNumberOfElements(),
+                request.getPageNo(), page.getTotalPages());
 
         List<AccountOnlineFinalResponseDto> content = page.stream()
                 .map(mapper::toDto)

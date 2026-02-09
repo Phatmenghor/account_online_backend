@@ -94,17 +94,19 @@ public class BankingService {
         }
 
         if (validationService.hasAccount(customerInfo, currency)) {
-            log.info(">>> Step {}: CREATE_{}_ACCOUNT - SKIPPED (already exists)", currency.equals("KHR") ? 6 : 7,
-                    currency);
+            log.info(">>> Step {}: CREATE_{}_ACCOUNT - SKIPPED (already exists)",
+                    AppConstants.CURRENCY_KHR.equals(currency) ? 6 : 7, currency);
             return null;
         }
 
-        log.info(">>> Step {}: CREATE_{}_ACCOUNT", currency.equals("KHR") ? 6 : 7, currency);
+        log.info(">>> Step {}: CREATE_{}_ACCOUNT", AppConstants.CURRENCY_KHR.equals(currency) ? 6 : 7, currency);
         String account = createAccount(request, cif, currency);
         if (account != null) {
-            log.info("Step {} SUCCESS: {} account created: {}", currency.equals("KHR") ? 6 : 7, currency, account);
+            log.info("Step {} SUCCESS: {} account created: {}",
+                    AppConstants.CURRENCY_KHR.equals(currency) ? 6 : 7, currency, account);
         } else {
-            log.warn("Step {} FAILED: {} account creation returned null", currency.equals("KHR") ? 6 : 7, currency);
+            log.warn("Step {} FAILED: {} account creation returned null",
+                    AppConstants.CURRENCY_KHR.equals(currency) ? 6 : 7, currency);
         }
         return account;
     }
@@ -129,8 +131,9 @@ public class BankingService {
     public void validateAtLeastOneAccountExists(Map<String, String> customerInfo, String khrAccount,
             String usdAccount) {
         log.info(">>> Step 8: VALIDATE_ACCOUNT_CREATION");
-        if (khrAccount == null && usdAccount == null && !validationService.hasAccount(customerInfo, "KHR")
-                && !validationService.hasAccount(customerInfo, "USD")) {
+        if (khrAccount == null && usdAccount == null
+                && !validationService.hasAccount(customerInfo, AppConstants.CURRENCY_KHR)
+                && !validationService.hasAccount(customerInfo, AppConstants.CURRENCY_USD)) {
             throw new AccountCreationException(AppConstants.FAIL_CREATE_ANY_ACCOUNT);
         }
         log.info("Step 8 SUCCESS: At least one account exists");
