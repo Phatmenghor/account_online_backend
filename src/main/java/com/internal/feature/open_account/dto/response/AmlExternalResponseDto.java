@@ -12,21 +12,21 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AmlExternalResponseDto {
 
-        @JsonProperty("RiskLevel")
-        private String riskLevel;
+    @JsonProperty("RiskLevel")
+    private String riskLevel;
 
-        @JsonProperty("ActionTaken")
-        private String actionTaken;
+    @JsonProperty("ActionTaken")
+    private String actionTaken;
 
-        @JsonProperty("RulesTriggered")
-        private String rulesTriggered;
+    @JsonProperty("RulesTriggered")
+    private String rulesTriggered;
 
-        @JsonProperty("ServiceName")
-        private String serviceName;
+    @JsonProperty("ServiceName")
+    private String serviceName;
 
-        @JsonProperty("TotalRulesScore")
-        private int totalRulesScore;
+    @JsonProperty("TotalRulesScore")
+    private int totalRulesScore;
 
-        @JsonProperty("TrxnID")
-        private String trxnID;
+    @JsonProperty("TrxnID")
+    private String trxnID;
 }

@@ -5,13 +5,13 @@ import lombok.Data;
 
 @Data
 public class MobileBankingResponse {
-    
+
     @JsonProperty("Code")
     private String code;
-    
+
     @JsonProperty("Message")
     private String message;
-    
+
     @JsonProperty("Content")
     private String content;
 }
