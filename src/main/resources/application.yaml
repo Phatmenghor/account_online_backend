@@ -172,8 +172,8 @@ cpb:
     url: http://192.168.103.106:9095/api/aml-check
   t24:
     url: http://192.168.127.31:7003
-    username: MENGHOR.PHAT
-    password: HouR$101
+    username: L.HOURNG
+    password: HOurng@2323
   mb:
     otpUrl: http://192.168.103.11:15004/CPBBank/services/CPBMobile?wsdl
     registerCodeUrl: http://192.168.103.13:8090/API/RegisterCustomerMB/
@@ -245,12 +245,12 @@ telegram:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
 
     #TEST
-    uat-acl-chat-id: "-4886328332"
-    uat-monitor-chat-id: "-4886328332"
+#    uat-acl-chat-id: "-4886328332"
+#    uat-monitor-chat-id: "-4886328332"
 
     #UAT
-#     uat-acl-chat-id: "-1002740302492"
-#    uat-monitor-chat-id: "-1003115792160"
+    uat-acl-chat-id: "-1002740302492"
+    uat-monitor-chat-id: "-1003115792160"
     enabled: true
 
 # Logging
