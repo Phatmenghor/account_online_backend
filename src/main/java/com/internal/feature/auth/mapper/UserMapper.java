@@ -1,5 +1,6 @@
 package com.internal.feature.auth.mapper;
 
+import com.internal.enumation.RoleEnum;
 import com.internal.enumation.StatusData;
 import com.internal.feature.auth.dto.response.AllUserResponseDto;
 import com.internal.feature.auth.dto.response.UserResponseDto;
@@ -84,14 +85,12 @@ public interface UserMapper {
         if (rolesString == null || rolesString.isEmpty()) {
             return null;
         }
-        // This is a simplified conversion - you may need to adjust based on your Role structure
         // If you need full Role objects with IDs, you might need to inject RoleRepository
         return Arrays.stream(rolesString.split(","))
                 .map(String::trim)
                 .map(roleName -> {
                     Role role = new Role();
-                    // You'll need to set the role name enum here
-                    // role.setName(RoleEnum.valueOf(roleName));
+                     role.setName(RoleEnum.valueOf(roleName));
                     return role;
                 })
                 .collect(Collectors.toList());

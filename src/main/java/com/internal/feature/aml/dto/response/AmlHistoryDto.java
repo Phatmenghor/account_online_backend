@@ -18,10 +18,10 @@ public class AmlHistoryDto {
 
     private Long id;
 
-    private CustomerAmlDto customerInfo; // Nested DTO for customer details
+    private CustomerAmlDto customerInfo;
 
-    private AmlStatusEnum status;        // AML status
-    private String screeningResult;      // AML screening JSON result
+    private AmlStatusEnum status;
+    private String screeningResult;
 
     private String riskLevel;
     private String actionTaken;
@@ -43,5 +43,5 @@ public class AmlHistoryDto {
     private String occupationCode;
     private String occupationStatus;
 
-    private String remarks;              // Admin remarks
+    private String remarks;
 }

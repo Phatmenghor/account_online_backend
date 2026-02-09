@@ -163,11 +163,11 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                     .build();
 
             AccountOnlineFinal savedLog = accountOnlineFinalRepository.save(finalLog);
-            log.info("✔ AccountOnlineFinal saved successfully for Legal ID: {}", request.getLegalId());
+            log.info("AccountOnlineFinal saved successfully for Legal ID: {}", request.getLegalId());
             return savedLog;
 
         } catch (Exception e) {
-            log.error("✘ Failed to save AccountOnlineFinal for Legal ID {}: {}",
+            log.error("Failed to save AccountOnlineFinal for Legal ID {}: {}",
                     request.getLegalId(), e.getMessage(), e);
             // Return null instead of throwing exception - this makes it non-blocking
             return null;
@@ -211,9 +211,9 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
             finalLog.setAmlRemarks(amlStatus.getRemarks());
             accountOnlineFinalRepository.save(finalLog);
 
-            log.info("✔ AML updated for Legal ID: {}", amlStatus.getCustomerInfo().getLegalId());
+            log.info("AML updated for Legal ID: {}", amlStatus.getCustomerInfo().getLegalId());
         } else {
-            log.warn("⚠ AML update skipped: AccountOnlineFinal not found for Legal ID {}",
+            log.warn("AML update skipped: AccountOnlineFinal not found for Legal ID {}",
                     amlStatus.getCustomerInfo().getLegalId());
         }
     }
@@ -275,33 +275,33 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
         try {
             return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         } catch (Exception e) {
-            log.warn("⚠ Could not parse date: {}", dateStr);
+            log.warn("Could not parse date: {}", dateStr);
             return null;
         }
     }
 
     private ClsProvinceDto safeProvinceLookup(String code) {
         try { return code != null ? masterDataService.getProvinceByCode(code) : null; }
-        catch (Exception e) { log.warn("⚠ Province lookup failed for code {}", code); return null; }
+        catch (Exception e) { log.warn("Province lookup failed for code {}", code); return null; }
     }
 
     private ClsDistrictDto safeDistrictLookup(String code) {
         try { return code != null ? masterDataService.getDistrictByCode(code) : null; }
-        catch (Exception e) { log.warn("⚠ District lookup failed for code {}", code); return null; }
+        catch (Exception e) { log.warn("District lookup failed for code {}", code); return null; }
     }
 
     private ClsCommuneDto safeCommuneLookup(String code) {
         try { return code != null ? masterDataService.getCommuneByCode(code) : null; }
-        catch (Exception e) { log.warn("⚠ Commune lookup failed for code {}", code); return null; }
+        catch (Exception e) { log.warn("Commune lookup failed for code {}", code); return null; }
     }
 
     private ClsVillageDto safeVillageLookup(String code) {
         try { return code != null ? masterDataService.getVillageByCode(code) : null; }
-        catch (Exception e) { log.warn("⚠ Village lookup failed for code {}", code); return null; }
+        catch (Exception e) { log.warn("Village lookup failed for code {}", code); return null; }
     }
 
     private ClsBranchDto safeBranchLookup(String code) {
         try { return code != null ? masterDataService.getBranchByCode(code) : null; }
-        catch (Exception e) { log.warn("⚠ Branch lookup failed for code {}", code); return null; }
+        catch (Exception e) { log.warn("Branch lookup failed for code {}", code); return null; }
     }
 }

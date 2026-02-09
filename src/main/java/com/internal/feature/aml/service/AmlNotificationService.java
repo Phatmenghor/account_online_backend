@@ -41,68 +41,68 @@ public class AmlNotificationService {
      * Send AML status notification email
      */
     public void sendAmlStatusNotification(AmlStatusDto amlStatus) {
-        if (amlStatus == null) {
-            log.warn("AML Status is null, email not sent.");
-            return;
-        }
-
-        log.info("Preparing AML status notification email for customer: {}", amlStatus.getCustomerInfo().getLegalId());
-
-        try {
-            // Set multiple primary recipients
-            String[] recipients = new String[]{
-                    "menghor.phat@cambodiapostbank.com.kh",
-                    "makkara.nob@cambodiapostbank.com.kh"
-            };
-
-            String subject = buildEmailSubject(amlStatus);
-
-            // Build HTML body using Thymeleaf template
-            Context context = new Context();
-            context.setVariable("amlStatus", amlStatus);
-            context.setVariable("timestamp", LocalDateTime.now().format(
-                    DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
-            context.setVariable(
-                    "amlDashboardUrl",
-                    amlDashboardUrl + "&legalId=" + amlStatus.getCustomerInfo().getLegalId()
-            );
-            // Determine badge color based on AML status
-            String statusColor;
-            if (AmlStatusEnum.APPROVE.equals(amlStatus.getStatus())) {
-                statusColor = "#22c55e"; // green
-            } else if (AmlStatusEnum.REJECT.equals(amlStatus.getStatus())) {
-                statusColor = "#ef4444"; // red
-            } else {
-                statusColor = "#f59e0b"; // pending / amber
-            }
-
-            context.setVariable("statusColor", statusColor);
-
-
-            String htmlContent = templateEngine.process("aml-template.html", context);
-
-            // Attach NID & Selfie images as files (better for Outlook)
-            Map<String, Resource> attachments = new HashMap<>();
-            try {
-                String legalId = amlStatus.getCustomerInfo().getLegalId();
-                if (customerImageService.nidImageExists(legalId)) {
-                    Resource nidRes = customerImageService.getNidImageResourceForEmail(legalId);
-                    if (nidRes != null) attachments.put("NID_" + legalId + ".jpg", nidRes);
-                }
-                if (customerImageService.selfieImageExists(legalId)) {
-                    Resource selfieRes = customerImageService.getSelfieImageResourceForEmail(legalId);
-                    if (selfieRes != null) attachments.put("SELFIE_" + legalId + ".jpg", selfieRes);
-                }
-            } catch (Exception e) {
-                log.warn("Failed to attach customer images", e);
-            }
-
-            mailService.sendEmail(recipients, subject, htmlContent, true, attachments);
-            log.info("AML status email sent successfully for customer: {}", amlStatus.getCustomerInfo().getLegalId());
-
-        } catch (Exception e) {
-            log.error("Failed to send AML status email for customer: {}", amlStatus.getCustomerInfo().getLegalId(), e);
-        }
+//        if (amlStatus == null) {
+//            log.warn("AML Status is null, email not sent.");
+//            return;
+//        }
+//
+//        log.info("Preparing AML status notification email for customer: {}", amlStatus.getCustomerInfo().getLegalId());
+//
+//        try {
+//            // Set multiple primary recipients
+//            String[] recipients = new String[]{
+//                    "menghor.phat@cambodiapostbank.com.kh",
+//                    "makkara.nob@cambodiapostbank.com.kh"
+//            };
+//
+//            String subject = buildEmailSubject(amlStatus);
+//
+//            // Build HTML body using Thymeleaf template
+//            Context context = new Context();
+//            context.setVariable("amlStatus", amlStatus);
+//            context.setVariable("timestamp", LocalDateTime.now().format(
+//                    DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
+//            context.setVariable(
+//                    "amlDashboardUrl",
+//                    amlDashboardUrl + "&legalId=" + amlStatus.getCustomerInfo().getLegalId()
+//            );
+//            // Determine badge color based on AML status
+//            String statusColor;
+//            if (AmlStatusEnum.APPROVE.equals(amlStatus.getStatus())) {
+//                statusColor = "#22c55e"; // green
+//            } else if (AmlStatusEnum.REJECT.equals(amlStatus.getStatus())) {
+//                statusColor = "#ef4444"; // red
+//            } else {
+//                statusColor = "#f59e0b"; // pending / amber
+//            }
+//
+//            context.setVariable("statusColor", statusColor);
+//
+//
+//            String htmlContent = templateEngine.process("aml-template.html", context);
+//
+//            // Attach NID & Selfie images as files (better for Outlook)
+//            Map<String, Resource> attachments = new HashMap<>();
+//            try {
+//                String legalId = amlStatus.getCustomerInfo().getLegalId();
+//                if (customerImageService.nidImageExists(legalId)) {
+//                    Resource nidRes = customerImageService.getNidImageResourceForEmail(legalId);
+//                    if (nidRes != null) attachments.put("NID_" + legalId + ".jpg", nidRes);
+//                }
+//                if (customerImageService.selfieImageExists(legalId)) {
+//                    Resource selfieRes = customerImageService.getSelfieImageResourceForEmail(legalId);
+//                    if (selfieRes != null) attachments.put("SELFIE_" + legalId + ".jpg", selfieRes);
+//                }
+//            } catch (Exception e) {
+//                log.warn("Failed to attach customer images", e);
+//            }
+//
+//            mailService.sendEmail(recipients, subject, htmlContent, true, attachments);
+//            log.info("AML status email sent successfully for customer: {}", amlStatus.getCustomerInfo().getLegalId());
+//
+//        } catch (Exception e) {
+//            log.error("Failed to send AML status email for customer: {}", amlStatus.getCustomerInfo().getLegalId(), e);
+//        }
     }
 
     private String buildEmailSubject(AmlStatusDto amlStatus) {
