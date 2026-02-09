@@ -64,7 +64,9 @@ public final class AppConstants {
     // 6. AML MESSAGES
     // Used in: OpenAccountServiceImpl
     // ==================================================================================
-    public static final String AML_NEED_REVIEW_MSG = "ការត្រួតពិនិត្យ AML បង្ហាញថាហានិភ័យខ្ពស់ឬកំពុងរង់ចាំសម្រាប់អត្តសញ្ញាណប័ណ្ណលេខ %s។ ពាក្យស្នើសុំនេះត្រូវការការត្រួតពិនិត្យដោយផ្ទាល់។ " + SUPPORT_CONTACT;
+    public static final String AML_NEED_REVIEW_MSG =
+            "ការស្នើសុំបរាជ័យ\n" +
+                    "ការស្នើសុំរបស់អ្នក ត្រូវការត្រួតពិនិត្យ។ ធនាគារនឹងឆ្លើយតបបន្ទាប់ពីត្រួតពិនិត្យរួចរាល់ ឬទំនាក់ទំនងមកសេវាបម្រើអតិថិជន 070 200 002 ឬ 1800 200 888 ដើម្បីជំនួយបន្ថែម។";
     public static final String AML_REJECTED_MSG = "ការត្រួតពិនិត្យ AML ត្រូវបានបដិសេធសម្រាប់អត្តសញ្ញាណប័ណ្ណលេខ %s។ គណនីមិនអាចបង្កើតបានទេ។ " + SUPPORT_CONTACT;
     public static final String AML_UNKNOWN_MSG = "ស្ថានភាព AML មិនស្គាល់សម្រាប់អត្តសញ្ញាណប័ណ្ណលេខ %s។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ ឬទំនាក់ទំនងសេវាបម្រើអតិថិជនតាមរយៈលេខ " + SUPPORT_PHONE_PRIMARY + " ឬ " + SUPPORT_PHONE_SECONDARY + "។";
 
