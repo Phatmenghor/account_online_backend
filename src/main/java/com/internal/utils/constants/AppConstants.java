@@ -105,6 +105,6 @@ public final class AppConstants {
     public static final String T24_ACCOUNT_ERROR = "SECURITY VIOLATION DURING SIGN ON PROCESS";
 
     private AppConstants() {
-        // Prevent instantiation
+
     }
 }
