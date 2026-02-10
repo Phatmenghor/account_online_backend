@@ -77,7 +77,6 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
             } catch (Exception e) {
                 log.error("Failed to send Telegram notification, but logs were created: {}", e.getMessage());
             }
-
         } else {
             log.info("Validation passed successfully for ID {}", idNumber);
         }
