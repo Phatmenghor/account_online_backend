@@ -109,7 +109,7 @@ public class CamdxServiceImp implements CamdxService {
             case 503 -> AppConstants.MSG_503;
             case 504 -> AppConstants.MSG_504;
             case 505 -> AppConstants.MSG_502; // generic system error
-            default -> "Unknown error occurred. " + AppConstants.SUPPORT_CONTACT;
+            default ->  AppConstants.SUPPORT_CONTACT;
         };
     }
 

@@ -26,7 +26,7 @@ public final class AppConstants {
     // ==================================================================================
     public static final String SUPPORT_PHONE_PRIMARY = "070 200 002";
     public static final String SUPPORT_PHONE_SECONDARY = "1800 200 888";
-    public static final String SUPPORT_CONTACT = "សូមទំនាក់ទំនងសេវាបម្រើអតិថិជនតាមរយៈលេខ " + SUPPORT_PHONE_PRIMARY + " ឬ " + SUPPORT_PHONE_SECONDARY + " ដើម្បីទទួលបានជំនួយបន្ថែម។";
+    public static final String SUPPORT_CONTACT = "មានបញ្ហាបច្ចេកទេស។ សូមទំនាក់ទំនងសេវាបម្រើអតិថិជនតាមរយៈលេខ " + SUPPORT_PHONE_PRIMARY + " ឬ " + SUPPORT_PHONE_SECONDARY + " ដើម្បីទទួលបានជំនួយបន្ថែម។";
 
     // ==================================================================================
     // 3. NID VALIDATION ERRORS (Generic)
@@ -42,7 +42,7 @@ public final class AppConstants {
     public static final String MSG_420 = "ការស្នើសុំលើសចំនួនកំណត់។ សូមទាក់ទងក្រុមបច្ចេកទេសដើម្បីទទួលបានជំនួយ។";
     public static final String MSG_500 = "រកមិនឃើញមុខនៅក្នុងរូបថតរបស់អ្នកទេ។ សូមថតរូបអោយច្បាស់ហើយព្យាយាមម្តងទៀត។";
     public static final String MSG_501 = "មិនអាចចាប់យកផ្ទៃមុខនៅលើអត្តសញ្ញាណប័ណ្ណបានទេ។ សូមបញ្ចូលរូបភាពអត្តសញ្ញាណប័ណ្ណរបស់អ្នកអោយបានច្បាស់។";
-    public static final String MSG_502 = "មានបញ្ហាបច្ចេកទេស។ សូមពិនិត្យមើលអត្តសញ្ញាណប័ណ្ណរបស់អ្នក ហើយព្យាយាមម្តងទៀតក្នុងរយៈពេលពីរបីនាទី ឬទំនាក់ទំនងសេវាបម្រើអតិថិជន។";
+    public static final String MSG_502 = "មានបញ្ហាបច្ចេកទេស។ សូមពិនិត្យមើលអត្តសញ្ញាណប័ណ្ណរបស់អ្នក ហើយព្យាយាមម្តងទៀតក្នុងរយៈពេលពីរបីនាទី ឬទំនាក់ទំនងសេវាបម្រើអតិថិជនជនតាមរយៈលេខ 070 200 002 ឬ 1800 200 888។";
     public static final String MSG_503 = "អត្តសញ្ញាណប័ណ្ណរបស់អ្នកមិនអាចរកឃើញក្នុងប្រពន្ធ័ Ministry of Interior (MOI) បានទេ។ សូមទំនាក់ទំនងសេវាបម្រើអតិថិជនតាមរយៈលេខ 070 200 002 ឬ 1800 200 888 ដើម្បីទទួលបានជំនួយបន្ថែម។";
     public static final String MSG_504 = "ការផ្ទៀងផ្ទាត់អត្តសញ្ញាណប័ណ្ណជាមួយ CAMDX បរាជ័យ។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។";
 
@@ -50,12 +50,10 @@ public final class AppConstants {
     // 5. ACCOUNT CREATION & OPEN ACCOUNT ERRORS
     // Used in: OpenAccountServiceImpl, OpenAcctController (legacy logic)
     // ==================================================================================
-    public static final String ACCOUNT_ALREADY_EXIST = "ACCOUNT_ALREADY_EXIST"; // ID
-    public static final String ACCOUNT_RISK = "ACCOUNT_RISK"; // ID
     public static final String FAIL_CREATE_ANY_ACCOUNT = "មិនអាចបង្កើតគណនីបានទេ។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។ ប្រសិនបើបញ្ហានៅតែបន្ត សូមទំនាក់ទំនងសេវាបម្រើអតិថិជន។";
     public static final String MSG_DB_CONNECTION_ERR = "មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ប្រព័ន្ធ សូមព្យាយាមម្តងទៀត";
     public static final String MSG_HIGH_RISK_ERR = "សំណើរបស់អ្នកមិនអាចដំណើរការបានទេ ពីព្រោះការវាយតម្លៃអតិថិជនមានការហានិភ័យ";
-    public static final String MSG_ACCOUNT_EXISTS_ERR = "លោកអ្នកមានគណនីជាមួយធនាគាររួចហើយ។ សូមប្រើប្រាស់ជាមួយគណនីរបស់លោកអ្នក។";
+    public static final String MSG_ACCOUNT_EXISTS_ERR = "លលោកអ្នកមានគណនីជាមួយធនាគាររួចហើយ។ សូមប្រើប្រាស់ជាមួយគណនីរបស់លោកអ្នក។";
     public static final String MSG_GENERIC_ERROR = "ការស្នើសុំរបស់លោកអ្នកមិនអាចដំណើរការបានទេ។ សូមព្យាយាមម្តងទៀត"; // For 500, 503, 504, 505, 506
     public static final String MSG_SUCCESS = "ការស្នើសុំជោគជ័យ។ លោកអ្នកនឹងទទួលបានលេខគណនី តាមសារទូរស័ព្ទ។ សូមភ្ជាប់សេវាធនាគារចល័តដើម្បីរីករាយជាមួយប្រតិបត្តិការដ៏សម្បូរបែប។";
 
