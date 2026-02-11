@@ -86,6 +86,9 @@ public class TelegramBotListenerService {
                 if (lowerText.contains("reset password") || lowerText.contains("reset pw")) {
                     String email = extractEmail(text);
                     handleResetPassword(chatId, senderName, email);
+
+                } else if (containsAny(lowerText, "hi bot", "hello bot", "hey bot", "hi bro bot", "yo bot")) {
+                    sendGreeting(chatId, senderName);
                 }
             }
 
@@ -94,6 +97,25 @@ public class TelegramBotListenerService {
         }
     }
 
+    // =====================================================
+    // GREETING
+    // =====================================================
+    private void sendGreeting(long chatId, String senderName) {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Hi ").append(escapeMarkdown(senderName)).append("!\n\n")
+                .append("How can I help you?\n\n")
+                .append("You can ask me:\n")
+                .append("- Reset password for <email>\n\n")
+                .append("Example:\n")
+                .append("`reset password phatmenghor19@gmail.com`");
+
+        telegramService.sendMarkdownToChat(String.valueOf(chatId), sb.toString());
+    }
+
+    // =====================================================
+    // RESET PASSWORD
+    // =====================================================
     private void handleResetPassword(long chatId, String senderName, String username) {
 
         if (username == null || username.isEmpty()) {
@@ -101,7 +123,7 @@ public class TelegramBotListenerService {
                     "Hi " + escapeMarkdown(senderName) + "!\n\n"
                             + "I couldn't find an email in your message\\.\n\n"
                             + "Example:\n"
-                            + "`Hi Bot, reset password for phatmenghor19@gmail.com`");
+                            + "`reset password phatmenghor19@gmail.com`");
             return;
         }
 
@@ -142,12 +164,24 @@ public class TelegramBotListenerService {
         }
     }
 
+    // =====================================================
+    // HELPERS
+    // =====================================================
     private String extractEmail(String text) {
         Matcher matcher = EMAIL_PATTERN.matcher(text);
         if (matcher.find()) {
             return matcher.group();
         }
         return null;
+    }
+
+    private boolean containsAny(String text, String... keywords) {
+        for (String keyword : keywords) {
+            if (text.contains(keyword.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String escapeMarkdown(String text) {
