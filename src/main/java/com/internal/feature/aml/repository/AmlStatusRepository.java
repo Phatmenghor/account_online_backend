@@ -25,4 +25,6 @@ public interface AmlStatusRepository extends JpaRepository<AmlStatus, Long> {
            "LOWER(a.legalId) LIKE LOWER(CONCAT('%', :search, '%'))) " +
            "ORDER BY a.createdAt DESC")
     Page<AmlStatus> findByStatusAndSearch(@Param("status") AmlStatusEnum status, @Param("search") String search, Pageable pageable);
+
+    long countByStatus(AmlStatusEnum amlStatusEnum);
 }

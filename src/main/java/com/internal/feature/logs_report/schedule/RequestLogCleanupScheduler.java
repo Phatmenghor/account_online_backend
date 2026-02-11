@@ -1,8 +1,10 @@
 package com.internal.feature.logs_report.schedule;
 
 import com.internal.feature.logs_report.repository.AccountOnlineFinalRepository;
+import com.internal.feature.aml.repository.AmlStatusRepository;
 import com.internal.feature.logs_report.service.RequestLogService;
 import com.internal.feature.telegram_alerts.config.TelegramService;
+import com.internal.enumation.AmlStatusEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +26,7 @@ public class RequestLogCleanupScheduler {
 
     private final RequestLogService requestLogService;
     private final AccountOnlineFinalRepository accountOnlineFinalRepository;
+    private final AmlStatusRepository amlStatusRepository;
     private final TelegramService telegramService;
 
     private static final ZoneId ZONE_PP = ZoneId.of("Asia/Phnom_Penh");
@@ -32,6 +35,9 @@ public class RequestLogCleanupScheduler {
 
     @Value("${request.log.retention.days:30}")
     private int retentionDays;
+
+    @Value("${aml.dashboard.url:}")
+    private String amlDashboardUrl;
 
     // =====================================================
     // CLEANUP OLD LOGS - DAILY AT 2:00 AM
@@ -49,7 +55,6 @@ public class RequestLogCleanupScheduler {
 
     // =====================================================
     // TIME DRIFT CHECK - EVERY HOUR
-    // Alerts only if server time drifts > 30 seconds
     // =====================================================
     @Scheduled(cron = "0 0 * * * ?", zone = "Asia/Phnom_Penh")
     public void checkTimeDrift() {
@@ -147,6 +152,57 @@ public class RequestLogCleanupScheduler {
             String errorMsg = "*DAILY REPORT ERROR*\n"
                     + "--------------------\n"
                     + "Failed to generate daily account report\\.\n"
+                    + "Error: " + escapeMarkdown(e.getMessage()) + "\n"
+                    + "Please check logs\\.";
+
+            telegramService.sendMarkdownAccountOnlineMonitorMessage(errorMsg);
+        }
+    }
+
+    // =====================================================
+    // AML PENDING REPORT - EVERY DAY AT 8:00 AM
+    // =====================================================
+    @Scheduled(cron = "0 1 8 * * ?", zone = "Asia/Phnom_Penh")
+    public void sendAmlPendingReport() {
+
+        log.info("Running AML pending report");
+
+        try {
+            long pendingCount = amlStatusRepository.countByStatus(AmlStatusEnum.PENDING);
+
+            String generatedAt = LocalDateTime.now(ZONE_PP).format(FORMATTER);
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("*AML SCREENING PENDING REPORT*\n")
+                    .append("--------------------\n\n")
+                    .append("Total Pending: *").append(pendingCount).append("*\n\n");
+
+            if (pendingCount > 0) {
+                sb.append("There are *").append(pendingCount)
+                        .append("* customer(s) awaiting AML review\\.\n")
+                        .append("Please take action as soon as possible\\.\n\n");
+
+                if (amlDashboardUrl != null && !amlDashboardUrl.isEmpty()) {
+                    sb.append("Dashboard: ").append(escapeMarkdown(amlDashboardUrl)).append("\n");
+                }
+            } else {
+                sb.append("No pending AML cases\\. All clear\\.\n");
+            }
+
+            sb.append("--------------------\n")
+                    .append("Generated: ").append(generatedAt).append("\n")
+                    .append("Auto Report \\- Account Online System");
+
+            telegramService.sendMarkdownAccountOnlineMonitorMessage(sb.toString());
+
+            log.info("AML pending report sent. Pending={}", pendingCount);
+
+        } catch (Exception e) {
+            log.error("Failed to send AML pending report: {}", e.getMessage(), e);
+
+            String errorMsg = "*AML REPORT ERROR*\n"
+                    + "--------------------\n"
+                    + "Failed to generate AML pending report\\.\n"
                     + "Error: " + escapeMarkdown(e.getMessage()) + "\n"
                     + "Please check logs\\.";
 
