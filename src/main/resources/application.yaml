@@ -222,9 +222,6 @@ jwt:
         queue-capacity: 100
         thread-name-prefix: async-telegram-
 
-        root@ciftp-db-uat:/home/dbaciftp# curl -X POST "https://api.telegram.org/bot8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY/sendMessage" -d chat_id="-1002740302492" -d parse_mode="Markdown" -d "text=⚠️ *SERVER TIME SYNC ALERT*%0A━━━━━━━━━━━━━━━━━━━━%0A%0ADear Team,%0A%0AThe server time is currently *incorrect*.%0APlease resync the server time as soon as possible.%0A%0AThis may affect scheduled jobs and report accuracy.%0A%0A━━━━━━━━━━━━━━━━━━━━%0A🖥️ Server: Account Online (UAT)%0A⏰ Thank you!"
-        { "ok": true,"result": { "message_id": 534,"from": { "id": 8227113200,"is_bot": true,"first_name": "IT_BOT_MONITOR","username": "InternalDevCPBankBot" },"chat": { "id": -1002740302492,"title": "ACL Internal DEv UAT Monitor","type": "supergroup" },"date": 1770798943,"text": "\u26a0\ufe0f SERVER TIME SYNC ALERT\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\nDear Team,\n\nThe server time is currently incorrect.\nPlease resync the server time as soon as possible.\n\nThis may affect scheduled jobs and report accuracy.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udda5\ufe0f Server: Account Online (UAT)\n\u23f0 Thank you!","entities": [ { "offset": 3,"length": 22,"type": "bold" },{ "offset": 89,"length": 9,"type": "bold" } ] } }root@ciftp-db-uat:/home/dbaciftp# ^C
-
 # App Configuration
 app:
   default-users:
