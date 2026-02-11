@@ -35,7 +35,7 @@ public class TelegramBotListenerService {
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
-    private static final String DEFAULT_PASSWORD = "Password@123"; // Change as needed
+    private static final String DEFAULT_PASSWORD = "88889999"; // Change as needed
 
     @Value("${telegram.bot.token}")
     private String botToken;
@@ -109,11 +109,7 @@ public class TelegramBotListenerService {
 
         StringBuilder sb = new StringBuilder();
         sb.append("Hi ").append(escapeMarkdown(senderName)).append("!\n\n")
-                .append("How can I help you?\n\n")
-                .append("You can ask me:\n")
-                .append("- Reset password for <email>\n\n")
-                .append("Example:\n")
-                .append("`reset password phatmenghor19@gmail.com`");
+                .append("How can I help you?");
 
         telegramService.sendMarkdownToChat(String.valueOf(chatId), sb.toString());
     }
