@@ -23,9 +23,9 @@ import java.util.regex.Pattern;
 @Slf4j
 public class TelegramBotListenerService {
 
+    private final TelegramService telegramService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final TelegramService telegramService;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -33,11 +33,9 @@ public class TelegramBotListenerService {
     private static final ZoneId ZONE_PP = ZoneId.of("Asia/Phnom_Penh");
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final String DEFAULT_PASSWORD = "88889999";
-    private static final String MONITOR_CHAT_ID = "-1003115792160";
-
     private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}");
+            Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
+    private static final String DEFAULT_PASSWORD = "Password@123"; // Change as needed
 
     @Value("${telegram.bot.token}")
     private String botToken;
@@ -47,6 +45,9 @@ public class TelegramBotListenerService {
 
     private long lastUpdateId = 0;
 
+    // =====================================================
+    // POLL EVERY 3 SECONDS
+    // =====================================================
     @Scheduled(fixedDelay = 3000)
     public void pollMessages() {
 
@@ -71,29 +72,33 @@ public class TelegramBotListenerService {
                 JsonNode message = update.path("message");
                 if (message.isMissingNode()) continue;
 
-                String text = message.path("text").asText("").trim();
+                String text = message.path("text").asText("").toLowerCase().trim();
                 long chatId = message.path("chat").path("id").asLong();
                 String senderName = message.path("from").path("first_name").asText("Unknown");
 
                 if (text.isEmpty()) continue;
 
-                if (chatId != Long.parseLong(MONITOR_CHAT_ID)) continue;
-
                 log.info("Bot received from {}: {}", senderName, text);
 
-                String lowerText = text.toLowerCase();
-
-                if (lowerText.contains("reset password") || lowerText.contains("reset pw")) {
-                    String email = extractEmail(text);
-                    handleResetPassword(chatId, senderName, email);
-
-                } else if (containsAny(lowerText, "hi bot", "hello bot", "hey bot", "hi bro bot", "yo bot")) {
-                    sendGreeting(chatId, senderName);
-                }
+                handleMessage(chatId, text, senderName);
             }
 
         } catch (Exception e) {
             log.error("Error polling Telegram: {}", e.getMessage());
+        }
+    }
+
+    // =====================================================
+    // HANDLE MESSAGES
+    // =====================================================
+    private void handleMessage(long chatId, String text, String senderName) {
+
+        if (containsAny(text, "reset password", "reset pass")) {
+            String email = extractEmail(text);
+            handleResetPassword(chatId, senderName, email);
+
+        } else if (containsAny(text, "hi bot", "hello bot", "hey bot", "help")) {
+            sendGreeting(chatId, senderName);
         }
     }
 
@@ -120,10 +125,10 @@ public class TelegramBotListenerService {
 
         if (username == null || username.isEmpty()) {
             telegramService.sendMarkdownToChat(String.valueOf(chatId),
-                    "Hi " + escapeMarkdown(senderName) + "!\n\n"
-                            + "I couldn't find an email in your message\\.\n\n"
-                            + "Example:\n"
-                            + "`reset password phatmenghor19@gmail.com`");
+                    "Hi " + escapeMarkdown(senderName) + "!\n\n" +
+                            "I couldn't find an email in your message\\.\n\n" +
+                            "Example:\n" +
+                            "`reset password phatmenghor19@gmail.com`");
             return;
         }
 
@@ -132,8 +137,8 @@ public class TelegramBotListenerService {
 
             if (userOptional.isEmpty()) {
                 telegramService.sendMarkdownToChat(String.valueOf(chatId),
-                        "Hi " + escapeMarkdown(senderName) + "!\n\n"
-                                + "User *" + escapeMarkdown(username) + "* not found\\.");
+                        "Hi " + escapeMarkdown(senderName) + "!\n\n" +
+                                "User *" + escapeMarkdown(username) + "* not found\\.");
                 return;
             }
 
