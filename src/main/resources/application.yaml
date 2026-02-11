@@ -35,6 +35,7 @@ spring:
         cache:
           use_second_level_cache: false
 
+  # PostgreSQL Datasource
   datasource:
     url: jdbc:postgresql://192.168.103.106:5432/account_online
     username: postgres
@@ -50,7 +51,7 @@ spring:
       pool-name: PostgreSQL-Pool
       auto-commit: false
 
-  # Mail configuration
+  # Mail Configuration
   mail:
     host: 10.18.1.204
     port: 25
@@ -66,14 +67,14 @@ spring:
             trust: "*"
     default-encoding: UTF-8
 
-  # Thymeleaf configuration
+  # Thymeleaf Configuration
   thymeleaf:
     cache: false
     prefix: classpath:/templates/
     suffix: .html
     encoding: UTF-8
 
-  # Async Task Configuration (for request logging)
+  # Async Task Configuration
   task:
     execution:
       pool:
@@ -84,11 +85,12 @@ spring:
     scheduling:
       enabled: true
 
+# Email Sender
 email:
   sender:
     address: ithelpdesk@cambodiapostbank.com.kh
 
-#FILE UPLOAD DIR
+# File Upload Directory
 file:
   upload:
     directory: /app/customer-image
@@ -99,7 +101,7 @@ file:
 request:
   log:
     retention:
-      days: 30  # Auto-delete logs older than 30 days
+      days: 30
     enabled: true
     exclude-paths:
       - /swagger-ui
@@ -123,7 +125,6 @@ oracle:
       idle-timeout: 600000
       max-lifetime: 1800000
       pool-name: Oracle-DWH-Pool
-
   stg:
     datasource:
       jdbc-url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
@@ -138,13 +139,13 @@ oracle:
       max-lifetime: 1800000
       pool-name: Oracle-STG-Pool
 
+# Master Data
 masterdata:
   schema: DWH
 
+# CPB Configuration
 cpb:
   environment: development
-
-  # Business defaults (overridable per environment)
   defaults:
     branch-code: KH0012011
     sector: "4501"
@@ -161,7 +162,6 @@ cpb:
     product-code: SAVE.ACCT.ONLINE
     account-activity: ACCOUNTS-NEW-ARRANGEMENT
     new-arrangement: NEW
-
   camdx:
     url: http://192.168.103.106:8099/api/v1/
     auth:
@@ -195,11 +195,12 @@ cpb:
     openAcctByCustomer: C:\Users\makkara.nob\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_CUSTOMER.xml
     openAcctByStaff: C:\Users\makkara.nob\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_STAFF.xml
 
-# Open account TEST Config
+# Open Account Test Config
 test:
   skip-check-account: false
   skip-check-cif: false
 
+# AML Configuration
 aml:
   dashboard:
     url: http://192.168.103.106:8282/aml-management?pageNo=1
@@ -243,12 +244,6 @@ app:
 telegram:
   bot:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
-
-    #TEST
-#    uat-acl-chat-id: "-4886328332"
-#    uat-monitor-chat-id: "-4886328332"
-
-    #UAT
     uat-acl-chat-id: "-1002740302492"
     uat-monitor-chat-id: "-1003115792160"
     enabled: true
@@ -261,7 +256,6 @@ logging:
     org.springframework: WARN
     org.hibernate: WARN
     com.zaxxer.hikari: INFO
-    # Request Logging specific
     com.internal.feature.auth.security.RequestLoggingFilter: DEBUG
     com.internal.feature.auth.service.RequestLogService: INFO
     com.internal.feature.auth.scheduler.RequestLogCleanupScheduler: INFO

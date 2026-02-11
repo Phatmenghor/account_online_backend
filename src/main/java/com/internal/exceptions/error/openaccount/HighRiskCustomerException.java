@@ -1,5 +1,6 @@
 package com.internal.exceptions.error.openaccount;
 
+import com.internal.utils.constants.AppConstants;
 import lombok.Getter;
 
 @Getter
@@ -7,7 +8,7 @@ public class HighRiskCustomerException extends RuntimeException {
     private final String rating;
     
     public HighRiskCustomerException(String rating) {
-        super(com.internal.utils.constants.AppConstants.ACCOUNT_RISK);
+        super(AppConstants.AML_NEED_REVIEW_MSG);
         this.rating = rating;
     }
 }
