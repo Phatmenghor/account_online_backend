@@ -66,4 +66,25 @@ public class TelegramService {
             log.error("Failed to send Telegram to Monitor channel: {}", e.getMessage(), e);
         }
     }
+
+    public void sendMarkdownToChat(String chatId, String message) {
+        try {
+            String url = String.format("https://api.telegram.org/bot%s/sendMessage", botToken);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+            body.add("chat_id", chatId);
+            body.add("text", message);
+            body.add("parse_mode", "Markdown");
+
+            HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
+
+            restTemplate.postForObject(url, requestEntity, String.class);
+            log.info("Telegram sent to chat: {}", chatId);
+        } catch (Exception e) {
+            log.error("Failed to send Telegram to chat {}: {}", chatId, e.getMessage(), e);
+        }
+    }
 }
