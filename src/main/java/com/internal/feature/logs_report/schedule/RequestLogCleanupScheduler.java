@@ -9,9 +9,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -25,6 +27,8 @@ public class RequestLogCleanupScheduler {
     private final TelegramService telegramService;
 
     private static final ZoneId ZONE_PP = ZoneId.of("Asia/Phnom_Penh");
+    private static final DateTimeFormatter FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Value("${request.log.retention.days:30}")
     private int retentionDays;
@@ -40,6 +44,41 @@ public class RequestLogCleanupScheduler {
             log.info("Request log cleanup completed. Deleted {} records", deleted);
         } catch (Exception e) {
             log.error("Error during request log cleanup: {}", e.getMessage(), e);
+        }
+    }
+
+    // =====================================================
+    // TIME DRIFT CHECK - EVERY HOUR
+    // Alerts only if server time drifts > 30 seconds
+    // =====================================================
+    @Scheduled(cron = "0 0 * * * ?", zone = "Asia/Phnom_Penh")
+    public void checkTimeDrift() {
+
+        ZonedDateTime serverTime = ZonedDateTime.now();
+        ZonedDateTime cambodiaTime = ZonedDateTime.now(ZONE_PP);
+
+        long driftSeconds = Math.abs(
+                Duration.between(
+                        serverTime.toInstant(),
+                        cambodiaTime.toInstant()
+                ).getSeconds()
+        );
+
+        if (driftSeconds > 30) {
+            log.warn("Server time drift detected: {} seconds", driftSeconds);
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("*SERVER TIME DRIFT ALERT*\n")
+                    .append("--------------------\n\n")
+                    .append("Server Time: ").append(serverTime.format(FORMATTER)).append("\n")
+                    .append("Cambodia Time: ").append(cambodiaTime.format(FORMATTER)).append("\n")
+                    .append("Drift: *").append(driftSeconds).append(" seconds*\n\n")
+                    .append("Please resync server time\\.\n")
+                    .append("--------------------");
+
+            telegramService.sendMarkdownAccountOnlineMonitorMessage(sb.toString());
+        } else {
+            log.info("Time check OK. Drift: {}s", driftSeconds);
         }
     }
 
@@ -79,25 +118,24 @@ public class RequestLogCleanupScheduler {
             long totalCount = maleCount + femaleCount + otherCount;
 
             String reportDate = yesterday.format(DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
-            String generatedAt = LocalDateTime.now(ZONE_PP)
-                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            String generatedAt = LocalDateTime.now(ZONE_PP).format(FORMATTER);
 
             StringBuilder sb = new StringBuilder();
-            sb.append("📊 *DAILY ACCOUNT OPENING REPORT*\n")
-                    .append("━━━━━━━━━━━━━━━━━━━━\n")
-                    .append("📅 Report Date: *").append(reportDate).append("*\n\n")
-                    .append("✅ *Successfully Opened Accounts*\n\n")
-                    .append("👨 Male: *").append(maleCount).append("*\n")
-                    .append("👩 Female: *").append(femaleCount).append("*\n");
+            sb.append("*DAILY ACCOUNT OPENING REPORT*\n")
+                    .append("--------------------\n")
+                    .append("Report Date: *").append(reportDate).append("*\n\n")
+                    .append("*Successfully Opened Accounts*\n\n")
+                    .append("Male: *").append(maleCount).append("*\n")
+                    .append("Female: *").append(femaleCount).append("*\n");
 
             if (otherCount > 0) {
-                sb.append("🔹 Other: *").append(otherCount).append("*\n");
+                sb.append("Other: *").append(otherCount).append("*\n");
             }
 
-            sb.append("\n📋 Total: *").append(totalCount).append("*\n")
-                    .append("━━━━━━━━━━━━━━━━━━━━\n")
-                    .append("⏰ Generated: ").append(generatedAt).append("\n")
-                    .append("🤖 Auto Report \\- Account Online System");
+            sb.append("\nTotal: *").append(totalCount).append("*\n")
+                    .append("--------------------\n")
+                    .append("Generated: ").append(generatedAt).append("\n")
+                    .append("Auto Report \\- Account Online System");
 
             telegramService.sendMarkdownAccountOnlineMonitorMessage(sb.toString());
 
@@ -106,8 +144,8 @@ public class RequestLogCleanupScheduler {
         } catch (Exception e) {
             log.error("Failed to send daily account report: {}", e.getMessage(), e);
 
-            String errorMsg = "⚠️ *DAILY REPORT ERROR*\n"
-                    + "━━━━━━━━━━━━━━━━━━━━\n"
+            String errorMsg = "*DAILY REPORT ERROR*\n"
+                    + "--------------------\n"
                     + "Failed to generate daily account report\\.\n"
                     + "Error: " + escapeMarkdown(e.getMessage()) + "\n"
                     + "Please check logs\\.";
