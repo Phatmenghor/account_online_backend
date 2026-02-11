@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,6 +18,16 @@ public interface AccountOnlineFinalRepository extends JpaRepository<AccountOnlin
 
     Optional<AccountOnlineFinal> findByLegalId(String legalId);
     Optional<AccountOnlineFinal> findTopByCifOrLegalIdOrderByCreatedAtDesc(String cif, String legalId);
+
+
+    @Query("SELECT a.legalGender, COUNT(a) FROM AccountOnlineFinal a " +
+            "WHERE a.createdAt >= :startDate AND a.createdAt < :endDate " +
+            "AND a.amlStatus = 'APPROVED' " +
+            "GROUP BY a.legalGender")
+    List<Object[]> countByGenderAndDateRange(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 
     @Query("SELECT a FROM AccountOnlineFinal a WHERE " +
            "(:search IS NULL OR :search = '' OR " +

@@ -37,7 +37,7 @@ public class ComplianceService {
     private final OpenAccountTelegramAlertServiceImpl alertTelegramService;
 
     public static class TestConfig {
-        public static final boolean FORCE_AML_HIGH_RISK = false;
+        public static final boolean FORCE_AML_HIGH_RISK = true;
     }
 
     public AmlStatusDto processAml(CustomerRequest request) throws Exception {
