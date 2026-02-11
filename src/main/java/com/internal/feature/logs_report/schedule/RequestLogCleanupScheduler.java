@@ -54,40 +54,6 @@ public class RequestLogCleanupScheduler {
     }
 
     // =====================================================
-    // TIME DRIFT CHECK - EVERY HOUR
-    // =====================================================
-    @Scheduled(cron = "0 0 * * * ?", zone = "Asia/Phnom_Penh")
-    public void checkTimeDrift() {
-
-        ZonedDateTime serverTime = ZonedDateTime.now();
-        ZonedDateTime cambodiaTime = ZonedDateTime.now(ZONE_PP);
-
-        long driftSeconds = Math.abs(
-                Duration.between(
-                        serverTime.toInstant(),
-                        cambodiaTime.toInstant()
-                ).getSeconds()
-        );
-
-        if (driftSeconds > 30) {
-            log.warn("Server time drift detected: {} seconds", driftSeconds);
-
-            StringBuilder sb = new StringBuilder();
-            sb.append("*SERVER TIME DRIFT ALERT*\n")
-                    .append("--------------------\n\n")
-                    .append("Server Time: ").append(serverTime.format(FORMATTER)).append("\n")
-                    .append("Cambodia Time: ").append(cambodiaTime.format(FORMATTER)).append("\n")
-                    .append("Drift: *").append(driftSeconds).append(" seconds*\n\n")
-                    .append("Please resync server time\\.\n")
-                    .append("--------------------");
-
-            telegramService.sendMarkdownAccountOnlineMonitorMessage(sb.toString());
-        } else {
-            log.info("Time check OK. Drift: {}s", driftSeconds);
-        }
-    }
-
-    // =====================================================
     // DAILY ACCOUNT REPORT - EVERY DAY AT 8:00 AM
     // =====================================================
     @Scheduled(cron = "0 0 8 * * ?", zone = "Asia/Phnom_Penh")
