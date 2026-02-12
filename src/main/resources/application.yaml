@@ -90,13 +90,6 @@ email:
   sender:
     address: ithelpdesk@cambodiapostbank.com.kh
 
-# File Upload Directory
-file:
-  upload:
-    directory: /app/customer-image
-    nid: /nid
-    selfie: /selfie
-
 # Request Logging Configuration
 request:
   log:
@@ -221,6 +214,11 @@ jwt:
 
 # App Configuration
 app:
+  upload:
+    directory: /app/customer-image
+    nid: /nid
+    selfie: /selfie
+
   default-users:
     create: true
   super:
