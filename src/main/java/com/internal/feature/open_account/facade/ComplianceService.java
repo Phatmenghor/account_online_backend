@@ -36,10 +36,6 @@ public class ComplianceService {
     private final ObjectMapper objectMapper;
     private final OpenAccountTelegramAlertServiceImpl alertTelegramService;
 
-    public static class TestConfig {
-        public static final boolean FORCE_AML_HIGH_RISK = true;
-    }
-
     public AmlStatusDto processAml(CustomerRequest request) throws Exception {
         // Check for existing AML
         Optional<AmlStatus> existingAmlOpt = amlService.findByLegalId(request.getLegalId());
@@ -57,11 +53,7 @@ public class ComplianceService {
 
         // Determine AML status based on risk
         boolean isHighRisk = AppConstants.RISK_HIGH.equalsIgnoreCase(amlResponse.getRiskLevel());
-
-        if (TestConfig.FORCE_AML_HIGH_RISK) {
-            log.warn(">>> FORCING AML HIGH RISK (TEST_CONFIG)");
-            isHighRisk = true;
-        }
+        
         AmlStatusEnum amlStatusEnum = isHighRisk ? AmlStatusEnum.PENDING : AmlStatusEnum.APPROVE;
 
         // Map to CreateAmlRequestDto
