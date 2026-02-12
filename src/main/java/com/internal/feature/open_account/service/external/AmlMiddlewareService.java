@@ -1,5 +1,6 @@
 package com.internal.feature.open_account.service.external;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.internal.config.CpbProperties;
 import com.internal.feature.open_account.dto.request.CustomerAmlRequest;
@@ -9,6 +10,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -23,13 +28,15 @@ public class AmlMiddlewareService {
 
         try {
             String url = properties.getAml().getUrl();
-            String bearerToken = properties.getAml().getToken();
             String jsonRequest = objectMapper.writeValueAsString(requestBody);
             log.info("AML Request JSON: {}", jsonRequest);
 
+            String credentials = properties.getAml().getUsername() + ":" + properties.getAml().getPassword();
+            String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(bearerToken);
+            headers.set("Authorization", "Basic " + encodedCredentials);
 
             HttpEntity<String> entity = new HttpEntity<>(jsonRequest, headers);
 
@@ -40,7 +47,7 @@ public class AmlMiddlewareService {
             String rawBody = response.getBody();
             log.info("AML raw response body: {}", rawBody);
 
-            java.util.Map<String, Object> map = objectMapper.readValue(rawBody, java.util.Map.class);
+            Map<String, Object> map = objectMapper.readValue(rawBody, new TypeReference<Map<String, Object>>() {});
             Object rulesArray = map.get("RulesTriggered");
             String rulesAsString = rulesArray == null ? "" : objectMapper.writeValueAsString(rulesArray);
             map.put("RulesTriggered", rulesAsString);

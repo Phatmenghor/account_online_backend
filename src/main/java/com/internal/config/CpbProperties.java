@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 public class CpbProperties {
 
     private String environment;
+    private Defaults defaults;
     private Camdx camdx;
     private Aml aml;
     private T24 t24;
@@ -17,7 +18,25 @@ public class CpbProperties {
     private Otp otp;
     private Validate validate;
     private Ocr ocr;
-    private Xml xml;
+
+    @Data
+    public static class Defaults {
+        private String branchCode;
+        private String sector;
+        private String costCenter;
+        private String industry;
+        private String target;
+        private String language;
+        private String customerRating;
+        private String customerStatus;
+        private String customerType;
+        private String ownership;
+        private String legalHolderName;
+        private String nationality;
+        private String productCode;
+        private String accountActivity;
+        private String newArrangement;
+    }
 
     @Data
     public static class Camdx {
@@ -33,8 +52,9 @@ public class CpbProperties {
 
     @Data
     public static class Aml {
-        private String token;
         private String url;
+        private String username;
+        private String password;
     }
 
     @Data
@@ -70,12 +90,5 @@ public class CpbProperties {
     @Data
     public static class Ocr {
         private String apiRoute;
-    }
-
-    @Data
-    public static class Xml {
-        private String createCustomer;
-        private String openAcctByCustomer;
-        private String openAcctByStaff;
     }
 }
