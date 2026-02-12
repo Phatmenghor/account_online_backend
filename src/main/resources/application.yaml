@@ -1,5 +1,5 @@
 server:
-  port: 9393
+  port: 7070
   servlet:
     context-path: /
   compression:
@@ -37,7 +37,7 @@ spring:
 
   # PostgreSQL Datasource
   datasource:
-    url: jdbc:postgresql://192.168.103.106:5432/account_online
+    url: jdbc:postgresql://192.168.101.5:5432/account_online
     username: postgres
     password: 123cp!@#
     driver-class-name: org.postgresql.Driver
@@ -145,7 +145,7 @@ masterdata:
 
 # CPB Configuration
 cpb:
-  environment: development
+  environment: production
   defaults:
     branch-code: KH0012011
     sector: "4501"
@@ -163,20 +163,20 @@ cpb:
     account-activity: ACCOUNTS-NEW-ARRANGEMENT
     new-arrangement: NEW
   camdx:
-    url: http://192.168.103.106:8099/api/v1/
+    url: http://192.168.101.5:8099/api/v1/
     auth:
       token: d8a7f9e2-3c4b-4f10-9d75-1c9f2b84a7ec
       tokenHeaderName: X-CPB-CamDx-Auth
   aml:
     token: eyJhbGciOiJSUzI1NiIsImtpZCI6IjRDQTE2QjM1NEQwNTAyNDU0OUQ1MEUwQkJEREY4OEJDNTIzODBBMDYiLCJ0eXAiOiJKV1QiLCJ4NXQiOiJUS0ZyTlUwRkFrVkoxUTRMdmQtSXZGSTRDZ1kifQ.eyJuYmYiOjE3MDU5ODQ5ODMsImV4cCI6MTcwNTk4NTI4MywiaXNzIjoiaHR0cHM6Ly9hdXRoLXVhdC1pbnR1aXRpb24uY2FtYm9kaWFwb3N0YmFuay5jb20ua2giLCJhdWQiOiJmOTVkYTViMS04MGMwLTQ1MzAtYjlhZi03MTIxNTJjNWJjMjYiLCJub25jZSI6ImNlMWI0YmRhZGRiNTQzYTA5ZWU4OTc0OWNmMDZkMTIyIiwiaWF0IjoxNzA1OTg0OTgzLCJhdF9oYXNoIjoiSlUxV0liMFFSai1XTFFFbmtYWmUzUSIsInNfaGFzaCI6IlZvUjVzYmlwQlM0ZWF5U3lROUlaN3ciLCJzaWQiOiJvbWNkZ29zdmdlNlFNaWpoSDlQUUpnIiwic3ViIjoiZjRhMTA3OTAtMmY2Ny00NTdhLWFjMGYtMDRmM2YxMGFjNTgzIiwiYXV0aF90aW1lIjoxNzA1OTc3MjMxLCJpZHAiOiJsb2NhbCIsIm5hbWUiOiJhZG1pbiIsImZhbWlseV9uYW1lIjoiYWRtaW4iLCJnaXZlbl9uYW1lIjoiQWRtaW4iLCJ0ZW5hbnRfaWQiOiJmNGExMDc5MC0yZjY3LTQ1N2EtYWMwZi0wNGYzZjEwYWM1ODMiLCJwcm9maWxlX2lkcyI6ImY0YTEwNzkwLTJmNjctNDU3YS1hYzBmLTA0ZjNmMTBhYzU4MyIsImFtciI6WyJwd2QiXSwicGVybWlzc2lvbiI6WyJ0ZW5hbnR8Zi8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vMy8vLy8vLy8vLy8vLy92VC8vLzl4Ly83dy8vLzkvL3F4Ly8zIiwicHJvZHVjdHxvbmJvYXJkaW5nfFAvLy8vLytBQUFmMytDUC8vLy8vLytBQUlBQXZmLy8vOXc9PSIsInByb2R1Y3R8bW9uaXRvcmluZ3xQLy8vLy8rQUFBZjMrQ1AvLy8vLy8vLy8vLy8vZi8vLzl3PT0iXX0.MbhFfAjQNuBjMABdG8f474z1Qk19XOYbLh_xXSoQeBs1Kq1wtH50gN1W54VxiiB69w_JwuaP6bwglH0ua3wPr9rSqxCGbECSjidESh8Jqo3bbdyKm69hHFPWnAaIlyM-PCzXXw64eKMR9sT-pWwi99VEOKt1Bcy7UnrS9qP9vH7fsK1QdHoVN6mbo4xpkdljEk58PFWksbhjHQj-oPKs49QfT7Eu29asFvmvH9POpKgkAkKyEhCTqPHyOdM2HUKvzhByL0c0FjhqEKyFQhPxO81BXFGTROYqdWy8N1McYxJPvQY0RA6lToDB6uT3oCtpOT8ERqAlZnJiO0IGkZGrRQ
-    url: http://192.168.103.106:9095/api/aml-check
+    url: http://192.168.101.5:9095/api/aml
   t24:
-    url: http://192.168.127.31:7003
-    username: L.HOURNG
-    password: HOurng@2323
+    url: http://192.168.101.21:7003
+    username: APPLOS
+    password: CPlos@123!@#
   mb:
-    otpUrl: http://192.168.103.11:15004/CPBBank/services/CPBMobile?wsdl
-    registerCodeUrl: http://192.168.103.13:8090/API/RegisterCustomerMB/
+    otpUrl: http://10.18.1.47:15004/CPBBank/services/CPBMobile?wsdl
+    registerCodeUrl: http://10.18.1.48:8090/API/RegisterCustomerMB/
     secretKey: cpbsmsgw@!@#974203
   otp:
     length: 6
@@ -184,16 +184,12 @@ cpb:
     maxAttempts: 3
     lockMinutes: 5
     expiryMinutes: 5
-    message: "Your OTP code is:"
+    message: "Your OTP code from account online system is:"
   validate:
     nid: validate-nid
     faceApiRoute: validate-nid-face
   ocr:
     apiRoute: ocr-idcard
-  xml:
-    createCustomer: C:\Users\makkara.nob\cpbAccountOnlineApi\Xml\CREATE_CUSTOMER.xml
-    openAcctByCustomer: C:\Users\makkara.nob\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_CUSTOMER.xml
-    openAcctByStaff: C:\Users\makkara.nob\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_STAFF.xml
 
 # Open Account Test Config
 test:
@@ -203,7 +199,7 @@ test:
 # AML Configuration
 aml:
   dashboard:
-    url: http://192.168.103.106:8282/aml-management?pageNo=1
+    url: http://192.168.100.5:8282/aml-management?pageNo=1
   api:
     key: 34acefcd-6e4e-4a81-a553-852b21000c8a
     secret-key: zH9iyS42JWYh4Ol+FeSGsuREwRJmoaDYBbZhgL4lBG0=
