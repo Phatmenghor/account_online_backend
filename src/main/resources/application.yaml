@@ -114,7 +114,7 @@ request:
 oracle:
   dwh:
     datasource:
-      jdbc-url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
+      jdbc-url: jdbc:oracle:thin:@//192.168.102.5:1521/stg
       username: stg
       password: Bnk$$444
       driver-class-name: oracle.jdbc.OracleDriver
@@ -127,7 +127,7 @@ oracle:
       pool-name: Oracle-DWH-Pool
   stg:
     datasource:
-      jdbc-url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
+      jdbc-url: jdbc:oracle:thin:@//192.168.102.5:1521/stg
       username: stg
       password: Bnk$$444
       driver-class-name: oracle.jdbc.OracleDriver
@@ -199,7 +199,7 @@ test:
 # AML Configuration
 aml:
   dashboard:
-    url: http://192.168.100.5:8282/aml-management?pageNo=1
+    url: http://192.168.100.5:7070/aml-management?pageNo=1
   api:
     key: 34acefcd-6e4e-4a81-a553-852b21000c8a
     secret-key: zH9iyS42JWYh4Ol+FeSGsuREwRJmoaDYBbZhgL4lBG0=
