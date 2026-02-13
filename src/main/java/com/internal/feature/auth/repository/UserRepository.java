@@ -16,7 +16,8 @@ import com.internal.enumation.RoleEnum;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
-    Optional<UserEntity> findByUsername(String username);
+    @Query("SELECT u FROM UserEntity u LEFT JOIN FETCH u.roles WHERE u.username = :username")
+    Optional<UserEntity> findByUsername(@Param("username") String username);
 
     Boolean existsByUsername(String username);
 
