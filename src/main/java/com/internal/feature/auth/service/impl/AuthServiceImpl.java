@@ -22,6 +22,7 @@ import com.internal.feature.auth.service.AuthService;
 import com.internal.feature.auth.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -53,6 +54,7 @@ public class AuthServiceImpl implements AuthService {
     private final RefreshTokenService refreshTokenService;
 
     @Override
+    @Transactional
     public AuthResponseDTO login(LoginRequestDto loginDto) {
         log.info("Processing login request for user: {}", loginDto.getUsername());
 
@@ -77,12 +79,12 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtGenerator.generateToken(authentication);
 
         userEntity.setLastLogin(LocalDateTime.now(ZoneId.of("UTC")));
-        userRepository.save(userEntity);
+        UserEntity savedEntity = userRepository.save(userEntity);
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(loginDto.getUsername());
 
-        UserResponseDto userDto = authMapper.userToUserResponseDto(userEntity);
-        userDto.setLastLogin(userEntity.getLastLogin());
+        UserResponseDto userDto = authMapper.userToUserResponseDto(savedEntity);
+        userDto.setLastLogin(savedEntity.getLastLogin());
         log.info("User {} logged in successfully", loginDto.getUsername());
         
         return new AuthResponseDTO(token, refreshToken.getToken(), userDto);
