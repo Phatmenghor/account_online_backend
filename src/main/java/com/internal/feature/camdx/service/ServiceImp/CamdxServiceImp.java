@@ -114,10 +114,6 @@ public class CamdxServiceImp implements CamdxService {
             log.debug("Could not parse error response body", e);
         }
 
-<<<<<<< HEAD
-        // 3. Fallback generic error
-        return "Unknown error occurred. " + AppConstants.SUPPORT_CONTACT;
-=======
         // fallback to predefined constants if API message is missing
         return switch (statusCode) {
             case 400 -> AppConstants.MSG_400;
@@ -130,7 +126,6 @@ public class CamdxServiceImp implements CamdxService {
             case 505 -> AppConstants.MSG_502; // generic system error
             default ->  AppConstants.SUPPORT_CONTACT;
         };
->>>>>>> c513903bc1216983a85bf66872856f8ba87588ce
     }
 
     @Override

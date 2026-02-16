@@ -54,6 +54,12 @@ public class RequestLog {
     @Column(name = "error_message", length = 500)
     private String errorMessage;
 
+    @Column(name = "request_payload", columnDefinition = "TEXT")
+    private String requestPayload;
+
+    @Column(name = "response_payload", columnDefinition = "TEXT")
+    private String responsePayload;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {

@@ -35,4 +35,7 @@ public class CamdxValidateNidRequest {
 
     @JsonProperty("issuedDate")
     private String issuedDate;
+
+    @JsonProperty(value = "phoneNumber", access = JsonProperty.Access.WRITE_ONLY)
+    private String phoneNumber;
 }

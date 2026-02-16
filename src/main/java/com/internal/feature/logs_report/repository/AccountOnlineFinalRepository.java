@@ -16,23 +16,21 @@ import java.util.UUID;
 @Repository
 public interface AccountOnlineFinalRepository extends JpaRepository<AccountOnlineFinal, UUID> {
 
-    Optional<AccountOnlineFinal> findByLegalId(String legalId);
-    Optional<AccountOnlineFinal> findTopByCifOrLegalIdOrderByCreatedAtDesc(String cif, String legalId);
+        Optional<AccountOnlineFinal> findByLegalId(String legalId);
 
+        Optional<AccountOnlineFinal> findTopByCifOrLegalIdOrderByCreatedAtDesc(String cif, String legalId);
 
-    @Query("SELECT a.legalGender, COUNT(a) FROM AccountOnlineFinal a " +
-            "WHERE a.createdAt >= :startDate AND a.createdAt < :endDate " +
-            "AND a.amlStatus = 'APPROVED' " +
-            "GROUP BY a.legalGender")
-    List<Object[]> countByGenderAndDateRange(
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
-    );
+        @Query("SELECT a.legalGender, COUNT(a) FROM AccountOnlineFinal a " +
+                        "WHERE a.createdAt >= :startDate AND a.createdAt < :endDate " +
+                        "GROUP BY a.legalGender")
+        List<Object[]> countByGenderAndDateRange(
+                        @Param("startDate") LocalDateTime startDate,
+                        @Param("endDate") LocalDateTime endDate);
 
-    @Query("SELECT a FROM AccountOnlineFinal a WHERE " +
-           "(:search IS NULL OR :search = '' OR " +
-           "LOWER(a.cif) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(a.legalId) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "ORDER BY a.createdAt DESC")
-    Page<AccountOnlineFinal> findBySearch(@Param("search") String search, Pageable pageable);
+        @Query("SELECT a FROM AccountOnlineFinal a WHERE " +
+                        "(:search IS NULL OR :search = '' OR " +
+                        "LOWER(a.cif) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+                        "LOWER(a.legalId) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+                        "ORDER BY a.createdAt DESC")
+        Page<AccountOnlineFinal> findBySearch(@Param("search") String search, Pageable pageable);
 }

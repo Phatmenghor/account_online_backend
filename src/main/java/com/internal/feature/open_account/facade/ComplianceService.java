@@ -27,6 +27,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+// Service to handle compliance checks
 public class ComplianceService {
 
     private final AmlService amlService;
@@ -53,7 +54,7 @@ public class ComplianceService {
 
         // Determine AML status based on risk
         boolean isHighRisk = AppConstants.RISK_HIGH.equalsIgnoreCase(amlResponse.getRiskLevel());
-        
+
         AmlStatusEnum amlStatusEnum = isHighRisk ? AmlStatusEnum.PENDING : AmlStatusEnum.APPROVE;
 
         // Map to CreateAmlRequestDto

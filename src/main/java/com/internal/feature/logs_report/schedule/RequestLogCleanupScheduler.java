@@ -1,21 +1,19 @@
 package com.internal.feature.logs_report.schedule;
 
-import com.internal.feature.logs_report.repository.AccountOnlineFinalRepository;
+import com.internal.enumation.AmlStatusEnum;
 import com.internal.feature.aml.repository.AmlStatusRepository;
+import com.internal.feature.logs_report.repository.AccountOnlineFinalRepository;
 import com.internal.feature.logs_report.service.RequestLogService;
 import com.internal.feature.telegram_alerts.config.TelegramService;
-import com.internal.enumation.AmlStatusEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -30,8 +28,7 @@ public class RequestLogCleanupScheduler {
     private final TelegramService telegramService;
 
     private static final ZoneId ZONE_PP = ZoneId.of("Asia/Phnom_Penh");
-    private static final DateTimeFormatter FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Value("${request.log.retention.days:30}")
     private int retentionDays;
@@ -58,12 +55,16 @@ public class RequestLogCleanupScheduler {
     // =====================================================
     @Scheduled(cron = "0 0 8 * * ?", zone = "Asia/Phnom_Penh")
     public void sendDailyAccountReport() {
+        // Default behavior: Report for YESTERDAY
+        sendDailyAccountReport(LocalDate.now(ZONE_PP).minusDays(1));
+    }
 
-        LocalDate yesterday = LocalDate.now(ZONE_PP).minusDays(1);
-        LocalDateTime startOfDay = yesterday.atStartOfDay();
-        LocalDateTime endOfDay = yesterday.plusDays(1).atStartOfDay();
+    public void sendDailyAccountReport(LocalDate reportDate) {
 
-        log.info("Running daily account report for date: {}", yesterday);
+        LocalDateTime startOfDay = reportDate.atStartOfDay();
+        LocalDateTime endOfDay = reportDate.plusDays(1).atStartOfDay();
+
+        log.info("Running daily account report for date: {}", reportDate);
 
         try {
             List<Object[]> results = accountOnlineFinalRepository
@@ -88,13 +89,13 @@ public class RequestLogCleanupScheduler {
 
             long totalCount = maleCount + femaleCount + otherCount;
 
-            String reportDate = yesterday.format(DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
+            String formattedDate = reportDate.format(DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
             String generatedAt = LocalDateTime.now(ZONE_PP).format(FORMATTER);
 
             StringBuilder sb = new StringBuilder();
             sb.append("*DAILY ACCOUNT OPENING REPORT*\n")
                     .append("--------------------\n")
-                    .append("Report Date: *").append(reportDate).append("*\n\n")
+                    .append("Report Date: *").append(formattedDate).append("*\n\n")
                     .append("*Successfully Opened Accounts*\n\n")
                     .append("Male: *").append(maleCount).append("*\n")
                     .append("Female: *").append(femaleCount).append("*\n");
@@ -180,7 +181,8 @@ public class RequestLogCleanupScheduler {
     // HELPER
     // =====================================================
     private String escapeMarkdown(String text) {
-        if (text == null) return "";
+        if (text == null)
+            return "";
         return text.replace("\\", "\\\\")
                 .replace("_", "\\_")
                 .replace("*", "\\*")

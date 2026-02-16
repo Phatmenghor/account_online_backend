@@ -43,7 +43,7 @@ public class SecurityConfig {
                 .antMatchers("/api/v1/enum/**").permitAll()
                 .antMatchers("/api/images/**").permitAll()
                 .antMatchers("/api/v1/staff/**").permitAll()
-                .antMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .antMatchers("/swagger-ui/**","/swagger-ui.html" , "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .httpBasic();

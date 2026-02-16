@@ -63,8 +63,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
                 accountOnlineReportLogService.saveLogReport(
                         idNumber,
                         OpenAccStatusEnum.FAILURE,
-                        ErrorMessage.CAMDX_VALIDATE
-                );
+                        ErrorMessage.CAMDX_VALIDATE);
 
                 sendInfraFailureAlert(request, errorCode, message);
                 return;
@@ -79,12 +78,10 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
 
             List<String> incorrectFields = objectMapper.convertValue(
                     data.path("incorrectFields"),
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)
-            );
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
 
-            boolean validationFailed =
-                    score < 1 ||
-                            (incorrectFields != null && !incorrectFields.isEmpty());
+            boolean validationFailed = score < 1 ||
+                    (incorrectFields != null && !incorrectFields.isEmpty());
 
             if (validationFailed) {
 
@@ -94,24 +91,18 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
                 accountOnlineReportLogService.saveLogReport(
                         idNumber,
                         OpenAccStatusEnum.FAILURE,
-                        ErrorMessage.CAMDX_VALIDATE
-                );
+                        ErrorMessage.CAMDX_VALIDATE);
 
                 sendValidationFailureAlert(request, score, incorrectFields);
             } else {
                 log.info("CAMDX VALIDATION SUCCESS for ID {}", idNumber);
             }
-<<<<<<< HEAD
-        } else {
-            log.info("Validation passed successfully for ID {}", idNumber);
-=======
 
         } catch (Exception e) {
 
             log.error("Unexpected exception during CAMDX validation", e);
 
             sendInfraErrorAlertFromException(request, e.getMessage());
->>>>>>> c513903bc1216983a85bf66872856f8ba87588ce
         }
     }
 
@@ -126,8 +117,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
         accountOnlineReportLogService.saveLogReport(
                 request.getIdNumber(),
                 OpenAccStatusEnum.FAILURE,
-                ErrorMessage.CAMDX_VALIDATE
-        );
+                ErrorMessage.CAMDX_VALIDATE);
 
         String errorCode = "Unknown";
         String errorMessage = rawMessage;
@@ -154,11 +144,10 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
     // TELEGRAM INFRA FAILURE
     // =====================================================
     private void sendInfraFailureAlert(CamdxValidateNidRequest request,
-                                       int errorCode,
-                                       String errorMessage) {
+            int errorCode,
+            String errorMessage) {
 
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         StringBuilder sb = new StringBuilder();
 
@@ -186,11 +175,10 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
     // TELEGRAM VALIDATION FAILURE
     // =====================================================
     private void sendValidationFailureAlert(CamdxValidateNidRequest request,
-                                            double score,
-                                            List<String> incorrectFields) {
+            double score,
+            List<String> incorrectFields) {
 
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         String formattedIncorrect = formatIncorrectFields(incorrectFields);
 
@@ -232,6 +220,9 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
                 .append("Expired: ")
                 .append(escapeMarkdown(request.getExpiredDate()))
                 .append("\n")
+                .append("Phone Number: ")
+                .append(escapeMarkdown(request.getPhoneNumber()))
+                .append("\n")
                 .append("--------------------\n")
                 .append("Time: ")
                 .append(LocalDateTime.now(ZoneId.of("Asia/Phnom_Penh"))
@@ -264,7 +255,8 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
 
     private String escapeMarkdown(String text) {
 
-        if (text == null) return "";
+        if (text == null)
+            return "";
 
         return text.replace("\\", "\\\\")
                 .replace("_", "\\_")
@@ -275,7 +267,8 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
 
     private boolean shouldIgnoreError(String message) {
 
-        if (message == null || message.isEmpty()) return false;
+        if (message == null || message.isEmpty())
+            return false;
 
         List<String> ignoreList = new ArrayList<>();
         ignoreList.add("id not found");

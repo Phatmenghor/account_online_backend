@@ -14,14 +14,14 @@ public enum RoleEnum {
 
     /**
      * -- GETTER --
-     *  Get the human-readable display name of the role.
+     * Get the human-readable display name of the role.
      *
      * @return Role display name
      */
     private final String displayName;
     /**
      * -- GETTER --
-     *  Get the description of permissions associated with this role.
+     * Get the description of permissions associated with this role.
      *
      * @return Role description
      */
@@ -34,6 +34,7 @@ public enum RoleEnum {
 
     /**
      * Get the role name as string.
+     * 
      * @return Role name
      */
     public String getValue() {
@@ -42,6 +43,7 @@ public enum RoleEnum {
 
     /**
      * Checks if the role name matches the enum value (case-insensitive).
+     * 
      * @param roleName The role name to check
      * @return true if matches, false otherwise
      */
@@ -60,6 +62,7 @@ public enum RoleEnum {
 
     /**
      * Get RoleEnum from string value (case-insensitive).
+     * 
      * @param roleName The role name
      * @return RoleEnum value or null if not found
      */

@@ -9,6 +9,7 @@ import com.internal.feature.open_account.service.external.*;
 import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -26,16 +27,17 @@ public class BankingService {
     private final JdbcTemplate jdbcTemplate;
     private final TestProperties isTestMode;
 
-    public static class TestConfig {
-        public static final boolean SIMULATE_CAMDX_ERROR = false;
-        public static final boolean SIMULATE_INTERNAL_ERROR = false;
-    }
+    @Value("${simulator.banking.camdx-error:false}")
+    private boolean simulateCamdxError;
+
+    @Value("${simulator.banking.internal-error:false}")
+    private boolean simulateInternalError;
 
     public void testConnection() {
         log.info(">>> Step 1: TEST_CONNECTION");
 
-        if (TestConfig.SIMULATE_INTERNAL_ERROR) {
-            throw new ValidateServiceException("Simulated Internal T24 Connection Error (TEST_CONFIG)");
+        if (simulateInternalError) {
+            throw new ValidateServiceException("Simulated Internal T24 Connection Error (SIMULATION)");
         }
 
         try {
@@ -51,8 +53,8 @@ public class BankingService {
     public Map<String, String> getCustomerInfo(String legalId) {
         log.info(">>> Step 2: GET_CUSTOMER_INFO");
 
-        if (TestConfig.SIMULATE_CAMDX_ERROR) {
-            throw new NidValidationException(500, "Simulated CAMDX/NID Validation Failure (TEST_CONFIG)");
+        if (simulateCamdxError) {
+            throw new NidValidationException(500, "Simulated CAMDX/NID Validation Failure (SIMULATION)");
         }
 
         Map<String, String> customerInfo = validationService.getCustomerInfo(legalId);

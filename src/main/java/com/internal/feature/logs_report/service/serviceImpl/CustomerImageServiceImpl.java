@@ -27,13 +27,13 @@ public class CustomerImageServiceImpl implements CustomerImageService {
 
     private final CustomerImageRepository customerImageRepository;
 
-    @Value("${app.upload.directory:/app/customer-image}")
+    @Value("${file.upload.directory:/app/customer-image}")
     private String uploadDir;
 
-    @Value("${app.upload.nid:/nid}")
+    @Value("${file.upload.nid:/nid}")
     private String nidPath;
 
-    @Value("${app.upload.selfie:/selfie}")
+    @Value("${file.upload.selfie:/selfie}")
     private String selfiePath;
 
     /**
