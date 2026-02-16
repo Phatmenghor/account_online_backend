@@ -32,7 +32,8 @@ public class AmlMiddlewareService {
             log.info("AML Request JSON: {}", jsonRequest);
 
             String credentials = properties.getAml().getUsername() + ":" + properties.getAml().getPassword();
-            String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+            String encodedCredentials = Base64.getEncoder()
+                    .encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -41,13 +42,17 @@ public class AmlMiddlewareService {
             HttpEntity<String> entity = new HttpEntity<>(jsonRequest, headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
-                    url, HttpMethod.POST, entity, String.class
-            );
+                    url, HttpMethod.POST, entity, String.class);
 
             String rawBody = response.getBody();
             log.info("AML raw response body: {}", rawBody);
 
-            Map<String, Object> map = objectMapper.readValue(rawBody, new TypeReference<Map<String, Object>>() {});
+            if (rawBody == null || rawBody.trim().isEmpty()) {
+                throw new RuntimeException("AML Service returned empty response");
+            }
+
+            Map<String, Object> map = objectMapper.readValue(rawBody, new TypeReference<Map<String, Object>>() {
+            });
             Object rulesArray = map.get("RulesTriggered");
             String rulesAsString = rulesArray == null ? "" : objectMapper.writeValueAsString(rulesArray);
             map.put("RulesTriggered", rulesAsString);
@@ -56,14 +61,7 @@ public class AmlMiddlewareService {
 
         } catch (Exception e) {
             log.error("AML API call failed: {}", e.getMessage(), e);
-            return AmlExternalResponseDto.builder()
-                    .riskLevel("Unknown")
-                    .actionTaken(null)
-                    .serviceName("Intuition")
-                    .totalRulesScore(0)
-                    .trxnID(null)
-                    .rulesTriggered("")
-                    .build();
+            throw new RuntimeException("AML Service Unavailable or returned Error: " + e.getMessage(), e);
         }
     }
 }

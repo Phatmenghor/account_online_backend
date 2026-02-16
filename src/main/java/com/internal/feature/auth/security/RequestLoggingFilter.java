@@ -95,12 +95,21 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         boolean isSuccess = (exception == null && statusCode >= 200 && statusCode < 400);
         String errorMessage = exception != null ? truncate(exception.getMessage(), 500) : null;
 
-        String requestPayload = new String(request.getContentAsByteArray());
-        // Truncate to avoid issues
-        requestPayload = truncate(requestPayload, 10000);
+        String requestPayload = "";
+        try {
+            requestPayload = new String(request.getContentAsByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+            requestPayload = truncate(requestPayload, 10000);
+        } catch (Exception e) {
+            log.warn("Failed to parse request payload: {}", e.getMessage());
+        }
 
-        String responsePayload = new String(response.getContentAsByteArray());
-        responsePayload = truncate(responsePayload, 10000);
+        String responsePayload = "";
+        try {
+            responsePayload = new String(response.getContentAsByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+            responsePayload = truncate(responsePayload, 10000);
+        } catch (Exception e) {
+            log.warn("Failed to parse response payload: {}", e.getMessage());
+        }
 
         return RequestLog.builder()
                 .requestPayload(requestPayload)
