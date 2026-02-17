@@ -6,6 +6,7 @@ import com.internal.config.DefaultProperties;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.request.MobileBankingRequest;
 import com.internal.feature.open_account.dto.response.MobileBankingResponse;
+import com.internal.utils.SoapSmsSender;
 import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,72 +27,98 @@ public class MobileBankingService {
     private final CpbProperties properties;
     private final DefaultProperties defaultProperties;
     private final RestTemplate restTemplate;
+    private final SoapSmsSender soapSmsSender;
 
-    public void activate(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
+    public MobileBankingResponse activate(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
         log.info("Activating mobile banking for CIF: {}", cif);
         try {
             MobileBankingRequest mbRequest = buildRequest(request, cif, khrAccount, usdAccount);
-            callActivatorApi(mbRequest);
-            log.info("Mobile banking activation successful for CIF: {}", cif);
+            MobileBankingResponse response = callActivatorApi(mbRequest);
+
+            if (response != null && "0".equals(response.getCode())) {
+                log.info("Mobile banking activation successful for CIF: {}", cif);
+
+                StringBuilder message = new StringBuilder("Your CPBank Account \n");
+
+                if (usdAccount != null) {
+                    message.append("USD:").append(usdAccount).append("\n");
+                }
+
+                if (khrAccount != null) {
+                    message.append("KHR:").append(khrAccount).append("\n");
+                }
+
+                message.append("CIF : ").append(cif).append("\n");
+                message.append("MB registCode: ").append(response.getContent()).append("\n");
+                message.append("MB App: http://onelink.to/cpbank");
+
+                soapSmsSender.sendSms(properties.getMb().getOtpUrl(), properties.getMb().getSecretKey(),
+                        request.getPhoneNumber(), message.toString());
+            } else {
+                log.warn("Mobile banking activation returned error/null for CIF: {}", cif);
+            }
+
+            return response;
         } catch (Exception e) {
             log.error("Mobile banking activation failed (non-critical): {}", e.getMessage());
+            return null;
         }
     }
 
     private MobileBankingRequest buildRequest(CustomerRequest request, String cif,
-                                              String khrAccount, String usdAccount) {
+            String khrAccount, String usdAccount) {
         String formattedDob = formatDateOfBirth(request.getDateOfBirth());
         String signData = generateSignature(cif, request.getPhoneNumber());
-        String branchCode = request.getBranchCode() != null ? request.getBranchCode() : defaultProperties.getBranchCode();
+        String branchCode = request.getBranchCode() != null ? request.getBranchCode()
+                : defaultProperties.getBranchCode();
         String accountNumber = usdAccount != null ? usdAccount : khrAccount;
         String currency = usdAccount != null ? AppConstants.CURRENCY_USD : AppConstants.CURRENCY_KHR;
-        
+
         return MobileBankingRequest.builder()
-            .customerName(request.getFamilyName() + " " + request.getGivenName())
-            .customerType("100")
-            .identityNumber(request.getLegalId().trim())
-            .email("NA@gmail.com")
-            .address("N/A")
-            .cifNo(cif)
-            .branchCodeCreatedUser(branchCode)
-            .posCodeCreatedUser("POS01")
-            .createdUser(request.getGivenName())
-            .dateOfBirth(formattedDob)
-            .telephone(request.getPhoneNumber())
-            .cifBranchCode(branchCode)
-            .gender(request.getGender())
-            .residence("1")
-            .accountNumber(accountNumber)
-            .accountType("6011")
-            .currency(currency)
-            .branchCode(branchCode)
-            .packageCode("BASIC")
-            .telephoneOtp(request.getPhoneNumber())
-            .staffCode("123")
-            .signData(signData)
-            .build();
+                .customerName(request.getFamilyName() + " " + request.getGivenName())
+                .customerType("100")
+                .identityNumber(request.getLegalId().trim())
+                .email("NA@gmail.com")
+                .address("N/A")
+                .cifNo(cif)
+                .branchCodeCreatedUser(branchCode)
+                .posCodeCreatedUser("POS01")
+                .createdUser(request.getGivenName())
+                .dateOfBirth(formattedDob)
+                .telephone(request.getPhoneNumber())
+                .cifBranchCode(branchCode)
+                .gender(request.getGender())
+                .residence("1")
+                .accountNumber(accountNumber)
+                .accountType("6011")
+                .currency(currency)
+                .branchCode(branchCode)
+                .packageCode("BASIC")
+                .telephoneOtp(request.getPhoneNumber())
+                .staffCode("123")
+                .signData(signData)
+                .build();
     }
 
-    private void callActivatorApi(MobileBankingRequest request) {
+    private MobileBankingResponse callActivatorApi(MobileBankingRequest request) {
         String url = properties.getMb().getRegisterCodeUrl();
-        
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        
-        HttpEntity<MobileBankingRequest> entity = new HttpEntity<>(request, headers);
-        
-        ResponseEntity<MobileBankingResponse> response = restTemplate.exchange(
-            url,
-            HttpMethod.POST,
-            entity,
-            MobileBankingResponse.class
-        );
 
+        HttpEntity<MobileBankingRequest> entity = new HttpEntity<>(request, headers);
+
+        ResponseEntity<MobileBankingResponse> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                MobileBankingResponse.class);
+
+        return response.getBody();
     }
 
     private String formatDateOfBirth(String dob) {
         try {
-            DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
             DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             LocalDateTime date = LocalDateTime.parse(dob + "0000", DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
             return date.format(outputFormatter);
@@ -104,17 +131,18 @@ public class MobileBankingService {
         try {
             String dateNow = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             String value = properties.getMb().getSecretKey() + cif + phone + dateNow;
-            
+
             MessageDigest md = MessageDigest.getInstance("MD5");
             byte[] messageDigest = md.digest(value.getBytes(StandardCharsets.UTF_8));
-            
+
             StringBuilder hexString = new StringBuilder();
             for (byte b : messageDigest) {
                 String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
+                if (hex.length() == 1)
+                    hexString.append('0');
                 hexString.append(hex);
             }
-            
+
             return hexString.toString().toLowerCase();
         } catch (Exception e) {
             log.error("Failed to generate signature: {}", e.getMessage());
