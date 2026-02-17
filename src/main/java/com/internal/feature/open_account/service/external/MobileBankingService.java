@@ -6,6 +6,7 @@ import com.internal.config.DefaultProperties;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.request.MobileBankingRequest;
 import com.internal.feature.open_account.dto.response.MobileBankingResponse;
+import com.internal.utils.SoapSmsSender;
 import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,15 +27,45 @@ public class MobileBankingService {
     private final CpbProperties properties;
     private final DefaultProperties defaultProperties;
     private final RestTemplate restTemplate;
+    private final SoapSmsSender soapSmsSender;
 
     public void activate(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
         log.info("Activating mobile banking for CIF: {}", cif);
         try {
             MobileBankingRequest mbRequest = buildRequest(request, cif, khrAccount, usdAccount);
-            callActivatorApi(mbRequest);
+            MobileBankingResponse mbResponse = callActivatorApi(mbRequest);
             log.info("Mobile banking activation successful for CIF: {}", cif);
+
+            // Send SMS notification with account details and activation code (mirrors C# SmsSender observer)
+            String activationCode = mbResponse != null ? mbResponse.getContent() : null;
+            sendAccountSms(request.getPhoneNumber(), usdAccount, khrAccount, cif, activationCode);
         } catch (Exception e) {
             log.error("Mobile banking activation failed (non-critical): {}", e.getMessage());
+        }
+    }
+
+    private void sendAccountSms(String phone, String usdAccount, String khrAccount, String cif, String activationCode) {
+        try {
+            StringBuilder message = new StringBuilder("Your CPBank Account \r\n");
+            if (usdAccount != null && !usdAccount.isEmpty()) {
+                message.append("USD:").append(usdAccount).append("\r\n");
+            }
+            if (khrAccount != null && !khrAccount.isEmpty()) {
+                message.append("KHR:").append(khrAccount).append("\r\n");
+            }
+            message.append("CIF : ").append(cif)
+                   .append("\r\nMB ").append(activationCode != null ? activationCode : "")
+                   .append("\r\nMB App: http://onelink.to/cpbank");
+
+            soapSmsSender.sendSms(
+                properties.getMb().getOtpUrl(),
+                properties.getMb().getSecretKey(),
+                phone,
+                message.toString()
+            );
+            log.info("Account SMS sent to phone: {}", phone);
+        } catch (Exception e) {
+            log.error("Failed to send account SMS (non-critical): {}", e.getMessage());
         }
     }
 
@@ -72,14 +103,14 @@ public class MobileBankingService {
             .build();
     }
 
-    private void callActivatorApi(MobileBankingRequest request) {
+    private MobileBankingResponse callActivatorApi(MobileBankingRequest request) {
         String url = properties.getMb().getRegisterCodeUrl();
-        
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        
+
         HttpEntity<MobileBankingRequest> entity = new HttpEntity<>(request, headers);
-        
+
         ResponseEntity<MobileBankingResponse> response = restTemplate.exchange(
             url,
             HttpMethod.POST,
@@ -87,6 +118,7 @@ public class MobileBankingService {
             MobileBankingResponse.class
         );
 
+        return response.getBody();
     }
 
     private String formatDateOfBirth(String dob) {
