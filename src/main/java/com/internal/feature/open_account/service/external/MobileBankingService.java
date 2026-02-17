@@ -33,35 +33,53 @@ public class MobileBankingService {
         log.info("Activating mobile banking for CIF: {}", cif);
         try {
             MobileBankingRequest mbRequest = buildRequest(request, cif, khrAccount, usdAccount);
-            MobileBankingResponse response = callActivatorApi(mbRequest);
+            MobileBankingResponse mbResponse = callActivatorApi(mbRequest);
+            log.info("Mobile banking activation successful for CIF: {}", cif);
 
-            if (response != null && "0".equals(response.getCode())) {
-                log.info("Mobile banking activation successful for CIF: {}", cif);
+            // Send SMS notification with account details and activation code (mirrors C#
+            // SmsSender observer)
+            String activationCode = mbResponse != null ? mbResponse.getContent() : null;
+            sendAccountSms(request.getPhoneNumber(), usdAccount, khrAccount, cif, activationCode);
 
-                StringBuilder message = new StringBuilder("Your CPBank Account \n");
-
-                if (usdAccount != null) {
-                    message.append("USD:").append(usdAccount).append("\n");
-                }
-
-                if (khrAccount != null) {
-                    message.append("KHR:").append(khrAccount).append("\n");
-                }
-
-                message.append("CIF : ").append(cif).append("\n");
-                message.append("MB registCode: ").append(response.getContent()).append("\n");
-                message.append("MB App: http://onelink.to/cpbank");
-
-                soapSmsSender.sendSms(properties.getMb().getOtpUrl(), properties.getMb().getSecretKey(),
-                        request.getPhoneNumber(), message.toString());
-            } else {
-                log.warn("Mobile banking activation returned error/null for CIF: {}", cif);
-            }
-
-            return response;
+            return mbResponse;
         } catch (Exception e) {
             log.error("Mobile banking activation failed (non-critical): {}", e.getMessage());
             return null;
+        }
+    }
+
+    private void sendAccountSms(String phone, String usdAccount, String khrAccount, String cif, String activationCode) {
+        try {
+            StringBuilder message = new StringBuilder("Your CPBank Account \n");
+
+            if (usdAccount != null && !usdAccount.isEmpty()) {
+                message.append("USD:").append(usdAccount).append("\n");
+            }
+
+            if (khrAccount != null && !khrAccount.isEmpty()) {
+                message.append("KHR:").append(khrAccount).append("\n");
+            }
+
+            if (cif != null && !cif.isEmpty()) {
+                message.append("CIF : ").append(cif).append("\n");
+            }
+
+            if (activationCode != null && !activationCode.isEmpty()) {
+                message.append("MB registerCode: ").append(activationCode).append("\n");
+            }
+
+            message.append("MB App: http://onelink.to/cpbank");
+
+            soapSmsSender.sendSms(
+                    properties.getMb().getOtpUrl(),
+                    properties.getMb().getSecretKey(),
+                    phone,
+                    message.toString());
+
+            log.info("Account SMS sent successfully to phone: {}", phone);
+
+        } catch (Exception e) {
+            log.error("Failed to send account SMS (non-critical) to {}: {}", phone, e.getMessage());
         }
     }
 

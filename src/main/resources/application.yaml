@@ -178,7 +178,7 @@ cpb:
     maxAttempts: 3
     lockMinutes: 5
     expiryMinutes: 5
-    message: "Your OTP code from account online system is:"
+    message: "Your OTP code for CPBank, Online Account Opening is:"
   validate:
     nid: validate-nid
     faceApiRoute: validate-nid-face
