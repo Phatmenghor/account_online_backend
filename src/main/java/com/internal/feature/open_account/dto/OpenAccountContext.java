@@ -17,4 +17,5 @@ public class OpenAccountContext {
     private String mnemonic;
     private String khrAccount;
     private String usdAccount;
+    private String mbActivationCode;
 }

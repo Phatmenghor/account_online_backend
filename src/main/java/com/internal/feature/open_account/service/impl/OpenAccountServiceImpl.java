@@ -74,8 +74,9 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
             // Step 9: Activate mobile banking
             currentStep = AppConstants.ACTIVATE_MOBILE_BANKING;
-            bankingService.activateMobileBanking(request, context.getCif(), context.getKhrAccount(),
-                    context.getUsdAccount());
+            context.setMbActivationCode(
+                    bankingService.activateMobileBanking(request, context.getCif(), context.getKhrAccount(), context.getUsdAccount())
+            );
 
             // BUILD RESPONSE
             CustomerResponse accInfo = complianceService.buildCustomerAccInfo(
@@ -96,7 +97,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             boolean skipTelegramAlert = AppConstants.PROCESS_AML.equals(currentStep)
                     && context.getAmlResult() != null
                     && (AmlStatusEnum.PENDING.equals(context.getAmlResult().getStatus())
-                            || AmlStatusEnum.REJECT.equals(context.getAmlResult().getStatus()));
+                    || AmlStatusEnum.REJECT.equals(context.getAmlResult().getStatus()));
 
             reportingService.saveFailureLogs(request, e, currentStep, failureRemark, skipTelegramAlert);
 

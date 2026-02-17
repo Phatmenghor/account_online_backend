@@ -211,4 +211,23 @@ public class AccountOnlineFinal extends BaseNoIdEntity {
 
     @Column(name = "selfie_image")
     private String selfieImage;
+
+    // === SMS NOTIFICATION HISTORY ===
+    @Column(name = "sms_sent_phone")
+    private String smsSentPhone;
+
+    @Column(name = "sms_sent_usd_account")
+    private String smsSentUsdAccount;
+
+    @Column(name = "sms_sent_khr_account")
+    private String smsSentKhrAccount;
+
+    @Column(name = "sms_sent_cif")
+    private String smsSentCif;
+
+    @Column(name = "mb_activation_code")
+    private String mbActivationCode;
+
+    @Column(name = "mb_app_download_link")
+    private String mbAppDownloadLink;
 }

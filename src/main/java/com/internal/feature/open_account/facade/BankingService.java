@@ -141,13 +141,15 @@ public class BankingService {
         log.info("Step 8 SUCCESS: At least one account exists");
     }
 
-    public void activateMobileBanking(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
+    public String activateMobileBanking(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
         log.info(">>> Step 9: ACTIVATE_MOBILE_BANKING");
         try {
-            mobileBankingService.activate(request, cif, khrAccount, usdAccount);
+            String activationCode = mobileBankingService.activate(request, cif, khrAccount, usdAccount);
             log.info("Step 9 SUCCESS: Mobile banking activated");
+            return activationCode;
         } catch (Exception e) {
             log.warn("Step 9 WARNING: Mobile banking activation failed (non-critical): {}", e.getMessage());
+            return null;
         }
     }
 }

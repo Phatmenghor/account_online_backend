@@ -32,7 +32,13 @@ public class AccountOpenedEventListener {
                 .mnemonic(context.getMnemonic())
                 .build();
 
-        reportingService.safeSaveSuccessLog(context.getRequest(), accInfo, context.getAmlResult(), imagePaths);
+        reportingService.safeSaveSuccessLog(
+                context.getRequest(),
+                accInfo,
+                context.getAmlResult(),
+                imagePaths,
+                context.getMbActivationCode()
+        );
 
         // Step 12: Report log
         reportingService.safeReportLog(context.getRequest().getLegalId());

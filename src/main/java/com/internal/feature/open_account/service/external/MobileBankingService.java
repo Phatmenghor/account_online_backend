@@ -29,7 +29,7 @@ public class MobileBankingService {
     private final RestTemplate restTemplate;
     private final SoapSmsSender soapSmsSender;
 
-    public void activate(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
+    public String activate(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
         log.info("Activating mobile banking for CIF: {}", cif);
         try {
             MobileBankingRequest mbRequest = buildRequest(request, cif, khrAccount, usdAccount);
@@ -39,8 +39,10 @@ public class MobileBankingService {
             // Send SMS notification with account details and activation code (mirrors C# SmsSender observer)
             String activationCode = mbResponse != null ? mbResponse.getContent() : null;
             sendAccountSms(request.getPhoneNumber(), usdAccount, khrAccount, cif, activationCode);
+            return activationCode;
         } catch (Exception e) {
             log.error("Mobile banking activation failed (non-critical): {}", e.getMessage());
+            return null;
         }
     }
 
