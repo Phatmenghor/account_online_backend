@@ -46,28 +46,43 @@ public class MobileBankingService {
 
     private void sendAccountSms(String phone, String usdAccount, String khrAccount, String cif, String activationCode) {
         try {
-            StringBuilder message = new StringBuilder("Your CPBank Account \r\n");
+            StringBuilder message = new StringBuilder();
+
+            message.append("Welcome to CPBank!\r\n");
+            message.append("Your new account details:\r\n");
+
             if (usdAccount != null && !usdAccount.isEmpty()) {
-                message.append("USD:").append(usdAccount).append("\r\n");
+                message.append("USD Account: ").append(usdAccount).append("\r\n");
             }
+
             if (khrAccount != null && !khrAccount.isEmpty()) {
-                message.append("KHR:").append(khrAccount).append("\r\n");
+                message.append("KHR Account: ").append(khrAccount).append("\r\n");
             }
-            message.append("CIF : ").append(cif)
-                   .append("\r\nMB ").append(activationCode != null ? activationCode : "")
-                   .append("\r\nMB App: http://onelink.to/cpbank");
+
+            if (cif != null && !cif.isEmpty()) {
+                message.append("CIF: ").append(cif).append("\r\n");
+            }
+
+            if (activationCode != null && !activationCode.isEmpty()) {
+                message.append("MB Activation Code: ").append(activationCode).append("\r\n");
+            }
+
+            message.append("Download CPBank App: http://onelink.to/cpbank");
 
             soapSmsSender.sendSms(
-                properties.getMb().getOtpUrl(),
-                properties.getMb().getSecretKey(),
-                phone,
-                message.toString()
+                    properties.getMb().getOtpUrl(),
+                    properties.getMb().getSecretKey(),
+                    phone,
+                    message.toString()
             );
-            log.info("Account SMS sent to phone: {}", phone);
+
+            log.info("Account SMS sent successfully to phone: {}", phone);
+
         } catch (Exception e) {
-            log.error("Failed to send account SMS (non-critical): {}", e.getMessage());
+            log.error("Failed to send account SMS (non-critical) to {}: {}", phone, e.getMessage());
         }
     }
+
 
     private MobileBankingRequest buildRequest(CustomerRequest request, String cif,
                                               String khrAccount, String usdAccount) {
