@@ -156,7 +156,7 @@ public class MobileBankingService {
 
         } catch (Exception e) {
             log.error("Error calling Activator API: {}", e.getMessage(), e);
-            throw e;
+            throw new RuntimeException(e);
         }
     }
 
