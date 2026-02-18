@@ -18,22 +18,22 @@ public class SoapSmsSender {
         try {
             String requestId = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
 
-            String soapXml =
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-                            "<soap:Envelope xmlns:soap='http://www.w3.org/2003/05/soap-envelope' xmlns:cpb='http://cpbmobile.vnpay.vn'>" +
-                            "<soap:Header/>" +
-                            "<soap:Body>" +
-                            "<cpb:sendSmsNew>" +
-                            "<cpb:requestId>" + requestId + "</cpb:requestId>" +
-                            "<cpb:keyword>CPBSMS</cpb:keyword>" +
-                            "<cpb:mobileNo>" + phone + "</cpb:mobileNo>" +
-                            "<cpb:content>" + message + "</cpb:content>" +
-                            "<cpb:requestTime></cpb:requestTime>" +
-                            "<cpb:contentType>9</cpb:contentType>" +
-                            "<cpb:secretKey>" + secretKey + "</cpb:secretKey>" +
-                            "</cpb:sendSmsNew>" +
-                            "</soap:Body>" +
-                            "</soap:Envelope>";
+            String soapXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+                    "<soap:Envelope xmlns:soap='http://www.w3.org/2003/05/soap-envelope' xmlns:cpb='http://cpbmobile.vnpay.vn'>"
+                    +
+                    "<soap:Header/>" +
+                    "<soap:Body>" +
+                    "<cpb:sendSmsNew>" +
+                    "<cpb:requestId>" + requestId + "</cpb:requestId>" +
+                    "<cpb:keyword>CPBSMS</cpb:keyword>" +
+                    "<cpb:mobileNo>" + phone + "</cpb:mobileNo>" +
+                    "<cpb:content>" + message + "</cpb:content>" +
+                    "<cpb:requestTime></cpb:requestTime>" +
+                    "<cpb:contentType>9</cpb:contentType>" +
+                    "<cpb:secretKey>" + secretKey + "</cpb:secretKey>" +
+                    "</cpb:sendSmsNew>" +
+                    "</soap:Body>" +
+                    "</soap:Envelope>";
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.valueOf("application/soap+xml; charset=utf-8"));
@@ -41,9 +41,9 @@ public class SoapSmsSender {
 
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 
-            log.info("âœ… SMS sent to {} - Response: {}", phone, response.getStatusCode());
+            log.info("SMS sent to {} - Response: {}", phone, response.getStatusCode());
         } catch (Exception ex) {
-            log.error("âŒ Failed to send SMS to {} - {}", phone, ex.getMessage(), ex);
+            log.error("Failed to send SMS to {} - {}", phone, ex.getMessage(), ex);
         }
     }
 }

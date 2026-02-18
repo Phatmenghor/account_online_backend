@@ -37,12 +37,22 @@ public class ComplianceService {
     private final ObjectMapper objectMapper;
     private final OpenAccountTelegramAlertServiceImpl alertTelegramService;
 
-    public AmlStatusDto processAml(CustomerRequest request) throws Exception {
-        // Check for existing AML
-        Optional<AmlStatus> existingAmlOpt = amlService.findByLegalId(request.getLegalId());
+    @org.springframework.beans.factory.annotation.Value("${simulator.aml.error:false}")
+    private boolean simulateAmlServiceError;
 
-        if (existingAmlOpt.isPresent()) {
-            return handleExistingAml(existingAmlOpt.get(), request.getLegalId());
+    @org.springframework.beans.factory.annotation.Value("${simulator.aml.high-risk:false}")
+    private boolean simulateAmlHighRisk;
+
+    public AmlStatusDto processAml(CustomerRequest request) throws Exception {
+        // Check for existing AML (Skip if simulation is enabled)
+        if (!simulateAmlServiceError && !simulateAmlHighRisk) {
+            Optional<AmlStatus> existingAmlOpt = amlService.findByLegalId(request.getLegalId());
+            if (existingAmlOpt.isPresent()) {
+                log.info("Existing AML status found for Legal ID: {}", request.getLegalId());
+                return handleExistingAml(existingAmlOpt.get(), request.getLegalId());
+            }
+        } else {
+            log.info("Simulation Mode Enabled: Skipping cached AML check to force middleware call.");
         }
 
         // Build request and call AML middleware
