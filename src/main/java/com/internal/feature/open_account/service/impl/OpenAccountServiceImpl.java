@@ -53,10 +53,11 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             context.setAmlResult(complianceService.processAml(request));
             complianceService.sentMessageOnHighRisk(request, context.getAmlResult());
 
-            // Step 5: Create customer
+            // Step 5: Create customer (single T24 call returns [cif, mnemonic])
             currentStep = AppConstants.CREATE_CUSTOMER;
-            context.setCif(bankingService.createCustomerIfNeeded(request, context.getCustomerInfo()));
-            context.setMnemonic(bankingService.getMnemonic(request));
+            String[] customerResult = bankingService.createCustomerIfNeeded(request, context.getCustomerInfo());
+            context.setCif(customerResult[0]);
+            context.setMnemonic(customerResult[1]);
 
             // Step 6 & 7: Create Accounts (KHR & USD)
             currentStep = AppConstants.CREATE_KHR_ACCOUNT;

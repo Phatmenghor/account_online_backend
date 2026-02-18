@@ -68,24 +68,17 @@ public class BankingService {
         log.info("Existing accounts validation passed");
     }
 
-    public String createCustomer(CustomerRequest request) {
-        Document resp = t24Service.createCustomer(request);
-        return XmlParser.extractCif(resp);
-    }
-
-    public String getMnemonic(CustomerRequest request) {
-        return XmlParser.extractMnemonic(t24Service.createCustomer(request));
-    }
-
-    public String createCustomerIfNeeded(CustomerRequest request, Map<String, String> customerInfo) {
+    public String[] createCustomerIfNeeded(CustomerRequest request, Map<String, String> customerInfo) {
         String existingCif = customerInfo.get("CIF");
         if (existingCif != null && !existingCif.isEmpty()) {
             log.info("Existing CIF found → Using existing customer");
-            return existingCif;
+            return new String[]{existingCif, "CUS" + existingCif};
         }
 
         Document resp = t24Service.createCustomer(request);
-        return XmlParser.extractCif(resp);
+        String cif = XmlParser.extractCif(resp);
+        String mnemonic = XmlParser.extractMnemonic(resp);
+        return new String[]{cif, mnemonic};
     }
 
     public String createAccountIfNeeded(CustomerRequest request, Map<String, String> customerInfo, String cif,
