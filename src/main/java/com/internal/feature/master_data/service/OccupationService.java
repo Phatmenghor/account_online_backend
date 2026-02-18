@@ -7,11 +7,12 @@ import com.internal.feature.master_data.dto.response.AllOccupationResponseDto;
 import com.internal.feature.master_data.dto.response.OccupationDto;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface OccupationService {
     OccupationDto getOccupationById(Long id);
 
-    OccupationDto getOccupationByCode(String occupationCode);
+    Optional<OccupationDto> getOccupationByCode(String occupationCode);
 
     AllOccupationResponseDto getAllOccupations(GetAllOccupationRequest request);
 

@@ -107,12 +107,14 @@ public class ComplianceService {
     }
 
     private OccupationDto safeOccupationLookup(String code) {
-        try {
-            return code != null ? occupationService.getOccupationByCode(code) : null;
-        } catch (Exception e) {
-            log.warn("Occupation lookup failed for code: {}", code);
+        if (code == null) {
             return null;
         }
+        return occupationService.getOccupationByCode(code)
+                .orElseGet(() -> {
+                    log.warn("Occupation lookup failed for code: {}", code);
+                    return null;
+                });
     }
 
     private void sendAmlNotification(CustomerAmlRequest amlRequest, AmlExternalResponseDto amlResponse,

@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,10 +39,9 @@ public class OccupationServiceImpl implements OccupationService {
     }
 
     @Override
-    public OccupationDto getOccupationByCode(String occupationCode) {
-        Occupation occupation = repository.findByOccupationCode(occupationCode)
-                .orElseThrow(() -> new NotFoundException("Occupation not found"));
-        return mapper.toDto(occupation);
+    public Optional<OccupationDto> getOccupationByCode(String occupationCode) {
+        return repository.findByOccupationCode(occupationCode)
+                .map(mapper::toDto);
     }
 
     @Override
