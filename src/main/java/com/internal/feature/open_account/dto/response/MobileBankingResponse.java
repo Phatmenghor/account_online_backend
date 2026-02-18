@@ -8,10 +8,10 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MobileBankingResponse {
 
-    @JsonProperty("Code")
+    @JsonProperty("ErrorCode")
     private String code;
 
-    @JsonProperty("Message")
+    @JsonProperty("ErrorMsg")
     private String message;
 
     @JsonProperty("Content")

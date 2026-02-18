@@ -33,19 +33,19 @@ public class MobileBankingService {
 
     public String activate(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
         log.info("Activating mobile banking for CIF: {}", cif);
+        String activationCode = null;
         try {
             MobileBankingRequest mbRequest = buildRequest(request, cif, khrAccount, usdAccount);
             MobileBankingResponse mbResponse = callActivatorApi(mbRequest);
             log.info("Mobile banking activation successful for CIF: {}", cif);
-
-            // Send SMS notification with account details and activation code (mirrors C# SmsSender observer)
-            String activationCode = mbResponse != null ? mbResponse.getContent() : null;
-            sendAccountSms(request.getPhoneNumber(), usdAccount, khrAccount, cif, activationCode);
-            return activationCode;
+            activationCode = mbResponse != null ? mbResponse.getContent() : null;
         } catch (Exception e) {
             log.error("Mobile banking activation failed (non-critical): {}", e.getMessage());
-            return null;
         }
+
+        // Always send account SMS regardless of MB activation result
+        sendAccountSms(request.getPhoneNumber(), usdAccount, khrAccount, cif, activationCode);
+        return activationCode;
     }
 
     private void sendAccountSms(String phone, String usdAccount, String khrAccount, String cif, String activationCode) {
@@ -152,6 +152,11 @@ public class MobileBankingService {
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             MobileBankingResponse parsed = mapper.readValue(rawResponse.getBody(), MobileBankingResponse.class);
             log.info("Parsed Response: code={}, message={}, content={}", parsed.getCode(), parsed.getMessage(), parsed.getContent());
+
+            if (parsed.getCode() != null && !"00".equals(parsed.getCode())) {
+                throw new RuntimeException("Mobile banking API error - code: " + parsed.getCode() + ", message: " + parsed.getMessage());
+            }
+
             return parsed;
 
         } catch (Exception e) {
