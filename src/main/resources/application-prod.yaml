@@ -56,7 +56,8 @@ cpb:
   mb:
     otpUrl: http://10.18.1.47:15004/CPBBank/services/CPBMobile?wsdl
     registerCodeUrl: http://10.18.1.48:8090/API/RegisterCustomerMB/
-    secretKey: mobilebankingCPB@#%123
+    secretKeyActivate: mobilebankingCPB@#%123
+    secretKey: cpbsmsgw@!@#974203
   otp:
     message: "Your OTP code for CPBank, Online Account Opening is:"
 

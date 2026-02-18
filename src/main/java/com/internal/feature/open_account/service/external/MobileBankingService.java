@@ -231,7 +231,7 @@ public class MobileBankingService {
     private String generateSignature(String cif, String sms) {
         try {
             String dateNow = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            String value = properties.getMb().getSecretKey() + cif + sms + dateNow;
+            String value = "mobilebankingCPB@#%123" + cif + sms + dateNow;
 
             MessageDigest md5 = MessageDigest.getInstance("MD5");
             byte[] hashBytes = md5.digest(value.getBytes(StandardCharsets.US_ASCII));
