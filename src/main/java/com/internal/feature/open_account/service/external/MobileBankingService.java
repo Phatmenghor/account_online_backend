@@ -18,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -176,10 +177,11 @@ public class MobileBankingService {
         }
     }
 
-    // Matches C# MobileService.CreateMD5Hash: MD5(secretKey + cif + phone) using ASCII encoding
-    private String generateSignature(String cif, String phone) {
+    // Matches C# MobileService.CreateMD5Hash: MD5(secretKey + cif + sms + dateNow) using ASCII encoding
+    private String generateSignature(String cif, String sms) {
         try {
-            String value = properties.getMb().getSecretKey() + cif + phone;
+            String dateNow = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String value = properties.getMb().getSecretKey() + cif + sms + dateNow;
 
             MessageDigest md5 = MessageDigest.getInstance("MD5");
             byte[] hashBytes = md5.digest(value.getBytes(StandardCharsets.US_ASCII));
