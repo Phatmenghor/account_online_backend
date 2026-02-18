@@ -14,18 +14,21 @@ import java.util.Optional;
 
 @Repository
 public interface OccupationRepository extends JpaRepository<Occupation, Long> {
-    boolean existsByNameKh(String nameKh);
-    boolean existsByNameEn(String nameEn);
-    Optional<Occupation> findByOccupationCode(String occupationCode);
+       boolean existsByNameKh(String nameKh);
 
-    @Query("SELECT o FROM Occupation o WHERE (:status IS NULL OR o.status = :status) " +
-           "AND (:search IS NULL OR :search = '' OR LOWER(o.nameEn) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(o.nameKh) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "ORDER BY o.createdAt DESC")
-    Page<Occupation> findByStatusAndSearch(@Param("status") StatusData status, @Param("search") String search, Pageable pageable);
+       boolean existsByNameEn(String nameEn);
 
-    @Query("SELECT o FROM Occupation o WHERE o.status = :status " +
-           "AND (:search IS NULL OR :search = '' OR LOWER(o.nameEn) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(o.nameKh) LIKE LOWER(CONCAT('%', :search, '%')))")
-    List<Occupation> findActiveBySearch(@Param("status") StatusData status, @Param("search") String search);
+       Optional<Occupation> findFirstByOccupationCode(String occupationCode);
+
+       @Query("SELECT o FROM Occupation o WHERE (:status IS NULL OR o.status = :status) " +
+                     "AND (:search IS NULL OR :search = '' OR LOWER(o.nameEn) LIKE LOWER(CONCAT('%', :search, '%')) " +
+                     "OR LOWER(o.nameKh) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+                     "ORDER BY o.createdAt DESC")
+       Page<Occupation> findByStatusAndSearch(@Param("status") StatusData status, @Param("search") String search,
+                     Pageable pageable);
+
+       @Query("SELECT o FROM Occupation o WHERE o.status = :status " +
+                     "AND (:search IS NULL OR :search = '' OR LOWER(o.nameEn) LIKE LOWER(CONCAT('%', :search, '%')) " +
+                     "OR LOWER(o.nameKh) LIKE LOWER(CONCAT('%', :search, '%')))")
+       List<Occupation> findActiveBySearch(@Param("status") StatusData status, @Param("search") String search);
 }

@@ -40,7 +40,7 @@ public class OccupationServiceImpl implements OccupationService {
 
     @Override
     public Optional<OccupationDto> getOccupationByCode(String occupationCode) {
-        return repository.findByOccupationCode(occupationCode)
+        return repository.findFirstByOccupationCode(occupationCode)
                 .map(mapper::toDto);
     }
 
@@ -70,10 +70,12 @@ public class OccupationServiceImpl implements OccupationService {
     @Override
     public OccupationDto createOccupation(OccupationCreateRequestDto requestDto) {
         if (repository.existsByNameEn(requestDto.getNameEn())) {
-            throw new DuplicateNameException("Occupation with English name '" + requestDto.getNameEn() + "' already exists");
+            throw new DuplicateNameException(
+                    "Occupation with English name '" + requestDto.getNameEn() + "' already exists");
         }
         if (repository.existsByNameKh(requestDto.getNameKh())) {
-            throw new DuplicateNameException("Occupation with Khmer name '" + requestDto.getNameKh() + "' already exists");
+            throw new DuplicateNameException(
+                    "Occupation with Khmer name '" + requestDto.getNameKh() + "' already exists");
         }
 
         Occupation occupation = mapper.fromCreateDto(requestDto);
