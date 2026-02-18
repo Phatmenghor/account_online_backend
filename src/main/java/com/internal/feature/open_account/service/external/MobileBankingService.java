@@ -19,7 +19,6 @@ import org.springframework.web.client.RestTemplate;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Service
@@ -102,7 +101,7 @@ public class MobileBankingService {
                 .customerType("100")
                 .identityNumber(request.getLegalId().trim())
                 .email(request.getEmail() != null ? request.getEmail() : "NA@gmail.com")
-                .address(request.getLegalAddress() != null ? request.getLegalAddress() : "N/A")
+                .address("N/A")
                 .cifNo(cif)
                 .branchCodeCreatedUser(branchCode)
                 .posCodeCreatedUser("POS01")
@@ -118,7 +117,7 @@ public class MobileBankingService {
                 .branchCode(branchCode)
                 .packageCode("BASIC")
                 .telephoneOtp(request.getPhoneNumber())
-                .staffCode(request.getReferralId() != null ? request.getReferralId() : "")
+                .staffCode("123")
                 .signData(signData)
                 .build();
     }
@@ -167,14 +166,19 @@ public class MobileBankingService {
     }
 
     private String formatDateOfBirth(String dob) {
+        if (dob == null || dob.isEmpty()) return dob;
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        // Try yyyyMMdd (e.g. "20030919")
         try {
-            DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-            DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            LocalDateTime date = LocalDateTime.parse(dob + "0000", DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
+            LocalDate date = LocalDate.parse(dob, DateTimeFormatter.ofPattern("yyyyMMdd"));
             return date.format(outputFormatter);
-        } catch (Exception e) {
-            return dob;
-        }
+        } catch (Exception ignored) {}
+        // Try yyyy-MM-dd (e.g. "2003-09-19")
+        try {
+            LocalDate date = LocalDate.parse(dob, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            return date.format(outputFormatter);
+        } catch (Exception ignored) {}
+        return dob;
     }
 
     // Matches C# MobileService.CreateMD5Hash: MD5(secretKey + cif + sms + dateNow) using ASCII encoding
