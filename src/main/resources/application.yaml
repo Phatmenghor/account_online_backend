@@ -1,5 +1,5 @@
 server:
-  port: 9393
+  port: 7070
   servlet:
     context-path: /
   compression:
@@ -35,8 +35,9 @@ spring:
         cache:
           use_second_level_cache: false
 
+  # PostgreSQL Datasource
   datasource:
-    url: jdbc:postgresql://192.168.103.106:5432/account_online
+    url: jdbc:postgresql://192.168.101.5:5432/account_online
     username: postgres
     password: 123cp!@#
     driver-class-name: org.postgresql.Driver
@@ -50,7 +51,7 @@ spring:
       pool-name: PostgreSQL-Pool
       auto-commit: false
 
-  # Mail configuration
+  # Mail Configuration
   mail:
     host: 10.18.1.204
     port: 25
@@ -66,14 +67,14 @@ spring:
             trust: "*"
     default-encoding: UTF-8
 
-  # Thymeleaf configuration
+  # Thymeleaf Configuration
   thymeleaf:
     cache: false
     prefix: classpath:/templates/
     suffix: .html
     encoding: UTF-8
 
-  # Async Task Configuration (for request logging)
+  # Async Task Configuration
   task:
     execution:
       pool:
@@ -84,22 +85,16 @@ spring:
     scheduling:
       enabled: true
 
+# Email Sender
 email:
   sender:
     address: ithelpdesk@cambodiapostbank.com.kh
-
-#FILE UPLOAD DIR
-file:
-  upload:
-    directory: /app/customer-image
-    nid: /nid
-    selfie: /selfie
 
 # Request Logging Configuration
 request:
   log:
     retention:
-      days: 30 # Auto-delete logs older than 30 days
+      days: 30
     enabled: true
     exclude-paths:
       - /swagger-ui
@@ -112,7 +107,7 @@ request:
 oracle:
   dwh:
     datasource:
-      jdbc-url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
+      jdbc-url: jdbc:oracle:thin:@//192.168.102.5:1521/stg
       username: stg
       password: Bnk$$444
       driver-class-name: oracle.jdbc.OracleDriver
@@ -123,10 +118,9 @@ oracle:
       idle-timeout: 600000
       max-lifetime: 1800000
       pool-name: Oracle-DWH-Pool
-
   stg:
     datasource:
-      jdbc-url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
+      jdbc-url: jdbc:oracle:thin:@//192.168.102.5:1521/stg
       username: stg
       password: Bnk$$444
       driver-class-name: oracle.jdbc.OracleDriver
@@ -138,13 +132,13 @@ oracle:
       max-lifetime: 1800000
       pool-name: Oracle-STG-Pool
 
+# Master Data
 masterdata:
   schema: DWH
 
+# CPB Configuration
 cpb:
-  environment: development
-
-  # Business defaults (overridable per environment)
+  environment: production
   defaults:
     branch-code: KH0012011
     sector: "4501"
@@ -161,49 +155,45 @@ cpb:
     product-code: SAVE.ACCT.ONLINE
     account-activity: ACCOUNTS-NEW-ARRANGEMENT
     new-arrangement: NEW
-
   camdx:
-    url: http://192.168.103.106:8099/api/v1/
+    url: http://192.168.101.5:8099/api/v1/
     auth:
       token: d8a7f9e2-3c4b-4f10-9d75-1c9f2b84a7ec
       tokenHeaderName: X-CPB-CamDx-Auth
   aml:
-    token: eyJhbGciOiJSUzI1NiIsImtpZCI6IjRDQTE2QjM1NEQwNTAyNDU0OUQ1MEUwQkJEREY4OEJDNTIzODBBMDYiLCJ0eXAiOiJKV1QiLCJ4NXQiOiJUS0ZyTlUwRkFrVkoxUTRMdmQtSXZGSTRDZ1kifQ.eyJuYmYiOjE3MDU5ODQ5ODMsImV4cCI6MTcwNTk4NTI4MywiaXNzIjoiaHR0cHM6Ly9hdXRoLXVhdC1pbnR1aXRpb24uY2FtYm9kaWFwb3N0YmFuay5jb20ua2giLCJhdWQiOiJmOTVkYTViMS04MGMwLTQ1MzAtYjlhZi03MTIxNTJjNWJjMjYiLCJub25jZSI6ImNlMWI0YmRhZGRiNTQzYTA5ZWU4OTc0OWNmMDZkMTIyIiwiaWF0IjoxNzA1OTg0OTgzLCJhdF9oYXNoIjoiSlUxV0liMFFSai1XTFFFbmtYWmUzUSIsInNfaGFzaCI6IlZvUjVzYmlwQlM0ZWF5U3lROUlaN3ciLCJzaWQiOiJvbWNkZ29zdmdlNlFNaWpoSDlQUUpnIiwic3ViIjoiZjRhMTA3OTAtMmY2Ny00NTdhLWFjMGYtMDRmM2YxMGFjNTgzIiwiYXV0aF90aW1lIjoxNzA1OTc3MjMxLCJpZHAiOiJsb2NhbCIsIm5hbWUiOiJhZG1pbiIsImZhbWlseV9uYW1lIjoiYWRtaW4iLCJnaXZlbl9uYW1lIjoiQWRtaW4iLCJ0ZW5hbnRfaWQiOiJmNGExMDc5MC0yZjY3LTQ1N2EtYWMwZi0wNGYzZjEwYWM1ODMiLCJwcm9maWxlX2lkcyI6ImY0YTEwNzkwLTJmNjctNDU3YS1hYzBmLTA0ZjNmMTBhYzU4MyIsImFtciI6WyJwd2QiXSwicGVybWlzc2lvbiI6WyJ0ZW5hbnR8Zi8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vMy8vLy8vLy8vLy8vLy8vLy92VC8vLzl4Ly83dy8vLzkvL3F4Ly8zIiwicHJvZHVjdHxvbmJvYXJkaW5nfFAvLy8vLytBQUFmMytDUC8vLy8vLytBQUlBQXZmLy8vOXc9PSIsInByb2R1Y3R8bW9uaXRvcmluZ3xQLy8vLy8rQUFBZjMrQ1AvLy8vLy8vLy8vLy8vZi8vLzl3PT0iXX0.MbhFfAjQNuBjMABdG8f474z1Qk19XOYbLh_xXSoQeBs1Kq1wtH50gN1W54VxiiB69w_JwuaP6bwglH0ua3wPr9rSqxCGbECSjidESh8Jqo3bbdyKm69hHFPWnAaIlyM-PCzXXw64eKMR9sT-pWwi99VEOKt1Bcy7UnrS9qP9vH7fsK1QdHoVN6mbo4xpkdljEk58PFWksbhjHQj-oPKs49QfT7Eu29asFvmvH9POpKgkAkKyEhCTqPHyOdM2HUKvzhByL0c0FjhqEKyFQhPxO81BXFGTROYqdWy8N1McYxJPvQY0RA6lToDB6uT3oCtpOT8ERqAlZnJiO0IGkZGrRQ
-    url: http://192.168.103.106:9095/api/aml-check
+    url: http://192.168.101.5:9095/api/aml
+    username: cpbaml
+    password: aml123!@#
   t24:
-    url: http://192.168.127.31:7003
-    username: L.HOURNG
-    password: HOurng@2323
+    url: http://192.168.101.21:7003
+    username: APPLOS
+    password: CPlos@123!@#
   mb:
-    otpUrl: http://192.168.103.11:15004/CPBBank/services/CPBMobile?wsdl
-    registerCodeUrl: http://192.168.103.13:8090/API/RegisterCustomerMB/
-    secretKey: mobilebankingCPB@#%123
-#    secretKey: cpbsmsgw@!@#974203
+    otpUrl: http://10.18.1.47:15004/CPBBank/services/CPBMobile?wsdl
+    registerCodeUrl: http://10.18.1.48:8090/API/RegisterCustomerMB/
+    secretKey: cpbsmsgw@!@#974203
   otp:
     length: 6
     cooldownSeconds: 60
     maxAttempts: 3
     lockMinutes: 5
     expiryMinutes: 5
-    message: "Your OTP code is:"
+    message: "Your OTP code for CPBank, Online Account Opening is:"
   validate:
     nid: validate-nid
     faceApiRoute: validate-nid-face
   ocr:
     apiRoute: ocr-idcard
-  xml:
-    createCustomer: C:\Users\makkara.nob\cpbAccountOnlineApi\Xml\CREATE_CUSTOMER.xml
-    openAcctByCustomer: C:\Users\makkara.nob\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_CUSTOMER.xml
-    openAcctByStaff: C:\Users\makkara.nob\cpbAccountOnlineApi\Xml\OPEN_ACCT_BY_STAFF.xml
 
-# Open account TEST Config
+# Open Account Test Config
 test:
   skip-check-account: false
   skip-check-cif: false
 
+# AML Configuration
 aml:
   dashboard:
-    url: http://192.168.103.106:8282/aml-management?pageNo=1
+    url: http://192.168.100.5:7070/aml-management?pageNo=1
   api:
     key: 34acefcd-6e4e-4a81-a553-852b21000c8a
     secret-key: zH9iyS42JWYh4Ol+FeSGsuREwRJmoaDYBbZhgL4lBG0=
@@ -240,16 +230,24 @@ app:
     progress-log-interval-minutes: 10
     heartbeat-interval-minutes: 5
 
+file:
+  upload:
+    directory: /app/customer-image
+    nid: /nid
+    selfie: /selfie
+
+simulator:
+  report-logs: false # Set to true to enable "Every Minute" simulation mode via ReportSimulator
+  aml: false     # Simulate AML High Risk alert
+  camdx: false   # Simulate CamDX Validation Failure
+  banking:
+    camdx-error: false    # Simulate CAMDX/NID Validation Failure in BankingService
+    internal-error: false # Simulate Internal T24 Connection Error in BankingService
+
 # Telegram Bot
 telegram:
   bot:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
-
-    #TEST
-    #    uat-acl-chat-id: "-4886328332"
-    #    uat-monitor-chat-id: "-4886328332"
-
-    #UAT
     uat-acl-chat-id: "-1002740302492"
     uat-monitor-chat-id: "-1003115792160"
     enabled: true
@@ -262,7 +260,6 @@ logging:
     org.springframework: WARN
     org.hibernate: WARN
     com.zaxxer.hikari: INFO
-    # Request Logging specific
     com.internal.feature.auth.security.RequestLoggingFilter: DEBUG
     com.internal.feature.auth.service.RequestLogService: INFO
     com.internal.feature.auth.scheduler.RequestLogCleanupScheduler: INFO
@@ -302,9 +299,3 @@ management:
     export:
       simple:
         enabled: true
-
-# Scheduler Configuration
-simulator:
-  report-logs: false # Set to true to enable "Every Minute" simulation mode via ReportSimulator
-  aml: false # Simulate AML High Risk alert
-  camdx: false # Simulate CamDX Validation Failure
