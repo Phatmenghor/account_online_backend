@@ -44,15 +44,15 @@ public class OpenAccountXmlBuilder {
         String pobCommune = getOrDefault(request.getCustomerPobCommune(), "");
         String pobVillage = getOrDefault(request.getCustomerPobVillage(), "");
 
-        String referralId = getOrDefault("", "");
-        String releasedBy = getOrDefault("", "");
+        String referralId = getOrDefault(request.getReferralId(), "");
+        String releasedBy = getOrDefault(request.getReleasedBy(), "");
 
         // Format dates to T24 format (YYYYMMDD)
         String dateOfBirth = formatDateForT24(request.getDateOfBirth());
         String legalIssueDate = formatDateForT24(request.getLegalIssueDate());
 
-        // Determine title from gender
-        String title = determineTitle(request.getGender());
+        // Determine title from gender (use request title if provided)
+        String title = getOrDefault(request.getTitle(), determineTitle(request.getGender()));
 
         return "<soapenv:Envelope xmlns:soapenv=\"" + DefaultConstants.SOAP_ENV_NS + "\" "
                 + "xmlns:oaow=\"" + DefaultConstants.OAOW_NS + "\" "
@@ -88,7 +88,7 @@ public class OpenAccountXmlBuilder {
                 + "<cus:LegalId>" + request.getLegalId() + "</cus:LegalId>"
                 + "<cus:LegalDocName>" + request.getLegalDocType() + "</cus:LegalDocName>"
                 + "<cus:LegalHolderName>" + defaultProperties.getLegalHolderName() + "</cus:LegalHolderName>"
-                + "<cus:LegalIssAuth>" + request.getGivenName() + "</cus:LegalIssAuth>"
+                + "<cus:LegalIssAuth>" + getOrDefault(request.getLegalIssAuth(), request.getGivenName()) + "</cus:LegalIssAuth>"
                 + "<cus:LegalIssDate>" + legalIssueDate + "</cus:LegalIssDate>"
                 + "</cus:mLEGALID></cus:gLEGALID>"
 
@@ -125,8 +125,8 @@ public class OpenAccountXmlBuilder {
                 // Ownership and staff
                 + "<cus:Ownership>" + defaultProperties.getOwnership() + "</cus:Ownership>"
                 + "<cus:RelationManager>" + referralId + "</cus:RelationManager>"
-                + "<cus:LoanOfficer/>"
-                + "<cus:Staff>" + releasedBy + "</cus:Staff>"
+                + "<cus:LoanOfficer>" + getOrDefault(request.getLoanOfficer(), "") + "</cus:LoanOfficer>"
+                + "<cus:Staff>" + getOrDefault(request.getStaff(), releasedBy) + "</cus:Staff>"
                 + "<cus:ReferralBy>" + referralId + "</cus:ReferralBy>"
 
                 // Place of birth address (Primary P fields)
