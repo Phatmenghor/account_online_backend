@@ -226,6 +226,27 @@ public class OpenAccountAmlStatusMapper {
         }
 
         public CustomerAmlRequest buildAmlRequestDto(CustomerRequest request) {
+                // Resolve English Address
+                String englishAddress = "NA";
+                if (request.getCustomerCurrentProvince() != null) {
+                        try {
+                                LocationCodesDto loc = masterDataServiceHelper.resolveAddress(
+                                                request.getCustomerCurrentProvince(),
+                                                request.getCustomerCurrentDistrict(),
+                                                request.getCustomerCurrentCommune(),
+                                                request.getCustomerCurrentVillage());
+                                String resolved = masterDataServiceHelper.buildEnglishAddress(loc);
+                                if (resolved != null && !resolved.isEmpty()) {
+                                        englishAddress = resolved;
+                                }
+                        } catch (Exception e) {
+                                // Fallback
+                                englishAddress = request.getLegalAddress() != null ? request.getLegalAddress() : "NA";
+                        }
+                } else {
+                        englishAddress = request.getLegalAddress() != null ? request.getLegalAddress() : "NA";
+                }
+
                 return CustomerAmlRequest.builder()
                                 .customerId(request.getLegalId())
                                 .custCreateDate(LocalDateTime.now()
@@ -237,7 +258,8 @@ public class OpenAccountAmlStatusMapper {
                                 .gender(request.getGender())
                                 .dateOfBirth(formatDateForAml(request.getDateOfBirth()))
                                 .nationality("KH")
-                                .legalAddress(request.getLegalAddress() != null ? request.getLegalAddress() : "NA")
+                                // Use the English address
+                                .legalAddress(englishAddress)
                                 .custDistrict(request.getCustomerPobDistrict())
                                 .custProvince(request.getCustomerPobProvince())
                                 .country("Cambodia")

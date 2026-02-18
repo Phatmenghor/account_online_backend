@@ -26,7 +26,8 @@ public final class AppConstants {
     // ==================================================================================
     public static final String SUPPORT_PHONE_PRIMARY = "070 200 002";
     public static final String SUPPORT_PHONE_SECONDARY = "1800 200 888";
-    public static final String SUPPORT_CONTACT = "មានបញ្ហាបច្ចេកទេស។ សូមទំនាក់ទំនងសេវាបម្រើអតិថិជនតាមរយៈលេខ " + SUPPORT_PHONE_PRIMARY + " ឬ " + SUPPORT_PHONE_SECONDARY + " ដើម្បីទទួលបានជំនួយបន្ថែម។";
+    public static final String SUPPORT_CONTACT = "មានបញ្ហាបច្ចេកទេស។ សូមទំនាក់ទំនងសេវាបម្រើអតិថិជនតាមរយៈលេខ "
+            + SUPPORT_PHONE_PRIMARY + " ឬ " + SUPPORT_PHONE_SECONDARY + " ដើម្បីទទួលបានជំនួយបន្ថែម។";
 
     // ==================================================================================
     // 3. NID VALIDATION ERRORS (Generic)
@@ -54,19 +55,25 @@ public final class AppConstants {
     public static final String MSG_DB_CONNECTION_ERR = "មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ប្រព័ន្ធ សូមព្យាយាមម្តងទៀត";
     public static final String MSG_HIGH_RISK_ERR = "សំណើរបស់អ្នកមិនអាចដំណើរការបានទេ ពីព្រោះការវាយតម្លៃអតិថិជនមានការហានិភ័យ";
     public static final String MSG_ACCOUNT_EXISTS_ERR = "លោកអ្នកមានគណនីជាមួយធនាគាររួចហើយ។ សូមប្រើប្រាស់ជាមួយគណនីរបស់លោកអ្នក។";
-    public static final String MSG_GENERIC_ERROR = "ការស្នើសុំរបស់លោកអ្នកមិនអាចដំណើរការបានទេ។ សូមព្យាយាមម្តងទៀត"; // For 500, 503, 504, 505, 506
+    public static final String MSG_GENERIC_ERROR = "ការស្នើសុំរបស់លោកអ្នកមិនអាចដំណើរការបានទេ។ សូមព្យាយាមម្តងទៀត"; // For
+                                                                                                                  // 500,
+                                                                                                                  // 503,
+                                                                                                                  // 504,
+                                                                                                                  // 505,
+                                                                                                                  // 506
     public static final String MSG_SUCCESS = "ការស្នើសុំជោគជ័យ។ លោកអ្នកនឹងទទួលបានលេខគណនី តាមសារទូរស័ព្ទ។ សូមភ្ជាប់សេវាធនាគារចល័តដើម្បីរីករាយជាមួយប្រតិបត្តិការដ៏សម្បូរបែប។ ករណីមានចម្ងល់សូមទំនាក់ទំនងមកសេវាបម្រើអតិថិជន 070 200 002 ឬ 1800 200 888 ដើម្បីជំនួយបន្ថែម។";
-
+    public static final String MSG_SYSTEM_BUSY = "System is currently busy. Please try again later.";
 
     // ==================================================================================
     // 6. AML MESSAGES
     // Used in: OpenAccountServiceImpl
     // ==================================================================================
-    public static final String AML_NEED_REVIEW_MSG =
-            "ការស្នើសុំបរាជ័យ\n" +
-                    "ការស្នើសុំរបស់អ្នក ត្រូវការត្រួតពិនិត្យ។ ធនាគារនឹងឆ្លើយតបបន្ទាប់ពីត្រួតពិនិត្យរួចរាល់ ឬទំនាក់ទំនងមកសេវាបម្រើអតិថិជន 070 200 002 ឬ 1800 200 888 ដើម្បីជំនួយបន្ថែម។";
-    public static final String AML_REJECTED_MSG = "ការត្រួតពិនិត្យ AML ត្រូវបានបដិសេធសម្រាប់អត្តសញ្ញាណប័ណ្ណលេខ %s។ គណនីមិនអាចបង្កើតបានទេ។ " + SUPPORT_CONTACT;
-    public static final String AML_UNKNOWN_MSG = "ស្ថានភាព AML មិនស្គាល់សម្រាប់អត្តសញ្ញាណប័ណ្ណលេខ %s។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ ឬទំនាក់ទំនងសេវាបម្រើអតិថិជនតាមរយៈលេខ " + SUPPORT_PHONE_PRIMARY + " ឬ " + SUPPORT_PHONE_SECONDARY + "។";
+    public static final String AML_NEED_REVIEW_MSG = "ការស្នើសុំបរាជ័យ\n" +
+            "ការស្នើសុំរបស់អ្នក ត្រូវការត្រួតពិនិត្យ។ ធនាគារនឹងឆ្លើយតបបន្ទាប់ពីត្រួតពិនិត្យរួចរាល់ ឬទំនាក់ទំនងមកសេវាបម្រើអតិថិជន 070 200 002 ឬ 1800 200 888 ដើម្បីជំនួយបន្ថែម។";
+    public static final String AML_REJECTED_MSG = "ការត្រួតពិនិត្យ AML ត្រូវបានបដិសេធសម្រាប់អត្តសញ្ញាណប័ណ្ណលេខ %s។ គណនីមិនអាចបង្កើតបានទេ។ "
+            + SUPPORT_CONTACT;
+    public static final String AML_UNKNOWN_MSG = "ស្ថានភាព AML មិនស្គាល់សម្រាប់អត្តសញ្ញាណប័ណ្ណលេខ %s។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ ឬទំនាក់ទំនងសេវាបម្រើអតិថិជនតាមរយៈលេខ "
+            + SUPPORT_PHONE_PRIMARY + " ឬ " + SUPPORT_PHONE_SECONDARY + "។";
 
     // ==================================================================================
     // 7. OPEN ACCOUNT WORKFLOW STEPS
@@ -101,7 +108,7 @@ public final class AppConstants {
     public static final String BULLET_PREFIX = "- ";
     public static final String NEW_LINE = "\n";
 
-    //T24 ERROR RESPONSE
+    // T24 ERROR RESPONSE
     public static final String T24_ACCOUNT_ERROR = "SECURITY VIOLATION DURING SIGN ON PROCESS";
 
     private AppConstants() {
