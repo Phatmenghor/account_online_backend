@@ -1,0 +1,41 @@
+# ==============================================================
+# UAT PROFILE  — overrides application.yaml base config
+# Active when: spring.profiles.active=uat  (default)
+# ==============================================================
+
+server:
+  port: 9393
+
+spring:
+  datasource:
+    url: jdbc:postgresql://192.168.103.106:5432/account_online
+
+oracle:
+  dwh:
+    datasource:
+      jdbc-url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
+  stg:
+    datasource:
+      jdbc-url: jdbc:oracle:thin:@//192.168.127.88:1521/stg
+
+cpb:
+  environment: development
+  camdx:
+    url: http://192.168.103.106:8099/api/v1/
+  aml:
+    url: http://192.168.103.106:9095/api/aml-check
+    username: cpbaml
+    password: aml123!@#
+  t24:
+    url: http://192.168.127.31:7003
+    username: L.HOURNG
+    password: HOurng@2323
+  mb:
+    otpUrl: http://192.168.103.11:15004/CPBBank/services/CPBMobile?wsdl
+    registerCodeUrl: http://192.168.103.13:8090/API/RegisterCustomerMB/
+  otp:
+    message: "Your OTP code is:"
+
+aml:
+  dashboard:
+    url: http://192.168.103.106:8282/aml-management?pageNo=1
