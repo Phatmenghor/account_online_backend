@@ -177,7 +177,7 @@ cpb:
   mb:
     otpUrl: http://10.18.1.47:15004/CPBBank/services/CPBMobile?wsdl
     registerCodeUrl: http://10.18.1.48:8090/API/RegisterCustomerMB/
-    secretKey: cpbsmsgw@!@#974203
+    secretKey: mobilebankingCPB@#%123
   otp:
     length: 6
     cooldownSeconds: 60

@@ -180,7 +180,7 @@ public class MobileBankingService {
     // Matches C# MobileService.CreateMD5Hash: MD5(secretKey + cif + sms + dateNow) using ASCII encoding
     private String generateSignature(String cif, String sms) {
         try {
-            String dateNow = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String dateNow = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             String value = properties.getMb().getSecretKey() + cif + sms + dateNow;
 
             MessageDigest md5 = MessageDigest.getInstance("MD5");
