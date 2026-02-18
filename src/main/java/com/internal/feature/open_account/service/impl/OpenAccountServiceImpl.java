@@ -50,8 +50,8 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
             // Step 4: Process AML
             currentStep = AppConstants.PROCESS_AML;
-            context.setAmlResult(complianceService.processAml(request));
-            complianceService.sentMessageOnHighRisk(request, context.getAmlResult());
+//            context.setAmlResult(complianceService.processAml(request));
+//            complianceService.sentMessageOnHighRisk(request, context.getAmlResult());
 
             // Step 5: Create customer
             currentStep = AppConstants.CREATE_CUSTOMER;
@@ -94,10 +94,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             String failureRemark = reportingService.buildFailureRemark(currentStep, context.getCif(),
                     context.getKhrAccount(), context.getUsdAccount(), context.getAmlResult());
 
-            boolean skipTelegramAlert = AppConstants.PROCESS_AML.equals(currentStep)
-                    && context.getAmlResult() != null
-                    && (AmlStatusEnum.PENDING.equals(context.getAmlResult().getStatus())
-                    || AmlStatusEnum.REJECT.equals(context.getAmlResult().getStatus()));
+            boolean skipTelegramAlert = false;
 
             reportingService.saveFailureLogs(request, e, currentStep, failureRemark, skipTelegramAlert);
 
