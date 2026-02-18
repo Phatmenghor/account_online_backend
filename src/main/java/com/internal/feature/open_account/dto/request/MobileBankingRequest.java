@@ -7,70 +7,76 @@ import lombok.Data;
 @Data
 @Builder
 public class MobileBankingRequest {
-    
-    @JsonProperty("CustomerName")
-    private String customerName;
-    
-    @JsonProperty("CustomerType")
-    private String customerType;
-    
-    @JsonProperty("IdentityNumber")
-    private String identityNumber;
-    
-    @JsonProperty("Email")
-    private String email;
-    
-    @JsonProperty("Address")
-    private String address;
-    
+
     @JsonProperty("CifNo")
     private String cifNo;
-    
-    @JsonProperty("BranchCodeCreatedUser")
-    private String branchCodeCreatedUser;
-    
-    @JsonProperty("PosCodeCreatedUser")
-    private String posCodeCreatedUser;
-    
-    @JsonProperty("CreatedUser")
-    private String createdUser;
-    
-    @JsonProperty("DateOfBirth")
-    private String dateOfBirth;
-    
-    @JsonProperty("Telephone")
-    private String telephone;
-    
-    @JsonProperty("CifBranchCode")
+
+    @JsonProperty("CifBranch")
     private String cifBranchCode;
-    
+
+    @JsonProperty("Email")
+    private String email;
+
+    @JsonProperty("Address")
+    private String address;
+
+    @JsonProperty("CusName")
+    private String customerName;
+
+    @JsonProperty("CusType")
+    private String customerType;
+
     @JsonProperty("Gender")
     private String gender;
-    
+
+    @JsonProperty("BirthDay")
+    private String dateOfBirth;
+
+    @JsonProperty("IdNumber")
+    private String identityNumber;
+
     @JsonProperty("Residence")
     private String residence;
-    
-    @JsonProperty("AccountNumber")
-    private String accountNumber;
-    
-    @JsonProperty("AccountType")
-    private String accountType;
-    
-    @JsonProperty("Currency")
-    private String currency;
-    
-    @JsonProperty("BranchCode")
-    private String branchCode;
-    
-    @JsonProperty("PackageCode")
-    private String packageCode;
-    
-    @JsonProperty("TelephoneOtp")
-    private String telephoneOtp;
-    
+
+    @JsonProperty("CreatedUser")
+    private String createdUser;
+
+    @JsonProperty("BranchCodeCreatedUser")
+    private String branchCodeCreatedUser;
+
+    @JsonProperty("PosCodeCreatedUser")
+    private String posCodeCreatedUser;
+
     @JsonProperty("StaffCode")
     private String staffCode;
-    
+
+    @JsonProperty("AccountNo")
+    private String accountNumber;
+
+    @JsonProperty("AccountType")
+    private String accountType;
+
+    @JsonProperty("Ccy")
+    private String currency;
+
+    @JsonProperty("BranchCode")
+    private String branchCode;
+
+    @JsonProperty("Telephone")
+    private String telephone;
+
+    @JsonProperty("TelephoneOtp")
+    private String telephoneOtp;
+
+    @JsonProperty("PackageCode")
+    private String packageCode;
+
     @JsonProperty("SignData")
     private String signData;
+
+    @JsonProperty("Channel")
+    private String channel;
+
+    @JsonProperty("MobileChannel")
+    private String mobileChannel;
 }
