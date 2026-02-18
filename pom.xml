@@ -177,13 +177,13 @@
     </dependencies>
 
     <!-- =========================================================
-         Maven Profiles — control Spring active profile easily
+         Maven Profiles - control Spring active profile easily
          Usage:
-           mvn clean install           → UAT (default)
-           mvn clean install -Pprod    → Production
-           mvn spring-boot:run         → run on UAT
-           mvn spring-boot:run -Pprod  → run on Production
-           java -jar account_online.jar --spring.profiles.active=prod
+           mvn clean install           -> UAT (default)
+           mvn clean install -Pprod    -> Production
+           mvn spring-boot:run         -> run on UAT
+           mvn spring-boot:run -Pprod  -> run on Production
+           java -jar account_online.jar -Dspring.profiles.active=prod
          ========================================================= -->
     <profiles>
         <profile>

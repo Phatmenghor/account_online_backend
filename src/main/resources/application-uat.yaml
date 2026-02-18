@@ -38,13 +38,23 @@ oracle:
       idle-timeout: 600000
       max-lifetime: 1800000
       pool-name: Oracle-STG-Pool
+# Simulators — all disabled by default
+simulator:
+  report-logs: false
+  aml:
+    error: false
+    high-risk: false
+  camdx: false
+  banking:
+    camdx-error: false
+    internal-error: false
 
 cpb:
   environment: development
   camdx:
     url: http://192.168.103.106:8099/api/v1/
   aml:
-    url: http://192.168.103.106:9095/api/aml-check
+    url: http://192.168.101.5:9095/api/aml
     username: cpbaml
     password: aml123!@#
   t24:
@@ -69,6 +79,8 @@ jwt:
 telegram:
   bot:
     token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
-    uat-acl-chat-id: "-1002740302492"
-    uat-monitor-chat-id: "-1003115792160"
+#    uat-acl-chat-id: "-1002740302492"
+    uat-acl-chat-id: "-4886328332"
+#    uat-monitor-chat-id: "-1003115792160"
+    uat-monitor-chat-id: "-4886328332"
     enabled: true

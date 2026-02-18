@@ -2,7 +2,7 @@
 # PRODUCTION PROFILE
 # Active when: spring.profiles.active=prod
 # Start: java -jar account_online.jar --spring.profiles.active=prod
-#    or: mvn spring-boot:run -Pprod
+#    or: mvn spring-boot:run -Prod
 # ==============================================================
 
 server:
