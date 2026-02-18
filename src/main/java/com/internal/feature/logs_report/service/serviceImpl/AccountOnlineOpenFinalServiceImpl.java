@@ -52,7 +52,9 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
             CustomerRequest request,
             CustomerResponse accountInfo,
             AmlStatusDto amlProcessResult,
-            CustomerImageUploadResponseDto imagePaths
+            CustomerImageUploadResponseDto imagePaths,
+            String mbActivationCode
+
     ) {
         try {
             log.info("Attempting to save AccountOnlineFinal for Legal ID: {}", request.getLegalId());
@@ -73,6 +75,7 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
             ClsVillageDto pobVillage = safeVillageLookup(request.getCustomerPobVillage());
 
             ClsBranchDto branch = safeBranchLookup(request.getBranchCode());
+
 
             if (branch == null) {
                 log.warn("Branch lookup returned null for code: {}", request.getBranchCode());
@@ -156,6 +159,13 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                     .usdAccount(accountInfo.getUsdAccount())
                     .khrAccount(accountInfo.getKhrAccount())
                     .cif(accountInfo.getCif())
+
+                    // === SMS HISTORY ===
+                    .smsSentPhone(request.getPhoneNumber())
+                    .smsSentUsdAccount(accountInfo.getUsdAccount())
+                    .smsSentKhrAccount(accountInfo.getKhrAccount())
+                    .smsSentCif(accountInfo.getCif())
+                    .mbActivationCode(mbActivationCode).mbAppDownloadLink("http://onelink.to/cpbank")
 
                     // Images
                     .nidImage(imagePaths != null ? imagePaths.getNidImagePath() : request.getNidImage())
@@ -281,27 +291,47 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
     }
 
     private ClsProvinceDto safeProvinceLookup(String code) {
-        try { return code != null ? masterDataService.getProvinceByCode(code) : null; }
-        catch (Exception e) { log.warn("Province lookup failed for code {}", code); return null; }
+        try {
+            return code != null ? masterDataService.getProvinceByCode(code) : null;
+        } catch (Exception e) {
+            log.warn("Province lookup failed for code {}", code);
+            return null;
+        }
     }
 
     private ClsDistrictDto safeDistrictLookup(String code) {
-        try { return code != null ? masterDataService.getDistrictByCode(code) : null; }
-        catch (Exception e) { log.warn("District lookup failed for code {}", code); return null; }
+        try {
+            return code != null ? masterDataService.getDistrictByCode(code) : null;
+        } catch (Exception e) {
+            log.warn("District lookup failed for code {}", code);
+            return null;
+        }
     }
 
     private ClsCommuneDto safeCommuneLookup(String code) {
-        try { return code != null ? masterDataService.getCommuneByCode(code) : null; }
-        catch (Exception e) { log.warn("Commune lookup failed for code {}", code); return null; }
+        try {
+            return code != null ? masterDataService.getCommuneByCode(code) : null;
+        } catch (Exception e) {
+            log.warn("Commune lookup failed for code {}", code);
+            return null;
+        }
     }
 
     private ClsVillageDto safeVillageLookup(String code) {
-        try { return code != null ? masterDataService.getVillageByCode(code) : null; }
-        catch (Exception e) { log.warn("Village lookup failed for code {}", code); return null; }
+        try {
+            return code != null ? masterDataService.getVillageByCode(code) : null;
+        } catch (Exception e) {
+            log.warn("Village lookup failed for code {}", code);
+            return null;
+        }
     }
 
     private ClsBranchDto safeBranchLookup(String code) {
-        try { return code != null ? masterDataService.getBranchByCode(code) : null; }
-        catch (Exception e) { log.warn("Branch lookup failed for code {}", code); return null; }
+        try {
+            return code != null ? masterDataService.getBranchByCode(code) : null;
+        } catch (Exception e) {
+            log.warn("Branch lookup failed for code {}", code);
+            return null;
+        }
     }
 }

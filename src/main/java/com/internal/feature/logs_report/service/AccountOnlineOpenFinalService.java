@@ -17,21 +17,23 @@ public interface AccountOnlineOpenFinalService {
     /**
      * Save AccountOnlineFinal after customer successfully opened account.
      *
-     * @param request     the customer request containing user info
-     * @param imagePaths  the image paths returned after saving NID & Selfie
+     * @param request    the customer request containing user info
+     * @param imagePaths the image paths returned after saving NID & Selfie
      * @return the persisted AccountOnlineFinal entity
      */
     AccountOnlineFinal saveFinalLog(
             CustomerRequest request,
             CustomerResponse accountInfo,
             AmlStatusDto amlProcessResult,
-            CustomerImageUploadResponseDto imagePaths
+            CustomerImageUploadResponseDto imagePaths,
+            String mbActivationCode
     );
 
     AllAccountOnlineFinalResponseDto getSuccessOpenAccount(AllAccountOnlineSuccessRequestDto request);
 
     @Transactional
     void updateFinalLogWithAml(AmlStatusDto amlStatus);
-    AccountOnlineFinalResponseDto findAccountByCifOrLegalId (AccountOnlineFinalLogRequestDto requestDto);
+
+    AccountOnlineFinalResponseDto findAccountByCifOrLegalId(AccountOnlineFinalLogRequestDto requestDto);
 
 }
