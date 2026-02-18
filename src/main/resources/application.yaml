@@ -306,5 +306,7 @@ management:
 # Scheduler Configuration
 simulator:
   report-logs: false # Set to true to enable "Every Minute" simulation mode via ReportSimulator
-  aml: false # Simulate AML High Risk alert
+  aml:
+    error: false
+    high-risk: false
   camdx: false # Simulate CamDX Validation Failure

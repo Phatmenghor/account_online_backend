@@ -94,7 +94,7 @@ public class OpenAccountAmlStatusMapper {
                                 .build();
         }
 
-        // -------------------- REQUEST + AML RESPONSE â†’ DTO --------------------
+        // -------------------- REQUEST + AML RESPONSE DTO --------------------
         public AmlStatusDto fromRequestAndResponse(
                         CustomerRequest request,
                         AmlExternalResponseDto amlResponse,

@@ -62,7 +62,8 @@ public final class AppConstants {
                                                                                                                   // 505,
                                                                                                                   // 506
     public static final String MSG_SUCCESS = "ការស្នើសុំជោគជ័យ។ លោកអ្នកនឹងទទួលបានលេខគណនី តាមសារទូរស័ព្ទ។ សូមភ្ជាប់សេវាធនាគារចល័តដើម្បីរីករាយជាមួយប្រតិបត្តិការដ៏សម្បូរបែប។ ករណីមានចម្ងល់សូមទំនាក់ទំនងមកសេវាបម្រើអតិថិជន 070 200 002 ឬ 1800 200 888 ដើម្បីជំនួយបន្ថែម។";
-    public static final String MSG_SYSTEM_BUSY = "System is currently busy. Please try again later.";
+    public static final String MSG_SYSTEM_BUSY = "ប្រព័ន្ធកំពុងមានបញ្ហាបណ្ដោះអាសន្ន។ សូមទំនាក់ទំនងសេវាបម្រើអតិថិជនតាមរយៈលេខ "
+            + SUPPORT_PHONE_PRIMARY + " ឬ " + SUPPORT_PHONE_SECONDARY + " ដើម្បីទទួលបានជំនួយបន្ថែម។";
 
     // ==================================================================================
     // 6. AML MESSAGES

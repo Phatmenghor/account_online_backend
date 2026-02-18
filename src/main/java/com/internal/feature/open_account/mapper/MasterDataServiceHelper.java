@@ -5,7 +5,6 @@ import com.internal.feature.master_data.dto.response.LocationCodesDto;
 import com.internal.feature.master_data.service.MasterDataService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
 
