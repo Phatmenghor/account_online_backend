@@ -175,8 +175,8 @@ cpb:
     username: L.HOURNG
     password: HOurng@2323
   mb:
-    otpUrl: http://10.18.1.47:15004/CPBBank/services/CPBMobile?wsdl
-    registerCodeUrl: http://10.18.1.48:8090/API/RegisterCustomerMB/
+    otpUrl: http://192.168.103.11:15004/CPBBank/services/CPBMobile?wsdl
+    registerCodeUrl: http://192.168.103.13:8090/API/RegisterCustomerMB/
     secretKey: mobilebankingCPB@#%123
   otp:
     length: 6
