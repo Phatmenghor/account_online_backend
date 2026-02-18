@@ -3,6 +3,8 @@ package com.internal.feature.open_account.service.external;
 
 import com.internal.config.CpbProperties;
 import com.internal.config.DefaultProperties;
+import com.internal.feature.logs_report.model.CifActivationLog;
+import com.internal.feature.logs_report.service.CifActivationLogService;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.request.MobileBankingRequest;
 import com.internal.feature.open_account.dto.response.MobileBankingResponse;
@@ -30,13 +32,14 @@ public class MobileBankingService {
     private final DefaultProperties defaultProperties;
     private final RestTemplate restTemplate;
     private final SoapSmsSender soapSmsSender;
+    private final CifActivationLogService cifActivationLogService;
 
     public String activate(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
         log.info("Activating mobile banking for CIF: {}", cif);
         String activationCode = null;
         try {
             MobileBankingRequest mbRequest = buildRequest(request, cif, khrAccount, usdAccount);
-            MobileBankingResponse mbResponse = callActivatorApi(mbRequest);
+            MobileBankingResponse mbResponse = callActivatorApi(mbRequest, cif);
             log.info("Mobile banking activation successful for CIF: {}", cif);
             activationCode = mbResponse != null ? mbResponse.getContent() : null;
         } catch (Exception e) {
@@ -119,10 +122,12 @@ public class MobileBankingService {
                 .telephoneOtp(request.getPhoneNumber())
                 .staffCode("123")
                 .signData(signData)
+                .channel("INTERNET BANKING")
+                .mobileChannel("I")
                 .build();
     }
 
-    private MobileBankingResponse callActivatorApi(MobileBankingRequest request) {
+    private MobileBankingResponse callActivatorApi(MobileBankingRequest request, String cif) {
         String url = properties.getMb().getRegisterCodeUrl();
 
         HttpHeaders headers = new HttpHeaders();
@@ -130,9 +135,21 @@ public class MobileBankingService {
 
         HttpEntity<MobileBankingRequest> entity = new HttpEntity<>(request, headers);
 
+        long startTime = System.currentTimeMillis();
+        String requestPayload = null;
+        String responsePayload = null;
+        String errorCode = null;
+        String errorMessage = null;
+        boolean success = false;
+        MobileBankingResponse parsed = null;
+
         try {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            requestPayload = mapper.writeValueAsString(request);
+
             log.info("Calling Activator API: {}", url);
-            log.info("Request: {}", request);
+            log.info("Request: {}", requestPayload);
 
             ResponseEntity<String> rawResponse = restTemplate.exchange(
                     url,
@@ -144,24 +161,53 @@ public class MobileBankingService {
             log.info("Response Status: {}", rawResponse.getStatusCode());
             log.info("Raw Response Body: {}", rawResponse.getBody());
 
-            if (rawResponse.getBody() == null) {
+            responsePayload = rawResponse.getBody();
+
+            if (responsePayload == null) {
+                errorMessage = "Empty response body from MB activation API";
                 return null;
             }
 
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            MobileBankingResponse parsed = mapper.readValue(rawResponse.getBody(), MobileBankingResponse.class);
+            parsed = mapper.readValue(responsePayload, MobileBankingResponse.class);
             log.info("Parsed Response: code={}, message={}, content={}", parsed.getCode(), parsed.getMessage(), parsed.getContent());
 
             if (parsed.getCode() != null && !"00".equals(parsed.getCode())) {
+                errorCode = parsed.getCode();
+                errorMessage = parsed.getMessage();
                 throw new RuntimeException("Mobile banking API error - code: " + parsed.getCode() + ", message: " + parsed.getMessage());
             }
 
+            success = true;
             return parsed;
 
         } catch (Exception e) {
             log.error("Error calling Activator API: {}", e.getMessage(), e);
+            if (errorMessage == null) {
+                errorMessage = e.getMessage();
+            }
             throw new RuntimeException(e);
+        } finally {
+            long duration = System.currentTimeMillis() - startTime;
+            String activationCode = (parsed != null) ? parsed.getContent() : null;
+
+            CifActivationLog activationLog = CifActivationLog.builder()
+                    .cifNo(cif)
+                    .telephone(request.getTelephone())
+                    .accountNo(request.getAccountNumber())
+                    .currency(request.getCurrency())
+                    .branchCode(request.getBranchCode())
+                    .channel(request.getChannel())
+                    .requestPayload(requestPayload)
+                    .responsePayload(responsePayload)
+                    .errorCode(errorCode)
+                    .errorMessage(errorMessage != null && errorMessage.length() > 500
+                            ? errorMessage.substring(0, 500) : errorMessage)
+                    .activationCode(activationCode)
+                    .isSuccess(success)
+                    .durationMs(duration)
+                    .build();
+
+            cifActivationLogService.saveLog(activationLog);
         }
     }
 

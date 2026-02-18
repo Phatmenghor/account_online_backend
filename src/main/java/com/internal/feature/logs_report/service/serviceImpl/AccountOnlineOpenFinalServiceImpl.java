@@ -137,22 +137,28 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                     // Contact
                     .phoneNumber(request.getPhoneNumber())
 
-                    // AML
-                    .amlStatus(amlProcessResult.getStatus())
-                    .amlActionBy(amlProcessResult.getApprovedBy() != null ? amlProcessResult.getApprovedBy().getId() :
-                            amlProcessResult.getRejectedBy() != null ? amlProcessResult.getRejectedBy().getId() : null)
-                    .amlActionName(amlProcessResult.getApprovedBy() != null ? amlProcessResult.getApprovedBy().getFullName() :
-                            amlProcessResult.getRejectedBy() != null ? amlProcessResult.getRejectedBy().getFullName() : null)
-                    .amlActionRole(amlProcessResult.getApprovedBy() != null ? amlProcessResult.getApprovedBy().getUserRole() :
-                            amlProcessResult.getRejectedBy() != null ? amlProcessResult.getRejectedBy().getUserRole() : null)
+                    // AML — guarded: amlProcessResult may be null when AML step is skipped
+                    .amlStatus(amlProcessResult != null ? amlProcessResult.getStatus() : null)
+                    .amlActionBy(amlProcessResult != null && amlProcessResult.getApprovedBy() != null
+                            ? amlProcessResult.getApprovedBy().getId()
+                            : amlProcessResult != null && amlProcessResult.getRejectedBy() != null
+                            ? amlProcessResult.getRejectedBy().getId() : null)
+                    .amlActionName(amlProcessResult != null && amlProcessResult.getApprovedBy() != null
+                            ? amlProcessResult.getApprovedBy().getFullName()
+                            : amlProcessResult != null && amlProcessResult.getRejectedBy() != null
+                            ? amlProcessResult.getRejectedBy().getFullName() : null)
+                    .amlActionRole(amlProcessResult != null && amlProcessResult.getApprovedBy() != null
+                            ? amlProcessResult.getApprovedBy().getUserRole()
+                            : amlProcessResult != null && amlProcessResult.getRejectedBy() != null
+                            ? amlProcessResult.getRejectedBy().getUserRole() : null)
                     .amlRemarks("")
-                    .amlScreeningResult(amlProcessResult.getScreeningResult())
-                    .amlRiskLevel(amlProcessResult.getRiskLevel())
-                    .amlActionTaken(amlProcessResult.getActionTaken())
-                    .amlTotalRulesScore(amlProcessResult.getTotalRulesScore())
-                    .serviceName(amlProcessResult.getServiceName())
-                    .amlTrxnId(amlProcessResult.getTrxnID())
-                    .amlRulesTriggered(amlProcessResult.getRulesTriggered())
+                    .amlScreeningResult(amlProcessResult != null ? amlProcessResult.getScreeningResult() : null)
+                    .amlRiskLevel(amlProcessResult != null ? amlProcessResult.getRiskLevel() : null)
+                    .amlActionTaken(amlProcessResult != null ? amlProcessResult.getActionTaken() : null)
+                    .amlTotalRulesScore(amlProcessResult != null ? amlProcessResult.getTotalRulesScore() : null)
+                    .serviceName(amlProcessResult != null ? amlProcessResult.getServiceName() : null)
+                    .amlTrxnId(amlProcessResult != null ? amlProcessResult.getTrxnID() : null)
+                    .amlRulesTriggered(amlProcessResult != null ? amlProcessResult.getRulesTriggered() : null)
 
                     // Account info
                     .mnemonic(accountInfo.getMnemonic())

@@ -1,0 +1,76 @@
+# ==============================================================
+# PRODUCTION PROFILE
+# Active when: spring.profiles.active=prod
+# Start: java -jar account_online.jar --spring.profiles.active=prod
+#    or: mvn spring-boot:run -Pprod
+# ==============================================================
+
+server:
+  port: 7070
+
+spring:
+  datasource:
+    url: jdbc:postgresql://192.168.101.5:5432/account_online
+
+# Oracle — full Production config
+oracle:
+  dwh:
+    datasource:
+      jdbc-url: jdbc:oracle:thin:@//192.168.102.5:1521/stg
+      username: stg
+      password: Bnk$$444
+      driver-class-name: oracle.jdbc.OracleDriver
+      connection-test-query: SELECT 1 FROM DUAL
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: Oracle-DWH-Pool
+  stg:
+    datasource:
+      jdbc-url: jdbc:oracle:thin:@//192.168.102.5:1521/stg
+      username: stg
+      password: Bnk$$444
+      driver-class-name: oracle.jdbc.OracleDriver
+      connection-test-query: SELECT 1 FROM DUAL
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: Oracle-STG-Pool
+
+cpb:
+  environment: production
+  camdx:
+    url: http://192.168.101.5:8099/api/v1/
+  aml:
+    url: http://192.168.101.5:9095/api/aml
+    username: cpbaml
+    password: aml123!@#
+  t24:
+    url: http://192.168.101.21:7003
+    username: APPLOS
+    password: CPlos@123!@#
+  mb:
+    otpUrl: http://10.18.1.47:15004/CPBBank/services/CPBMobile?wsdl
+    registerCodeUrl: http://10.18.1.48:8090/API/RegisterCustomerMB/
+    secretKey: mobilebankingCPB@#%123
+  otp:
+    message: "Your OTP code for CPBank, Online Account Opening is:"
+
+aml:
+  dashboard:
+    url: http://192.168.100.5:7070/aml-management?pageNo=1
+
+jwt:
+  expiration-min: 525600
+  issuer: account-online-api
+
+telegram:
+  bot:
+    token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
+    uat-acl-chat-id: "-1002740302492"
+    uat-monitor-chat-id: "-1003115792160"
+    enabled: true

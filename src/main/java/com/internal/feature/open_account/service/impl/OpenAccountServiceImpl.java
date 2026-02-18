@@ -48,10 +48,10 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             currentStep = AppConstants.VALIDATE_EXISTING_ACCOUNT;
             bankingService.validateExistingAccounts(context.getCustomerInfo());
 
-            // Step 4: Process AML
+            // Step 4: Process AML — only Low risk (APPROVE) may continue; High risk or error stops here
             currentStep = AppConstants.PROCESS_AML;
-//            context.setAmlResult(complianceService.processAml(request));
-//            complianceService.sentMessageOnHighRisk(request, context.getAmlResult());
+            context.setAmlResult(complianceService.processAml(request));
+            complianceService.sentMessageOnHighRisk(request, context.getAmlResult());
 
             // Step 5: Create customer
             currentStep = AppConstants.CREATE_CUSTOMER;
