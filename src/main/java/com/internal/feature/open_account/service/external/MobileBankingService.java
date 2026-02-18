@@ -109,7 +109,7 @@ public class MobileBankingService {
                 .dateOfBirth(formattedDob)
                 .telephone(request.getPhoneNumber())
                 .cifBranchCode(branchCode)
-                .gender(request.getGender())
+                .gender("FEMALE".equalsIgnoreCase(request.getGender()) ? "F" : "M")
                 .residence(request.getResidence() != null ? request.getResidence() : "1")
                 .accountNumber(accountNumber)
                 .accountType("6011")
