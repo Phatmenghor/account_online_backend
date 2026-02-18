@@ -40,8 +40,16 @@ public class OccupationServiceImpl implements OccupationService {
 
     @Override
     public Optional<OccupationDto> getOccupationByCode(String occupationCode) {
-        return repository.findByOccupationCode(occupationCode)
-                .map(mapper::toDto);
+        Optional<Occupation> byCode = repository.findByOccupationCode(occupationCode);
+        if (byCode.isPresent()) {
+            return byCode.map(mapper::toDto);
+        }
+        try {
+            Long id = Long.parseLong(occupationCode);
+            return repository.findById(id).map(mapper::toDto);
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
     }
 
     @Override
