@@ -93,31 +93,31 @@ public class MobileBankingService {
         String branchCode = request.getBranchCode() != null ? request.getBranchCode() : defaultProperties.getBranchCode();
         String accountNumber = usdAccount != null ? usdAccount : khrAccount;
         String currency = usdAccount != null ? AppConstants.CURRENCY_USD : AppConstants.CURRENCY_KHR;
-        
+
         return MobileBankingRequest.builder()
-            .customerName(request.getFamilyName() + " " + request.getGivenName())
-            .customerType("100")
-            .identityNumber(request.getLegalId().trim())
-            .email("NA@gmail.com")
-            .address("N/A")
-            .cifNo(cif)
-            .branchCodeCreatedUser(branchCode)
-            .posCodeCreatedUser("POS01")
-            .createdUser(request.getGivenName())
-            .dateOfBirth(formattedDob)
-            .telephone(request.getPhoneNumber())
-            .cifBranchCode(branchCode)
-            .gender(request.getGender())
-            .residence("1")
-            .accountNumber(accountNumber)
-            .accountType("6011")
-            .currency(currency)
-            .branchCode(branchCode)
-            .packageCode("BASIC")
-            .telephoneOtp(request.getPhoneNumber())
-            .staffCode("123")
-            .signData(signData)
-            .build();
+                .customerName(request.getFamilyName() + " " + request.getGivenName())
+                .customerType("100")
+                .identityNumber(request.getLegalId().trim())
+                .email("NA@gmail.com")
+                .address("N/A")
+                .cifNo(cif)
+                .branchCodeCreatedUser(branchCode)
+                .posCodeCreatedUser("POS01")
+                .createdUser(request.getGivenName())
+                .dateOfBirth(formattedDob)
+                .telephone(request.getPhoneNumber())
+                .cifBranchCode(branchCode)
+                .gender(request.getGender())
+                .residence("1")
+                .accountNumber(accountNumber)
+                .accountType("6011")
+                .currency(currency)
+                .branchCode(branchCode)
+                .packageCode("BASIC")
+                .telephoneOtp(request.getPhoneNumber())
+                .staffCode("123")
+                .signData(signData)
+                .build();
     }
 
     private MobileBankingResponse callActivatorApi(MobileBankingRequest request) {
@@ -128,14 +128,27 @@ public class MobileBankingService {
 
         HttpEntity<MobileBankingRequest> entity = new HttpEntity<>(request, headers);
 
-        ResponseEntity<MobileBankingResponse> response = restTemplate.exchange(
-            url,
-            HttpMethod.POST,
-            entity,
-            MobileBankingResponse.class
-        );
+        try {
+            log.info("Calling Activator API: {}", url);
+            log.info("Request: {}", request);
 
-        return response.getBody();
+            ResponseEntity<MobileBankingResponse> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    entity,
+                    MobileBankingResponse.class
+            );
+
+            log.info("Response {}", response.toString());
+            log.info("Response Status: {}", response.getStatusCode());
+            log.info("Response Body: {}", response.getBody());
+
+            return response.getBody();
+
+        } catch (Exception e) {
+            log.error("Error calling Activator API: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     private String formatDateOfBirth(String dob) {
@@ -153,17 +166,17 @@ public class MobileBankingService {
         try {
             String dateNow = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             String value = properties.getMb().getSecretKey() + cif + phone + dateNow;
-            
+
             MessageDigest md = MessageDigest.getInstance("MD5");
             byte[] messageDigest = md.digest(value.getBytes(StandardCharsets.UTF_8));
-            
+
             StringBuilder hexString = new StringBuilder();
             for (byte b : messageDigest) {
                 String hex = Integer.toHexString(0xff & b);
                 if (hex.length() == 1) hexString.append('0');
                 hexString.append(hex);
             }
-            
+
             return hexString.toString().toLowerCase();
         } catch (Exception e) {
             log.error("Failed to generate signature: {}", e.getMessage());
