@@ -176,12 +176,43 @@
         </dependency>
     </dependencies>
 
+    <!-- =========================================================
+         Maven Profiles — control Spring active profile easily
+         Usage:
+           mvn clean install           → UAT (default)
+           mvn clean install -Pprod    → Production
+           mvn spring-boot:run         → run on UAT
+           mvn spring-boot:run -Pprod  → run on Production
+           java -jar account_online.jar --spring.profiles.active=prod
+         ========================================================= -->
+    <profiles>
+        <profile>
+            <id>uat</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <spring.profiles.active>uat</spring.profiles.active>
+            </properties>
+        </profile>
+        <profile>
+            <id>prod</id>
+            <properties>
+                <spring.profiles.active>prod</spring.profiles.active>
+            </properties>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!-- Pass the Maven-selected Spring profile to spring-boot:run -->
+                    <profiles>
+                        <profile>${spring.profiles.active}</profile>
+                    </profiles>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
