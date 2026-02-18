@@ -10,6 +10,8 @@ import com.internal.utils.SoapSmsSender;
 import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -132,18 +134,25 @@ public class MobileBankingService {
             log.info("Calling Activator API: {}", url);
             log.info("Request: {}", request);
 
-            ResponseEntity<MobileBankingResponse> response = restTemplate.exchange(
+            ResponseEntity<String> rawResponse = restTemplate.exchange(
                     url,
                     HttpMethod.POST,
                     entity,
-                    MobileBankingResponse.class
+                    String.class
             );
 
-            log.info("Response {}", response.toString());
-            log.info("Response Status: {}", response.getStatusCode());
-            log.info("Response Body: {}", response.getBody());
+            log.info("Response Status: {}", rawResponse.getStatusCode());
+            log.info("Raw Response Body: {}", rawResponse.getBody());
 
-            return response.getBody();
+            if (rawResponse.getBody() == null) {
+                return null;
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            MobileBankingResponse parsed = mapper.readValue(rawResponse.getBody(), MobileBankingResponse.class);
+            log.info("Parsed Response: code={}, message={}, content={}", parsed.getCode(), parsed.getMessage(), parsed.getContent());
+            return parsed;
 
         } catch (Exception e) {
             log.error("Error calling Activator API: {}", e.getMessage(), e);
