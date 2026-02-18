@@ -176,22 +176,20 @@ public class MobileBankingService {
         }
     }
 
+    // Matches C# MobileService.CreateMD5Hash: MD5(secretKey + cif + phone) using ASCII encoding
     private String generateSignature(String cif, String phone) {
         try {
-            String dateNow = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            String value = properties.getMb().getSecretKey() + cif + phone + dateNow;
+            String value = properties.getMb().getSecretKey() + cif + phone;
 
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] messageDigest = md.digest(value.getBytes(StandardCharsets.UTF_8));
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            byte[] hashBytes = md5.digest(value.getBytes(StandardCharsets.US_ASCII));
 
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : messageDigest) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
-                hexString.append(hex);
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashBytes) {
+                sb.append(String.format("%02X", b));
             }
 
-            return hexString.toString().toLowerCase();
+            return sb.toString().toLowerCase();
         } catch (Exception e) {
             log.error("Failed to generate signature: {}", e.getMessage());
             return "";
