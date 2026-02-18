@@ -1,7 +1,7 @@
 # ==============================================================
-# BASE CONFIGURATION — shared by all profiles
+# BASE CONFIGURATION — truly shared settings only
 # Default active profile: uat
-# Override: --spring.profiles.active=prod  or  -Pprod (Maven)
+# Override: --spring.profiles.active=prod  |  mvn -Pprod
 # ==============================================================
 spring:
   profiles:
@@ -34,7 +34,7 @@ spring:
         cache:
           use_second_level_cache: false
 
-  # PostgreSQL — credentials shared; URL set in each profile file
+  # PostgreSQL — shared driver & pool; URL defined per profile
   datasource:
     username: postgres
     password: 123cp!@#
@@ -108,38 +108,11 @@ request:
       - /favicon.ico
       - /webjars
 
-# Oracle — credentials shared; URL set in each profile file
-oracle:
-  dwh:
-    datasource:
-      username: stg
-      password: Bnk$$444
-      driver-class-name: oracle.jdbc.OracleDriver
-      connection-test-query: SELECT 1 FROM DUAL
-      maximum-pool-size: 10
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-      pool-name: Oracle-DWH-Pool
-  stg:
-    datasource:
-      username: stg
-      password: Bnk$$444
-      driver-class-name: oracle.jdbc.OracleDriver
-      connection-test-query: SELECT 1 FROM DUAL
-      maximum-pool-size: 10
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-      pool-name: Oracle-STG-Pool
-
 # Master Data
 masterdata:
   schema: DWH
 
-# CPB — shared defaults; URLs/credentials overridden in each profile file
+# CPB — shared static defaults only; all URLs/secrets defined per profile
 cpb:
   defaults:
     branch-code: KH0012011
@@ -161,8 +134,6 @@ cpb:
     auth:
       token: d8a7f9e2-3c4b-4f10-9d75-1c9f2b84a7ec
       tokenHeaderName: X-CPB-CamDx-Auth
-  mb:
-    secretKey: cpbsmsgw@!@#974203
   otp:
     length: 6
     cooldownSeconds: 60
@@ -180,18 +151,16 @@ test:
   skip-check-account: false
   skip-check-cif: false
 
-# AML API (shared)
+# AML API (shared key)
 aml:
   api:
     key: 34acefcd-6e4e-4a81-a553-852b21000c8a
     secret-key: zH9iyS42JWYh4Ol+FeSGsuREwRJmoaDYBbZhgL4lBG0=
 
-# JWT
+# JWT — secret key shared; expiration & issuer defined per profile
 jwt:
   secret:
     key: f7e8d9c6b5a4938271605f4de3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a001
-  expiration-min: 525600
-  issuer: account-online-api
   task:
     execution:
       pool:
@@ -226,14 +195,6 @@ simulator:
   banking:
     camdx-error: false
     internal-error: false
-
-# Telegram Bot
-telegram:
-  bot:
-    token: "8227113200:AAGq1I7Hs0CjkSW99M9rgrIdlHpgM8r6NMY"
-    uat-acl-chat-id: "-1002740302492"
-    uat-monitor-chat-id: "-1003115792160"
-    enabled: true
 
 # Logging
 logging:
