@@ -5,6 +5,10 @@
 
 server:
   port: 9393
+  tomcat:
+    connection-timeout: 90000      # ← ADD
+    max-http-form-post-size: 50MB  # ← ADD
+    max-swallow-size: 50MB         # ← ADD
 
 spring:
   datasource:
