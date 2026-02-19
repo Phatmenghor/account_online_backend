@@ -97,8 +97,8 @@ public class ReportingService {
     }
 
     public void safeSaveSuccessLog(CustomerRequest request, CustomerResponse accountInfo,
-                                   AmlStatusDto amlStatusResponseDto, CustomerImageUploadResponseDto imagePaths,
-                                   String mbActivationCode) {  // ← add param
+            AmlStatusDto amlStatusResponseDto, CustomerImageUploadResponseDto imagePaths,
+            String mbActivationCode) { // ← add param
         log.info(">>> Step 11: SAVE_SUCCESS_LOG");
         try {
             accountOnlineOpenSuccessService.saveFinalLog(
@@ -106,8 +106,7 @@ public class ReportingService {
                     accountInfo,
                     amlStatusResponseDto,
                     imagePaths,
-                    mbActivationCode
-            );
+                    mbActivationCode);
             log.info("Step 11 SUCCESS: Success log saved");
         } catch (Exception e) {
             log.warn("Step 11 WARNING: Failed to save success log (non-critical): {}", e.getMessage());
