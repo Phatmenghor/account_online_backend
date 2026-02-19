@@ -52,7 +52,8 @@ public class CamdxServiceImp implements CamdxService {
 
         } catch (ValidateServiceException ex) {
             handleValidateServiceException(ex, request);
-            throw new NidValidationException(502, AppConstants.NID_ERROR_SYSTEM); // Unreachable but required by// compiler if handle throws runtime
+            throw new NidValidationException(502, AppConstants.NID_ERROR_SYSTEM); // Unreachable but required by//
+                                                                                  // compiler if handle throws runtime
                                                                                   // exception
         } catch (Exception e) {
             log.error("Unexpected error calling NID Validation", e);
@@ -124,7 +125,7 @@ public class CamdxServiceImp implements CamdxService {
             case 503 -> AppConstants.MSG_503;
             case 504 -> AppConstants.MSG_504;
             case 505 -> AppConstants.MSG_502; // generic system error
-            default ->  AppConstants.SUPPORT_CONTACT;
+            default -> AppConstants.SUPPORT_CONTACT;
         };
     }
 

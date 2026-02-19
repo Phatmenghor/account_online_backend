@@ -43,7 +43,7 @@ simulator:
   report-logs: false
   aml:
     error: false
-    high-risk: false
+    high-risk: true
   camdx: false
   banking:
     camdx-error: false
@@ -52,7 +52,7 @@ simulator:
 cpb:
   environment: development
   camdx:
-    url: http://192.168.103.106:8099/api/v1/
+    url: http://192.168.101.5:8099/api/v1/
   aml:
     url: http://192.168.101.5:9095/api/aml
     username: cpbaml

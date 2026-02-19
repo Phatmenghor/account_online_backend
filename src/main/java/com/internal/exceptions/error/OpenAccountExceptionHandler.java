@@ -12,10 +12,14 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.ResourceAccessException;
 
+import java.io.EOFException;
+import java.net.SocketTimeoutException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -94,6 +98,20 @@ public class OpenAccountExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_GATEWAY);
+    }
+
+    @ExceptionHandler({ ResourceAccessException.class, SocketTimeoutException.class, TimeoutException.class,
+            EOFException.class })
+    public ResponseEntity<ErrorResponse> handleTimeoutException(Exception ex) {
+        log.error("Timeout/Connection error: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.REQUEST_TIMEOUT.value())
+                .message(AppConstants.MSG_CONNECTION_TIMEOUT)
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.REQUEST_TIMEOUT);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

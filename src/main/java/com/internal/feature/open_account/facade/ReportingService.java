@@ -53,7 +53,7 @@ public class ReportingService {
     }
 
     private boolean isMonitorAlertStep(String step) {
-        return AppConstants.GET_CUSTOMER_INFO.equals(step);
+        return AppConstants.PROCESS_AML.equals(step) || AppConstants.GET_CUSTOMER_INFO.equals(step);
     }
 
     public String buildFailureRemark(String failedStep, String cif, String khrAccount, String usdAccount,
