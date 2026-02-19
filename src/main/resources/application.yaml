@@ -1,7 +1,6 @@
 # ==============================================================
 # BASE CONFIGURATION — truly shared settings only
-# Default active profile: uat
-# Override: --spring.profiles.active=prod  |  mvn -Pprod
+# Default active profile: prod
 # ==============================================================
 spring:
   profiles:
@@ -11,13 +10,12 @@ spring:
   main:
     allow-bean-definition-overriding: true
 
-  # File Upload Limits
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
 
-  # JPA Configuration
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
@@ -40,7 +38,6 @@ spring:
         cache:
           use_second_level_cache: false
 
-  # PostgreSQL — shared driver & pool; URL defined per profile
   datasource:
     username: postgres
     password: 123cp!@#
@@ -55,7 +52,6 @@ spring:
       pool-name: PostgreSQL-Pool
       auto-commit: false
 
-  # Mail
   mail:
     host: 10.18.1.204
     port: 25
@@ -71,14 +67,12 @@ spring:
             trust: "*"
     default-encoding: UTF-8
 
-  # Thymeleaf
   thymeleaf:
     cache: false
     prefix: classpath:/templates/
     suffix: .html
     encoding: UTF-8
 
-  # Async Task
   task:
     execution:
       pool:
@@ -89,19 +83,16 @@ spring:
     scheduling:
       enabled: true
 
-# Email
 email:
   sender:
     address: ithelpdesk@cambodiapostbank.com.kh
 
-# File Upload
 file:
   upload:
     directory: /app/customer-image
     nid: /nid
     selfie: /selfie
 
-# Request Logging
 request:
   log:
     retention:
@@ -114,11 +105,9 @@ request:
       - /favicon.ico
       - /webjars
 
-# Master Data
 masterdata:
   schema: DWH
 
-# CPB — shared static defaults only; all URLs/secrets defined per profile
 cpb:
   defaults:
     branch-code: KH0012011
@@ -152,18 +141,15 @@ cpb:
   ocr:
     apiRoute: ocr-idcard
 
-# Open Account Test Config
 test:
   skip-check-account: false
   skip-check-cif: false
 
-# AML API (shared key)
 aml:
   api:
     key: 34acefcd-6e4e-4a81-a553-852b21000c8a
     secret-key: zH9iyS42JWYh4Ol+FeSGsuREwRJmoaDYBbZhgL4lBG0=
 
-# JWT — secret key shared; expiration & issuer defined per profile
 jwt:
   secret:
     key: f7e8d9c6b5a4938271605f4de3d2c1b0a9f8e7d6c5b4a392817f6e5d4c3b2a1908f7e6d5c4b3a29180716f5e4d3c2b1a001
@@ -175,7 +161,6 @@ jwt:
         queue-capacity: 100
         thread-name-prefix: async-telegram-
 
-# App
 app:
   default-users:
     create: true
@@ -193,7 +178,6 @@ app:
     progress-log-interval-minutes: 10
     heartbeat-interval-minutes: 5
 
-# Simulators — all disabled by default
 simulator:
   report-logs: false
   aml:
@@ -204,7 +188,6 @@ simulator:
     camdx-error: false
     internal-error: false
 
-# Logging
 logging:
   level:
     root: INFO
@@ -223,7 +206,6 @@ logging:
     max-size: 100MB
     max-history: 10
 
-# OpenAPI / Swagger
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -235,7 +217,6 @@ springdoc:
     tags-sorter: alpha
     disable-swagger-default-url: true
 
-# Actuator
 management:
   endpoints:
     web:
