@@ -8,11 +8,15 @@ import com.internal.feature.telegram_alerts.service.AlertsOpenAccOnlineService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+
+import com.internal.feature.logs_report.service.CustomerImageService;
+import org.springframework.core.io.Resource;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +24,16 @@ import java.time.format.DateTimeFormatterBuilder;
 public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineService {
 
     private final TelegramService telegramService;
+    private final CustomerImageService customerImageService;
+    @Value("${telegram.bot.uat-acl-chat-id}")
+    private String chatId_acl_internal;
+
+    @Value("${telegram.bot.uat-monitor-chat-id}")
+    private String chatId_uat_monitor;
+
+    @Value("${telegram.bot.compliance-mention}")
+    private String complianceMention;
+
     private static final String SEPARATOR = "--------------------";
 
     @Override
@@ -30,7 +44,8 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
             appendIfNotEmpty(bodyBuilder, "Remark", remarkBuilder != null ? remarkBuilder.toString() : null);
 
             String message = buildStandardMessage("Account Online Error", bodyBuilder.toString(), status.name(), "-");
-            telegramService.sendMarkdownAccountOnlineMonitorMessage(message);
+            // Changed to send to ACL (Error) channel as requested
+            telegramService.sendMarkdownAclInternalMessage(message);
         } catch (Exception e) {
             log.error("Telegram alert sending failed: {}", e.getMessage(), e);
         }
@@ -67,8 +82,7 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
                 amlDto.getCustomerInfo().getFirstNameKh(),
                 amlDto.getCustomerInfo().getLastNameKh(),
                 amlDto.getStatus(),
-                amlDto.getCustomerInfo().getLegalId()
-        );
+                amlDto.getCustomerInfo().getLegalId());
 
         // Append all fields for all statuses
         appendIfNotEmpty(bodyBuilder, "Name", customerName);
@@ -106,11 +120,54 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
 
         String message = header + "\n" + SEPARATOR + "\n" + bodyBuilder + SEPARATOR + "\n" + footer;
 
-        telegramService.sendMarkdownAccountOnlineMonitorMessage(message);
+        // Logic for High Risk to attach images
+        if ("HIGH".equalsIgnoreCase(amlDto.getRiskLevel())) {
+
+            // Send mention ONLY if PENDING (First hit)
+            if (amlDto.getStatus() == AmlStatusEnum.PENDING) {
+                try {
+                    // Delay for 2 seconds before sending high risk alert
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.error("Thread interrupted while waiting for high risk alert delay", e);
+                }
+
+                // Send a short mention message for Compliance review
+                String mentionMessage = "⚠️ *High Risk Alert* - " + escapeMarkdown(complianceMention)
+                        + " please review this case.";
+                // Send to Monitor Channel as requested
+                telegramService.sendMarkdownAccountOnlineMonitorMessage(mentionMessage);
+            }
+
+            // Send main message to Monitor Channel as requested
+            telegramService.sendMarkdownAccountOnlineMonitorMessage(message);
+
+            // Send images to Monitor Channel as requested
+            try {
+                String customerId = amlDto.getCustomerInfo().getLegalId();
+                if (customerId != null) {
+                    Resource nidResource = customerImageService.getNidImageResourceForEmail(customerId);
+                    if (nidResource != null && nidResource.exists()) {
+                        telegramService.sendPhoto(chatId_uat_monitor, "NID - " + customerId, nidResource);
+                    }
+
+                    Resource selfieResource = customerImageService.getSelfieImageResourceForEmail(customerId);
+                    if (selfieResource != null && selfieResource.exists()) {
+                        telegramService.sendPhoto(chatId_uat_monitor, "Selfie - " + customerId, selfieResource);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Failed to attach images for High Risk AML alert: {}", e.getMessage());
+            }
+        } else {
+            telegramService.sendMarkdownAccountOnlineMonitorMessage(message);
+        }
     }
 
     private String formatDob(String dob) {
-        if (dob == null || dob.isEmpty()) return null;
+        if (dob == null || dob.isEmpty())
+            return null;
         try {
             DateTimeFormatter inputFormatter = new DateTimeFormatterBuilder()
                     .appendPattern("yyyy-M-d")
@@ -130,16 +187,18 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
             String firstNameKh,
             String lastNameKh,
             AmlStatusEnum status,
-            String legalId
-    ) {
+            String legalId) {
         String name = joinNonNull(givenName, familyName);
-        if (name.isEmpty()) name = joinNonNull(firstNameKh, lastNameKh);
-        if (name.isEmpty()) name = legalId != null ? legalId : "";
+        if (name.isEmpty())
+            name = joinNonNull(firstNameKh, lastNameKh);
+        if (name.isEmpty())
+            name = legalId != null ? legalId : "";
         return name;
     }
 
     private String getProcessedUserName(AmlStatusDto amlDto) {
-        if (amlDto == null || amlDto.getStatus() == null) return "N/A";
+        if (amlDto == null || amlDto.getStatus() == null)
+            return "N/A";
 
         return switch (amlDto.getStatus()) {
             case PENDING -> ""; // Hide "By" for pending
@@ -172,7 +231,8 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
     }
 
     private String escapeMarkdown(String text) {
-        if (text == null) return "";
+        if (text == null)
+            return "";
         // Escape only characters that actually break Markdown
         return text.replace("_", "\\_")
                 .replace("*", "\\*")
@@ -182,9 +242,11 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
 
     private String joinNonNull(String a, String b) {
         StringBuilder sb = new StringBuilder();
-        if (a != null && !a.isEmpty()) sb.append(a.trim());
+        if (a != null && !a.isEmpty())
+            sb.append(a.trim());
         if (b != null && !b.isEmpty()) {
-            if (!sb.isEmpty()) sb.append(" ");
+            if (!sb.isEmpty())
+                sb.append(" ");
             sb.append(b.trim());
         }
         return sb.toString();

@@ -1,6 +1,6 @@
 # ==============================================================
-# UAT / DEVELOPMENT PROFILE
-# Active when: spring.profiles.active=uat  (default)
+# LOCAL DEVELOPMENT PROFILE
+# Active when: spring.profiles.active=local
 # ==============================================================
 
 server:
@@ -10,7 +10,7 @@ spring:
   datasource:
     url: jdbc:postgresql://192.168.103.106:5432/account_online
 
-# Oracle — full UAT config
+# Oracle — full UAT config (keeping UAT DBs for local dev if accessible)
 oracle:
   dwh:
     datasource:
@@ -38,12 +38,12 @@ oracle:
       idle-timeout: 600000
       max-lifetime: 1800000
       pool-name: Oracle-STG-Pool
-# Simulators — all disabled by default
+# Simulators
 simulator:
   report-logs: false
   aml:
     error: false
-    high-risk: false
+    high-risk: true
   camdx: false
   banking:
     camdx-error: false
@@ -83,3 +83,10 @@ telegram:
     uat-monitor-chat-id: "-1003174573947"
     compliance-mention: "@PHAT_MENGHOR"
     enabled: true
+
+# File Upload (Local Override)
+file:
+  upload:
+    directory: ./customer-image
+    nid: /nid
+    selfie: /selfie

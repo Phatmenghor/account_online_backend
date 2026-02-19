@@ -35,8 +35,8 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             "/actuator",
             "/favicon.ico",
             "/webjars",
-            "/api/images"
-
+            "/api/images",
+            "/api/v1/customer-images" // Added to fix UTF-8 error on image fetch
     );
 
     @Override
@@ -104,11 +104,17 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         }
 
         String responsePayload = "";
-        try {
-            responsePayload = new String(response.getContentAsByteArray(), java.nio.charset.StandardCharsets.UTF_8);
-            responsePayload = truncate(responsePayload, 10000);
-        } catch (Exception e) {
-            log.warn("Failed to parse response payload: {}", e.getMessage());
+        String contentType = response.getContentType();
+        if (contentType != null && (contentType.startsWith("image/") || contentType.startsWith("application/pdf")
+                || contentType.startsWith("application/octet-stream"))) {
+            responsePayload = "[Binary Content - " + contentType + "]";
+        } else {
+            try {
+                responsePayload = new String(response.getContentAsByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+                responsePayload = truncate(responsePayload, 10000);
+            } catch (Exception e) {
+                log.warn("Failed to parse response payload: {}", e.getMessage());
+            }
         }
 
         return RequestLog.builder()

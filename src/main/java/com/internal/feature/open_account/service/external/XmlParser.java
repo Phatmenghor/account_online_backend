@@ -64,8 +64,7 @@ public class XmlParser {
             // Try with namespace first
             NodeList mnemonicNodes = document.getElementsByTagNameNS(
                     "http://temenos.com/CUSTOMER",
-                    "MNEMONIC"
-            );
+                    "MNEMONIC");
 
             if (mnemonicNodes != null && mnemonicNodes.getLength() > 0) {
                 String mnemonic = mnemonicNodes.item(0).getTextContent();
@@ -93,7 +92,6 @@ public class XmlParser {
             return null;
         }
     }
-
 
     /**
      * Extract account number from T24 account creation response
@@ -151,6 +149,15 @@ public class XmlParser {
      */
     public static boolean hasError(Document document) {
         try {
+            // Check for explicit <successIndicator>T24Error</successIndicator>
+            NodeList successNodes = document.getElementsByTagName("successIndicator");
+            if (successNodes.getLength() > 0) {
+                String indicator = successNodes.item(0).getTextContent();
+                if ("T24Error".equalsIgnoreCase(indicator)) {
+                    return true;
+                }
+            }
+
             NodeList errorNodes = document.getElementsByTagName("error");
             if (errorNodes.getLength() > 0) {
                 return true;
@@ -169,6 +176,18 @@ public class XmlParser {
      */
     public static String extractErrorMessage(Document document) {
         try {
+            // Check for <messages> tag (common in T24Error)
+            NodeList messageNodes = document.getElementsByTagName("messages");
+            if (messageNodes.getLength() > 0) {
+                StringBuilder errorMsg = new StringBuilder();
+                for (int i = 0; i < messageNodes.getLength(); i++) {
+                    if (i > 0)
+                        errorMsg.append("; ");
+                    errorMsg.append(messageNodes.item(i).getTextContent());
+                }
+                return errorMsg.toString();
+            }
+
             NodeList errorNodes = document.getElementsByTagName("error");
             if (errorNodes.getLength() > 0) {
                 return errorNodes.item(0).getTextContent();
@@ -179,7 +198,7 @@ public class XmlParser {
                 return faultNodes.item(0).getTextContent();
             }
 
-            return "Unknown error";
+            return "Unknown T24 Error (T24Error indicator present but no message found)";
         } catch (Exception e) {
             log.error("Failed to extract error message: {}", e.getMessage());
             return "Error parsing response";

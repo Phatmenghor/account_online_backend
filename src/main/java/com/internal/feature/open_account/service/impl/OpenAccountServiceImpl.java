@@ -15,90 +15,101 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.internal.feature.logs_report.service.CustomerImageService;
+import com.internal.feature.logs_report.dto.request.CustomerFileUploadRequestDto;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class OpenAccountServiceImpl implements OpenAccountService {
 
-    private final BankingService bankingService;
-    private final ComplianceService complianceService;
-    private final ReportingService reportingService;
-    private final ApplicationEventPublisher eventPublisher;
+        private final BankingService bankingService;
+        private final ComplianceService complianceService;
+        private final ReportingService reportingService;
+        private final ApplicationEventPublisher eventPublisher;
 
-    @Override
-    @Transactional
-    public CustomerResponse openAccount(CustomerRequest request) throws Exception {
-        log.info("========== ACCOUNT OPENING STARTED ==========");
-        log.info("Legal ID: {}", request.getLegalId());
+        @Override
+        @Transactional
+        public CustomerResponse openAccount(CustomerRequest request) throws Exception {
+                log.info("========== ACCOUNT OPENING STARTED ==========");
+                log.info("Legal ID: {}", request.getLegalId());
+                log.info("NID Image present: {}, Length: {}",
+                                request.getNidImage() != null,
+                                request.getNidImage() != null ? request.getNidImage().length() : 0);
+                log.info("Selfie Image present: {}, Length: {}",
+                                request.getSelfieImage() != null,
+                                request.getSelfieImage() != null ? request.getSelfieImage().length() : 0);
 
-        OpenAccountContext context = OpenAccountContext.builder().request(request).build();
-        String currentStep = "START";
+                OpenAccountContext context = OpenAccountContext.builder().request(request).build();
+                String currentStep = "START";
 
-        try {
-            // Step 1: Test connection
-            currentStep = AppConstants.TEST_CONNECTION;
-            bankingService.testConnection();
+                try {
+                        // Step 1: Test connection
+                        currentStep = AppConstants.TEST_CONNECTION;
+                        bankingService.testConnection();
 
-            // Step 2: Customer matching
-            currentStep = AppConstants.GET_CUSTOMER_INFO;
-            context.setCustomerInfo(bankingService.getCustomerInfo(request.getLegalId()));
+                        // Step 2: Customer matching
+                        currentStep = AppConstants.GET_CUSTOMER_INFO;
+                        context.setCustomerInfo(bankingService.getCustomerInfo(request.getLegalId()));
 
-            // Step 3: Validation
-            currentStep = AppConstants.VALIDATE_EXISTING_ACCOUNT;
-            bankingService.validateExistingAccounts(context.getCustomerInfo());
+                        // Step 3: Validation
+                        currentStep = AppConstants.VALIDATE_EXISTING_ACCOUNT;
+                        bankingService.validateExistingAccounts(context.getCustomerInfo());
 
-            // Step 4: Process AML — only Low risk (APPROVE) may continue; High risk or error stops here
-            currentStep = AppConstants.PROCESS_AML;
-            context.setAmlResult(complianceService.processAml(request));
-            complianceService.sentMessageOnHighRisk(request, context.getAmlResult());
+                        // Step 4: Process AML — only Low risk (APPROVE) may continue; High risk or
+                        // error stops here
+                        currentStep = AppConstants.PROCESS_AML;
+                        context.setAmlResult(complianceService.processAml(request));
+                        complianceService.sentMessageOnHighRisk(request, context.getAmlResult());
 
-            // Step 5: Create customer
-            currentStep = AppConstants.CREATE_CUSTOMER;
-            context.setCif(bankingService.createCustomerIfNeeded(request, context.getCustomerInfo()));
-            context.setMnemonic(bankingService.getMnemonic(request));
+                        // Step 5: Create customer
+                        currentStep = AppConstants.CREATE_CUSTOMER;
+                        context.setCif(bankingService.createCustomerIfNeeded(request, context.getCustomerInfo()));
+                        context.setMnemonic(bankingService.getMnemonic(request));
 
-            // Step 6 & 7: Create Accounts (KHR & USD)
-            currentStep = AppConstants.CREATE_KHR_ACCOUNT;
-            context.setKhrAccount(bankingService.createAccountIfNeeded(request, context.getCustomerInfo(),
-                    context.getCif(), AppConstants.CURRENCY_KHR));
+                        // Step 6 & 7: Create Accounts (KHR & USD)
+                        currentStep = AppConstants.CREATE_KHR_ACCOUNT;
+                        context.setKhrAccount(bankingService.createAccountIfNeeded(request, context.getCustomerInfo(),
+                                        context.getCif(), AppConstants.CURRENCY_KHR));
 
-            currentStep = AppConstants.CREATE_USD_ACCOUNT;
-            context.setUsdAccount(bankingService.createAccountIfNeeded(request, context.getCustomerInfo(),
-                    context.getCif(), AppConstants.CURRENCY_USD));
+                        currentStep = AppConstants.CREATE_USD_ACCOUNT;
+                        context.setUsdAccount(bankingService.createAccountIfNeeded(request, context.getCustomerInfo(),
+                                        context.getCif(), AppConstants.CURRENCY_USD));
 
-            // Step 8: Final Validation
-            currentStep = AppConstants.VALIDATE_ACCOUNT_CREATION;
-            bankingService.validateAtLeastOneAccountExists(context.getCustomerInfo(), context.getKhrAccount(),
-                    context.getUsdAccount());
+                        // Step 8: Final Validation
+                        currentStep = AppConstants.VALIDATE_ACCOUNT_CREATION;
+                        bankingService.validateAtLeastOneAccountExists(context.getCustomerInfo(),
+                                        context.getKhrAccount(),
+                                        context.getUsdAccount());
 
-            // Step 9: Activate mobile banking
-            currentStep = AppConstants.ACTIVATE_MOBILE_BANKING;
-            context.setMbActivationCode(
-                    bankingService.activateMobileBanking(request, context.getCif(), context.getKhrAccount(), context.getUsdAccount())
-            );
+                        // Step 9: Activate mobile banking
+                        currentStep = AppConstants.ACTIVATE_MOBILE_BANKING;
+                        context.setMbActivationCode(
+                                        bankingService.activateMobileBanking(request, context.getCif(),
+                                                        context.getKhrAccount(), context.getUsdAccount()));
 
-            // BUILD RESPONSE
-            CustomerResponse accInfo = complianceService.buildCustomerAccInfo(
-                    context.getCif(), context.getKhrAccount(), context.getUsdAccount(), context.getMnemonic());
+                        // BUILD RESPONSE
+                        CustomerResponse accInfo = complianceService.buildCustomerAccInfo(
+                                        context.getCif(), context.getKhrAccount(), context.getUsdAccount(),
+                                        context.getMnemonic());
 
-            // PUBLISH SUCCESS EVENT (Steps 10, 11, 12 handled by EventListener)
-            eventPublisher.publishEvent(new AccountOpenedEvent(this, context));
+                        // PUBLISH SUCCESS EVENT (Steps 10, 11, 12 handled by EventListener)
+                        eventPublisher.publishEvent(new AccountOpenedEvent(this, context));
 
-            log.info("========== ACCOUNT OPENING COMPLETED ==========");
-            return accInfo;
+                        log.info("========== ACCOUNT OPENING COMPLETED ==========");
+                        return accInfo;
 
-        } catch (Exception e) {
-            log.error("========== ACCOUNT OPENING FAILED AT STEP: {} ==========", currentStep);
+                } catch (Exception e) {
+                        log.error("========== ACCOUNT OPENING FAILED AT STEP: {} ==========", currentStep);
 
-            String failureRemark = reportingService.buildFailureRemark(currentStep, context.getCif(),
-                    context.getKhrAccount(), context.getUsdAccount(), context.getAmlResult());
+                        String failureRemark = reportingService.buildFailureRemark(currentStep, context.getCif(),
+                                        context.getKhrAccount(), context.getUsdAccount(), context.getAmlResult());
 
-            boolean skipTelegramAlert = false;
+                        boolean skipTelegramAlert = false;
 
-            reportingService.saveFailureLogs(request, e, currentStep, failureRemark, skipTelegramAlert);
+                        reportingService.saveFailureLogs(request, e, currentStep, failureRemark, skipTelegramAlert);
 
-            throw e;
+                        throw e;
+                }
         }
-    }
 }

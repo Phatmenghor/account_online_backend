@@ -80,8 +80,7 @@ public class MobileBankingService {
                     properties.getMb().getOtpUrl(),
                     properties.getMb().getSecretKey(),
                     phone,
-                    message.toString()
-            );
+                    message.toString());
 
             log.info("Account SMS sent successfully to phone: {}", phone);
 
@@ -90,12 +89,13 @@ public class MobileBankingService {
         }
     }
 
-
     private MobileBankingRequest buildRequest(CustomerRequest request, String cif,
-                                              String khrAccount, String usdAccount) {
+            String khrAccount, String usdAccount) {
         String formattedDob = formatDateOfBirth(request.getDateOfBirth());
         String signData = generateSignature(cif, request.getPhoneNumber());
-        String branchCode = request.getBranchCode() != null ? request.getBranchCode() : defaultProperties.getBranchCode();
+//        String branchCode = "KH0011090"; // Hardcoded for testing as requested
+         String branchCode = request.getBranchCode() != null ? request.getBranchCode()
+         : defaultProperties.getBranchCode();
         String accountNumber = usdAccount != null ? usdAccount : khrAccount;
         String currency = usdAccount != null ? AppConstants.CURRENCY_USD : AppConstants.CURRENCY_KHR;
 
@@ -155,8 +155,7 @@ public class MobileBankingService {
                     url,
                     HttpMethod.POST,
                     entity,
-                    String.class
-            );
+                    String.class);
 
             log.info("Response Status: {}", rawResponse.getStatusCode());
             log.info("Raw Response Body: {}", rawResponse.getBody());
@@ -169,12 +168,14 @@ public class MobileBankingService {
             }
 
             parsed = mapper.readValue(responsePayload, MobileBankingResponse.class);
-            log.info("Parsed Response: code={}, message={}, content={}", parsed.getCode(), parsed.getMessage(), parsed.getContent());
+            log.info("Parsed Response: code={}, message={}, content={}", parsed.getCode(), parsed.getMessage(),
+                    parsed.getContent());
 
             if (parsed.getCode() != null && !"00".equals(parsed.getCode())) {
                 errorCode = parsed.getCode();
                 errorMessage = parsed.getMessage();
-                throw new RuntimeException("Mobile banking API error - code: " + parsed.getCode() + ", message: " + parsed.getMessage());
+                throw new RuntimeException(
+                        "Mobile banking API error - code: " + parsed.getCode() + ", message: " + parsed.getMessage());
             }
 
             success = true;
@@ -201,7 +202,8 @@ public class MobileBankingService {
                     .responsePayload(responsePayload)
                     .errorCode(errorCode)
                     .errorMessage(errorMessage != null && errorMessage.length() > 500
-                            ? errorMessage.substring(0, 500) : errorMessage)
+                            ? errorMessage.substring(0, 500)
+                            : errorMessage)
                     .activationCode(activationCode)
                     .isSuccess(success)
                     .durationMs(duration)
@@ -212,22 +214,26 @@ public class MobileBankingService {
     }
 
     private String formatDateOfBirth(String dob) {
-        if (dob == null || dob.isEmpty()) return dob;
+        if (dob == null || dob.isEmpty())
+            return dob;
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         // Try yyyyMMdd (e.g. "20030919")
         try {
             LocalDate date = LocalDate.parse(dob, DateTimeFormatter.ofPattern("yyyyMMdd"));
             return date.format(outputFormatter);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         // Try yyyy-MM-dd (e.g. "2003-09-19")
         try {
             LocalDate date = LocalDate.parse(dob, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             return date.format(outputFormatter);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return dob;
     }
 
-    // Matches C# MobileService.CreateMD5Hash: MD5(secretKey + cif + sms + dateNow) using ASCII encoding
+    // Matches C# MobileService.CreateMD5Hash: MD5(secretKey + cif + sms + dateNow)
+    // using ASCII encoding
     private String generateSignature(String cif, String sms) {
         try {
             String dateNow = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.core.io.Resource;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -85,6 +86,28 @@ public class TelegramService {
             log.info("Telegram sent to chat: {}", chatId);
         } catch (Exception e) {
             log.error("Failed to send Telegram to chat {}: {}", chatId, e.getMessage(), e);
+        }
+    }
+
+    public void sendPhoto(String chatId, String caption, Resource imageResource) {
+        try {
+            String url = String.format("https://api.telegram.org/bot%s/sendPhoto", botToken);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("chat_id", chatId);
+            body.add("caption", caption);
+            body.add("photo", imageResource);
+            body.add("parse_mode", "Markdown");
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            restTemplate.postForObject(url, requestEntity, String.class);
+            log.info("Telegram photo sent to chat: {}", chatId);
+        } catch (Exception e) {
+            log.error("Failed to send Telegram photo to chat {}: {}", chatId, e.getMessage(), e);
         }
     }
 }

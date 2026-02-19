@@ -46,7 +46,10 @@ public class ReportingService {
         boolean isAccountExistsError = e.getMessage() != null && e.getMessage().contains("Account already exists");
 
         if (isMonitorAlertStep(currentStep) && !isAccountExistsError) {
-            alertTelegramService.sendTelegramAccountOnlineError(request.getLegalId(), status, remarkBuilder);
+            // Skip sending "Account Online Error" for AML failures as requested
+            if (!AppConstants.PROCESS_AML.equals(currentStep)) {
+                alertTelegramService.sendTelegramAccountOnlineError(request.getLegalId(), status, remarkBuilder);
+            }
         } else {
             alertTelegramService.sendTelegramInternalError(request.getLegalId(), status, remarkBuilder);
         }

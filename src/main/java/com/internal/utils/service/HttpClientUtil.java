@@ -28,8 +28,7 @@ public class HttpClientUtil {
                 url,
                 HttpMethod.POST,
                 request,
-                String.class
-        );
+                String.class);
 
         return response.getBody();
     }
@@ -69,8 +68,7 @@ public class HttpClientUtil {
             T request,
             Map<String, String> customHeaders,
             String apiName,
-            Class<R> responseType
-    ) {
+            Class<R> responseType) {
         long startTime = System.currentTimeMillis();
 
         try {
@@ -88,8 +86,7 @@ public class HttpClientUtil {
                     url,
                     method,
                     entity,
-                    responseType
-            );
+                    responseType);
 
             // Validate response
             R body = response.getBody();
@@ -117,6 +114,9 @@ public class HttpClientUtil {
         } catch (HttpClientErrorException ex) {
             return handleHttpClientError(ex, apiName, startTime);
 
+        } catch (org.springframework.web.client.HttpServerErrorException ex) {
+            return handleHttpServerError(ex, apiName, startTime);
+
         } catch (ResourceAccessException ex) {
             return handleResourceAccessError(ex, apiName, startTime);
 
@@ -141,14 +141,38 @@ public class HttpClientUtil {
     }
 
     // Error handling methods
+    private <R> R handleHttpServerError(org.springframework.web.client.HttpServerErrorException ex, String apiName,
+            long startTime) {
+        log.error("{} API Server Error ({}) - Duration: {}ms, Response: {}",
+                apiName, ex.getStatusCode(), System.currentTimeMillis() - startTime,
+                ex.getResponseBodyAsString());
+
+        String errorMessage = ex.getResponseBodyAsString();
+        // Try to check if it has a specific message inside
+        try {
+            // Simple check if it's a JSON with "message" field
+            // We can't use objectMapper here easily without injecting it or parsing
+            // manually
+            // But let's just use the raw body or a formatted string
+            if (errorMessage.contains("\"message\"")) {
+                // Leave it to frontend/service to parse if needed, or just include it
+            }
+        } catch (Exception e) {
+            /* ignore */}
+
+        throw new ValidateServiceException(
+                String.format("%s API Server Error: %s", apiName, errorMessage),
+                ex);
+    }
+
+    // Error handling methods
     private <R> R handleUnauthorized(HttpClientErrorException.Unauthorized ex, String apiName, long startTime) {
         log.error("{} API Unauthorized (401) - Duration: {}ms",
                 apiName, System.currentTimeMillis() - startTime);
         log.debug("Response body: {}", ex.getResponseBodyAsString());
         throw new ValidateServiceException(
                 String.format("%s API authentication failed", apiName),
-                ex
-        );
+                ex);
     }
 
     private <R> R handleForbidden(HttpClientErrorException.Forbidden ex, String apiName, long startTime) {
@@ -157,8 +181,7 @@ public class HttpClientUtil {
         log.debug("Response body: {}", ex.getResponseBodyAsString());
         throw new ValidateServiceException(
                 String.format("%s API access denied", apiName),
-                ex
-        );
+                ex);
     }
 
     private <R> R handleBadRequest(HttpClientErrorException.BadRequest ex, String apiName, long startTime) {
@@ -166,8 +189,7 @@ public class HttpClientUtil {
                 apiName, System.currentTimeMillis() - startTime, ex.getResponseBodyAsString());
         throw new ValidateServiceException(
                 String.format("%s API invalid request: %s", apiName, ex.getResponseBodyAsString()),
-                ex
-        );
+                ex);
     }
 
     private <R> R handleHttpClientError(HttpClientErrorException ex, String apiName, long startTime) {
@@ -176,8 +198,7 @@ public class HttpClientUtil {
                 ex.getResponseBodyAsString());
         throw new ValidateServiceException(
                 String.format("%s API failed with status %s", apiName, ex.getStatusCode()),
-                ex
-        );
+                ex);
     }
 
     private <R> R handleResourceAccessError(ResourceAccessException ex, String apiName, long startTime) {
@@ -185,8 +206,7 @@ public class HttpClientUtil {
                 apiName, System.currentTimeMillis() - startTime, ex.getMessage());
         throw new ValidateServiceException(
                 String.format("%s API connection error (timeout or network issue)", apiName),
-                ex
-        );
+                ex);
     }
 
     private <R> R handleUnexpectedError(Exception ex, String apiName, long startTime) {
@@ -194,7 +214,6 @@ public class HttpClientUtil {
                 apiName, System.currentTimeMillis() - startTime, ex.getMessage(), ex);
         throw new ValidateServiceException(
                 String.format("%s API internal error: %s", apiName, ex.getMessage()),
-                ex
-        );
+                ex);
     }
 }

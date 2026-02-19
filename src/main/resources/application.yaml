@@ -5,11 +5,17 @@
 # ==============================================================
 spring:
   profiles:
-    active: uat
+    active: prod
   application:
     name: account_online
   main:
     allow-bean-definition-overriding: true
+
+  # File Upload Limits
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
   # JPA Configuration
   jpa:

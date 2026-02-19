@@ -59,8 +59,7 @@ public class T24Service {
                     url,
                     HttpMethod.POST,
                     entity,
-                    String.class
-            );
+                    String.class);
 
             long duration = System.currentTimeMillis() - startTime;
 
@@ -68,8 +67,7 @@ public class T24Service {
             int responseSize = responseBody != null ? responseBody.length() : 0;
 
             log.info("T24 Response Received | op={} | status={} | responseSize={} bytes | duration={} ms",
-                    operation, response.getStatusCode(), responseSize, duration
-            );
+                    operation, response.getStatusCode(), responseSize, duration);
             log.info("T24 Response Body: {}", responseBody);
 
             checkAndAlertSecurityViolation(responseBody, operation);
@@ -80,6 +78,13 @@ public class T24Service {
             }
 
             Document doc = parseXmlResponse(responseBody);
+
+            // Check for T24 business errors (e.g. T24Error)
+            if (XmlParser.hasError(doc)) {
+                String errorMessage = XmlParser.extractErrorMessage(doc);
+                log.error("T24 Business Error | op={} | message={}", operation, errorMessage);
+                throw new T24ServiceException("T24 Error: " + errorMessage);
+            }
 
             if (hasJmsError(doc)) {
                 log.warn("T24 JMS Error Detected | op={}", operation);
@@ -117,9 +122,9 @@ public class T24Service {
     private void checkAndAlertSecurityViolation(String responseBody, String operation) {
         if (responseBody != null && responseBody.contains(AppConstants.T24_ACCOUNT_ERROR)) {
             String errorMessage = String.format("🚨 **T24 Security Violation Detected**\n\n" +
-                            "**Operation:** `%s`\n" +
-                            "**Error:** `SECURITY VIOLATION DURING SIGN ON PROCESS`\n" +
-                            "**Action Required:** Check T24 credentials in `application.yaml`.",
+                    "**Operation:** `%s`\n" +
+                    "**Error:** `SECURITY VIOLATION DURING SIGN ON PROCESS`\n" +
+                    "**Action Required:** Check T24 credentials in `application.yaml`.",
                     operation);
             telegramService.sendMarkdownAclInternalMessage(errorMessage);
             log.error("T24 Security Violation Detected! Alert sent to Telegram.");

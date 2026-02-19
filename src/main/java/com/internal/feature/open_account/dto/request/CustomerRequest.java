@@ -156,12 +156,16 @@ public class CustomerRequest {
     private String releasedBy;
 
     @JsonProperty("selfie_image")
-    @NotBlank(message = "Selfie image is required")
-    private String selfieImage;
+    private String selfieImage; // Base64 (Legacy)
 
     @JsonProperty("nid_image")
-    @NotBlank(message = "NID image is required")
-    private String nidImage;
+    private String nidImage; // Base64 (Legacy)
+
+    @JsonProperty("nid_image_name")
+    private String nidImageName; // Filename from upload
+
+    @JsonProperty("selfie_image_name")
+    private String selfieImageName; // Filename from upload
 
     private String legalMrz1;
     private String legalMrz2;

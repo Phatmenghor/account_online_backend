@@ -49,34 +49,89 @@ public class CustomerImageServiceImpl implements CustomerImageService {
 
             String legalId = request.getLegal_id();
 
-            // Define consistent file names
-            String nidFileName = "nid_" + legalId + ".jpg";
-            String selfieFileName = "selfie_" + legalId + ".jpg";
+            // Check if images were already uploaded via DocumentUploadController
+            // We assume that if nidImage contains "nid_", it's a filename, otherwise base64
+            // OR we can add fields to CustomerFileUploadRequestDto.
+            // For now, let's stick to the plan: OpenAccountServiceImpl will handle this
+            // logic
+            // and pass base64 OR we update this to handle filenames.
 
-            // Build full paths for saving to disk
-            String nidFullPath = Paths.get(uploadDir, "nid", nidFileName).toString();
-            String selfieFullPath = Paths.get(uploadDir, "selfie", selfieFileName).toString();
+            // Actually, best approach:
+            // If the input string looks like a filename (ends with .jpg/png and has no
+            // base64 header), treat as file.
+            // But strict Base64 validation is better.
 
-            // Save physical files
-            saveBase64ToFile(request.getNidImage(), nidFullPath);
-            saveBase64ToFile(request.getSelfieImage(), selfieFullPath);
+            // Let's rely on OpenAccountServiceImpl to populate this DTO.
+            // If we use the new flow, OpenAccountServiceImpl won't even call this method
+            // with Base64.
+            // It might call it with null Base64 but we need to store the filenames in DB.
 
-            // Store only file names in DB (not full paths)
-            customerImageRepository.save(CustomerImage.builder()
-                    .type("NID")
-                    .name(nidFileName)
-                    .filePath(nidFileName)
-                    .build());
+            String nidFileName;
+            String selfieFileName;
 
-            customerImageRepository.save(CustomerImage.builder()
-                    .type("SELFIE")
-                    .name(selfieFileName)
-                    .filePath(selfieFileName)
-                    .build());
+            // 1. Handle NID
+            if (request.getNidImage() != null && !request.getNidImage().isEmpty()) {
+                // Check if it's already a filename (simple heuristic or flag)
+                if (request.getNidImage().startsWith("nid_")) {
+                    nidFileName = request.getNidImage();
+                    log.info("NID image already uploaded: {}", nidFileName);
+                } else {
+                    // It is Base64
+                    nidFileName = "nid_" + legalId + ".jpg";
+                    String nidFullPath = Paths.get(uploadDir, "nid", nidFileName).toString();
+                    saveBase64ToFile(request.getNidImage(), nidFullPath);
+                }
+            } else {
+                // Check if file already exists on disk (fallback)
+                if (nidImageExists(legalId)) {
+                    nidFileName = "nid_" + legalId + ".jpg";
+                    log.info("NID image data missing but file found on disk: {}", nidFileName);
+                } else {
+                    log.warn("NID image data is missing and file not found - skipping save");
+                    nidFileName = null;
+                }
+            }
 
-            log.info("Saved customer images: NID={}, Selfie={}", nidFileName, selfieFileName);
+            // 2. Handle Selfie
+            if (request.getSelfieImage() != null && !request.getSelfieImage().isEmpty()) {
+                if (request.getSelfieImage().startsWith("selfie_")) {
+                    selfieFileName = request.getSelfieImage();
+                    log.info("Selfie image already uploaded: {}", selfieFileName);
+                } else {
+                    selfieFileName = "selfie_" + legalId + ".jpg";
+                    String selfieFullPath = Paths.get(uploadDir, "selfie", selfieFileName).toString();
+                    saveBase64ToFile(request.getSelfieImage(), selfieFullPath);
+                }
+            } else {
+                // Check if file already exists on disk (fallback)
+                if (selfieImageExists(legalId)) {
+                    selfieFileName = "selfie_" + legalId + ".jpg";
+                    log.info("Selfie image data missing but file found on disk: {}", selfieFileName);
+                } else {
+                    log.warn("Selfie image data is missing and file not found - skipping save");
+                    selfieFileName = null;
+                }
+            }
 
-            // Return filenames
+            // Only save to DB if filenames are present
+            if (nidFileName != null) {
+                customerImageRepository.save(CustomerImage.builder()
+                        .type("NID")
+                        .name(nidFileName)
+                        .filePath(nidFileName)
+                        .build());
+            }
+
+            if (selfieFileName != null) {
+                customerImageRepository.save(CustomerImage.builder()
+                        .type("SELFIE")
+                        .name(selfieFileName)
+                        .filePath(selfieFileName)
+                        .build());
+            }
+
+            log.info("Saved customer images metadata: NID={}, Selfie={}", nidFileName, selfieFileName);
+
             return CustomerImageUploadResponseDto.builder()
                     .nidImagePath(nidFileName)
                     .selfieImagePath(selfieFileName)
@@ -86,6 +141,31 @@ public class CustomerImageServiceImpl implements CustomerImageService {
             log.error("Failed to save customer images: {}", e.getMessage(), e);
             throw new RuntimeException("Error saving images", e);
         }
+    }
+
+    /**
+     * Save uploaded file directly to disk.
+     * returns the filename.
+     */
+    @Override
+    public String saveUploadedFile(org.springframework.web.multipart.MultipartFile file, String filename)
+            throws Exception {
+        // Determine sub-folder based on filename prefix (nid_ or selfie_)
+        String subFolder = filename.startsWith("nid_") ? "nid" : "selfie";
+        String folderPath = Paths.get(uploadDir, subFolder).toString();
+
+        File directory = new File(folderPath);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        Path targetPath = Paths.get(folderPath, filename);
+        try (FileOutputStream fos = new FileOutputStream(targetPath.toFile())) {
+            fos.write(file.getBytes());
+        }
+
+        log.info("Saved uploaded file: {} to {}", filename, targetPath);
+        return filename;
     }
 
     /** Get NID image file as Resource (for email attachment) */
@@ -193,7 +273,8 @@ public class CustomerImageServiceImpl implements CustomerImageService {
 
     /** Utility: Save base64 image to file */
     private void saveBase64ToFile(String base64, String filePath) throws Exception {
-        if (base64 == null || base64.isEmpty()) return;
+        if (base64 == null || base64.isEmpty())
+            return;
 
         // 1. Strip metadata if present (e.g., "data:image/jpeg;base64,")
         if (base64.contains(",")) {
@@ -207,7 +288,8 @@ public class CustomerImageServiceImpl implements CustomerImageService {
             }
         }
 
-        // 2. Sanitize: Remove all characters not in the Base64 alphabet (A-Z, a-z, 0-9, +, /, =)
+        // 2. Sanitize: Remove all characters not in the Base64 alphabet (A-Z, a-z, 0-9,
+        // +, /, =)
         // This handles newlines, spaces, dots (.), etc.
         base64 = base64.replaceAll("[^A-Za-z0-9+/=]", "");
 

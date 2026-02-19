@@ -29,7 +29,7 @@ public class OpenAccountXmlBuilder {
         String password = cpbProperties.getT24().getPassword();
 
         String branchCode = getOrDefault(request.getBranchCode(), defaultProperties.getBranchCode());
-        String maritalStatus = getOrDefault(request.getMaritalStatus(), "");
+        String maritalStatus = mapMaritalStatus(request.getMaritalStatus());
         String legalAddress = getOrDefault(request.getLegalAddress(), "");
 
         // Current address codes
@@ -69,9 +69,12 @@ public class OpenAccountXmlBuilder {
                 + "<CUSTOMERCPBCREATEOAOType id=\"\">"
 
                 // Name fields
-                + "<cus:gSHORTNAME g=\"1\"><cus:ShortName>" + request.getGivenName() + "</cus:ShortName></cus:gSHORTNAME>"
-                + "<cus:gNAME1 g=\"1\"><cus:FullName>" + request.getFamilyName() + " " + request.getGivenName() + "</cus:FullName></cus:gNAME1>"
-                + "<cus:gNAME2 g=\"1\"><cus:FullName2>" + request.getLastNameKh() + " " + request.getFirstNameKh() + "</cus:FullName2></cus:gNAME2>"
+                + "<cus:gSHORTNAME g=\"1\"><cus:ShortName>" + request.getGivenName()
+                + "</cus:ShortName></cus:gSHORTNAME>"
+                + "<cus:gNAME1 g=\"1\"><cus:FullName>" + request.getFamilyName() + " " + request.getGivenName()
+                + "</cus:FullName></cus:gNAME1>"
+                + "<cus:gNAME2 g=\"1\"><cus:FullName2>" + request.getLastNameKh() + " " + request.getFirstNameKh()
+                + "</cus:FullName2></cus:gNAME2>"
                 + "<cus:gSTREET g=\"1\"><cus:STREET>" + legalAddress + "</cus:STREET></cus:gSTREET>"
 
                 // Organizational fields
@@ -88,7 +91,8 @@ public class OpenAccountXmlBuilder {
                 + "<cus:LegalId>" + request.getLegalId() + "</cus:LegalId>"
                 + "<cus:LegalDocName>" + request.getLegalDocType() + "</cus:LegalDocName>"
                 + "<cus:LegalHolderName>" + defaultProperties.getLegalHolderName() + "</cus:LegalHolderName>"
-                + "<cus:LegalIssAuth>" + getOrDefault(request.getLegalIssAuth(), request.getGivenName()) + "</cus:LegalIssAuth>"
+                + "<cus:LegalIssAuth>" + getOrDefault(request.getLegalIssAuth(), request.getGivenName())
+                + "</cus:LegalIssAuth>"
                 + "<cus:LegalIssDate>" + legalIssueDate + "</cus:LegalIssDate>"
                 + "</cus:mLEGALID></cus:gLEGALID>"
 
@@ -96,7 +100,8 @@ public class OpenAccountXmlBuilder {
                 + "<cus:Language>" + defaultProperties.getLanguage() + "</cus:Language>"
 
                 // Customer rating
-                + "<cus:gCUSTOMERRATING g=\"1\"><cus:CustomerRating>" + defaultProperties.getCustomerRating() + "</cus:CustomerRating></cus:gCUSTOMERRATING>"
+                + "<cus:gCUSTOMERRATING g=\"1\"><cus:CustomerRating>" + defaultProperties.getCustomerRating()
+                + "</cus:CustomerRating></cus:gCUSTOMERRATING>"
 
                 // Personal details
                 + "<cus:TITLE>" + title + "</cus:TITLE>"
@@ -219,6 +224,16 @@ public class OpenAccountXmlBuilder {
             return DefaultConstants.MS;
         }
         return "";
+    }
+
+    private String mapMaritalStatus(String status) {
+        if (status == null || status.trim().isEmpty()) {
+            return "SINGLE"; // Default to SINGLE to prevent T24 error
+        }
+        // T24 likely expects specific values (e.g., SINGLE, MARRIED).
+        // Ensure it's uppercase.
+        // If the frontend sends "Single", "Married", etc. this handles it.
+        return status.toUpperCase();
     }
 
     private String getOrDefault(String value, String defaultValue) {
