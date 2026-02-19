@@ -43,7 +43,7 @@ simulator:
   report-logs: false
   aml:
     error: false
-    high-risk: true
+    high-risk: false
   camdx: false
   banking:
     camdx-error: false
