@@ -55,7 +55,6 @@ public class RequestLogCleanupScheduler {
     // =====================================================
     @Scheduled(cron = "0 0 8 * * ?", zone = "Asia/Phnom_Penh")
     public void sendDailyAccountReport() {
-        // Default behavior: Report for YESTERDAY
         sendDailyAccountReport(LocalDate.now(ZONE_PP).minusDays(1));
     }
 
@@ -93,21 +92,20 @@ public class RequestLogCleanupScheduler {
             String generatedAt = LocalDateTime.now(ZONE_PP).format(FORMATTER);
 
             StringBuilder sb = new StringBuilder();
-            sb.append("*DAILY ACCOUNT OPENING REPORT*\n")
-                    .append("--------------------\n")
+            sb.append("*DAILY ACCOUNT OPENING SUMMARY REPORT*\n")
+                    .append("=================================\n")
                     .append("Report Date: *").append(formattedDate).append("*\n\n")
-                    .append("*Successfully Opened Accounts*\n\n")
-                    .append("Male: *").append(maleCount).append("*\n")
-                    .append("Female: *").append(femaleCount).append("*\n");
+                    .append("Summary of Successfully Opened Accounts:\n\n")
+                    .append("• Male: *").append(maleCount).append("*\n")
+                    .append("• Female: *").append(femaleCount).append("*\n");
 
             if (otherCount > 0) {
-                sb.append("Other: *").append(otherCount).append("*\n");
+                sb.append("• Other: *").append(otherCount).append("*\n");
             }
 
-            sb.append("\nTotal: *").append(totalCount).append("*\n")
-                    .append("--------------------\n")
-                    .append("Generated: ").append(generatedAt).append("\n")
-                    .append("Auto Report \\- Account Online System");
+            sb.append("\nTotal Accounts Opened: *").append(totalCount).append("*\n\n")
+                    .append("Report Generated At: ").append(generatedAt).append("\n")
+                    .append("This is an automated notification from the Account Online System.");
 
             telegramService.sendMarkdownAccountOnlineMonitorMessage(sb.toString());
 
@@ -116,18 +114,19 @@ public class RequestLogCleanupScheduler {
         } catch (Exception e) {
             log.error("Failed to send daily account report: {}", e.getMessage(), e);
 
-            String errorMsg = "*DAILY REPORT ERROR*\n"
-                    + "--------------------\n"
-                    + "Failed to generate daily account report\\.\n"
-                    + "Error: " + escapeMarkdown(e.getMessage()) + "\n"
-                    + "Please check logs\\.";
+            String errorMsg = "*DAILY ACCOUNT OPENING REPORT ERROR*\n"
+                    + "=================================\n"
+                    + "The system encountered an issue while generating the daily account opening report.\n"
+                    + "Error Details: " + escapeMarkdown(e.getMessage()) + "\n"
+                    + "Please review the application logs for further investigation.\n"
+                    + "This is an automated notification from the Account Online System.";
 
             telegramService.sendMarkdownAccountOnlineMonitorMessage(errorMsg);
         }
     }
 
     // =====================================================
-    // AML PENDING REPORT - EVERY DAY AT 8:00 AM
+    // AML PENDING REPORT - EVERY DAY AT 8:01 AM
     // =====================================================
     @Scheduled(cron = "0 1 8 * * ?", zone = "Asia/Phnom_Penh")
     public void sendAmlPendingReport() {
@@ -140,25 +139,27 @@ public class RequestLogCleanupScheduler {
             String generatedAt = LocalDateTime.now(ZONE_PP).format(FORMATTER);
 
             StringBuilder sb = new StringBuilder();
-            sb.append("*AML SCREENING PENDING REPORT*\n")
-                    .append("--------------------\n\n")
-                    .append("Total Pending: *").append(pendingCount).append("*\n\n");
+            sb.append("*AML SCREENING STATUS REPORT*\n")
+                    .append("=================================\n\n")
+                    .append("Total Cases Pending Review: *").append(pendingCount).append("*\n\n");
 
             if (pendingCount > 0) {
-                sb.append("There are *").append(pendingCount)
-                        .append("* customer(s) awaiting AML review\\.\n")
-                        .append("Please take action as soon as possible\\.\n\n");
+                sb.append("There are currently *").append(pendingCount)
+                        .append("* case(s) pending AML compliance review.\n")
+                        .append("Kindly proceed with the necessary review and action at your earliest convenience.\n\n");
 
                 if (amlDashboardUrl != null && !amlDashboardUrl.isEmpty()) {
-                    sb.append("Dashboard: ").append(escapeMarkdown(amlDashboardUrl)).append("\n");
+                    sb.append("AML Dashboard: ")
+                            .append(escapeMarkdown(amlDashboardUrl))
+                            .append("\n\n");
                 }
             } else {
-                sb.append("No pending AML cases\\. All clear\\.\n");
+                sb.append("There are no pending AML cases at this time.\n")
+                        .append("All records are up to date.\n\n");
             }
 
-            sb.append("--------------------\n")
-                    .append("Generated: ").append(generatedAt).append("\n")
-                    .append("Auto Report \\- Account Online System");
+            sb.append("Report Generated At: ").append(generatedAt).append("\n")
+                    .append("This is an automated notification from the Account Online System.");
 
             telegramService.sendMarkdownAccountOnlineMonitorMessage(sb.toString());
 
@@ -167,11 +168,12 @@ public class RequestLogCleanupScheduler {
         } catch (Exception e) {
             log.error("Failed to send AML pending report: {}", e.getMessage(), e);
 
-            String errorMsg = "*AML REPORT ERROR*\n"
-                    + "--------------------\n"
-                    + "Failed to generate AML pending report\\.\n"
-                    + "Error: " + escapeMarkdown(e.getMessage()) + "\n"
-                    + "Please check logs\\.";
+            String errorMsg = "*AML SCREENING REPORT GENERATION ERROR*\n"
+                    + "=================================\n"
+                    + "The system encountered an issue while generating the AML screening status report.\n"
+                    + "Error Details: " + escapeMarkdown(e.getMessage()) + "\n"
+                    + "Please review the application logs for further investigation.\n"
+                    + "This is an automated notification from the Account Online System.";
 
             telegramService.sendMarkdownAccountOnlineMonitorMessage(errorMsg);
         }

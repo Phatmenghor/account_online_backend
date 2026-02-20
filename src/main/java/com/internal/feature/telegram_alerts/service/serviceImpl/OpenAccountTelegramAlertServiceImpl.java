@@ -123,23 +123,6 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
         // Logic for High Risk to attach images
         if ("HIGH".equalsIgnoreCase(amlDto.getRiskLevel())) {
 
-            // Send mention ONLY if PENDING (First hit)
-            if (amlDto.getStatus() == AmlStatusEnum.PENDING) {
-                try {
-                    // Delay for 2 seconds before sending high risk alert
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    log.error("Thread interrupted while waiting for high risk alert delay", e);
-                }
-
-                // Send a short mention message for Compliance review
-                String mentionMessage = "⚠️ *High Risk Alert* - " + escapeMarkdown(complianceMention)
-                        + " please review this case.";
-                // Send to Monitor Channel as requested
-                telegramService.sendMarkdownAccountOnlineMonitorMessage(mentionMessage);
-            }
-
             // Send main message to Monitor Channel as requested
             telegramService.sendMarkdownAccountOnlineMonitorMessage(message);
 
@@ -159,6 +142,27 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
                 }
             } catch (Exception e) {
                 log.error("Failed to attach images for High Risk AML alert: {}", e.getMessage());
+            }
+
+            // Send mention ONLY if PENDING (First hit)
+            if (amlDto.getStatus() == AmlStatusEnum.PENDING) {
+                try {
+                    // Delay for 2 seconds before sending high risk alert
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.error("Thread interrupted while waiting for high risk alert delay", e);
+                }
+
+                // Send a short mention message for Compliance review
+                String mentionMessage = "*AML High Risk Review Required*\n\n"
+                        + "Dear " + escapeMarkdown(complianceMention) + " Team,\n"
+                        + "The following case has been identified as high risk in accordance with AML compliance requirements.\n"
+                        + "Please proceed with your review and advise accordingly.\n"
+                        + "Thank you for your cooperation.";
+
+                // Send to Monitor Channel as requested
+                telegramService.sendMarkdownAccountOnlineMonitorMessage(mentionMessage);
             }
         } else {
             telegramService.sendMarkdownAccountOnlineMonitorMessage(message);
