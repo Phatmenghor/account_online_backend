@@ -24,6 +24,6 @@ else
 fi
 
 # Push to current branch
-git push orgin "$BRANCH"
+git push origin "$BRANCH"
 
 echo "✅ Code pushed to '$BRANCH' at $CURRENT_TIME"
