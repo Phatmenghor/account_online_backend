@@ -1,16 +1,20 @@
 # ==============================================================
-# LOCAL DEVELOPMENT PROFILE
-# Active when: spring.profiles.active=local
+# UAT / DEVELOPMENT PROFILE
+# Active when: spring.profiles.active=uat  (default)
 # ==============================================================
 
 server:
-  port: 9393
+  port: 7070
+  tomcat:
+    connection-timeout: 90000
+    max-http-form-post-size: 200MB
+    max-swallow-size: -1           # Unlimited: prevents EOFException when client aborts large uploads
 
 spring:
   datasource:
     url: jdbc:postgresql://192.168.103.106:5432/account_online
 
-# Oracle — full UAT config (keeping UAT DBs for local dev if accessible)
+# Oracle — full UAT config
 oracle:
   dwh:
     datasource:
@@ -38,12 +42,12 @@ oracle:
       idle-timeout: 600000
       max-lifetime: 1800000
       pool-name: Oracle-STG-Pool
-# Simulators
+# Simulators — all disabled by default
 simulator:
   report-logs: false
   aml:
     error: false
-    high-risk: true
+    high-risk: false
   camdx: false
   banking:
     camdx-error: false
@@ -54,7 +58,7 @@ cpb:
   camdx:
     url: http://192.168.101.5:8099/api/v1/
   aml:
-    url: http://192.168.101.5:9095/api/aml
+    url: http://192.168.103.106:9095/api/aml
     username: cpbaml
     password: aml123!@#
   t24:
@@ -83,10 +87,3 @@ telegram:
     uat-monitor-chat-id: "-1003174573947"
     compliance-mention: "@PHAT_MENGHOR"
     enabled: true
-
-# File Upload (Local Override)
-file:
-  upload:
-    directory: ./customer-image
-    nid: /nid
-    selfie: /selfie
