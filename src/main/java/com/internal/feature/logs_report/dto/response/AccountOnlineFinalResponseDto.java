@@ -94,8 +94,8 @@ public class AccountOnlineFinalResponseDto {
     private String amlRulesTriggered;
 
     // === IMAGES ===
-    private String nidImage;
-    private String selfieImage;
+    private String nidImageName;
+    private String selfieImageName;
 
     // === TRACE FIELDS FROM BaseNoIdEntity ===
     private LocalDateTime createdAt;

@@ -206,11 +206,11 @@ public class AccountOnlineFinal extends BaseNoIdEntity {
     private String amlRulesTriggered;
 
     // === IMAGES ===
-    @Column(name = "nid_image")
-    private String nidImage;
+    @Column(name = "nid_image_name")
+    private String nidImageName;
 
-    @Column(name = "selfie_image")
-    private String selfieImage;
+    @Column(name = "selfie_image_name")
+    private String selfieImageName;
 
     // === SMS NOTIFICATION HISTORY ===
     @Column(name = "sms_sent_phone")

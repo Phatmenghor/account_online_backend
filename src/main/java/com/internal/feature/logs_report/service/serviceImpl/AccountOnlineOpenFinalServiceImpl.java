@@ -171,8 +171,8 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                     .mbActivationCode(mbActivationCode).mbAppDownloadLink("http://onelink.to/cpbank")
 
                     // Images
-                    .nidImage(imagePaths != null ? imagePaths.getNidImagePath() : request.getNidImageName())
-                    .selfieImage(imagePaths != null ? imagePaths.getSelfieImagePath() : request.getSelfieImageName())
+                    .nidImageName(imagePaths != null ? imagePaths.getNidImagePath() : request.getNidImageName())
+                    .selfieImageName(imagePaths != null ? imagePaths.getSelfieImagePath() : request.getSelfieImageName())
                     .build();
 
             AccountOnlineFinal savedLog = accountOnlineFinalRepository.save(finalLog);
@@ -250,7 +250,7 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
 
 
         AccountOnlineFinalResponseDto responseDto = mapper.toDto(onlineFinal);
-        log.info("Returning account with nidImage={}, selfieImage={}", responseDto.getNidImage(), responseDto.getSelfieImage());
+        log.info("Returning account with nidImageName={}, selfieImageName={}", responseDto.getNidImageName(), responseDto.getSelfieImageName());
 
         return responseDto;
     }
