@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -255,20 +256,28 @@ public class CustomerImageServiceImpl implements CustomerImageService {
         }
     }
 
-    /** Check if NID image exist */
+    /** Check if any NID image exists for the customer (prefix match) */
     @Override
     public boolean nidImageExists(String customerId) {
-        String fileName = "nid_" + customerId + ".jpg";
-        Path path = Paths.get(uploadDir, "nid", fileName);
-        return Files.exists(path);
+        Path dir = Paths.get(uploadDir, "nid");
+        String prefix = "nid_" + customerId + "_";
+        try (Stream<Path> files = Files.list(dir)) {
+            return files.anyMatch(p -> p.getFileName().toString().startsWith(prefix));
+        } catch (IOException e) {
+            return false;
+        }
     }
 
-    /** Check if Selfie image exists */
+    /** Check if any Selfie image exists for the customer (prefix match) */
     @Override
     public boolean selfieImageExists(String customerId) {
-        String fileName = "selfie_" + customerId + ".jpg";
-        Path path = Paths.get(uploadDir, "selfie", fileName);
-        return Files.exists(path);
+        Path dir = Paths.get(uploadDir, "selfie");
+        String prefix = "selfie_" + customerId + "_";
+        try (Stream<Path> files = Files.list(dir)) {
+            return files.anyMatch(p -> p.getFileName().toString().startsWith(prefix));
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     /** Utility: Save base64 image to file */

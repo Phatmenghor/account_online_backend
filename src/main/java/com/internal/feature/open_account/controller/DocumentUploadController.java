@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
@@ -33,13 +35,13 @@ public class DocumentUploadController {
                 return ResponseEntity.badRequest().body(Collections.singletonMap("error", "File is empty"));
             }
 
-            // Generate filename: {type}_{legalId or randomUUID}.jpg
+            // Generate filename: {type}_{legalId or randomUUID}_{timestamp}.jpg
             String identifier = (legalId != null && !legalId.isEmpty()) ? legalId : UUID.randomUUID().toString();
             String prefix = type.equalsIgnoreCase("selfie") ? "selfie_" : "nid_";
-            String extension = ".jpg"; // Force jpg for simplicity as used in service, or extract from
-                                       // file.getOriginalFilename()
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+            String extension = ".jpg";
 
-            String filename = prefix + identifier + extension;
+            String filename = prefix + identifier + "_" + timestamp + extension;
 
             String savedFilename = customerImageService.saveUploadedFile(file, filename);
 
