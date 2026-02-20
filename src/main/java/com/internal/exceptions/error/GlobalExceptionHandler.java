@@ -146,7 +146,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({ ResourceAccessException.class, SocketTimeoutException.class, TimeoutException.class,
             EOFException.class })
     public ResponseEntity<ErrorResponse> handleTimeoutException(Exception ex) {
-        log.error("Timeout/Connection error: {}", ex.getMessage());
+        log.warn("Timeout/Connection error: {}", ex.getMessage());
         return buildErrorResponse(HttpStatus.REQUEST_TIMEOUT, AppConstants.MSG_CONNECTION_TIMEOUT);
     }
 

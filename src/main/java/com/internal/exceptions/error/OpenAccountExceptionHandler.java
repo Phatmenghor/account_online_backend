@@ -13,6 +13,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.multipart.MultipartException;
 
 import java.io.EOFException;
 import java.net.SocketTimeoutException;
@@ -100,10 +101,23 @@ public class OpenAccountExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_GATEWAY);
     }
 
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ErrorResponse> handleMultipartException(MultipartException ex) {
+        log.warn("File upload interrupted (client disconnected mid-upload): {}", ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.REQUEST_TIMEOUT.value())
+                .message(AppConstants.MSG_CONNECTION_TIMEOUT)
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.REQUEST_TIMEOUT);
+    }
+
     @ExceptionHandler({ ResourceAccessException.class, SocketTimeoutException.class, TimeoutException.class,
             EOFException.class })
     public ResponseEntity<ErrorResponse> handleTimeoutException(Exception ex) {
-        log.error("Timeout/Connection error: {}", ex.getMessage());
+        log.warn("Timeout/Connection error: {}", ex.getMessage());
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())

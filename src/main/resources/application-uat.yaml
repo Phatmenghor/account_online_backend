@@ -6,9 +6,9 @@
 server:
   port: 9393
   tomcat:
-    connection-timeout: 90000      # ← ADD
-    max-http-form-post-size: 50MB  # ← ADD
-    max-swallow-size: 50MB         # ← ADD
+    connection-timeout: 90000
+    max-http-form-post-size: 200MB
+    max-swallow-size: -1           # Unlimited: prevents EOFException when client aborts large uploads
 
 spring:
   datasource:
