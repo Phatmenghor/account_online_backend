@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.stream.Stream;
 
 @Service
@@ -83,9 +84,11 @@ public class CustomerImageServiceImpl implements CustomerImageService {
                     saveBase64ToFile(request.getNidImage(), nidFullPath);
                 }
             } else {
-                // Check if file already exists on disk (fallback)
-                if (nidImageExists(legalId)) {
-                    nidFileName = "nid_" + legalId + ".jpg";
+                // Check if file already exists on disk (fallback) - find the actual filename
+                Path nidDir = Paths.get(uploadDir, "nid");
+                Path existingNid = findLatestFile(nidDir, "nid_" + legalId + "_");
+                if (existingNid != null) {
+                    nidFileName = existingNid.getFileName().toString();
                     log.info("NID image data missing but file found on disk: {}", nidFileName);
                 } else {
                     log.warn("NID image data is missing and file not found - skipping save");
@@ -104,9 +107,11 @@ public class CustomerImageServiceImpl implements CustomerImageService {
                     saveBase64ToFile(request.getSelfieImage(), selfieFullPath);
                 }
             } else {
-                // Check if file already exists on disk (fallback)
-                if (selfieImageExists(legalId)) {
-                    selfieFileName = "selfie_" + legalId + ".jpg";
+                // Check if file already exists on disk (fallback) - find the actual filename
+                Path selfieDir = Paths.get(uploadDir, "selfie");
+                Path existingSelfie = findLatestFile(selfieDir, "selfie_" + legalId + "_");
+                if (existingSelfie != null) {
+                    selfieFileName = existingSelfie.getFileName().toString();
                     log.info("Selfie image data missing but file found on disk: {}", selfieFileName);
                 } else {
                     log.warn("Selfie image data is missing and file not found - skipping save");
@@ -173,16 +178,14 @@ public class CustomerImageServiceImpl implements CustomerImageService {
     @Override
     public Resource getNidImageResourceForEmail(String customerId) {
         try {
-            String fileName = "nid_" + customerId + ".jpg";
-            String filePath = Paths.get(uploadDir, "nid", fileName).toString();
-
-            File file = new File(filePath);
-            if (!file.exists()) {
+            Path dir = Paths.get(uploadDir, "nid");
+            Path imagePath = findLatestFile(dir, "nid_" + customerId + "_");
+            if (imagePath == null) {
                 log.warn("NID image not found for customer: {}", customerId);
                 return null;
             }
-            log.info("Retrieved NID image for email: {}", filePath);
-            return new FileSystemResource(file);
+            log.info("Retrieved NID image for email: {}", imagePath);
+            return new FileSystemResource(imagePath.toFile());
 
         } catch (Exception e) {
             log.error("Failed to get NID image resource: {}", e.getMessage(), e);
@@ -194,16 +197,15 @@ public class CustomerImageServiceImpl implements CustomerImageService {
     @Override
     public byte[] getNidImageBytes(String customerId) {
         try {
-            String fileName = "nid_" + customerId + ".jpg";
-            Path path = Paths.get(uploadDir, "nid", fileName);
-
-            if (!Files.exists(path)) {
-                log.warn("NID image not found for customer: {} at path: {}", customerId, path.toAbsolutePath());
+            Path dir = Paths.get(uploadDir, "nid");
+            Path imagePath = findLatestFile(dir, "nid_" + customerId + "_");
+            if (imagePath == null) {
+                log.warn("NID image not found for customer: {} in dir: {}", customerId, dir.toAbsolutePath());
                 return null;
             }
 
-            byte[] bytes = Files.readAllBytes(path);
-            log.info("Retrieved NID image bytes for customer: {} ({} bytes)", customerId, bytes.length);
+            byte[] bytes = Files.readAllBytes(imagePath);
+            log.info("Retrieved NID image bytes for customer: {} ({} bytes) from {}", customerId, bytes.length, imagePath.getFileName());
             return bytes;
 
         } catch (IOException e) {
@@ -216,17 +218,15 @@ public class CustomerImageServiceImpl implements CustomerImageService {
     @Override
     public Resource getSelfieImageResourceForEmail(String customerId) {
         try {
-            String fileName = "selfie_" + customerId + ".jpg";
-            String filePath = Paths.get(uploadDir, "selfie", fileName).toString();
-
-            File file = new File(filePath);
-            if (!file.exists()) {
+            Path dir = Paths.get(uploadDir, "selfie");
+            Path imagePath = findLatestFile(dir, "selfie_" + customerId + "_");
+            if (imagePath == null) {
                 log.warn("Selfie image not found for customer: {}", customerId);
                 return null;
             }
 
-            log.info("Retrieved Selfie image for email: {}", filePath);
-            return new FileSystemResource(file);
+            log.info("Retrieved Selfie image for email: {}", imagePath);
+            return new FileSystemResource(imagePath.toFile());
 
         } catch (Exception e) {
             log.error("Failed to get Selfie image resource: {}", e.getMessage(), e);
@@ -238,16 +238,15 @@ public class CustomerImageServiceImpl implements CustomerImageService {
     @Override
     public byte[] getSelfieImageBytes(String customerId) {
         try {
-            String fileName = "selfie_" + customerId + ".jpg";
-            Path path = Paths.get(uploadDir, "selfie", fileName);
-
-            if (!Files.exists(path)) {
-                log.warn("Selfie image not found for customer: {} at path: {}", customerId, path.toAbsolutePath());
+            Path dir = Paths.get(uploadDir, "selfie");
+            Path imagePath = findLatestFile(dir, "selfie_" + customerId + "_");
+            if (imagePath == null) {
+                log.warn("Selfie image not found for customer: {} in dir: {}", customerId, dir.toAbsolutePath());
                 return null;
             }
 
-            byte[] bytes = Files.readAllBytes(path);
-            log.info("Retrieved Selfie image bytes for customer: {} ({} bytes)", customerId, bytes.length);
+            byte[] bytes = Files.readAllBytes(imagePath);
+            log.info("Retrieved Selfie image bytes for customer: {} ({} bytes) from {}", customerId, bytes.length, imagePath.getFileName());
             return bytes;
 
         } catch (IOException e) {
@@ -277,6 +276,19 @@ public class CustomerImageServiceImpl implements CustomerImageService {
             return files.anyMatch(p -> p.getFileName().toString().startsWith(prefix));
         } catch (IOException e) {
             return false;
+        }
+    }
+
+    /** Utility: Find the most recently modified file in a directory whose name starts with the given prefix */
+    private Path findLatestFile(Path dir, String prefix) {
+        try (Stream<Path> files = Files.list(dir)) {
+            return files
+                    .filter(p -> p.getFileName().toString().startsWith(prefix))
+                    .max(Comparator.comparingLong(p -> p.toFile().lastModified()))
+                    .orElse(null);
+        } catch (IOException e) {
+            log.warn("Could not scan directory {} for prefix {}: {}", dir, prefix, e.getMessage());
+            return null;
         }
     }
 
