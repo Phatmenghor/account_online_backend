@@ -5,9 +5,9 @@
 server:
   port: 7070
   tomcat:
-    connection-timeout: 90000 # ✅ match nginx 90s
-    max-http-form-post-size: 50MB # ✅ match nginx 50M
-    max-swallow-size: 50MB # ✅ swallow large bodies gracefully
+    connection-timeout: 90000 # match nginx 90s
+    max-http-form-post-size: 200MB
+    max-swallow-size: -1 # unlimited: prevents EOFException when client aborts large uploads
 
 spring:
   datasource:
