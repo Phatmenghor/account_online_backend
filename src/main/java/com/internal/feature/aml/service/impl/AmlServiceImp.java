@@ -160,7 +160,8 @@ public class AmlServiceImp implements AmlService {
         LocalDateTime startDateTime = request.getStartDate() != null ? request.getStartDate().atStartOfDay() : null;
         LocalDateTime endDateTime = request.getEndDate() != null ? request.getEndDate().atTime(23, 59, 59) : null;
 
-        Page<AmlHistory> page = amlHistoryRepository.findByFilters(startDateTime, endDateTime, request.getStatus(), request.getSearch(), pageable);
+        String statusStr = request.getStatus() != null ? request.getStatus().name() : null;
+        Page<AmlHistory> page = amlHistoryRepository.findByFilters(startDateTime, endDateTime, statusStr, request.getSearch(), pageable);
 
         List<AmlHistoryDto> content = page.stream()
                 .map(amlHistoryMapper::toDto)
