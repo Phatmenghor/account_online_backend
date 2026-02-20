@@ -8,6 +8,7 @@ import com.internal.feature.aml.model.AmlStatus;
 import com.internal.feature.auth.mapper.UserMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Mappings;
 import org.mapstruct.Named;
 import org.springframework.data.domain.Page;
@@ -56,6 +57,44 @@ public interface AmlStatusMapper {
             @Mapping(target = "expiredDate", source = "expiredDate")
     })
     AmlStatus fromCreateDto(CreateAmlRequestDto request);
+
+    // ============================================================
+    // UPDATE EXISTING ENTITY FROM CREATE DTO (UPSERT)
+    // ============================================================
+    @Mappings({
+            @Mapping(target = "status", expression = "java(com.internal.enumation.AmlStatusEnum.PENDING)"),
+            @Mapping(target = "approvedBy", ignore = true),
+            @Mapping(target = "rejectedBy", ignore = true),
+            @Mapping(target = "amlExternalRiskLevel", source = "riskLevel"),
+            @Mapping(target = "amlExternalActionTaken", source = "actionTaken"),
+            @Mapping(target = "amlExternalServiceName", source = "serviceName"),
+            @Mapping(target = "amlExternalTotalRulesScore", source = "totalRulesScore"),
+            @Mapping(target = "amlExternalTrxnID", source = "trxnID"),
+            @Mapping(target = "amlExternalRulesTriggered", source = "rulesTriggered"),
+            @Mapping(target = "currentAddressCode",
+                    expression = "java(request.getCustomerCurrentProvince() + \"-\" + request.getCustomerCurrentDistrict() + \"-\" + request.getCustomerCurrentCommune() + \"-\" + request.getCustomerCurrentVillage())"),
+            @Mapping(target = "placeOfBirthCode",
+                    expression = "java(request.getCustomerPobProvince() + \"-\" + request.getCustomerPobDistrict() + \"-\" + request.getCustomerPobCommune() + \"-\" + request.getCustomerPobVillage())"),
+            @Mapping(target = "legalId", source = "legalId"),
+            @Mapping(target = "familyName", source = "familyName"),
+            @Mapping(target = "givenName", source = "givenName"),
+            @Mapping(target = "firstNameKh", source = "firstNameKh"),
+            @Mapping(target = "lastNameKh", source = "lastNameKh"),
+            @Mapping(target = "dateOfBirth", source = "dateOfBirth"),
+            @Mapping(target = "gender", source = "gender"),
+            @Mapping(target = "nationality", source = "nationality"),
+            @Mapping(target = "phoneNumber", source = "phoneNumber"),
+            @Mapping(target = "maritalStatus", source = "maritalStatus"),
+            @Mapping(target = "occupationCode", source = "occupationCode"),
+            @Mapping(target = "occupationStatus", source = "occupationStatus"),
+            @Mapping(target = "issuedDate", source = "issuedDate"),
+            @Mapping(target = "expiredDate", source = "expiredDate"),
+            @Mapping(target = "remarks", ignore = true),
+            @Mapping(target = "screeningResult", ignore = true),
+            @Mapping(target = "currentAddressName", ignore = true),
+            @Mapping(target = "placeOfBirthName", ignore = true)
+    })
+    void updateFromCreateDto(CreateAmlRequestDto request, @MappingTarget AmlStatus status);
 
     // ============================================================
     // ENTITY â†’ DTO (NO DUPLICATE NESTED MAPPING)

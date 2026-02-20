@@ -62,9 +62,20 @@ public class AmlServiceImp implements AmlService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public AmlStatus createAmlStatus(CreateAmlRequestDto requestDto) throws JsonProcessingException {
-        log.info("Creating new AML status for legalId: {}", requestDto.getLegalId());
-        AmlStatus status = amlStatusMapper.fromCreateDto(requestDto);
-        status.setRejectedBy(null);
+        Optional<AmlStatus> existingOpt = amlStatusRepository.findByLegalId(requestDto.getLegalId());
+
+        AmlStatus status;
+        if (existingOpt.isPresent()) {
+            log.info("AML status already exists for legalId: {}, updating existing record to PENDING", requestDto.getLegalId());
+            status = existingOpt.get();
+            amlStatusMapper.updateFromCreateDto(requestDto, status);
+            status.setApprovedBy(null);
+            status.setRejectedBy(null);
+        } else {
+            log.info("Creating new AML status for legalId: {}", requestDto.getLegalId());
+            status = amlStatusMapper.fromCreateDto(requestDto);
+            status.setRejectedBy(null);
+        }
 
         // Populate address fields using code-based lookup
         populateAddressFields(status, requestDto);
@@ -72,9 +83,8 @@ public class AmlServiceImp implements AmlService {
         // Save AML record
         status = amlStatusRepository.save(status);
 
-        // Create initial history (PENDING)
+        // Create history entry (PENDING)
         AmlHistory history = amlHistoryMapper.createHistoryFromStatusChange(status, null);
-
         amlHistoryRepository.save(history);
 
         return status;
