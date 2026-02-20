@@ -31,6 +31,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -155,13 +157,36 @@ public class AmlServiceImp implements AmlService {
     public AllAmlHistoryResponseDto getAllAmlHistory(AllAmlHistoryRequestDto request) {
         log.info("Fetching AML history with status: {}, search: {}, startDate: {}, endDate: {}",
                 request.getStatus(), request.getSearch(), request.getStartDate(), request.getEndDate());
-        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize());
 
         LocalDateTime startDateTime = request.getStartDate() != null ? request.getStartDate().atStartOfDay() : null;
         LocalDateTime endDateTime = request.getEndDate() != null ? request.getEndDate().atTime(23, 59, 59) : null;
+        String search = request.getSearch() != null ? request.getSearch().toLowerCase() : null;
 
-        String statusStr = request.getStatus() != null ? request.getStatus().name() : null;
-        Page<AmlHistory> page = amlHistoryRepository.findByFilters(startDateTime, endDateTime, statusStr, request.getSearch(), pageable);
+        Specification<AmlHistory> spec = Specification.where(null);
+
+        if (startDateTime != null) {
+            spec = spec.and((root, q, cb) -> cb.greaterThanOrEqualTo(root.get("createdAt"), startDateTime));
+        }
+        if (endDateTime != null) {
+            spec = spec.and((root, q, cb) -> cb.lessThanOrEqualTo(root.get("createdAt"), endDateTime));
+        }
+        if (request.getStatus() != null) {
+            spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), request.getStatus()));
+        }
+        if (search != null && !search.isEmpty()) {
+            String pattern = "%" + search + "%";
+            spec = spec.and((root, q, cb) -> cb.or(
+                    cb.like(cb.lower(root.get("familyName")), pattern),
+                    cb.like(cb.lower(root.get("givenName")), pattern),
+                    cb.like(cb.lower(root.get("lastNameKh")), pattern),
+                    cb.like(cb.lower(root.get("firstNameKh")), pattern),
+                    cb.like(cb.lower(root.get("phoneNumber")), pattern),
+                    cb.like(cb.lower(root.get("legalId")), pattern)
+            ));
+        }
+
+        Pageable pageable = PageRequest.of(request.getPageNo() - 1, request.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<AmlHistory> page = amlHistoryRepository.findAll(spec, pageable);
 
         List<AmlHistoryDto> content = page.stream()
                 .map(amlHistoryMapper::toDto)
