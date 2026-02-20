@@ -48,4 +48,7 @@ public class AmlStatusDto {
     private String occupationStatus;
 
     private String remarks;
+
+    private String nidImageName;
+    private String selfieImageName;
 }

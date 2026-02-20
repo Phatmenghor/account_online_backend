@@ -54,7 +54,10 @@ public interface AmlStatusMapper {
             @Mapping(target = "occupationStatus", source = "occupationStatus"),
             // Document
             @Mapping(target = "issuedDate", source = "issuedDate"),
-            @Mapping(target = "expiredDate", source = "expiredDate")
+            @Mapping(target = "expiredDate", source = "expiredDate"),
+            // Image filenames
+            @Mapping(target = "nidImageName", source = "nidImageName"),
+            @Mapping(target = "selfieImageName", source = "selfieImageName")
     })
     AmlStatus fromCreateDto(CreateAmlRequestDto request);
 
@@ -89,6 +92,8 @@ public interface AmlStatusMapper {
             @Mapping(target = "occupationStatus", source = "occupationStatus"),
             @Mapping(target = "issuedDate", source = "issuedDate"),
             @Mapping(target = "expiredDate", source = "expiredDate"),
+            @Mapping(target = "nidImageName", source = "nidImageName"),
+            @Mapping(target = "selfieImageName", source = "selfieImageName"),
             @Mapping(target = "remarks", ignore = true),
             @Mapping(target = "screeningResult", ignore = true),
             @Mapping(target = "currentAddressName", ignore = true),
@@ -129,6 +134,9 @@ public interface AmlStatusMapper {
             // Users
             @Mapping(target = "approvedBy", source = "approvedBy"),
             @Mapping(target = "rejectedBy", source = "rejectedBy"),
+            // Image filenames
+            @Mapping(target = "nidImageName", source = "nidImageName"),
+            @Mapping(target = "selfieImageName", source = "selfieImageName"),
     })
     AmlStatusDto toStatusDto(AmlStatus status);
 

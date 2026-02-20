@@ -59,6 +59,10 @@ public class AmlHistoryRequestDto {
     private Integer totalRulesScore;
     private String trxnID;
 
+    // Image filenames from upload
+    private String nidImageName;
+    private String selfieImageName;
+
     // Admin workflow
     private UserResponseDto approvedBy;
     private UserResponseDto rejectedBy;

@@ -155,12 +155,6 @@ public class CustomerRequest {
     @JsonProperty("released_by")
     private String releasedBy;
 
-    @JsonProperty("selfie_image")
-    private String selfieImage; // Base64 (Legacy)
-
-    @JsonProperty("nid_image")
-    private String nidImage; // Base64 (Legacy)
-
     @JsonProperty("nid_image_name")
     private String nidImageName; // Filename from upload
 

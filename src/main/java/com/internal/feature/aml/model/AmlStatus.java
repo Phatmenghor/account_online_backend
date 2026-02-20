@@ -129,6 +129,15 @@ public class AmlStatus extends BaseEntity {
     private String amlExternalTrxnID;
 
     // ============================================
+    // IMAGE FILENAMES
+    // ============================================
+    @Column(name = "nid_image_name")
+    private String nidImageName;
+
+    @Column(name = "selfie_image_name")
+    private String selfieImageName;
+
+    // ============================================
     // ADMIN REMARKS
     // ============================================
     @Column(name = "remarks", columnDefinition = "TEXT")

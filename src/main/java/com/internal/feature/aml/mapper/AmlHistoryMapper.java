@@ -48,6 +48,8 @@ public interface AmlHistoryMapper {
         @Mapping(target = "amlExternalServiceName", source = "serviceName")
         @Mapping(target = "amlExternalTotalRulesScore", source = "totalRulesScore")
         @Mapping(target = "amlExternalTrxnID", source = "trxnID")
+        @Mapping(target = "nidImageName", source = "nidImageName")
+        @Mapping(target = "selfieImageName", source = "selfieImageName")
         AmlHistory fromCreateDto(AmlHistoryRequestDto request);
 
     // -------------------------------
@@ -72,6 +74,8 @@ public interface AmlHistoryMapper {
     @Mapping(target = "serviceName", source = "amlExternalServiceName")
     @Mapping(target = "actionTaken", source = "amlExternalActionTaken")
     @Mapping(target = "totalRulesScore", source = "amlExternalTotalRulesScore")
+    @Mapping(target = "nidImageName", source = "nidImageName")
+    @Mapping(target = "selfieImageName", source = "selfieImageName")
     AmlHistoryDto toDto(AmlHistory history);
 
     // -------------------------------
@@ -132,6 +136,10 @@ public interface AmlHistoryMapper {
 
         // Convert rulesTriggered safely
         history.setAmlExternalRulesTriggered(status.getAmlExternalRulesTriggered());
+
+        // Image filenames
+        history.setNidImageName(status.getNidImageName());
+        history.setSelfieImageName(status.getSelfieImageName());
 
         return history;
     }

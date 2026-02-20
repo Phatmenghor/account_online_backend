@@ -54,6 +54,8 @@ public class OpenAccountAmlStatusMapper {
                                 .occupationCode(entity.getOccupationCode())
                                 .occupationStatus(entity.getOccupationStatus())
                                 .remarks(entity.getRemarks())
+                                .nidImageName(entity.getNidImageName())
+                                .selfieImageName(entity.getSelfieImageName())
                                 .createdAt(entity.getCreatedAt())
                                 .updatedAt(entity.getUpdatedAt())
                                 .build();
@@ -222,6 +224,8 @@ public class OpenAccountAmlStatusMapper {
                                 .serviceName(amlResponse.getServiceName())
                                 .totalRulesScore(amlResponse.getTotalRulesScore())
                                 .trxnID(amlResponse.getTrxnID())
+                                .nidImageName(request.getNidImageName())
+                                .selfieImageName(request.getSelfieImageName())
                                 .build();
         }
 
