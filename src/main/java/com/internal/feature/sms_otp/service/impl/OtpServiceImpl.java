@@ -196,8 +196,8 @@ public class OtpServiceImpl implements OtpService {
             // Use raw XML POST, return response as String (no JSON parsing)
             String responseXml = httpClient.postForString(otpUrl, soapXml, "application/soap+xml");
 
-            // Extract <return> JSON payload from SOAP response
-            Matcher matcher = Pattern.compile("<return>(.*?)</return>").matcher(responseXml);
+            // Extract <return> JSON payload from SOAP response (handle optional namespace prefix, e.g. <ns:return>)
+            Matcher matcher = Pattern.compile("<(?:\\w+:)?return>(.*?)</(?:\\w+:)?return>").matcher(responseXml);
             String jsonPayload = matcher.find() ? matcher.group(1) : null;
 
             log.info("SOAP SMS raw response: {}", responseXml);
