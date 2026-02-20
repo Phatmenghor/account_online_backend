@@ -13,7 +13,6 @@ import com.internal.feature.logs_report.model.AccountOnlineOpenFinalAudit;
 import com.internal.feature.logs_report.repository.AccountOnlineFinalAuditRepository;
 import com.internal.feature.logs_report.repository.AccountOnlineFinalRepository;
 import com.internal.feature.logs_report.service.AccountOnlineOpenFinalService;
-import com.internal.feature.logs_report.service.CustomerImageService;
 import com.internal.feature.master_data.dto.response.*;
 import com.internal.feature.master_data.service.MasterDataService;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
@@ -30,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -45,7 +43,6 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
     private final AccountOnlineFinalAuditRepository onlineFinalAuditRepository;
     private final AccountOnlineFinalMapper mapper;
     private final SecurityUtils securityUtils;
-    private final CustomerImageService customerImageService;
 
     @Override
     public AccountOnlineFinal saveFinalLog(
@@ -253,34 +250,7 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
 
 
         AccountOnlineFinalResponseDto responseDto = mapper.toDto(onlineFinal);
-
-        // Populate images
-        try {
-            String legalId = onlineFinal.getLegalId();
-            log.info("Attempting to fetch images for Legal ID: {}", legalId);
-
-            if (legalId != null) {
-                byte[] nidBytes = customerImageService.getNidImageBytes(legalId);
-                if (nidBytes != null) {
-                    log.info("Found NID bytes: {} bytes", nidBytes.length);
-                    responseDto.setNidImage(Base64.getEncoder().encodeToString(nidBytes));
-                } else {
-                    log.warn("NID bytes are NULL for Legal ID: {}", legalId);
-                }
-
-                byte[] selfieBytes = customerImageService.getSelfieImageBytes(legalId);
-                if (selfieBytes != null) {
-                    log.info("Found Selfie bytes: {} bytes", selfieBytes.length);
-                    responseDto.setSelfieImage(Base64.getEncoder().encodeToString(selfieBytes));
-                } else {
-                    log.warn("Selfie bytes are NULL for Legal ID: {}", legalId);
-                }
-            }
-        } catch (Exception e) {
-            log.error("Failed to load images for Legal ID {}: {}", onlineFinal.getLegalId(), e.getMessage());
-            // Continue without images
-        }
-        // End populate images
+        log.info("Returning account with nidImage={}, selfieImage={}", responseDto.getNidImage(), responseDto.getSelfieImage());
 
         return responseDto;
     }
