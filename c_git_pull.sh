@@ -10,6 +10,6 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 git fetch
 
 # Pull latest code for the current branch
-git pull origin $BRANCH
+git pull orgin $BRANCH
 
 echo "✅ Auto pull completed from '$BRANCH' at $CURRENT_TIME"
