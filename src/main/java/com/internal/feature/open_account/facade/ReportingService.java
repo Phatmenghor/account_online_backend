@@ -3,11 +3,9 @@ package com.internal.feature.open_account.facade;
 import com.internal.enumation.AmlStatusEnum;
 import com.internal.enumation.OpenAccStatusEnum;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
-import com.internal.feature.logs_report.dto.request.CustomerFileUploadRequestDto;
 import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
 import com.internal.feature.logs_report.service.AccountOnlineOpenFinalService;
 import com.internal.feature.logs_report.service.AccountOnlineReportLogService;
-import com.internal.feature.logs_report.service.CustomerImageService;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.dto.response.CustomerResponse;
 import com.internal.feature.telegram_alerts.service.serviceImpl.OpenAccountTelegramAlertServiceImpl;
@@ -22,7 +20,6 @@ import org.springframework.stereotype.Component;
 public class ReportingService {
 
     private final AccountOnlineReportLogService reportLogService;
-    private final CustomerImageService customerImageService;
     private final AccountOnlineOpenFinalService accountOnlineOpenSuccessService;
     private final OpenAccountTelegramAlertServiceImpl alertTelegramService;
 
@@ -82,19 +79,17 @@ public class ReportingService {
     }
 
     public CustomerImageUploadResponseDto safeSaveCustomerImages(CustomerRequest request) {
-        log.info(">>> Step 10: SAVE_CUSTOMER_IMAGES");
+        log.info(">>> Step 10: SAVE_CUSTOMER_IMAGES (using pre-uploaded filenames)");
         try {
-            CustomerFileUploadRequestDto fileRequest = CustomerFileUploadRequestDto.builder()
-                    .legal_id(request.getLegalId())
-                    .NidImage(request.getNidImage())
-                    .SelfieImage(request.getSelfieImage())
+            CustomerImageUploadResponseDto imagePaths = CustomerImageUploadResponseDto.builder()
+                    .nidImagePath(request.getNidImageName())
+                    .selfieImagePath(request.getSelfieImageName())
                     .build();
-
-            CustomerImageUploadResponseDto imagePaths = customerImageService.saveCustomerImages(fileRequest);
-            log.info("Step 10 SUCCESS: Images saved");
+            log.info("Step 10 SUCCESS: Image filenames resolved - NID: {}, Selfie: {}",
+                    request.getNidImageName(), request.getSelfieImageName());
             return imagePaths;
         } catch (Exception e) {
-            log.warn("Step 10 WARNING: Failed to save images (non-critical): {}", e.getMessage());
+            log.warn("Step 10 WARNING: Failed to resolve image filenames (non-critical): {}", e.getMessage());
             return null;
         }
     }

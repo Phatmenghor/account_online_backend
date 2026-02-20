@@ -33,12 +33,8 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         public CustomerResponse openAccount(CustomerRequest request) throws Exception {
                 log.info("========== ACCOUNT OPENING STARTED ==========");
                 log.info("Legal ID: {}", request.getLegalId());
-                log.info("NID Image present: {}, Length: {}",
-                                request.getNidImage() != null,
-                                request.getNidImage() != null ? request.getNidImage().length() : 0);
-                log.info("Selfie Image present: {}, Length: {}",
-                                request.getSelfieImage() != null,
-                                request.getSelfieImage() != null ? request.getSelfieImage().length() : 0);
+                log.info("NID Image name: {}", request.getNidImageName());
+                log.info("Selfie Image name: {}", request.getSelfieImageName());
 
                 OpenAccountContext context = OpenAccountContext.builder().request(request).build();
                 String currentStep = "START";
