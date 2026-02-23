@@ -104,7 +104,7 @@ public class MobileBankingService {
                 .customerType("100")
                 .identityNumber(request.getLegalId().trim())
                 .email(request.getEmail() != null ? request.getEmail() : "NA@gmail.com")
-                .address("N/A")
+                .address(request.getLegalAddress())
                 .cifNo(cif)
                 .branchCodeCreatedUser(branchCode)
                 .posCodeCreatedUser("POS01")
