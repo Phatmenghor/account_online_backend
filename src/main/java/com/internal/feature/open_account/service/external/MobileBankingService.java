@@ -120,7 +120,7 @@ public class MobileBankingService {
                 .branchCode(branchCode)
                 .packageCode("BASIC")
                 .telephoneOtp(request.getPhoneNumber())
-                .staffCode("123")
+                .staffCode(request.getReferralId() != null ? request.getReferralId() : "")
                 .signData(signData)
                 .channel("INTERNET BANKING")
                 .mobileChannel("I")

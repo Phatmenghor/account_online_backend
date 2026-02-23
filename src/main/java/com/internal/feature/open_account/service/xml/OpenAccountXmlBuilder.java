@@ -69,11 +69,11 @@ public class OpenAccountXmlBuilder {
                 + "<CUSTOMERCPBCREATEOAOType id=\"\">"
 
                 // Name fields
-                + "<cus:gSHORTNAME g=\"1\"><cus:ShortName>" + request.getGivenName()
+                + "<cus:gSHORTNAME g=\"1\"><cus:ShortName>" + request.getFamilyName() + " " + request.getGivenName()
                 + "</cus:ShortName></cus:gSHORTNAME>"
                 + "<cus:gNAME1 g=\"1\"><cus:FullName>" + request.getFamilyName() + " " + request.getGivenName()
                 + "</cus:FullName></cus:gNAME1>"
-                + "<cus:gNAME2 g=\"1\"><cus:FullName2>" + request.getLastNameKh() + " " + request.getFirstNameKh()
+                + "<cus:gNAME2 g=\"1\"><cus:FullName2>" + request.getFirstNameKh() + " " + request.getLastNameKh()
                 + "</cus:FullName2></cus:gNAME2>"
                 + "<cus:gSTREET g=\"1\"><cus:STREET>" + legalAddress + "</cus:STREET></cus:gSTREET>"
 
@@ -147,50 +147,89 @@ public class OpenAccountXmlBuilder {
     }
 
     public String buildAccountCreationXml(CustomerRequest request, String cif, String currency) {
+
         String username = cpbProperties.getT24().getUsername();
         String password = cpbProperties.getT24().getPassword();
         String branchCode = getOrDefault(request.getBranchCode(), defaultProperties.getBranchCode());
         String effectiveDate = LocalDate.now().format(DATE_FORMATTER);
 
+        String englishFullName =
+                safe(request.getFamilyName()) + " " + safe(request.getGivenName());
+
+        String khmerFullName =
+                safe(request.getFirstNameKh()) + " " + safe(request.getLastNameKh());
+
         return "<soapenv:Envelope xmlns:soapenv=\"" + DefaultConstants.SOAP_ENV_NS + "\" "
                 + "xmlns:oaow=\"" + DefaultConstants.OAOW_NS + "\" "
                 + "xmlns:aaar=\"" + DefaultConstants.ACCOUNT_NS + "\">"
+
                 + "<soapenv:Header/>"
                 + "<soapenv:Body>"
                 + "<oaow:ACCREATIONOAO>"
+
                 + "<WebRequestCommon>"
                 + "<company>" + branchCode + "</company>"
                 + "<password><![CDATA[" + password + "]]></password>"
                 + "<userName>" + username + "</userName>"
                 + "</WebRequestCommon>"
+
                 + "<OfsFunction/>"
+
                 + "<AAARRANGEMENTACTIVITYAANEWOAOType id=\"\">"
                 + "<aaar:Arrangement>" + defaultProperties.getNewArrangement() + "</aaar:Arrangement>"
                 + "<aaar:Activity>" + defaultProperties.getAccountActivity() + "</aaar:Activity>"
                 + "<aaar:EffectiveDate>" + effectiveDate + "</aaar:EffectiveDate>"
+
+                // CUSTOMER
                 + "<aaar:gCUSTOMER g=\"1\">"
                 + "<aaar:mCUSTOMER m=\"1\">"
                 + "<aaar:Customer>" + cif + "</aaar:Customer>"
                 + "<aaar:CustomerRole>OWNER</aaar:CustomerRole>"
                 + "</aaar:mCUSTOMER>"
                 + "</aaar:gCUSTOMER>"
+
+                // PRODUCT + CURRENCY
                 + "<aaar:Product>" + defaultProperties.getProductCode() + "</aaar:Product>"
                 + "<aaar:Currency>" + currency + "</aaar:Currency>"
+
+                // PROPERTY BLOCK
                 + "<aaar:gPROPERTY g=\"1\">"
                 + "<aaar:mPROPERTY m=\"1\">"
                 + "<aaar:Property>BALANCE</aaar:Property>"
+
                 + "<aaar:sgFIELDNAME sg=\"1\">"
+
+                // SHORT.TITLE
                 + "<aaar:FieldName s=\"1\">"
                 + "<aaar:FieldName>SHORT.TITLE</aaar:FieldName>"
-                + "<aaar:FieldValue>" + request.getGivenName() + "</aaar:FieldValue>"
+                + "<aaar:FieldValue>" + englishFullName + "</aaar:FieldValue>"
                 + "</aaar:FieldName>"
+
+                // ACCOUNT.TITLE.1 (English)
+                + "<aaar:FieldName s=\"2\">"
+                + "<aaar:FieldName>ACCOUNT.TITLE.1</aaar:FieldName>"
+                + "<aaar:FieldValue>" + englishFullName + "</aaar:FieldValue>"
+                + "</aaar:FieldName>"
+
+                // ACCOUNT.TITLE.2 (Khmer)
+                + "<aaar:FieldName s=\"3\">"
+                + "<aaar:FieldName>ACCOUNT.TITLE.2</aaar:FieldName>"
+                + "<aaar:FieldValue>" + khmerFullName + "</aaar:FieldValue>"
+                + "</aaar:FieldName>"
+
                 + "</aaar:sgFIELDNAME>"
+
                 + "</aaar:mPROPERTY>"
                 + "</aaar:gPROPERTY>"
+
                 + "</AAARRANGEMENTACTIVITYAANEWOAOType>"
                 + "</oaow:ACCREATIONOAO>"
                 + "</soapenv:Body>"
                 + "</soapenv:Envelope>";
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.trim();
     }
 
     // === Utility Methods ===
