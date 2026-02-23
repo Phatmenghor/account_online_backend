@@ -13,6 +13,8 @@ public interface CustomerImageService {
 
     Resource getNidImageResourceForEmail(String customerId);
 
+    String saveBase64File(String base64, String filename, String type) throws Exception;
+
     byte[] getNidImageBytes(String customerId);
 
     Resource getSelfieImageResourceForEmail(String customerId);

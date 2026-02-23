@@ -149,6 +149,18 @@ public class CustomerImageServiceImpl implements CustomerImageService {
         }
     }
 
+    @Override
+    public String saveBase64File(String base64, String filename, String type) throws Exception {
+        String subFolder = "selfie".equalsIgnoreCase(type) ? "selfie" : "nid";
+        String filePath = Paths.get(uploadDir, subFolder, filename).toString();
+
+        new File(Paths.get(uploadDir, subFolder).toString()).mkdirs();
+        saveBase64ToFile(base64, filePath);
+
+        log.info("Saved base64 file: {} to {}", filename, filePath);
+        return filename;
+    }
+
     /**
      * Save uploaded file directly to disk.
      * returns the filename.

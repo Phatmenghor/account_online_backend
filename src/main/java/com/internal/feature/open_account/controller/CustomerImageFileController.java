@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @RestController
-@RequestMapping("/api/v1/public/customer-images")
+@RequestMapping("/api/customer-images")
 @Slf4j
 public class CustomerImageFileController {
 
