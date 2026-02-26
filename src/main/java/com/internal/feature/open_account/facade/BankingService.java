@@ -4,9 +4,11 @@ import com.internal.config.TestProperties;
 import com.internal.exceptions.error.custom.NidValidationException;
 import com.internal.exceptions.error.custom.ValidateServiceException;
 import com.internal.exceptions.error.openaccount.AccountCreationException;
+import com.internal.feature.open_account.dto.request.CustomerCreationResult;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.service.external.*;
 import com.internal.utils.constants.AppConstants;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +35,7 @@ public class BankingService {
     @Value("${simulator.banking.internal-error:false}")
     private boolean simulateInternalError;
 
+    // ─── Step 1: Test Connection ──────────────────────────────────────────────
     public void testConnection() {
         log.info(">>> Step 1: TEST_CONNECTION");
 
@@ -50,6 +53,7 @@ public class BankingService {
         }
     }
 
+    // ─── Step 2: Get Customer Info ────────────────────────────────────────────
     public Map<String, String> getCustomerInfo(String legalId) {
         log.info(">>> Step 2: GET_CUSTOMER_INFO");
 
@@ -62,34 +66,41 @@ public class BankingService {
         return customerInfo;
     }
 
+    // ─── Step 3: Validate Existing Accounts ───────────────────────────────────
     public void validateExistingAccounts(Map<String, String> customerInfo) {
-        log.info(">>> Step 3: VALIDATE_EXISTING_ACCOUNTS (UAT profile)");
+        log.info(">>> Step 3: VALIDATE_EXISTING_ACCOUNTS");
         validationService.validateExistingAccounts(customerInfo);
         log.info("Existing accounts validation passed");
     }
 
-    public String createCustomer(CustomerRequest request) {
-        Document resp = t24Service.createCustomer(request);
-        return XmlParser.extractCif(resp);
-    }
-
-    public String getMnemonic(CustomerRequest request) {
-        return XmlParser.extractMnemonic(t24Service.createCustomer(request));
-    }
-
-    public String createCustomerIfNeeded(CustomerRequest request, Map<String, String> customerInfo) {
+    // ─── Step 5: Create Customer ──────────────────────────────────────────────
+    /**
+     * Creates a new customer in T24 if no existing CIF is found.
+     * Extracts both CIF and MNEMONIC from a SINGLE t24Service.createCustomer() call.
+     * For existing customers, both CIF and MNEMONIC are taken directly from customerInfo.
+     */
+    public CustomerCreationResult createCustomerIfNeeded(CustomerRequest request, Map<String, String> customerInfo) {
         String existingCif = customerInfo.get("CIF");
+
         if (existingCif != null && !existingCif.isEmpty()) {
             log.info("Existing CIF found → Using existing customer");
-            return existingCif;
+            String existingMnemonic = customerInfo.get("MNEMONIC");
+            log.info("Existing MNEMONIC retrieved from customerInfo: {}", existingMnemonic);
+            return new CustomerCreationResult(existingCif, existingMnemonic);
         }
 
+        // Single T24 call — extract both CIF and MNEMONIC from one response
         Document resp = t24Service.createCustomer(request);
-        return XmlParser.extractCif(resp);
+        String cif = XmlParser.extractCif(resp);
+        String mnemonic = XmlParser.extractMnemonic(resp);
+        log.info("New customer created → CIF: {}, MNEMONIC: {}", cif, mnemonic);
+
+        return new CustomerCreationResult(cif, mnemonic);
     }
 
+    // ─── Steps 6 & 7: Create Accounts ────────────────────────────────────────
     public String createAccountIfNeeded(CustomerRequest request, Map<String, String> customerInfo, String cif,
-            String currency) {
+                                        String currency) {
         if (isTestMode.isSkipCheckAccount()) {
             log.info("TEST MODE ENABLED — Skipping existing account check → creating new {} account", currency);
             return createAccount(request, cif, currency);
@@ -130,8 +141,9 @@ public class BankingService {
         }
     }
 
+    // ─── Step 8: Validate At Least One Account Exists ────────────────────────
     public void validateAtLeastOneAccountExists(Map<String, String> customerInfo, String khrAccount,
-            String usdAccount) {
+                                                String usdAccount) {
         log.info(">>> Step 8: VALIDATE_ACCOUNT_CREATION");
         if (khrAccount == null && usdAccount == null
                 && !validationService.hasAccount(customerInfo, AppConstants.CURRENCY_KHR)
@@ -141,6 +153,7 @@ public class BankingService {
         log.info("Step 8 SUCCESS: At least one account exists");
     }
 
+    // ─── Step 9: Activate Mobile Banking ─────────────────────────────────────
     public String activateMobileBanking(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
         log.info(">>> Step 9: ACTIVATE_MOBILE_BANKING");
         try {

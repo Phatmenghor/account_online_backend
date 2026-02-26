@@ -16,6 +16,7 @@ import org.w3c.dom.Document;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 
 @Service
 @RequiredArgsConstructor
@@ -27,16 +28,19 @@ public class T24Service {
     private final OpenAccountXmlBuilder xmlBuilder;
     private final TelegramService telegramService;
 
+    // text/xml; charset=UTF-8 — ensures Khmer and other non-Latin characters
+    // are not mangled by the HTTP layer defaulting to ISO-8859-1
+    private static final MediaType TEXT_XML_UTF8 =
+            new MediaType("text", "xml", StandardCharsets.UTF_8);
+
     public Document createCustomer(CustomerRequest request) {
         log.info("Creating customer in T24 for Legal ID: {}", request.getLegalId());
-
         String xmlRequest = xmlBuilder.buildCustomerCreationXml(request);
         return executeT24Request(xmlRequest, "OAOCUSTOMERCREATION");
     }
 
     public Document createAccount(CustomerRequest request, String cif, String currency) {
         log.info("Creating {} account in T24 for CIF: {}", currency, cif);
-
         String xmlRequest = xmlBuilder.buildAccountCreationXml(request, cif, currency);
         return executeT24Request(xmlRequest, "ACCREATIONOAO");
     }
@@ -46,24 +50,34 @@ public class T24Service {
         String url = properties.getT24().getUrl() + "/TWS.CPBOAO/services";
 
         log.info("T24 Request Started | op={} | url={} | payloadSize={} bytes",
-                operation, url, xmlRequest != null ? xmlRequest.length() : 0);
+                operation, url, xmlRequest != null ? xmlRequest.getBytes(StandardCharsets.UTF_8).length : 0);
 
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.TEXT_XML);
+            // UTF-8 charset declared on Content-Type so T24 parses Khmer characters correctly
+            headers.setContentType(TEXT_XML_UTF8);
+            headers.set("Accept", "text/xml; charset=UTF-8");
             headers.set("SOAPAction", operation);
 
-            HttpEntity<String> entity = new HttpEntity<>(xmlRequest, headers);
+            // Send as raw UTF-8 bytes — bypasses any RestTemplate re-encoding
+            byte[] requestBytes = xmlRequest.getBytes(StandardCharsets.UTF_8);
+            HttpEntity<byte[]> entity = new HttpEntity<>(requestBytes, headers);
 
-            ResponseEntity<String> response = restTemplate.exchange(
+            // Receive as byte[] so we control UTF-8 decoding ourselves
+            ResponseEntity<byte[]> response = restTemplate.exchange(
                     url,
                     HttpMethod.POST,
                     entity,
-                    String.class);
+                    byte[].class);
 
             long duration = System.currentTimeMillis() - startTime;
 
-            String responseBody = response.getBody();
+            byte[] responseBytes = response.getBody();
+            // Decode response explicitly as UTF-8
+            String responseBody = responseBytes != null
+                    ? new String(responseBytes, StandardCharsets.UTF_8)
+                    : null;
+
             int responseSize = responseBody != null ? responseBody.length() : 0;
 
             log.info("T24 Response Received | op={} | status={} | responseSize={} bytes | duration={} ms",
@@ -79,7 +93,6 @@ public class T24Service {
 
             Document doc = parseXmlResponse(responseBody);
 
-            // Check for T24 business errors (e.g. T24Error)
             if (XmlParser.hasError(doc)) {
                 String errorMessage = XmlParser.extractErrorMessage(doc);
                 log.error("T24 Business Error | op={} | message={}", operation, errorMessage);
@@ -95,10 +108,8 @@ public class T24Service {
 
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
-
             log.error("T24 Request Failed | op={} | url={} | duration={} ms | message={}",
                     operation, url, duration, e.getMessage(), e);
-
             throw new T24ServiceException("T24 call failed", e);
         }
     }
@@ -107,7 +118,8 @@ public class T24Service {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
         DocumentBuilder builder = factory.newDocumentBuilder();
-        return builder.parse(new ByteArrayInputStream(xmlString.getBytes()));
+        // Encode to bytes as UTF-8 explicitly — avoids JVM default charset corrupting Khmer
+        return builder.parse(new ByteArrayInputStream(xmlString.getBytes(StandardCharsets.UTF_8)));
     }
 
     private boolean hasJmsError(Document doc) {
@@ -122,9 +134,9 @@ public class T24Service {
     private void checkAndAlertSecurityViolation(String responseBody, String operation) {
         if (responseBody != null && responseBody.contains(AppConstants.T24_ACCOUNT_ERROR)) {
             String errorMessage = String.format("🚨 **T24 Security Violation Detected**\n\n" +
-                    "**Operation:** `%s`\n" +
-                    "**Error:** `SECURITY VIOLATION DURING SIGN ON PROCESS`\n" +
-                    "**Action Required:** Check T24 credentials in `application.yaml`.",
+                            "**Operation:** `%s`\n" +
+                            "**Error:** `SECURITY VIOLATION DURING SIGN ON PROCESS`\n" +
+                            "**Action Required:** Check T24 credentials in `application.yaml`.",
                     operation);
             telegramService.sendMarkdownAclInternalMessage(errorMessage);
             log.error("T24 Security Violation Detected! Alert sent to Telegram.");

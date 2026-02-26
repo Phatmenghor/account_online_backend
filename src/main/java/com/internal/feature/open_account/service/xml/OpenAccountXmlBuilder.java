@@ -30,7 +30,9 @@ public class OpenAccountXmlBuilder {
 
         String branchCode = getOrDefault(request.getBranchCode(), defaultProperties.getBranchCode());
         String maritalStatus = mapMaritalStatus(request.getMaritalStatus());
-        String legalAddress = getOrDefault(request.getLegalAddress(), "");
+
+        // Sanitize legalAddress to SWIFT-safe characters before sending to T24
+        String legalAddress = toSwiftSafe(getOrDefault(request.getLegalAddress(), ""));
 
         // Current address codes
         String custProvince = getOrDefault(request.getCustomerCurrentProvince(), "");
@@ -50,11 +52,18 @@ public class OpenAccountXmlBuilder {
         // Format dates to T24 format (YYYYMMDD)
         String dateOfBirth = formatDateForT24(request.getDateOfBirth());
         String legalIssueDate = formatDateForT24(request.getLegalIssueDate());
+        String legalExpDate = formatDateForT24(request.getLegalExpireDate());
 
         // Determine title from gender (use request title if provided)
         String title = getOrDefault(request.getTitle(), determineTitle(request.getGender()));
 
-        return "<soapenv:Envelope xmlns:soapenv=\"" + DefaultConstants.SOAP_ENV_NS + "\" "
+        // English and Khmer full names
+        String englishFullName = safe(request.getFamilyName()) + " " + safe(request.getGivenName());
+        String khmerFullName = safe(request.getLastNameKh()) + " " + safe(request.getFirstNameKh());
+
+        // UTF-8 XML declaration ensures Khmer characters are correctly interpreted by T24
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<soapenv:Envelope xmlns:soapenv=\"" + DefaultConstants.SOAP_ENV_NS + "\" "
                 + "xmlns:oaow=\"" + DefaultConstants.OAOW_NS + "\" "
                 + "xmlns:cus=\"" + DefaultConstants.CUSTOMER_NS + "\">"
                 + "<soapenv:Header/>"
@@ -62,19 +71,25 @@ public class OpenAccountXmlBuilder {
                 + "<oaow:OAOCUSTOMERCREATION>"
                 + "<WebRequestCommon>"
                 + "<company>" + branchCode + "</company>"
-                + "<password><![CDATA[" + password + "]]></password>"
+                + "<password>" + xmlEscape(password) + "</password>"
                 + "<userName>" + username + "</userName>"
                 + "</WebRequestCommon>"
                 + "<OfsFunction/>"
                 + "<CUSTOMERCPBCREATEOAOType id=\"\">"
 
-                // Name fields
-                + "<cus:gSHORTNAME g=\"1\"><cus:ShortName>" + request.getFamilyName() + " " + request.getGivenName()
-                + "</cus:ShortName></cus:gSHORTNAME>"
-                + "<cus:gNAME1 g=\"1\"><cus:FullName>" + request.getFamilyName() + " " + request.getGivenName()
-                + "</cus:FullName></cus:gNAME1>"
-                + "<cus:gNAME2 g=\"1\"><cus:FullName2>" + request.getFirstNameKh() + " " + request.getLastNameKh()
-                + "</cus:FullName2></cus:gNAME2>"
+                // gSHORTNAME — two entries: English + Khmer
+                + "<cus:gSHORTNAME g=\"1\">"
+                + "<cus:ShortName>" + englishFullName + "</cus:ShortName>"
+                + "<cus:ShortName>" + khmerFullName + "</cus:ShortName>"
+                + "</cus:gSHORTNAME>"
+
+                // gNAME1 — two entries: English + Khmer
+                + "<cus:gNAME1 g=\"1\">"
+                + "<cus:FullName>" + englishFullName + "</cus:FullName>"
+                + "<cus:FullName>" + khmerFullName + "</cus:FullName>"
+                + "</cus:gNAME1>"
+
+                // STREET — sanitized to SWIFT-safe characters
                 + "<cus:gSTREET g=\"1\"><cus:STREET>" + legalAddress + "</cus:STREET></cus:gSTREET>"
 
                 // Organizational fields
@@ -94,6 +109,7 @@ public class OpenAccountXmlBuilder {
                 + "<cus:LegalIssAuth>" + getOrDefault(request.getLegalIssAuth(), request.getGivenName())
                 + "</cus:LegalIssAuth>"
                 + "<cus:LegalIssDate>" + legalIssueDate + "</cus:LegalIssDate>"
+                + "<cus:LegalExpDate>" + legalExpDate + "</cus:LegalExpDate>"
                 + "</cus:mLEGALID></cus:gLEGALID>"
 
                 // Language
@@ -132,7 +148,7 @@ public class OpenAccountXmlBuilder {
                 + "<cus:RelationManager>" + referralId + "</cus:RelationManager>"
                 + "<cus:LoanOfficer>" + getOrDefault(request.getLoanOfficer(), "") + "</cus:LoanOfficer>"
                 + "<cus:Staff>" + getOrDefault(request.getStaff(), releasedBy) + "</cus:Staff>"
-                + "<cus:ReferralBy>" + referralId + "</cus:ReferralBy>"
+                + "<cus:ReferralBy>" + getOrDefault(referralId, defaultProperties.getCostCenter()) + "</cus:ReferralBy>"
 
                 // Place of birth address (Primary P fields)
                 + "<cus:CUSTPROVINCEP>" + pobProvince + "</cus:CUSTPROVINCEP>"
@@ -151,15 +167,13 @@ public class OpenAccountXmlBuilder {
         String username = cpbProperties.getT24().getUsername();
         String password = cpbProperties.getT24().getPassword();
         String branchCode = getOrDefault(request.getBranchCode(), defaultProperties.getBranchCode());
-        String effectiveDate = LocalDate.now().format(DATE_FORMATTER);
 
-        String englishFullName =
-                safe(request.getFamilyName()) + " " + safe(request.getGivenName());
+        String englishFullName = safe(request.getFamilyName()) + " " + safe(request.getGivenName());
+        String khmerFullName = safe(safe(request.getLastNameKh() + " " + request.getFirstNameKh()));
 
-        String khmerFullName =
-                safe(request.getFirstNameKh()) + " " + safe(request.getLastNameKh());
-
-        return "<soapenv:Envelope xmlns:soapenv=\"" + DefaultConstants.SOAP_ENV_NS + "\" "
+        // UTF-8 XML declaration ensures Khmer characters are correctly interpreted by T24
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<soapenv:Envelope xmlns:soapenv=\"" + DefaultConstants.SOAP_ENV_NS + "\" "
                 + "xmlns:oaow=\"" + DefaultConstants.OAOW_NS + "\" "
                 + "xmlns:aaar=\"" + DefaultConstants.ACCOUNT_NS + "\">"
 
@@ -169,7 +183,7 @@ public class OpenAccountXmlBuilder {
 
                 + "<WebRequestCommon>"
                 + "<company>" + branchCode + "</company>"
-                + "<password><![CDATA[" + password + "]]></password>"
+                + "<password>" + xmlEscape(password) + "</password>"
                 + "<userName>" + username + "</userName>"
                 + "</WebRequestCommon>"
 
@@ -178,7 +192,6 @@ public class OpenAccountXmlBuilder {
                 + "<AAARRANGEMENTACTIVITYAANEWOAOType id=\"\">"
                 + "<aaar:Arrangement>" + defaultProperties.getNewArrangement() + "</aaar:Arrangement>"
                 + "<aaar:Activity>" + defaultProperties.getAccountActivity() + "</aaar:Activity>"
-                + "<aaar:EffectiveDate>" + effectiveDate + "</aaar:EffectiveDate>"
 
                 // CUSTOMER
                 + "<aaar:gCUSTOMER g=\"1\">"
@@ -199,22 +212,22 @@ public class OpenAccountXmlBuilder {
 
                 + "<aaar:sgFIELDNAME sg=\"1\">"
 
-                // SHORT.TITLE
+                // SHORT.TITLE:1 — English
                 + "<aaar:FieldName s=\"1\">"
-                + "<aaar:FieldName>SHORT.TITLE</aaar:FieldName>"
+                + "<aaar:FieldName>SHORT.TITLE:1</aaar:FieldName>"
                 + "<aaar:FieldValue>" + englishFullName + "</aaar:FieldValue>"
                 + "</aaar:FieldName>"
 
-                // ACCOUNT.TITLE.1 (English)
-                + "<aaar:FieldName s=\"2\">"
-                + "<aaar:FieldName>ACCOUNT.TITLE.1</aaar:FieldName>"
-                + "<aaar:FieldValue>" + englishFullName + "</aaar:FieldValue>"
-                + "</aaar:FieldName>"
-
-                // ACCOUNT.TITLE.2 (Khmer)
-                + "<aaar:FieldName s=\"3\">"
-                + "<aaar:FieldName>ACCOUNT.TITLE.2</aaar:FieldName>"
+                // SHORT.TITLE:2 — Khmer
+                + "<aaar:FieldName s=\"1\">"
+                + "<aaar:FieldName>SHORT.TITLE:2</aaar:FieldName>"
                 + "<aaar:FieldValue>" + khmerFullName + "</aaar:FieldValue>"
+                + "</aaar:FieldName>"
+
+                // ACCOUNT.TITLE.1:1 — English
+                + "<aaar:FieldName s=\"1\">"
+                + "<aaar:FieldName>ACCOUNT.TITLE.1:1</aaar:FieldName>"
+                + "<aaar:FieldValue>" + englishFullName + "</aaar:FieldValue>"
                 + "</aaar:FieldName>"
 
                 + "</aaar:sgFIELDNAME>"
@@ -232,18 +245,14 @@ public class OpenAccountXmlBuilder {
         return value == null ? "" : value.trim();
     }
 
-    // === Utility Methods ===
-
     private String formatDateForT24(String date) {
         if (date == null || date.isEmpty()) {
             return "";
         }
         try {
-            // If already in YYYYMMDD format
             if (date.matches("\\d{8}")) {
                 return date;
             }
-            // Try parsing from YYYY-MM-DD format
             LocalDate localDate = LocalDate.parse(date, DATE_FORMATTER);
             return localDate.format(T24_DATE_FORMATTER);
         } catch (Exception e) {
@@ -267,15 +276,43 @@ public class OpenAccountXmlBuilder {
 
     private String mapMaritalStatus(String status) {
         if (status == null || status.trim().isEmpty()) {
-            return "SINGLE"; // Default to SINGLE to prevent T24 error
+            return "SINGLE";
         }
-        // T24 likely expects specific values (e.g., SINGLE, MARRIED).
-        // Ensure it's uppercase.
-        // If the frontend sends "Single", "Married", etc. this handles it.
         return status.toUpperCase();
     }
 
     private String getOrDefault(String value, String defaultValue) {
         return value != null && !value.isEmpty() ? value : defaultValue;
+    }
+
+    /**
+     * Sanitizes a string to contain only SWIFT-allowed characters.
+     * SWIFT charset: A-Z a-z 0-9 / - ? : ( ) . , ' + space
+     * Any character outside this set is replaced with a space.
+     * Used for fields like STREET that T24 validates against SWIFT rules.
+     */
+    private String toSwiftSafe(String input) {
+        if (input == null) return "";
+        String sanitized = input.replaceAll("[^A-Za-z0-9/ \\-?:()\\.,'\\+]", " ").trim();
+        // Collapse multiple spaces into one
+        sanitized = sanitized.replaceAll(" {2,}", " ");
+        if (!sanitized.equals(input.trim())) {
+            log.warn("SWIFT sanitization applied to address. Original: [{}] → Sanitized: [{}]", input, sanitized);
+        }
+        return sanitized;
+    }
+
+    /**
+     * Escapes special XML characters — use for all values injected into XML,
+     * especially passwords containing @, #, &, <, >
+     */
+    private String xmlEscape(String value) {
+        if (value == null) return "";
+        return value
+                .replace("&", "&amp;")   // must be first
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&apos;");
     }
 }
