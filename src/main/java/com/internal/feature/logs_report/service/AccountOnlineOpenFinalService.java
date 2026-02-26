@@ -2,8 +2,10 @@ package com.internal.feature.logs_report.service;
 
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.logs_report.dto.request.AccountOnlineFinalLogRequestDto;
+import com.internal.feature.logs_report.dto.request.AllAccountOnlineSuccessExcelRequestDto;
 import com.internal.feature.logs_report.dto.request.AllAccountOnlineSuccessRequestDto;
 import com.internal.feature.logs_report.dto.response.AccountOnlineFinalResponseDto;
+import com.internal.feature.logs_report.dto.response.AllAccountOnlineFinalExcelResponseDto;
 import com.internal.feature.logs_report.dto.response.AllAccountOnlineFinalResponseDto;
 import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
 import com.internal.feature.logs_report.model.AccountOnlineFinal;
@@ -30,6 +32,9 @@ public interface AccountOnlineOpenFinalService {
     );
 
     AllAccountOnlineFinalResponseDto getSuccessOpenAccount(AllAccountOnlineSuccessRequestDto request);
+
+    // Excel
+    AllAccountOnlineFinalExcelResponseDto getSuccessOpenAccountExcel(AllAccountOnlineSuccessExcelRequestDto request);
 
     @Transactional
     void updateFinalLogWithAml(AmlStatusDto amlStatus);

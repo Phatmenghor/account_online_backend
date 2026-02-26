@@ -33,4 +33,18 @@ public interface AccountOnlineFinalRepository extends JpaRepository<AccountOnlin
                         "LOWER(a.legalId) LIKE LOWER(CONCAT('%', :search, '%'))) " +
                         "ORDER BY a.createdAt DESC")
         Page<AccountOnlineFinal> findBySearch(@Param("search") String search, Pageable pageable);
+
+        // Excel
+        @Query("SELECT a FROM AccountOnlineFinal a WHERE " +
+                "(:search IS NULL OR :search = '' OR " +
+                "LOWER(a.cif) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+                "LOWER(a.legalId) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+                "AND (CAST(:fromDate AS java.time.LocalDateTime) IS NULL OR a.createdAt >= :fromDate) " +
+                "AND (CAST(:toDate AS java.time.LocalDateTime) IS NULL OR a.createdAt < :toDate) " +
+                "ORDER BY a.createdAt DESC")
+        List<AccountOnlineFinal> findBySearchExcel(
+                @Param("search") String search,
+                @Param("fromDate") LocalDateTime fromDate,
+                @Param("toDate") LocalDateTime toDate
+        );
 }

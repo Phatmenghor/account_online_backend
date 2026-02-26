@@ -3,10 +3,9 @@ package com.internal.feature.logs_report.service.serviceImpl;
 import com.internal.exceptions.error.custom.NotFoundException;
 import com.internal.feature.aml.dto.response.AmlStatusDto;
 import com.internal.feature.logs_report.dto.request.AccountOnlineFinalLogRequestDto;
+import com.internal.feature.logs_report.dto.request.AllAccountOnlineSuccessExcelRequestDto;
 import com.internal.feature.logs_report.dto.request.AllAccountOnlineSuccessRequestDto;
-import com.internal.feature.logs_report.dto.response.AccountOnlineFinalResponseDto;
-import com.internal.feature.logs_report.dto.response.AllAccountOnlineFinalResponseDto;
-import com.internal.feature.logs_report.dto.response.CustomerImageUploadResponseDto;
+import com.internal.feature.logs_report.dto.response.*;
 import com.internal.feature.logs_report.mapper.AccountOnlineFinalMapper;
 import com.internal.feature.logs_report.model.AccountOnlineFinal;
 import com.internal.feature.logs_report.model.AccountOnlineOpenFinalAudit;
@@ -28,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -204,6 +204,29 @@ public class AccountOnlineOpenFinalServiceImpl implements AccountOnlineOpenFinal
                 .collect(Collectors.toList());
 
         return mapper.mapToListDto(content, page);
+    }
+
+    // Excel
+    @Override
+    public AllAccountOnlineFinalExcelResponseDto getSuccessOpenAccountExcel(AllAccountOnlineSuccessExcelRequestDto request) {
+        log.info("Fetching success open accounts - Search: {}, From: {}, To: {}",
+                request.getSearch(), request.getFromDate(), request.getToDate());
+
+        LocalDateTime fromDateTime = request.getFromDate() != null
+                ? request.getFromDate().atStartOfDay()
+                : null;
+
+        LocalDateTime toDateTime = request.getToDate() != null
+                ? request.getToDate().plusDays(1).atStartOfDay()   // exclusive upper bound → covers full toDate
+                : null;
+
+        List<AccountOnlineFinal> accountOnline = accountOnlineFinalRepository.findBySearchExcel(request.getSearch(), fromDateTime, toDateTime);
+
+        List<AccountOnlineFinalExcelResponseDto> content = accountOnline.stream()
+                .map(mapper::toExcelDto)
+                .collect(Collectors.toList());
+
+        return mapper.mapToListExcelDto(content);
     }
 
     @Transactional
