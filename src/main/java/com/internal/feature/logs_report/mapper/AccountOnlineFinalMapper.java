@@ -25,6 +25,8 @@ public interface AccountOnlineFinalMapper {
     @Mapping(target = "khrAccount", source = "khrAccount")
     @Mapping(target = "mnemonic", source = "mnemonic")
     @Mapping(target = "legalId", source = "legalId")
+    @Mapping(target = "branchCode", source = "branchCode")
+    @Mapping(target = "branchNameKh", source = "branchNameKh")
     AccountOnlineFinalExcelResponseDto toExcelDto(AccountOnlineFinal historyExcel);
 
     @Named("mapToListDto")

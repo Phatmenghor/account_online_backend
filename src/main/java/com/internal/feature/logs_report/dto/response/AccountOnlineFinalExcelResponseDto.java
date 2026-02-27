@@ -25,6 +25,10 @@ public class AccountOnlineFinalExcelResponseDto {
     // === LEGAL / NID INFO ===
     private String legalId;
 
+    // === BRANCH INFO ===
+    private String branchCode;
+    private String branchNameKh;
+
     // === IMAGES ===
     private String nidImageName;
     private String selfieImageName;
