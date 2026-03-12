@@ -173,7 +173,7 @@ public class OtpServiceImpl implements OtpService {
         String requestID = String.valueOf(System.currentTimeMillis());
         String message = cpbProperties.getOtp().getMessage() + " " + otpCode;
 
-        String soapXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+        String soapXml = "<?xml version=\"1.0\"?>"
                 + "<soap:Envelope xmlns:soap='http://www.w3.org/2003/05/soap-envelope' "
                 + "xmlns:cpb='http://cpbmobile.vnpay.vn'>"
                 + "<soap:Header/>"

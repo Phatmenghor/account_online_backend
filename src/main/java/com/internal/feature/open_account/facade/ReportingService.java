@@ -13,6 +13,8 @@ import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -23,8 +25,9 @@ public class ReportingService {
     private final AccountOnlineOpenFinalService accountOnlineOpenSuccessService;
     private final OpenAccountTelegramAlertServiceImpl alertTelegramService;
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void saveFailureLogs(CustomerRequest request, Exception e, String currentStep, String failureRemark,
-            boolean skipTelegramAlert) {
+                                boolean skipTelegramAlert) {
         OpenAccStatusEnum status = OpenAccStatusEnum.FAILURE;
         if (currentStep.equals(AppConstants.PROCESS_AML)) {
             status = OpenAccStatusEnum.AML;
@@ -43,7 +46,6 @@ public class ReportingService {
         boolean isAccountExistsError = e.getMessage() != null && e.getMessage().contains("Account already exists");
 
         if (isMonitorAlertStep(currentStep) && !isAccountExistsError) {
-            // Skip sending "Account Online Error" for AML failures as requested
             if (!AppConstants.PROCESS_AML.equals(currentStep)) {
                 alertTelegramService.sendTelegramAccountOnlineError(request.getLegalId(), status, remarkBuilder);
             }
@@ -57,7 +59,7 @@ public class ReportingService {
     }
 
     public String buildFailureRemark(String failedStep, String cif, String khrAccount, String usdAccount,
-            AmlStatusDto amlProcessResult) {
+                                     AmlStatusDto amlProcessResult) {
         StringBuilder remark = new StringBuilder("Account opening failed at: ").append(failedStep);
 
         if (amlProcessResult != null && amlProcessResult.getStatus() != null
@@ -95,8 +97,8 @@ public class ReportingService {
     }
 
     public void safeSaveSuccessLog(CustomerRequest request, CustomerResponse accountInfo,
-            AmlStatusDto amlStatusResponseDto, CustomerImageUploadResponseDto imagePaths,
-            String mbActivationCode) { // ← add param
+                                   AmlStatusDto amlStatusResponseDto, CustomerImageUploadResponseDto imagePaths,
+                                   String mbActivationCode) {
         log.info(">>> Step 11: SAVE_SUCCESS_LOG");
         try {
             accountOnlineOpenSuccessService.saveFinalLog(

@@ -46,9 +46,9 @@ spring:
       maximum-pool-size: 20
       minimum-idle: 5
       connection-timeout: 30000
-      idle-timeout: 1800000
-      max-lifetime: 7200000
-      leak-detection-threshold: 1800000
+      idle-timeout: 300000         # 5 min - close idle connections
+      max-lifetime: 600000         # 10 min - max connection lifetime
+      leak-detection-threshold: 300000  # 5 min - enough for full T24 flow
       pool-name: PostgreSQL-Pool
       auto-commit: false
 

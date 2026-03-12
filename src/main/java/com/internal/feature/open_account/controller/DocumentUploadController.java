@@ -25,9 +25,6 @@ public class DocumentUploadController {
 
     private final CustomerImageService customerImageService;
 
-
-
-    // ✅ Base64 JSON upload (used by frontend via 1.6 proxy)
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> uploadBase64(
             @RequestBody Base64UploadRequest request) {

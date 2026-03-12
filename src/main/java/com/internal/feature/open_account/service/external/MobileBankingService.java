@@ -71,16 +71,20 @@ public class MobileBankingService {
             }
 
             if (activationCode != null && !activationCode.isEmpty()) {
+                // Remove duplicate "registCode:" if present
+                activationCode = activationCode.replaceAll("(?i)registCode:\\s*", "").trim();
                 message.append("MB Activation Code: ").append(activationCode).append("\r\n");
             }
 
             message.append("Download CPBank App: http://onelink.to/cpbank");
 
+            // Always send SMS, even if some fields are empty
             soapSmsSender.sendSms(
                     properties.getMb().getOtpUrl(),
                     properties.getMb().getSecretKey(),
                     phone,
-                    message.toString());
+                    message.toString()
+            );
 
             log.info("Account SMS sent successfully to phone: {}", phone);
 

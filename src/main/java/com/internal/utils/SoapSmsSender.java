@@ -14,13 +14,22 @@ public class SoapSmsSender {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    /**
+     * Sends a raw SMS message via SOAP API.
+     */
     public void sendSms(String url, String secretKey, String phone, String message) {
         try {
+            if (message != null) {
+                // Remove duplicate "registCode:" if present, trim spaces
+                message = message.replaceAll("(?i)registCode:\\s*", "").trim();
+                // Optional: collapse multiple spaces into one while keeping line breaks
+                message = message.replaceAll(" +", " ");
+            }
+
             String requestId = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
 
-            String soapXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-                    "<soap:Envelope xmlns:soap='http://www.w3.org/2003/05/soap-envelope' xmlns:cpb='http://cpbmobile.vnpay.vn'>"
-                    +
+            String soapXml = "<?xml version=\"1.0\"?>" +
+                    "<soap:Envelope xmlns:soap='http://www.w3.org/2003/05/soap-envelope' xmlns:cpb='http://cpbmobile.vnpay.vn'>" +
                     "<soap:Header/>" +
                     "<soap:Body>" +
                     "<cpb:sendSmsNew>" +
@@ -36,7 +45,7 @@ public class SoapSmsSender {
                     "</soap:Envelope>";
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.valueOf("application/soap+xml; charset=utf-8"));
+            headers.setContentType(MediaType.valueOf("application/soap+xml"));
             HttpEntity<String> entity = new HttpEntity<>(soapXml, headers);
 
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
