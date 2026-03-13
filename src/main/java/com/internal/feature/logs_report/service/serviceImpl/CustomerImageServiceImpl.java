@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,8 +19,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.IsoFields;
 import java.util.Base64;
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Service
@@ -38,57 +43,62 @@ public class CustomerImageServiceImpl implements CustomerImageService {
     @Value("${file.upload.selfie:/selfie}")
     private String selfiePath;
 
+    // ─────────────────────────────────────────────
+    // Week folder: 2026-03-W11
+    // ─────────────────────────────────────────────
+
     /**
-     * Save NID and Selfie images for a customer.
-     * Only the filenames are stored in the DB to prevent dependency on path config.
+     * Returns current week folder name.
+     * Format: yyyy-MM-W{isoWeek}
+     * Example: 2026-03-W11
      */
+    private String getCurrentWeekFolder() {
+        LocalDate today = LocalDate.now();
+        int isoWeek = today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+        String monthPart = today.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+        return String.format("%s-W%02d", monthPart, isoWeek);
+    }
+
+    /**
+     * Resolves and creates the week sub-folder for a given type.
+     * Example: /app/customer-image/nid/2026-03-W11/
+     */
+    private Path resolveWeekFolder(String subFolder) {
+        Path dir = Paths.get(uploadDir, subFolder, getCurrentWeekFolder());
+        dir.toFile().mkdirs();
+        log.debug("Resolved week folder: {}", dir);
+        return dir;
+    }
+
+    // ─────────────────────────────────────────────
+    // Public API
+    // ─────────────────────────────────────────────
+
     @Override
     public CustomerImageUploadResponseDto saveCustomerImages(CustomerFileUploadRequestDto request) {
         try {
-            // Ensure directories exist
             new File(uploadDir + nidPath).mkdirs();
             new File(uploadDir + selfiePath).mkdirs();
 
             String legalId = request.getLegal_id();
-
-            // Check if images were already uploaded via DocumentUploadController
-            // We assume that if nidImage contains "nid_", it's a filename, otherwise base64
-            // OR we can add fields to CustomerFileUploadRequestDto.
-            // For now, let's stick to the plan: OpenAccountServiceImpl will handle this
-            // logic
-            // and pass base64 OR we update this to handle filenames.
-
-            // Actually, best approach:
-            // If the input string looks like a filename (ends with .jpg/png and has no
-            // base64 header), treat as file.
-            // But strict Base64 validation is better.
-
-            // Let's rely on OpenAccountServiceImpl to populate this DTO.
-            // If we use the new flow, OpenAccountServiceImpl won't even call this method
-            // with Base64.
-            // It might call it with null Base64 but we need to store the filenames in DB.
-
             String nidFileName;
             String selfieFileName;
 
-            // 1. Handle NID
+            // ── Handle NID ──
             if (request.getNidImage() != null && !request.getNidImage().isEmpty()) {
-                // Check if it's already a filename (simple heuristic or flag)
                 if (request.getNidImage().startsWith("nid_")) {
                     nidFileName = request.getNidImage();
                     log.info("NID image already uploaded: {}", nidFileName);
                 } else {
-                    // It is Base64
                     nidFileName = "nid_" + legalId + ".jpg";
-                    String nidFullPath = Paths.get(uploadDir, "nid", nidFileName).toString();
-                    saveBase64ToFile(request.getNidImage(), nidFullPath);
+                    Path weekDir = resolveWeekFolder("nid");
+                    saveBase64ToFile(request.getNidImage(), weekDir.resolve(nidFileName).toString());
                 }
             } else {
-                // Check if file already exists on disk (fallback) - find the actual filename
-                Path nidDir = Paths.get(uploadDir, "nid");
-                Path existingNid = findLatestFile(nidDir, "nid_" + legalId + "_");
-                if (existingNid != null) {
-                    nidFileName = existingNid.getFileName().toString();
+                Path existing = findLatestFileRecursive(
+                        Paths.get(uploadDir, "nid"), "nid_" + legalId + "_");
+                if (existing != null) {
+                    nidFileName = existing.getFileName().toString();
                     log.info("NID image data missing but file found on disk: {}", nidFileName);
                 } else {
                     log.warn("NID image data is missing and file not found - skipping save");
@@ -96,22 +106,21 @@ public class CustomerImageServiceImpl implements CustomerImageService {
                 }
             }
 
-            // 2. Handle Selfie
+            // ── Handle Selfie ──
             if (request.getSelfieImage() != null && !request.getSelfieImage().isEmpty()) {
                 if (request.getSelfieImage().startsWith("selfie_")) {
                     selfieFileName = request.getSelfieImage();
                     log.info("Selfie image already uploaded: {}", selfieFileName);
                 } else {
                     selfieFileName = "selfie_" + legalId + ".jpg";
-                    String selfieFullPath = Paths.get(uploadDir, "selfie", selfieFileName).toString();
-                    saveBase64ToFile(request.getSelfieImage(), selfieFullPath);
+                    Path weekDir = resolveWeekFolder("selfie");
+                    saveBase64ToFile(request.getSelfieImage(), weekDir.resolve(selfieFileName).toString());
                 }
             } else {
-                // Check if file already exists on disk (fallback) - find the actual filename
-                Path selfieDir = Paths.get(uploadDir, "selfie");
-                Path existingSelfie = findLatestFile(selfieDir, "selfie_" + legalId + "_");
-                if (existingSelfie != null) {
-                    selfieFileName = existingSelfie.getFileName().toString();
+                Path existing = findLatestFileRecursive(
+                        Paths.get(uploadDir, "selfie"), "selfie_" + legalId + "_");
+                if (existing != null) {
+                    selfieFileName = existing.getFileName().toString();
                     log.info("Selfie image data missing but file found on disk: {}", selfieFileName);
                 } else {
                     log.warn("Selfie image data is missing and file not found - skipping save");
@@ -119,20 +128,22 @@ public class CustomerImageServiceImpl implements CustomerImageService {
                 }
             }
 
-            // Only save to DB if filenames are present
+            // ── Persist to DB ──
             if (nidFileName != null) {
                 customerImageRepository.save(CustomerImage.builder()
                         .type("NID")
+                        .legal_id(legalId)
                         .name(nidFileName)
-                        .filePath(nidFileName)
+                        .filePath(getCurrentWeekFolder() + "/" + nidFileName)
                         .build());
             }
 
             if (selfieFileName != null) {
                 customerImageRepository.save(CustomerImage.builder()
                         .type("SELFIE")
+                        .legal_id(legalId)
                         .name(selfieFileName)
-                        .filePath(selfieFileName)
+                        .filePath(getCurrentWeekFolder() + "/" + selfieFileName)
                         .build());
             }
 
@@ -149,181 +160,219 @@ public class CustomerImageServiceImpl implements CustomerImageService {
         }
     }
 
+    /**
+     * Save a raw base64 string into the current week folder.
+     * Called by DocumentUploadController for JSON base64 uploads.
+     * Filename already contains legalId + timestamp + random from buildFilename().
+     */
     @Override
     public String saveBase64File(String base64, String filename, String type) throws Exception {
         String subFolder = "selfie".equalsIgnoreCase(type) ? "selfie" : "nid";
-        String filePath = Paths.get(uploadDir, subFolder, filename).toString();
+        Path weekDir = resolveWeekFolder(subFolder);
+        String filePath = weekDir.resolve(filename).toString();
 
-        new File(Paths.get(uploadDir, subFolder).toString()).mkdirs();
         saveBase64ToFile(base64, filePath);
 
-        log.info("Saved base64 file: {} to {}", filename, filePath);
+        String legalId = extractLegalIdFromFilename(filename);
+
+        customerImageRepository.save(CustomerImage.builder()
+                .type(subFolder.toUpperCase())
+                .legal_id(legalId)
+                .name(filename)
+                .filePath(getCurrentWeekFolder() + "/" + filename)
+                .build());
+
+        log.info("Saved base64 file: {} → week folder: {}", filename, weekDir);
         return filename;
     }
 
     /**
-     * Save uploaded file directly to disk.
-     * returns the filename.
+     * Save a multipart file into the current week folder.
+     * Called by DocumentUploadController for multipart uploads.
      */
     @Override
-    public String saveUploadedFile(org.springframework.web.multipart.MultipartFile file, String filename)
-            throws Exception {
-        // Determine sub-folder based on filename prefix (nid_ or selfie_)
-        String subFolder = filename.startsWith("nid_") ? "nid" : "selfie";
-        String folderPath = Paths.get(uploadDir, subFolder).toString();
+    public String saveUploadedFile(MultipartFile file, String filename) throws Exception {
+        String subFolder = filename.startsWith("selfie_") ? "selfie" : "nid";
+        Path weekDir = resolveWeekFolder(subFolder);
+        Path targetPath = weekDir.resolve(filename);
 
-        File directory = new File(folderPath);
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-
-        Path targetPath = Paths.get(folderPath, filename);
         try (FileOutputStream fos = new FileOutputStream(targetPath.toFile())) {
             fos.write(file.getBytes());
         }
 
-        log.info("Saved uploaded file: {} to {}", filename, targetPath);
+        String legalId = extractLegalIdFromFilename(filename);
+
+        customerImageRepository.save(CustomerImage.builder()
+                .type(subFolder.toUpperCase())
+                .legal_id(legalId)
+                .name(filename)
+                .filePath(getCurrentWeekFolder() + "/" + filename)
+                .build());
+
+        log.info("Saved uploaded file: {} → week folder: {}", filename, weekDir);
         return filename;
     }
 
-    /** Get NID image file as Resource (for email attachment) */
     @Override
     public Resource getNidImageResourceForEmail(String customerId) {
         try {
-            Path dir = Paths.get(uploadDir, "nid");
-            Path imagePath = findLatestFile(dir, "nid_" + customerId + "_");
+            Path imagePath = findLatestFileRecursive(
+                    Paths.get(uploadDir, "nid"), "nid_" + customerId + "_");
             if (imagePath == null) {
                 log.warn("NID image not found for customer: {}", customerId);
                 return null;
             }
             log.info("Retrieved NID image for email: {}", imagePath);
             return new FileSystemResource(imagePath.toFile());
-
         } catch (Exception e) {
             log.error("Failed to get NID image resource: {}", e.getMessage(), e);
             return null;
         }
     }
 
-    /** Get NID image as byte array */
     @Override
     public byte[] getNidImageBytes(String customerId) {
         try {
-            Path dir = Paths.get(uploadDir, "nid");
-            Path imagePath = findLatestFile(dir, "nid_" + customerId + "_");
+            Path imagePath = findLatestFileRecursive(
+                    Paths.get(uploadDir, "nid"), "nid_" + customerId + "_");
             if (imagePath == null) {
-                log.warn("NID image not found for customer: {} in dir: {}", customerId, dir.toAbsolutePath());
+                log.warn("NID image not found for customer: {} in dir: {}",
+                        customerId, Paths.get(uploadDir, "nid").toAbsolutePath());
                 return null;
             }
-
             byte[] bytes = Files.readAllBytes(imagePath);
-            log.info("Retrieved NID image bytes for customer: {} ({} bytes) from {}", customerId, bytes.length, imagePath.getFileName());
+            log.info("Retrieved NID image bytes for customer: {} ({} bytes) from {}",
+                    customerId, bytes.length, imagePath.getFileName());
             return bytes;
-
         } catch (IOException e) {
             log.error("Failed to read NID image bytes: {}", e.getMessage(), e);
             return null;
         }
     }
 
-    /** Get Selfie image file as Resource (for email attachment) */
     @Override
     public Resource getSelfieImageResourceForEmail(String customerId) {
         try {
-            Path dir = Paths.get(uploadDir, "selfie");
-            Path imagePath = findLatestFile(dir, "selfie_" + customerId + "_");
+            Path imagePath = findLatestFileRecursive(
+                    Paths.get(uploadDir, "selfie"), "selfie_" + customerId + "_");
             if (imagePath == null) {
                 log.warn("Selfie image not found for customer: {}", customerId);
                 return null;
             }
-
             log.info("Retrieved Selfie image for email: {}", imagePath);
             return new FileSystemResource(imagePath.toFile());
-
         } catch (Exception e) {
             log.error("Failed to get Selfie image resource: {}", e.getMessage(), e);
             return null;
         }
     }
 
-    /** Get Selfie image as byte array */
     @Override
     public byte[] getSelfieImageBytes(String customerId) {
         try {
-            Path dir = Paths.get(uploadDir, "selfie");
-            Path imagePath = findLatestFile(dir, "selfie_" + customerId + "_");
+            Path imagePath = findLatestFileRecursive(
+                    Paths.get(uploadDir, "selfie"), "selfie_" + customerId + "_");
             if (imagePath == null) {
-                log.warn("Selfie image not found for customer: {} in dir: {}", customerId, dir.toAbsolutePath());
+                log.warn("Selfie image not found for customer: {} in dir: {}",
+                        customerId, Paths.get(uploadDir, "selfie").toAbsolutePath());
                 return null;
             }
-
             byte[] bytes = Files.readAllBytes(imagePath);
-            log.info("Retrieved Selfie image bytes for customer: {} ({} bytes) from {}", customerId, bytes.length, imagePath.getFileName());
+            log.info("Retrieved Selfie image bytes for customer: {} ({} bytes) from {}",
+                    customerId, bytes.length, imagePath.getFileName());
             return bytes;
-
         } catch (IOException e) {
             log.error("Failed to read Selfie image bytes: {}", e.getMessage(), e);
             return null;
         }
     }
 
-    /** Check if any NID image exists for the customer (prefix match) */
     @Override
     public boolean nidImageExists(String customerId) {
-        Path dir = Paths.get(uploadDir, "nid");
-        String prefix = "nid_" + customerId + "_";
-        try (Stream<Path> files = Files.list(dir)) {
-            return files.anyMatch(p -> p.getFileName().toString().startsWith(prefix));
-        } catch (IOException e) {
-            return false;
-        }
+        return findLatestFileRecursive(
+                Paths.get(uploadDir, "nid"), "nid_" + customerId + "_") != null;
     }
 
-    /** Check if any Selfie image exists for the customer (prefix match) */
     @Override
     public boolean selfieImageExists(String customerId) {
-        Path dir = Paths.get(uploadDir, "selfie");
-        String prefix = "selfie_" + customerId + "_";
-        try (Stream<Path> files = Files.list(dir)) {
-            return files.anyMatch(p -> p.getFileName().toString().startsWith(prefix));
+        return findLatestFileRecursive(
+                Paths.get(uploadDir, "selfie"), "selfie_" + customerId + "_") != null;
+    }
+
+    /**
+     * Find file by exact filename — used by CustomerImageFileController.
+     * Searches flat (old) + week subfolders (new) at depth 2.
+     */
+    public Optional<Path> findFileByName(String subFolder, String filename) {
+        Path baseDir = Paths.get(uploadDir, subFolder);
+        try (Stream<Path> walk = Files.walk(baseDir, 2)) {
+            return walk
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().equals(filename))
+                    .findFirst();
         } catch (IOException e) {
-            return false;
+            log.warn("Could not search for file {} in {}: {}", filename, baseDir, e.getMessage());
+            return Optional.empty();
         }
     }
 
-    /** Utility: Find the most recently modified file in a directory whose name starts with the given prefix */
-    private Path findLatestFile(Path dir, String prefix) {
-        try (Stream<Path> files = Files.list(dir)) {
-            return files
+    // ─────────────────────────────────────────────
+    // Private utilities
+    // ─────────────────────────────────────────────
+
+    /**
+     * Search recursively through base dir AND all week sub-folders.
+     * Handles both old flat structure and new week structure.
+     * Depth 2: base → week folder → file
+     */
+    private Path findLatestFileRecursive(Path baseDir, String prefix) {
+        try (Stream<Path> walk = Files.walk(baseDir, 2)) {
+            return walk
+                    .filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().startsWith(prefix))
                     .max(Comparator.comparingLong(p -> p.toFile().lastModified()))
                     .orElse(null);
         } catch (IOException e) {
-            log.warn("Could not scan directory {} for prefix {}: {}", dir, prefix, e.getMessage());
+            log.warn("Could not scan directory {} for prefix {}: {}", baseDir, prefix, e.getMessage());
             return null;
         }
     }
 
-    /** Utility: Save base64 image to file */
-    private void saveBase64ToFile(String base64, String filePath) throws Exception {
-        if (base64 == null || base64.isEmpty())
-            return;
-
-        // 1. Strip metadata if present (e.g., "data:image/jpeg;base64,")
-        if (base64.contains(",")) {
-            int base64Index = base64.indexOf("base64,");
-            if (base64Index != -1) {
-                base64 = base64.substring(base64Index + 7);
-            } else {
-                // Fallback: take content after the last comma
-                int lastCommaIndex = base64.lastIndexOf(",");
-                base64 = base64.substring(lastCommaIndex + 1);
+    /**
+     * Extract legalId from filename built by DocumentUploadController.buildFilename().
+     * Pattern: {type}_{legalId}_{timestamp}_{random}.jpg
+     * Example: nid_250319613_20260313043535123_a3f9c1.jpg → 250319613
+     */
+    private String extractLegalIdFromFilename(String filename) {
+        try {
+            String withoutExt = filename.contains(".")
+                    ? filename.substring(0, filename.lastIndexOf('.'))
+                    : filename;
+            // parts[0]=type, parts[1]=legalId, parts[2]=timestamp_random
+            String[] parts = withoutExt.split("_", 3);
+            if (parts.length >= 2) {
+                return parts[1];
             }
+        } catch (Exception e) {
+            log.warn("Could not extract legalId from filename: {}", filename);
+        }
+        return null;
+    }
+
+    /**
+     * Decode and write a base64 string to a file path.
+     * Strips data URI prefix and sanitizes non-Base64 characters.
+     */
+    private void saveBase64ToFile(String base64, String filePath) throws Exception {
+        if (base64 == null || base64.isEmpty()) return;
+
+        if (base64.contains(",")) {
+            int idx = base64.indexOf("base64,");
+            base64 = (idx != -1)
+                    ? base64.substring(idx + 7)
+                    : base64.substring(base64.lastIndexOf(",") + 1);
         }
 
-        // 2. Sanitize: Remove all characters not in the Base64 alphabet (A-Z, a-z, 0-9,
-        // +, /, =)
-        // This handles newlines, spaces, dots (.), etc.
         base64 = base64.replaceAll("[^A-Za-z0-9+/=]", "");
 
         byte[] decoded = Base64.getDecoder().decode(base64);
@@ -332,7 +381,7 @@ public class CustomerImageServiceImpl implements CustomerImageService {
         }
     }
 
-    /** Utility: Encode file to Base64 (optional use) */
+    /** Encode file to Base64 string (utility, optional use) */
     private String encodeFileToBase64(String filePath) throws Exception {
         byte[] bytes = Files.readAllBytes(Paths.get(filePath));
         return Base64.getEncoder().encodeToString(bytes);

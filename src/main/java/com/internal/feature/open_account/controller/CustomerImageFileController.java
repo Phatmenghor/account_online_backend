@@ -1,7 +1,8 @@
 package com.internal.feature.open_account.controller;
 
+import com.internal.feature.logs_report.service.serviceImpl.CustomerImageServiceImpl;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,37 +10,43 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/customer-images")
+@RequiredArgsConstructor
 @Slf4j
 public class CustomerImageFileController {
 
-    @Value("${file.upload.directory:/app/customer-image}")
-    private String uploadDir;
+    private final CustomerImageServiceImpl customerImageService;
 
     /**
-     * Serve a customer image file by filename.
-     * Filename prefix determines the subfolder: nid_ → /nid/, selfie_ → /selfie/
-     * Example: GET /api/v1/public/customer-images/nid_020013239_20260220045614.jpg
+     * Serve a customer image by filename.
+     * Searches both flat (old) and week-subfolder (new) structure automatically.
+     *
+     * Examples:
+     *   GET /api/customer-images/nid_250319613_20260313043535123_a3f9c1.jpg
+     *   GET /api/customer-images/selfie_250319613_20260313043535123_a3f9c1.jpg
      */
     @GetMapping("/{filename:.+}")
     public ResponseEntity<byte[]> getImage(@PathVariable String filename) {
         try {
             String subFolder = filename.startsWith("selfie_") ? "selfie" : "nid";
-            Path filePath = Paths.get(uploadDir, subFolder, filename);
 
-            if (!Files.exists(filePath)) {
-                log.warn("Customer image not found: {}", filePath.toAbsolutePath());
+            Optional<Path> found = customerImageService.findFileByName(subFolder, filename);
+
+            if (found.isEmpty()) {
+                log.warn("Customer image not found: {} in subFolder: {}", filename, subFolder);
                 return ResponseEntity.notFound().build();
             }
 
+            Path filePath = found.get();
             byte[] bytes = Files.readAllBytes(filePath);
-            String extension = filename.contains(".png") ? "png" : filename.contains(".webp") ? "webp" : "jpeg";
-            MediaType mediaType = MediaType.parseMediaType("image/" + extension);
+            MediaType mediaType = resolveMediaType(filename);
 
-            log.info("Serving customer image: {} ({} bytes)", filename, bytes.length);
+            log.info("Serving customer image: {} ({} bytes) from week: {}",
+                    filename, bytes.length, filePath.getParent().getFileName());
+
             return ResponseEntity.ok()
                     .contentType(mediaType)
                     .body(bytes);
@@ -48,5 +55,12 @@ public class CustomerImageFileController {
             log.error("Failed to read customer image {}: {}", filename, e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    private MediaType resolveMediaType(String filename) {
+        String lower = filename.toLowerCase();
+        if (lower.endsWith(".png"))  return MediaType.IMAGE_PNG;
+        if (lower.endsWith(".webp")) return MediaType.parseMediaType("image/webp");
+        return MediaType.IMAGE_JPEG;
     }
 }

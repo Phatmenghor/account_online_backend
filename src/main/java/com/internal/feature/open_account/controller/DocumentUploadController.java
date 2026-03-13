@@ -2,7 +2,6 @@ package com.internal.feature.open_account.controller;
 
 import com.internal.feature.logs_report.service.CustomerImageService;
 import com.internal.feature.open_account.dto.request.Base64UploadRequest;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,14 +27,20 @@ public class DocumentUploadController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> uploadBase64(
             @RequestBody Base64UploadRequest request) {
-        log.info("Received base64 upload. Type: {}, LegalId: {}", request.getType(), request.getLegalId());
+
+        log.info("Received base64 upload. Type: {}, LegalId: {}",
+                request.getType(), request.getLegalId());
+
+        if (request.getFileBase64() == null || request.getFileBase64().isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(Collections.singletonMap("error", "File data is empty"));
+        }
+
+        if (request.getLegalId() == null || request.getLegalId().isBlank()) {
+            log.warn("legalId is missing — falling back to UUID-based filename");
+        }
 
         try {
-            if (request.getFileBase64() == null || request.getFileBase64().isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Collections.singletonMap("error", "File data is empty"));
-            }
-
             String filename = buildFilename(request.getType(), request.getLegalId());
             String savedFilename = customerImageService.saveBase64File(
                     request.getFileBase64(), filename, request.getType());
@@ -50,20 +55,20 @@ public class DocumentUploadController {
         }
     }
 
-    // ✅ Multipart upload (used when calling 100.5 directly)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> uploadMultipart(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "type", defaultValue = "nid") String type,
             @RequestParam(value = "legalId", required = false) String legalId) {
+
         log.info("Received multipart upload. Type: {}, LegalId: {}", type, legalId);
 
-        try {
-            if (file.isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Collections.singletonMap("error", "File is empty"));
-            }
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Collections.singletonMap("error", "File is empty"));
+        }
 
+        try {
             String filename = buildFilename(type, legalId);
             String savedFilename = customerImageService.saveUploadedFile(file, filename);
 
@@ -77,12 +82,21 @@ public class DocumentUploadController {
         }
     }
 
+    /**
+     * Builds a unique filename.
+     * Pattern: {type}_{legalId}_{yyyyMMddHHmmssSSS}_{6charRandom}.jpg
+     * Example: nid_250319613_20260313043535123_a3f9c1.jpg
+     */
     private String buildFilename(String type, String legalId) {
-        String identifier = (legalId != null && !legalId.isEmpty())
-                ? legalId : UUID.randomUUID().toString();
+        String identifier = (legalId != null && !legalId.isBlank())
+                ? legalId
+                : UUID.randomUUID().toString();
         String prefix = "selfie".equalsIgnoreCase(type) ? "selfie_" : "nid_";
         String timestamp = LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        return prefix + identifier + "_" + timestamp + ".jpg";
+                .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+        String random = UUID.randomUUID().toString()
+                .replace("-", "")
+                .substring(0, 6);
+        return prefix + identifier + "_" + timestamp + "_" + random + ".jpg";
     }
 }

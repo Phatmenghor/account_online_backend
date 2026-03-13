@@ -29,7 +29,7 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
-            batch_size: 50
+          batch_size: 50
         order_inserts: true
         order_updates: true
         batch_versioned_data: true
@@ -43,14 +43,14 @@ spring:
     password: 123cp!@#
     driver-class-name: org.postgresql.Driver
     hikari:
+      auto-commit: false
       maximum-pool-size: 20
       minimum-idle: 5
       connection-timeout: 30000
-      idle-timeout: 300000         # 5 min - close idle connections
-      max-lifetime: 600000         # 10 min - max connection lifetime
-      leak-detection-threshold: 300000  # 5 min - enough for full T24 flow
+      idle-timeout: 300000
+      max-lifetime: 600000
+      leak-detection-threshold: 300000
       pool-name: PostgreSQL-Pool
-      auto-commit: false
 
   mail:
     host: 10.18.1.204
