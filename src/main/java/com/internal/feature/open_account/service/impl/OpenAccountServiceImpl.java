@@ -51,30 +51,19 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             bankingService.testConnection();
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "TEST_CONNECTION", true, "Banking service connection verified");
 
-            // Step 2: Customer matching
+            // Step 2: Check existing complete account (recovery path for failed activation)
+            currentStep = "CHECK_EXISTING_COMPLETE_ACCOUNT";
+            var recoveryResult = bankingService.checkExistingCompleteAccountAndActivate(request);
+            if (recoveryResult.isPresent()) {
+                log.info("Account recovery successful - account already complete");
+                return new CustomerResponse(); // Return minimal response - account is complete
+            }
+
+            // Step 3: Customer matching (continue normal flow)
             currentStep = AppConstants.GET_CUSTOMER_INFO;
             context.setCustomerInfo(bankingService.getCustomerInfo(request.getLegalId()));
             String customerCif = context.getCustomerInfo() != null ? context.getCustomerInfo().get("CIF") : "N/A";
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "GET_CUSTOMER_INFO", true, "Customer found with CIF: " + customerCif);
-
-            // Step 2.5: Check existing complete account (recovery path for failed activation)
-            currentStep = "CHECK_EXISTING_COMPLETE_ACCOUNT";
-            var recoveryResult = bankingService.checkExistingCompleteAccountAndActivate(request);
-            if (recoveryResult.isPresent()) {
-                log.info("========== ACCOUNT OPENING COMPLETED (RECOVERY PATH) ==========");
-                monitoringService.logAccountOpeningCompleted(
-                        request.getLegalId(),
-                        context.getCustomerInfo() != null ? context.getCustomerInfo().get("CIF") : "N/A",
-                        context.getCustomerInfo() != null ? context.getCustomerInfo().get("KHR") : "N/A",
-                        context.getCustomerInfo() != null ? context.getCustomerInfo().get("USD") : "N/A",
-                        System.currentTimeMillis() - startTime);
-                // Return recovery result
-                return complianceService.buildCustomerAccInfo(
-                        context.getCustomerInfo() != null ? context.getCustomerInfo().get("CIF") : null,
-                        context.getCustomerInfo() != null ? context.getCustomerInfo().get("KHR") : null,
-                        context.getCustomerInfo() != null ? context.getCustomerInfo().get("USD") : null,
-                        context.getCustomerInfo() != null ? context.getCustomerInfo().get("MNEMONIC") : null);
-            }
 
             // Step 3: Validation
             currentStep = AppConstants.VALIDATE_EXISTING_ACCOUNT;
