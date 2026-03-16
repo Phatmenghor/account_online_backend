@@ -181,10 +181,18 @@ public class BankingService {
                     delayMs(retryDelay);
                     log.info("Delayed 3 seconds. Verifying customer info before retry attempt {}", attempt + 1);
 
-                    // Verify customer info before retry
+                    // Verify customer info and check if account was created despite error
                     try {
                         Map<String, String> freshCustomerInfo = getCustomerInfo(request.getLegalId());
-                        log.info("Customer info verified - CIF present. Retrying {} account creation (attempt {} of {})", currency, attempt + 1, maxRetries);
+
+                        // Check if account was actually created despite error
+                        if (validationService.hasAccount(freshCustomerInfo, currency)) {
+                            String existingAccount = freshCustomerInfo.get(currency);
+                            log.info("{} account already created (verified) → returning: {}", currency, existingAccount);
+                            return existingAccount;
+                        }
+
+                        log.info("{} account verified as null. Retrying account creation (attempt {} of {})", currency, attempt + 1, maxRetries);
                     } catch (Exception verifyError) {
                         log.error("Failed to verify customer info before retry: {}", verifyError.getMessage());
                         throw new AccountCreationException("Customer verification failed before retry");
