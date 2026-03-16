@@ -132,6 +132,32 @@ public class MobileBankingService {
     }
 
     private MobileBankingResponse callActivatorApi(MobileBankingRequest request, String cif) {
+        int maxRetries = 2;
+        int retryDelay = 1000; // 1 second
+
+        for (int attempt = 1; attempt <= maxRetries + 1; attempt++) {
+            try {
+                return attemptApiCall(request, cif, attempt, maxRetries + 1);
+            } catch (Exception e) {
+                if (attempt == maxRetries + 1) {
+                    // Final attempt failed, throw error
+                    throw e;
+                }
+                // Retry with delay
+                log.warn("Attempt {} failed for CIF {}: {}. Retrying in {}ms...",
+                    attempt, cif, e.getMessage(), retryDelay);
+                try {
+                    Thread.sleep(retryDelay);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Retry interrupted", ie);
+                }
+            }
+        }
+        return null;
+    }
+
+    private MobileBankingResponse attemptApiCall(MobileBankingRequest request, String cif, int attemptNumber, int totalAttempts) {
         String url = properties.getMb().getRegisterCodeUrl();
 
         HttpHeaders headers = new HttpHeaders();
@@ -152,7 +178,7 @@ public class MobileBankingService {
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             requestPayload = mapper.writeValueAsString(request);
 
-            log.info("Calling Activator API: {}", url);
+            log.info("Calling Activator API (Attempt {}/{}): {}", attemptNumber, totalAttempts, url);
             log.info("Request: {}", requestPayload);
 
             ResponseEntity<String> rawResponse = restTemplate.exchange(
@@ -186,7 +212,7 @@ public class MobileBankingService {
             return parsed;
 
         } catch (Exception e) {
-            log.error("Error calling Activator API: {}", e.getMessage(), e);
+            log.error("Error calling Activator API (Attempt {}/{}): {}", attemptNumber, totalAttempts, e.getMessage(), e);
             if (errorMessage == null) {
                 errorMessage = e.getMessage();
             }
