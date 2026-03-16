@@ -111,7 +111,18 @@ public class BankingService {
 
                 if (activationCode != null && !activationCode.isEmpty()) {
                     log.info("✓ MB activation successful → Code: {}", activationCode);
-                    // TODO: Send SMS with activation code if needed
+
+                    // Update the final table with the new activation code
+                    try {
+                        account.setMbActivationCode(activationCode);
+                        accountOnlineFinalRepository.save(account);
+                        log.info("✓ Updated acc_online_open_final table with activation code");
+                    } catch (Exception saveError) {
+                        log.error("Failed to save activation code to database: {}", saveError.getMessage());
+                        // Don't fail the whole recovery if DB save fails
+                    }
+
+                    // TODO: Send SMS with activation code to customer
                     return Optional.of(activationCode);
                 } else {
                     log.warn("MB activation returned null code → Continue to Step 3");
