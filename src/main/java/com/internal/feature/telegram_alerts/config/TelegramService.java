@@ -109,6 +109,9 @@ public class TelegramService {
     }
 
     public void sendPhoto(String chatId, String caption, Resource imageResource) {
+        if (chatId == null || chatId.trim().isEmpty()) {
+            return;
+        }
         try {
             String url = String.format("https://api.telegram.org/bot%s/sendPhoto", botToken);
 
@@ -124,9 +127,8 @@ public class TelegramService {
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
             restTemplate.postForObject(url, requestEntity, String.class);
-            log.info("Telegram photo sent to chat: {}", chatId);
         } catch (Exception e) {
-            log.error("Failed to send Telegram photo to chat {}: {}", chatId, e.getMessage(), e);
+            log.warn("Failed to send Telegram photo: {}", e.getMessage());
         }
     }
 }
