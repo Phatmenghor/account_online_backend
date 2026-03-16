@@ -73,19 +73,19 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             String customerCif = context.getCustomerInfo() != null ? context.getCustomerInfo().get("CIF") : "N/A";
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "GET_CUSTOMER_INFO", true, "Customer found with CIF: " + customerCif);
 
-            // Step 3: Validation
+            // Step 4: Validation
             currentStep = AppConstants.VALIDATE_EXISTING_ACCOUNT;
             bankingService.validateExistingAccounts(context.getCustomerInfo());
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "VALIDATE_EXISTING_ACCOUNT", true, "No existing accounts found");
 
-            // Step 4: Process AML
+            // Step 5: Process AML
             currentStep = AppConstants.PROCESS_AML;
             context.setAmlResult(complianceService.processAml(request));
             String amlStatus = context.getAmlResult() != null ? context.getAmlResult().getStatus().name() : "UNKNOWN";
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "PROCESS_AML", true, "AML Status: " + amlStatus);
             complianceService.sentMessageOnHighRisk(request, context.getAmlResult());
 
-            // Step 5: Create customer
+            // Step 6: Create customer
             currentStep = AppConstants.CREATE_CUSTOMER;
             CustomerCreationResult customerResult =
                     bankingService.createCustomerIfNeeded(request, context.getCustomerInfo());
@@ -93,26 +93,26 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             context.setMnemonic(customerResult.getMnemonic());
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "CREATE_CUSTOMER", true, "CIF Created: " + customerResult.getCif());
 
-            // Step 6: Create KHR Account
+            // Step 7: Create KHR Account
             currentStep = AppConstants.CREATE_KHR_ACCOUNT;
             context.setKhrAccount(bankingService.createAccountIfNeeded(request, context.getCustomerInfo(),
                     context.getCif(), AppConstants.CURRENCY_KHR));
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "CREATE_KHR_ACCOUNT", true, "Account: " + context.getKhrAccount());
 
-            // Step 7: Create USD Account
+            // Step 8: Create USD Account
             currentStep = AppConstants.CREATE_USD_ACCOUNT;
             context.setUsdAccount(bankingService.createAccountIfNeeded(request, context.getCustomerInfo(),
                     context.getCif(), AppConstants.CURRENCY_USD));
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "CREATE_USD_ACCOUNT", true, "Account: " + context.getUsdAccount());
 
-            // Step 8: Final Validation
+            // Step 9: Final Validation
             currentStep = AppConstants.VALIDATE_ACCOUNT_CREATION;
             bankingService.validateAllRequiredAccountsCreated(context.getCustomerInfo(),
                     context.getKhrAccount(),
                     context.getUsdAccount());
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "VALIDATE_ACCOUNT_CREATION", true, "Accounts validated successfully");
 
-            // Step 9: Activate mobile banking
+            // Step 10: Activate mobile banking
             currentStep = AppConstants.ACTIVATE_MOBILE_BANKING;
             context.setMbActivationCode(
                     bankingService.activateMobileBanking(request, context.getCif(),
