@@ -139,7 +139,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             return accInfo;
 
         } catch (Exception e) {
-            long totalDuration = System.currentTimeMillis() - startTime;
             log.error("========== ACCOUNT OPENING FAILED AT STEP: {} ==========", currentStep);
 
             // Monitor: Account opening failed

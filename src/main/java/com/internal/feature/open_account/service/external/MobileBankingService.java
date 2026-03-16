@@ -133,7 +133,7 @@ public class MobileBankingService {
 
     private MobileBankingResponse callActivatorApi(MobileBankingRequest request, String cif) {
         int maxRetries = 2;
-        int retryDelay = 1000; // 1 second
+        int retryDelay = 3000; // 3 second
 
         for (int attempt = 1; attempt <= maxRetries + 1; attempt++) {
             try {
