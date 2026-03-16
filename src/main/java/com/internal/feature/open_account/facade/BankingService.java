@@ -70,6 +70,15 @@ public class BankingService {
         return customerInfo;
     }
 
+    // ─── Step 2: Get Existing Account Details ─────────────────────────────────
+    /**
+     * Retrieves complete account details from acc_online_open_final table.
+     * Used for returning full response in recovery path.
+     */
+    public Optional<AccountOnlineFinal> getExistingAccountDetails(String legalId) {
+        return accountOnlineFinalRepository.findByLegalId(legalId);
+    }
+
     // ─── Step 2.5: Check Existing Complete Account (Recovery) ───────────────────
     /**
      * Checks if customer already has complete accounts (USD + KHR + CIF) in the final table.

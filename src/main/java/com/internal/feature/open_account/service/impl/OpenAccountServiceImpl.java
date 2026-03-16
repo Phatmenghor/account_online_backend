@@ -56,7 +56,15 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             var recoveryResult = bankingService.checkExistingCompleteAccountAndActivate(request);
             if (recoveryResult.isPresent()) {
                 log.info("Account recovery successful - account already complete");
-                return new CustomerResponse(); // Return minimal response - account is complete
+                // Build and return full response with account details
+                var existingAccount = bankingService.getExistingAccountDetails(request.getLegalId());
+                if (existingAccount.isPresent()) {
+                    return complianceService.buildCustomerAccInfo(
+                            existingAccount.get().getCif(),
+                            existingAccount.get().getKhrAccount(),
+                            existingAccount.get().getUsdAccount(),
+                            existingAccount.get().getMnemonic());
+                }
             }
 
             // Step 3: Customer matching (continue normal flow)
