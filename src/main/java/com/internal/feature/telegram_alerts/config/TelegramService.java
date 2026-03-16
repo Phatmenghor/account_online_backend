@@ -24,6 +24,9 @@ public class TelegramService {
     @Value("${telegram.bot.uat-monitor-chat-id}")
     private String chatId_uat_monitor;
 
+    @Value("${telegram.bot.uat-dev-team-chat-id:}")
+    private String chatId_dev_team;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     public void sendMarkdownAclInternalMessage(String message) {
@@ -66,6 +69,18 @@ public class TelegramService {
         } catch (Exception e) {
             log.error("Failed to send Telegram to Monitor channel: {}", e.getMessage(), e);
         }
+    }
+
+    public void sendDetailedErrorToDevTeam(String message) {
+        sendMarkdownToChat(chatId_dev_team, message);
+        log.info("Detailed error message sent to Dev Team channel.");
+    }
+
+    public void sendCriticalErrorAlert(String title, String details) {
+        String message = String.format(
+                "*🚨 %s*\n%s",
+                title, details);
+        sendDetailedErrorToDevTeam(message);
     }
 
     public void sendMarkdownToChat(String chatId, String message) {

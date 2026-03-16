@@ -155,17 +155,48 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
     }
 
     // =====================================================
-    // TELEGRAM INFRA FAILURE
+    // TELEGRAM INFRA FAILURE - Detailed for Dev Team
     // =====================================================
     private void sendInfraFailureAlert(CamdxValidateNidRequest request,
             int errorCode,
             String errorMessage) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter detailFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
-        StringBuilder sb = new StringBuilder();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Phnom_Penh"));
 
-        sb.append("*CAMDX / MIDDLEWARE FAILURE*\n")
+        // DETAILED MESSAGE FOR DEV TEAM
+        StringBuilder detailedMsg = new StringBuilder();
+        detailedMsg.append("🚨 *CAMDX MIDDLEWARE FAILURE*\n")
+                .append("═══════════════════════════════════════\n\n")
+                .append("*ERROR DETAILS:*\n")
+                .append("├─ Status: `FAILURE`\n")
+                .append("├─ Error Code: `").append(errorCode).append("`\n")
+                .append("├─ Error Type: `INFRASTRUCTURE`\n")
+                .append("├─ Message: `").append(escapeMarkdown(errorMessage)).append("`\n")
+                .append("├─ Time: `").append(now.format(detailFormatter)).append("`\n")
+                .append("└─ Date: `").append(now.format(formatter)).append("`\n\n")
+                .append("*REQUEST INFO:*\n")
+                .append("├─ NID: `").append(escapeMarkdown(request.getIdNumber())).append("`\n")
+                .append("├─ Name KH: `").append(escapeMarkdown(request.getLastNameKh()))
+                .append(" ").append(escapeMarkdown(request.getFirstNameKh())).append("`\n")
+                .append("├─ Name EN: `").append(escapeMarkdown(request.getLastNameEn()))
+                .append(" ").append(escapeMarkdown(request.getFirstNameEn())).append("`\n")
+                .append("├─ Phone: `").append(escapeMarkdown(request.getPhoneNumber())).append("`\n")
+                .append("└─ DOB: `").append(escapeMarkdown(request.getDob())).append("`\n\n")
+                .append("*ACTION REQUIRED:*\n")
+                .append("• Contact MOI/CAMDX operations\n")
+                .append("• Check network connectivity\n")
+                .append("• Verify API endpoint availability\n")
+                .append("• Review recent infrastructure changes\n\n")
+                .append("═══════════════════════════════════════");
+
+        telegramService.sendDetailedErrorToDevTeam(detailedMsg.toString());
+
+        // SIMPLE MESSAGE FOR OPERATIONS/MONITORING CHANNEL
+        StringBuilder simpleMsg = new StringBuilder();
+        simpleMsg.append("*CAMDX / MIDDLEWARE FAILURE*\n")
                 .append("--------------------\n")
                 .append("Status: *FAILURE*\n")
                 .append("Error Code: ").append(errorCode).append("\n")
@@ -176,75 +207,94 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
                 .append(escapeMarkdown(request.getIdNumber()))
                 .append("`\n")
                 .append("--------------------\n")
-                .append("Time: ")
-                .append(LocalDateTime.now(ZoneId.of("Asia/Phnom_Penh"))
-                        .format(formatter))
-                .append("\n")
+                .append("Time: ").append(now.format(formatter)).append("\n")
                 .append(AppConstants.SUPPORT_CONTACT);
 
-        telegramService.sendMarkdownAccountOnlineMonitorMessage(sb.toString());
+        telegramService.sendMarkdownAccountOnlineMonitorMessage(simpleMsg.toString());
     }
 
     // =====================================================
-    // TELEGRAM VALIDATION FAILURE
+    // TELEGRAM VALIDATION FAILURE - Detailed for Dev Team
     // =====================================================
     private void sendValidationFailureAlert(CamdxValidateNidRequest request,
             double score,
             List<String> incorrectFields) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter detailFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Phnom_Penh"));
         String formattedIncorrect = formatIncorrectFields(incorrectFields);
+        String scorePercentage = String.format("%.1f%%", score * 100);
 
-        StringBuilder sb = new StringBuilder();
+        // DETAILED MESSAGE FOR DEV TEAM
+        StringBuilder detailedMsg = new StringBuilder();
+        detailedMsg.append("⚠️ *CAMDX VALIDATION FAILURE*\n")
+                .append("═══════════════════════════════════════\n\n")
+                .append("*VALIDATION RESULTS:*\n")
+                .append("├─ Status: `FAILURE`\n")
+                .append("├─ Error Type: `DATA_MISMATCH`\n")
+                .append("├─ Match Score: `").append(scorePercentage).append("` (Required: 100%)\n")
+                .append("├─ Time: `").append(now.format(detailFormatter)).append("`\n")
+                .append("└─ Date: `").append(now.format(formatter)).append("`\n\n")
+                .append("*MISMATCH DETAILS:*\n");
 
-        sb.append("*CAMDX VALIDATION FAILURE*\n")
+        if (incorrectFields != null && !incorrectFields.isEmpty()) {
+            for (int i = 0; i < incorrectFields.size(); i++) {
+                String field = incorrectFields.get(i);
+                boolean isLast = (i == incorrectFields.size() - 1);
+                detailedMsg.append(isLast ? "└─ " : "├─ ")
+                        .append("*").append(escapeMarkdown(field)).append("*")
+                        .append(" - Data mismatch detected\n");
+            }
+        } else {
+            detailedMsg.append("└─ No field details available\n");
+        }
+
+        detailedMsg.append("\n*SUBMITTED DATA:*\n")
+                .append("├─ NID: `").append(escapeMarkdown(request.getIdNumber())).append("`\n")
+                .append("├─ Name (KH): `").append(escapeMarkdown(request.getLastNameKh()))
+                .append(" ").append(escapeMarkdown(request.getFirstNameKh())).append("`\n")
+                .append("├─ Name (EN): `").append(escapeMarkdown(request.getLastNameEn()))
+                .append(" ").append(escapeMarkdown(request.getFirstNameEn())).append("`\n")
+                .append("├─ Gender: `").append(escapeMarkdown(request.getGender())).append("`\n")
+                .append("├─ DOB: `").append(escapeMarkdown(request.getDob())).append("`\n")
+                .append("├─ Issued: `").append(escapeMarkdown(request.getIssuedDate())).append("`\n")
+                .append("├─ Expired: `").append(escapeMarkdown(request.getExpiredDate())).append("`\n")
+                .append("└─ Phone: `").append(escapeMarkdown(request.getPhoneNumber())).append("`\n\n")
+                .append("*ACTION REQUIRED:*\n")
+                .append("• Request customer to resubmit NID\n")
+                .append("• Verify scanned document quality\n")
+                .append("• Check for data entry errors\n")
+                .append("• Confirm customer identity via phone call if needed\n\n")
+                .append("═══════════════════════════════════════");
+
+        telegramService.sendDetailedErrorToDevTeam(detailedMsg.toString());
+
+        // SIMPLE MESSAGE FOR OPERATIONS/MONITORING CHANNEL
+        StringBuilder simpleMsg = new StringBuilder();
+        simpleMsg.append("*CAMDX VALIDATION FAILURE*\n")
                 .append("--------------------\n")
                 .append("Status: *FAILURE*\n\n")
-                .append("NID: `")
-                .append(escapeMarkdown(request.getIdNumber()))
-                .append("`\n")
-                .append("Score: `")
-                .append(String.format("%.2f", score))
-                .append("`\n")
-                .append("Incorrect Fields:\n")
-                .append(formattedIncorrect)
-                .append("\n")
+                .append("NID: `").append(escapeMarkdown(request.getIdNumber())).append("`\n")
+                .append("Score: `").append(String.format("%.2f", score)).append("`\n")
+                .append("Incorrect Fields:\n").append(formattedIncorrect).append("\n")
                 .append("--------------------\n")
                 .append("Request Info\n")
-                .append("Name KH: ")
-                .append(escapeMarkdown(request.getLastNameKh()))
-                .append(" ")
-                .append(escapeMarkdown(request.getFirstNameKh()))
-                .append("\n")
-                .append("Name EN: ")
-                .append(escapeMarkdown(request.getLastNameEn()))
-                .append(" ")
-                .append(escapeMarkdown(request.getFirstNameEn()))
-                .append("\n")
-                .append("DOB: ")
-                .append(escapeMarkdown(request.getDob()))
-                .append("\n")
-                .append("Gender: ")
-                .append(escapeMarkdown(request.getGender()))
-                .append("\n")
-                .append("Issued: ")
-                .append(escapeMarkdown(request.getIssuedDate()))
-                .append("\n")
-                .append("Expired: ")
-                .append(escapeMarkdown(request.getExpiredDate()))
-                .append("\n")
-                .append("Phone Number: ")
-                .append(escapeMarkdown(request.getPhoneNumber()))
-                .append("\n")
+                .append("Name KH: ").append(escapeMarkdown(request.getLastNameKh()))
+                .append(" ").append(escapeMarkdown(request.getFirstNameKh())).append("\n")
+                .append("Name EN: ").append(escapeMarkdown(request.getLastNameEn()))
+                .append(" ").append(escapeMarkdown(request.getFirstNameEn())).append("\n")
+                .append("DOB: ").append(escapeMarkdown(request.getDob())).append("\n")
+                .append("Gender: ").append(escapeMarkdown(request.getGender())).append("\n")
+                .append("Issued: ").append(escapeMarkdown(request.getIssuedDate())).append("\n")
+                .append("Expired: ").append(escapeMarkdown(request.getExpiredDate())).append("\n")
+                .append("Phone Number: ").append(escapeMarkdown(request.getPhoneNumber())).append("\n")
                 .append("--------------------\n")
-                .append("Time: ")
-                .append(LocalDateTime.now(ZoneId.of("Asia/Phnom_Penh"))
-                        .format(formatter))
-                .append("\n")
+                .append("Time: ").append(now.format(formatter)).append("\n")
                 .append("Please recheck NID / submission.");
 
-        telegramService.sendMarkdownAccountOnlineMonitorMessage(sb.toString());
+        telegramService.sendMarkdownAccountOnlineMonitorMessage(simpleMsg.toString());
     }
 
     // =====================================================

@@ -31,6 +31,9 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
     @Value("${telegram.bot.uat-monitor-chat-id}")
     private String chatId_uat_monitor;
 
+    @Value("${telegram.bot.uat-dev-team-chat-id:}")
+    private String chatId_dev_team;
+
     @Value("${telegram.bot.compliance-mention}")
     private String complianceMention;
 
@@ -166,6 +169,77 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
             }
         } else {
             telegramService.sendMarkdownAccountOnlineMonitorMessage(message);
+        }
+
+        // Send detailed alert to Dev Team for HIGH RISK cases
+        if ("HIGH".equalsIgnoreCase(amlDto.getRiskLevel())) {
+            sendDetailedAmlAlertToDevTeam(amlDto);
+        }
+    }
+
+    /**
+     * Send detailed AML alert to Dev Team for debugging and monitoring
+     */
+    private void sendDetailedAmlAlertToDevTeam(AmlStatusDto amlDto) {
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String timeFormatted = amlDto.getCreatedAt() != null
+                    ? amlDto.getCreatedAt().format(formatter)
+                    : LocalDateTime.now().format(formatter);
+
+            StringBuilder detailedMsg = new StringBuilder();
+            detailedMsg.append("🚨 *AML HIGH RISK ALERT - DEV TEAM*\n")
+                    .append("═══════════════════════════════════════\n\n")
+                    .append("*RISK ASSESSMENT:*\n")
+                    .append("├─ Risk Level: `HIGH` ⚠️\n")
+                    .append("├─ Rules Score: `").append(amlDto.getTotalRulesScore()).append("`\n")
+                    .append("├─ Status: `").append(amlDto.getStatus().name()).append("`\n")
+                    .append("├─ Service: `").append(amlDto.getServiceName()).append("`\n")
+                    .append("├─ Action: `").append(amlDto.getActionTaken()).append("`\n")
+                    .append("└─ Time: `").append(timeFormatted).append("`\n\n")
+                    .append("*CUSTOMER INFORMATION:*\n")
+                    .append("├─ Legal ID: `").append(amlDto.getCustomerInfo().getLegalId()).append("`\n")
+                    .append("├─ Name (EN): `").append(amlDto.getCustomerInfo().getGivenName())
+                    .append(" ").append(amlDto.getCustomerInfo().getFamilyName()).append("`\n")
+                    .append("├─ Name (KH): `").append(amlDto.getCustomerInfo().getFirstNameKh())
+                    .append(" ").append(amlDto.getCustomerInfo().getLastNameKh()).append("`\n")
+                    .append("├─ Gender: `").append(amlDto.getCustomerInfo().getGender()).append("`\n")
+                    .append("├─ DOB: `").append(formatDob(amlDto.getCustomerInfo().getDateOfBirth())).append("`\n")
+                    .append("├─ Nationality: `").append(amlDto.getCustomerInfo().getNationality()).append("`\n")
+                    .append("├─ Phone: `").append(amlDto.getCustomerInfo().getPhoneNumber()).append("`\n")
+                    .append("├─ ID Issued: `").append(amlDto.getCustomerInfo().getIssuedDate()).append("`\n")
+                    .append("└─ ID Expired: `").append(amlDto.getCustomerInfo().getExpiredDate()).append("`\n\n")
+                    .append("*TRIGGERED RULES:*\n");
+
+            // Format rules triggered
+            if (amlDto.getRulesTriggered() != null && !amlDto.getRulesTriggered().isEmpty()) {
+                for (int i = 0; i < amlDto.getRulesTriggered().size(); i++) {
+                    boolean isLast = (i == amlDto.getRulesTriggered().size() - 1);
+                    detailedMsg.append(isLast ? "└─ " : "├─ ")
+                            .append("`").append(amlDto.getRulesTriggered().get(i)).append("`\n");
+                }
+            } else {
+                detailedMsg.append("└─ No specific rules captured\n");
+            }
+
+            detailedMsg.append("\n*REVIEW NOTES:*\n")
+                    .append("├─ Occupation: `").append(amlDto.getOccupationStatus()).append("`\n")
+                    .append("├─ Address: `").append(amlDto.getCurrentAddressName()).append("`\n")
+                    .append("├─ Marital Status: `").append(amlDto.getMaritalStatus()).append("`\n")
+                    .append("├─ Place of Birth: `").append(amlDto.getPlaceOfBirthName()).append("`\n")
+                    .append("├─ TrxnID: `").append(amlDto.getTrxnID()).append("`\n")
+                    .append("└─ Remarks: `").append(amlDto.getRemarks()).append("`\n\n")
+                    .append("*REQUIRED ACTIONS:*\n")
+                    .append("• Review customer profile for suspicious patterns\n")
+                    .append("• Check document authenticity\n")
+                    .append("• Verify through secondary sources\n")
+                    .append("• Contact compliance team for final decision\n\n")
+                    .append("═══════════════════════════════════════");
+
+            telegramService.sendDetailedErrorToDevTeam(detailedMsg.toString());
+            log.info("Detailed AML alert sent to Dev Team for Legal ID: {}", amlDto.getCustomerInfo().getLegalId());
+        } catch (Exception e) {
+            log.error("Failed to send detailed AML alert to Dev Team: {}", e.getMessage(), e);
         }
     }
 
