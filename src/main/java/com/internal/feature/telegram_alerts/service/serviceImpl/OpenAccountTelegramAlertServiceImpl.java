@@ -211,13 +211,10 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
                     .append("└─ ID Expired: `").append(amlDto.getCustomerInfo().getExpiredDate()).append("`\n\n")
                     .append("*TRIGGERED RULES:*\n");
 
-            // Format rules triggered
-            if (amlDto.getRulesTriggered() != null && !amlDto.getRulesTriggered().isEmpty()) {
-                for (int i = 0; i < amlDto.getRulesTriggered().size(); i++) {
-                    boolean isLast = (i == amlDto.getRulesTriggered().size() - 1);
-                    detailedMsg.append(isLast ? "└─ " : "├─ ")
-                            .append("`").append(amlDto.getRulesTriggered().get(i)).append("`\n");
-                }
+            // Format rules triggered (stored as JSON string)
+            String rulesTriggered = amlDto.getRulesTriggered();
+            if (rulesTriggered != null && !rulesTriggered.isEmpty()) {
+                detailedMsg.append("└─ `").append(escapeMarkdown(rulesTriggered)).append("`\n");
             } else {
                 detailedMsg.append("└─ No specific rules captured\n");
             }

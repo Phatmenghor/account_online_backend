@@ -58,7 +58,8 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             stepStartTime = System.currentTimeMillis();
             context.setCustomerInfo(bankingService.getCustomerInfo(request.getLegalId()));
             duration = System.currentTimeMillis() - stepStartTime;
-            monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "GET_CUSTOMER_INFO", true, "Customer found with CIF: " + (context.getCustomerInfo() != null ? context.getCustomerInfo().getCif() : "N/A"));
+            String customerCif = context.getCustomerInfo() != null ? context.getCustomerInfo().get("CIF") : "N/A";
+            monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "GET_CUSTOMER_INFO", true, "Customer found with CIF: " + customerCif);
 
             // Step 3: Validation
             currentStep = AppConstants.VALIDATE_EXISTING_ACCOUNT;

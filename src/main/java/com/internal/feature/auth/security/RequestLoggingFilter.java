@@ -77,9 +77,9 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             requestLogService.saveLog(requestLog);
 
             // Monitor: Log critical events
-            if (!requestLog.isSuccess()) {
+            if (requestLog.getIsSuccess() != null && !requestLog.getIsSuccess()) {
                 // Failed request
-                if (requestLog.getStatusCode() >= 500) {
+                if (requestLog.getStatusCode() != null && requestLog.getStatusCode() >= 500) {
                     monitoringService.logExternalApiCall(
                             requestLog.getEndpoint(),
                             request.getMethod() + " " + request.getRequestURI(),
@@ -91,7 +91,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 
             // Monitor: Detect suspicious authentication failures
             if (requestLog.getEndpoint() != null && requestLog.getEndpoint().contains("login")) {
-                if (!requestLog.isSuccess()) {
+                if (requestLog.getIsSuccess() != null && !requestLog.getIsSuccess()) {
                     String username = requestLog.getUsername() != null ? requestLog.getUsername() : "Unknown";
                     String ipAddress = requestLog.getIpAddress() != null ? requestLog.getIpAddress() : "Unknown";
                     monitoringService.logUserAuthentication(username, ipAddress, false);

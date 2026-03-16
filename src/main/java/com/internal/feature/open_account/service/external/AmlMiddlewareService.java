@@ -63,8 +63,8 @@ public class AmlMiddlewareService {
                     .encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setCharset(StandardCharsets.UTF_8);
+            headers.setContentType(new MediaType(MediaType.APPLICATION_JSON.getType(),
+                    MediaType.APPLICATION_JSON.getSubtype(), StandardCharsets.UTF_8));
             headers.set("Authorization", "Basic " + encodedCredentials);
 
             HttpEntity<String> entity = new HttpEntity<>(jsonRequest, headers);
