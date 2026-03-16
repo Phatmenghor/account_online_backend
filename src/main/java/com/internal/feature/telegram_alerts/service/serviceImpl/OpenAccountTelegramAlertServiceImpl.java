@@ -158,11 +158,9 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
                 }
 
                 // Send a short mention message for Compliance review
-                String mentionMessage = "*AML High Risk Review Required*\n\n"
-                        + "Dear " + escapeMarkdown(complianceMention) + ",\n"
-                        + "The following case has been identified as high risk in accordance with AML compliance requirements.\n"
-                        + "Please proceed with your review and advise accordingly.\n"
-                        + "Thank you for your cooperation.";
+                String mentionMessage = "*🚨 AML HIGH RISK ALERT*\n"
+                        + "High-risk customer flagged for compliance review.\n"
+                        + "Please review and advise.";
 
                 // Send to Monitor Channel as requested
                 telegramService.sendMarkdownAccountOnlineMonitorMessage(mentionMessage);
