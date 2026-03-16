@@ -196,15 +196,18 @@ public class BankingService {
             throw new AccountCreationException("Customer CIF not found. Account creation failed.");
         }
 
-        // Validate at least one account exists (USD or KHR)
+        // Validate both USD and KHR accounts exist
         boolean khrExists = khrAccount != null || (customerInfo != null && validationService.hasAccount(customerInfo, AppConstants.CURRENCY_KHR));
         boolean usdExists = usdAccount != null || (customerInfo != null && validationService.hasAccount(customerInfo, AppConstants.CURRENCY_USD));
 
-        if (!khrExists && !usdExists) {
-            throw new AccountCreationException(AppConstants.FAIL_CREATE_ANY_ACCOUNT);
+        if (!khrExists) {
+            throw new AccountCreationException("KHR account not found. Account creation failed.");
+        }
+        if (!usdExists) {
+            throw new AccountCreationException("USD account not found. Account creation failed.");
         }
 
-        log.info("Step 8 SUCCESS: CIF validated and at least one account exists (KHR: {}, USD: {})", khrExists, usdExists);
+        log.info("Step 8 SUCCESS: CIF validated with both accounts (KHR: {}, USD: {})", khrExists, usdExists);
     }
 
     // ─── Step 9: Activate Mobile Banking ─────────────────────────────────────
