@@ -101,6 +101,9 @@ public class BankingService {
     // ─── Steps 6 & 7: Create Accounts ────────────────────────────────────────
     public String createAccountIfNeeded(CustomerRequest request, Map<String, String> customerInfo, String cif,
                                         String currency) {
+        // Add 3-second delay before creating account
+        delayMs(3000);
+
         if (isTestMode.isSkipCheckAccount()) {
             log.info("TEST MODE ENABLED — Skipping existing account check → creating new {} account", currency);
             return createAccount(request, cif, currency);
@@ -113,7 +116,7 @@ public class BankingService {
         }
 
         log.info(">>> Step {}: CREATE_{}_ACCOUNT", AppConstants.CURRENCY_KHR.equals(currency) ? 6 : 7, currency);
-        String account = createAccount(request, cif, currency);
+        String account = createAccountWithRetry(request, customerInfo, cif, currency);
         if (account != null) {
             log.info("Step {} SUCCESS: {} account created: {}",
                     AppConstants.CURRENCY_KHR.equals(currency) ? 6 : 7, currency, account);
@@ -122,6 +125,47 @@ public class BankingService {
                     AppConstants.CURRENCY_KHR.equals(currency) ? 6 : 7, currency);
         }
         return account;
+    }
+
+    private String createAccountWithRetry(CustomerRequest request, Map<String, String> customerInfo, String cif, String currency) {
+        int maxRetries = 3;
+        int retryDelay = 3000; // 3 seconds
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                return createAccount(request, cif, currency);
+            } catch (Exception e) {
+                log.warn("Attempt {} failed to create {} account: {}", attempt, currency, e.getMessage());
+
+                if (attempt < maxRetries) {
+                    // Verify customer info before retry
+                    try {
+                        Map<String, String> freshCustomerInfo = getCustomerInfo(request.getLegalId());
+                        log.info("Customer info verified before retry attempt {}", attempt + 1);
+                    } catch (Exception verifyError) {
+                        log.error("Failed to verify customer info before retry: {}", verifyError.getMessage());
+                        throw new AccountCreationException("Customer verification failed before retry");
+                    }
+
+                    // Delay before retry
+                    delayMs(retryDelay);
+                    log.info("Retrying {} account creation (attempt {} of {})", currency, attempt + 1, maxRetries);
+                } else {
+                    log.error("Max retries ({}) exceeded for {} account creation", maxRetries, currency);
+                    throw e;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void delayMs(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Delay interrupted: {}", e.getMessage());
+        }
     }
 
     private String createAccount(CustomerRequest request, String cif, String currency) {
@@ -145,12 +189,22 @@ public class BankingService {
     public void validateAtLeastOneAccountExists(Map<String, String> customerInfo, String khrAccount,
                                                 String usdAccount) {
         log.info(">>> Step 8: VALIDATE_ACCOUNT_CREATION");
-        if (khrAccount == null && usdAccount == null
-                && !validationService.hasAccount(customerInfo, AppConstants.CURRENCY_KHR)
-                && !validationService.hasAccount(customerInfo, AppConstants.CURRENCY_USD)) {
+
+        // Validate CIF exists
+        String cif = customerInfo != null ? customerInfo.get("CIF") : null;
+        if (cif == null || cif.isEmpty()) {
+            throw new AccountCreationException("Customer CIF not found. Account creation failed.");
+        }
+
+        // Validate at least one account exists (USD or KHR)
+        boolean khrExists = khrAccount != null || (customerInfo != null && validationService.hasAccount(customerInfo, AppConstants.CURRENCY_KHR));
+        boolean usdExists = usdAccount != null || (customerInfo != null && validationService.hasAccount(customerInfo, AppConstants.CURRENCY_USD));
+
+        if (!khrExists && !usdExists) {
             throw new AccountCreationException(AppConstants.FAIL_CREATE_ANY_ACCOUNT);
         }
-        log.info("Step 8 SUCCESS: At least one account exists");
+
+        log.info("Step 8 SUCCESS: CIF validated and at least one account exists (KHR: {}, USD: {})", khrExists, usdExists);
     }
 
     // ─── Step 9: Activate Mobile Banking ─────────────────────────────────────

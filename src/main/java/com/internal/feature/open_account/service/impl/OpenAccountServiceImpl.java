@@ -50,14 +50,12 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             currentStep = AppConstants.TEST_CONNECTION;
             long stepStartTime = System.currentTimeMillis();
             bankingService.testConnection();
-            long duration = System.currentTimeMillis() - stepStartTime;
-            monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "TEST_CONNECTION", true, "Banking service connection verified (" + duration + "ms)");
+            monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "TEST_CONNECTION", true, "Banking service connection verified");
 
             // Step 2: Customer matching
             currentStep = AppConstants.GET_CUSTOMER_INFO;
             stepStartTime = System.currentTimeMillis();
             context.setCustomerInfo(bankingService.getCustomerInfo(request.getLegalId()));
-            duration = System.currentTimeMillis() - stepStartTime;
             String customerCif = context.getCustomerInfo() != null ? context.getCustomerInfo().get("CIF") : "N/A";
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "GET_CUSTOMER_INFO", true, "Customer found with CIF: " + customerCif);
 
@@ -65,16 +63,14 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             currentStep = AppConstants.VALIDATE_EXISTING_ACCOUNT;
             stepStartTime = System.currentTimeMillis();
             bankingService.validateExistingAccounts(context.getCustomerInfo());
-            duration = System.currentTimeMillis() - stepStartTime;
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "VALIDATE_EXISTING_ACCOUNT", true, "No existing accounts found");
 
             // Step 4: Process AML
             currentStep = AppConstants.PROCESS_AML;
             stepStartTime = System.currentTimeMillis();
             context.setAmlResult(complianceService.processAml(request));
-            duration = System.currentTimeMillis() - stepStartTime;
             String amlStatus = context.getAmlResult() != null ? context.getAmlResult().getStatus().name() : "UNKNOWN";
-            monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "PROCESS_AML", true, "AML Status: " + amlStatus + " (" + duration + "ms)");
+            monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "PROCESS_AML", true, "AML Status: " + amlStatus);
             complianceService.sentMessageOnHighRisk(request, context.getAmlResult());
 
             // Step 5: Create customer
@@ -82,7 +78,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             stepStartTime = System.currentTimeMillis();
             CustomerCreationResult customerResult =
                     bankingService.createCustomerIfNeeded(request, context.getCustomerInfo());
-            duration = System.currentTimeMillis() - stepStartTime;
             context.setCif(customerResult.getCif());
             context.setMnemonic(customerResult.getMnemonic());
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "CREATE_CUSTOMER", true, "CIF Created: " + customerResult.getCif());
@@ -92,7 +87,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             stepStartTime = System.currentTimeMillis();
             context.setKhrAccount(bankingService.createAccountIfNeeded(request, context.getCustomerInfo(),
                     context.getCif(), AppConstants.CURRENCY_KHR));
-            duration = System.currentTimeMillis() - stepStartTime;
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "CREATE_KHR_ACCOUNT", true, "Account: " + context.getKhrAccount());
 
             // Step 7: Create USD Account
@@ -100,7 +94,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             stepStartTime = System.currentTimeMillis();
             context.setUsdAccount(bankingService.createAccountIfNeeded(request, context.getCustomerInfo(),
                     context.getCif(), AppConstants.CURRENCY_USD));
-            duration = System.currentTimeMillis() - stepStartTime;
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "CREATE_USD_ACCOUNT", true, "Account: " + context.getUsdAccount());
 
             // Step 8: Final Validation
@@ -109,7 +102,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             bankingService.validateAtLeastOneAccountExists(context.getCustomerInfo(),
                     context.getKhrAccount(),
                     context.getUsdAccount());
-            duration = System.currentTimeMillis() - stepStartTime;
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "VALIDATE_ACCOUNT_CREATION", true, "Accounts validated successfully");
 
             // Step 9: Activate mobile banking
@@ -118,7 +110,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             context.setMbActivationCode(
                     bankingService.activateMobileBanking(request, context.getCif(),
                             context.getKhrAccount(), context.getUsdAccount()));
-            duration = System.currentTimeMillis() - stepStartTime;
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "ACTIVATE_MOBILE_BANKING", true, "Mobile Banking activated");
 
             // BUILD RESPONSE
