@@ -122,7 +122,17 @@ public class BankingService {
                         // Don't fail the whole recovery if DB save fails
                     }
 
-                    // TODO: Send SMS with activation code to customer
+                    // Send SMS with account details and activation code
+                    try {
+                        mobileBankingService.sendAccountSms(request.getPhoneNumber(),
+                                account.getUsdAccount(), account.getKhrAccount(),
+                                account.getCif(), activationCode);
+                        log.info("✓ Account SMS sent to customer");
+                    } catch (Exception smsError) {
+                        log.error("Failed to send SMS (non-critical): {}", smsError.getMessage());
+                        // Don't fail recovery if SMS fails
+                    }
+
                     return Optional.of(activationCode);
                 } else {
                     log.warn("MB activation returned null code → Continue to Step 3");
