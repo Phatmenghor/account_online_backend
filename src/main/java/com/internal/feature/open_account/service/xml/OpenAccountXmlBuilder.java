@@ -294,7 +294,9 @@ public class OpenAccountXmlBuilder {
      */
     private String toSwiftSafe(String input) {
         if (input == null) return "";
-        String sanitized = input.replaceAll("[^A-Za-z0-9/ \\-?:()\\.,'\\+]", " ").trim();
+        // T24 STREET field: ONLY accepts A-Z, 0-9, space, and dash
+        // All other characters (including Khmer, special symbols) are removed
+        String sanitized = input.replaceAll("[^A-Za-z0-9 \\-]", " ").trim();
         // Collapse multiple spaces into one
         sanitized = sanitized.replaceAll(" {2,}", " ");
         if (!sanitized.equals(input.trim())) {
