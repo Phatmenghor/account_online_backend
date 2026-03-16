@@ -89,12 +89,7 @@ public class MonitoringService {
         }
 
         msg.append("└─ Time: `").append(getCurrentDateTime()).append("`\n")
-                .append("═══════════════════════════════════════\n")
-                .append("*ACTION REQUIRED:*\n")
-                .append("• Review error logs for details\n")
-                .append("• Check service connectivity (T24, AML, CAMDX)\n")
-                .append("• Verify customer data submission\n")
-                .append("• Contact operations if persistent");
+                .append("═══════════════════════════════════════");
 
         sendToDevTeam(msg.toString());
     }
@@ -123,11 +118,7 @@ public class MonitoringService {
                 .append("├─ Customer ID: `").append(escapeMarkdown(customerId)).append("`\n")
                 .append("├─ Error: `").append(escapeMarkdown(errorMessage)).append("`\n")
                 .append("├─ Service: `T24 Banking`\n")
-                .append("└─ Time: `").append(getCurrentTime()).append("`\n")
-                .append("\n*ACTION REQUIRED:*\n")
-                .append("• Check T24 service availability\n")
-                .append("• Verify authentication credentials\n")
-                .append("• Review T24 logs for details");
+                .append("└─ Time: `").append(getCurrentTime()).append("`");
 
         sendToDevTeam(msg.toString());
     }
@@ -170,13 +161,6 @@ public class MonitoringService {
                 .append("├─ Duration: `").append(durationMs).append("ms`\n")
                 .append("└─ Time: `").append(getCurrentTime()).append("`");
 
-        if (!success) {
-            msg.append("\n*ACTION REQUIRED:*\n")
-                    .append("• Check database server status\n")
-                    .append("• Verify connection pool settings\n")
-                    .append("• Review network connectivity");
-        }
-
         sendToDevTeam(msg.toString());
     }
 
@@ -187,11 +171,7 @@ public class MonitoringService {
                 .append("├─ Datasource: `").append(escapeMarkdown(datasource)).append("`\n")
                 .append("├─ Operation: `").append(escapeMarkdown(operation)).append("`\n")
                 .append("├─ Error: `").append(escapeMarkdown(errorMessage)).append("`\n")
-                .append("└─ Time: `").append(getCurrentTime()).append("`\n")
-                .append("\n*ACTION REQUIRED:*\n")
-                .append("• Check database logs\n")
-                .append("• Verify connection pool status\n")
-                .append("• Monitor database performance");
+                .append("└─ Time: `").append(getCurrentTime()).append("`");
 
         sendToDevTeam(msg.toString());
     }
@@ -220,11 +200,7 @@ public class MonitoringService {
                 .append("├─ Activity Type: `").append(escapeMarkdown(activityType)).append("`\n")
                 .append("├─ Description: `").append(escapeMarkdown(description)).append("`\n")
                 .append("└─ Time: `").append(getCurrentDateTime()).append("`\n")
-                .append("═══════════════════════════════════════\n")
-                .append("*ACTION REQUIRED:*\n")
-                .append("• Verify user identity\n")
-                .append("• Review recent activities\n")
-                .append("• Check for unauthorized access attempts");
+                .append("═══════════════════════════════════════");
 
         sendToDevTeam(msg.toString());
     }
@@ -246,19 +222,7 @@ public class MonitoringService {
     }
 
     public void logPerformanceAlert(String componentName, long durationMs, long thresholdMs) {
-        StringBuilder msg = new StringBuilder();
-        msg.append("⚡ *SLOW PERFORMANCE ALERT*\n")
-                .append("├─ Component: `").append(escapeMarkdown(componentName)).append("`\n")
-                .append("├─ Duration: `").append(durationMs).append("ms`\n")
-                .append("├─ Threshold: `").append(thresholdMs).append("ms`\n")
-                .append("├─ Exceeded by: `").append(durationMs - thresholdMs).append("ms`\n")
-                .append("└─ Time: `").append(getCurrentTime()).append("`\n")
-                .append("\n*ACTION REQUIRED:*\n")
-                .append("• Review component logic\n")
-                .append("• Check database query performance\n")
-                .append("• Monitor resource utilization");
-
-        sendToDevTeam(msg.toString());
+        // Performance alerts disabled - prevents API slowdown from Telegram sends
     }
 
     /**

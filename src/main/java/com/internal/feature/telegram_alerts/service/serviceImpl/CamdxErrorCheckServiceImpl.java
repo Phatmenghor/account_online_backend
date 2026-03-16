@@ -184,12 +184,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
                 .append("├─ Name EN: `").append(escapeMarkdown(request.getLastNameEn()))
                 .append(" ").append(escapeMarkdown(request.getFirstNameEn())).append("`\n")
                 .append("├─ Phone: `").append(escapeMarkdown(request.getPhoneNumber())).append("`\n")
-                .append("└─ DOB: `").append(escapeMarkdown(request.getDob())).append("`\n\n")
-                .append("*ACTION REQUIRED:*\n")
-                .append("• Contact MOI/CAMDX operations\n")
-                .append("• Check network connectivity\n")
-                .append("• Verify API endpoint availability\n")
-                .append("• Review recent infrastructure changes\n\n")
+                .append("└─ DOB: `").append(escapeMarkdown(request.getDob())).append("`\n")
                 .append("═══════════════════════════════════════");
 
         telegramService.sendDetailedErrorToDevTeam(detailedMsg.toString());
@@ -261,12 +256,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
                 .append("├─ DOB: `").append(escapeMarkdown(request.getDob())).append("`\n")
                 .append("├─ Issued: `").append(escapeMarkdown(request.getIssuedDate())).append("`\n")
                 .append("├─ Expired: `").append(escapeMarkdown(request.getExpiredDate())).append("`\n")
-                .append("└─ Phone: `").append(escapeMarkdown(request.getPhoneNumber())).append("`\n\n")
-                .append("*ACTION REQUIRED:*\n")
-                .append("• Request customer to resubmit NID\n")
-                .append("• Verify scanned document quality\n")
-                .append("• Check for data entry errors\n")
-                .append("• Confirm customer identity via phone call if needed\n\n")
+                .append("└─ Phone: `").append(escapeMarkdown(request.getPhoneNumber())).append("`\n")
                 .append("═══════════════════════════════════════");
 
         telegramService.sendDetailedErrorToDevTeam(detailedMsg.toString());

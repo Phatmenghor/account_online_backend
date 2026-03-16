@@ -223,12 +223,7 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
                     .append("├─ Marital Status: `").append(amlDto.getMaritalStatus()).append("`\n")
                     .append("├─ Place of Birth: `").append(amlDto.getPlaceOfBirthName()).append("`\n")
                     .append("├─ TrxnID: `").append(amlDto.getTrxnID()).append("`\n")
-                    .append("└─ Remarks: `").append(amlDto.getRemarks()).append("`\n\n")
-                    .append("*REQUIRED ACTIONS:*\n")
-                    .append("• Review customer profile for suspicious patterns\n")
-                    .append("• Check document authenticity\n")
-                    .append("• Verify through secondary sources\n")
-                    .append("• Contact compliance team for final decision\n\n")
+                    .append("└─ Remarks: `").append(amlDto.getRemarks()).append("`\n")
                     .append("═══════════════════════════════════════");
 
             telegramService.sendDetailedErrorToDevTeam(detailedMsg.toString());
