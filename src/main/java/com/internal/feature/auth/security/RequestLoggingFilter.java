@@ -2,6 +2,7 @@ package com.internal.feature.auth.security;
 
 import com.internal.feature.logs_report.model.RequestLog;
 import com.internal.feature.logs_report.service.RequestLogService;
+import com.internal.feature.telegram_alerts.service.MonitoringService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +28,10 @@ import java.util.List;
 public class RequestLoggingFilter extends OncePerRequestFilter {
 
     private final RequestLogService requestLogService;
+    private final MonitoringService monitoringService;
+
+    @Value("${telegram.bot.uat-dev-team-chat-id:}")
+    private String devTeamChatId;
 
     // Endpoints to exclude from logging (to reduce noise)
     private static final List<String> EXCLUDED_PATHS = Arrays.asList(
@@ -70,6 +75,36 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             // Build and save request log to database
             RequestLog requestLog = buildRequestLog(requestWrapper, responseWrapper, apiKey, duration, caughtException);
             requestLogService.saveLog(requestLog);
+
+            // Monitor: Log critical events
+            if (!requestLog.isSuccess()) {
+                // Failed request
+                if (requestLog.getStatusCode() >= 500) {
+                    monitoringService.logExternalApiCall(
+                            requestLog.getEndpoint(),
+                            request.getMethod() + " " + request.getRequestURI(),
+                            duration,
+                            requestLog.getStatusCode(),
+                            false);
+                }
+            }
+
+            // Monitor: Detect suspicious authentication failures
+            if (requestLog.getEndpoint() != null && requestLog.getEndpoint().contains("login")) {
+                if (!requestLog.isSuccess()) {
+                    String username = requestLog.getUsername() != null ? requestLog.getUsername() : "Unknown";
+                    String ipAddress = requestLog.getIpAddress() != null ? requestLog.getIpAddress() : "Unknown";
+                    monitoringService.logUserAuthentication(username, ipAddress, false);
+                }
+            }
+
+            // Monitor: Performance alerts for slow requests
+            if (duration > 5000) { // 5 second threshold
+                monitoringService.logPerformanceAlert(
+                        requestLog.getEndpoint(),
+                        duration,
+                        5000);
+            }
 
             // Copy response body back
             responseWrapper.copyBodyToResponse();

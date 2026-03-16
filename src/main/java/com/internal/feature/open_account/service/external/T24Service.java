@@ -5,6 +5,7 @@ import com.internal.exceptions.error.openaccount.T24ServiceException;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.service.xml.OpenAccountXmlBuilder;
 import com.internal.feature.telegram_alerts.config.TelegramService;
+import com.internal.feature.telegram_alerts.service.MonitoringService;
 import com.internal.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class T24Service {
     private final RestTemplate restTemplate;
     private final OpenAccountXmlBuilder xmlBuilder;
     private final TelegramService telegramService;
+    private final MonitoringService monitoringService;
 
     // text/xml; charset=UTF-8 — ensures Khmer and other non-Latin characters
     // are not mangled by the HTTP layer defaulting to ISO-8859-1
@@ -110,6 +112,10 @@ public class T24Service {
             long duration = System.currentTimeMillis() - startTime;
             log.error("T24 Request Failed | op={} | url={} | duration={} ms | message={}",
                     operation, url, duration, e.getMessage(), e);
+
+            // Monitor: T24 Error
+            monitoringService.logT24Error(operation, "N/A", e.getMessage());
+
             throw new T24ServiceException("T24 call failed", e);
         }
     }
