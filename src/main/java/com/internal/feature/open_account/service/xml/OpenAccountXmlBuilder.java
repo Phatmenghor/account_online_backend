@@ -294,13 +294,13 @@ public class OpenAccountXmlBuilder {
      */
     private String toSwiftSafe(String input) {
         if (input == null) return "";
-        // Allow Unicode characters (Khmer, etc.) alongside SWIFT characters
-        // Remove only control characters and very problematic symbols
-        String sanitized = input.replaceAll("[\\p{Cc}\\p{Cn}]", " ").trim();
+        // SWIFT charset: A-Z a-z 0-9 / - ? : ( ) . , ' + space
+        // T24 rejects Unicode (including Khmer) - keep ASCII-only
+        String sanitized = input.replaceAll("[^A-Za-z0-9/\\-?:().,' ]", " ").trim();
         // Collapse multiple spaces into one
         sanitized = sanitized.replaceAll(" {2,}", " ");
         if (!sanitized.equals(input.trim())) {
-            log.info("Address sanitization applied (control chars removed). Original: [{}] → Sanitized: [{}]", input, sanitized);
+            log.info("Address sanitization applied (ASCII-only for SWIFT). Original: [{}] → Sanitized: [{}]", input, sanitized);
         }
         return sanitized;
     }
