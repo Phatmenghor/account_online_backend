@@ -58,14 +58,20 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
             // =============================
             if (errorCode != 0) {
 
-                log.error("CAMDX API ERROR for ID {} - ErrorCode: {}", idNumber, errorCode);
+                log.error("CAMDX API ERROR for ID {} - ErrorCode: {} | Message: {}", idNumber, errorCode, message);
 
                 accountOnlineReportLogService.saveLogReport(
                         idNumber,
                         OpenAccStatusEnum.FAILURE,
                         ErrorMessage.CAMDX_VALIDATE);
 
-                sendInfraFailureAlert(request, errorCode, message);
+                // Only send alerts for critical infrastructure failures
+                if (isCriticalInfraError(message)) {
+                    log.warn("CRITICAL INFRA ERROR detected - sending Telegram alert");
+                    sendInfraFailureAlert(request, errorCode, message);
+                } else {
+                    log.info("Non-critical error - only logging (not sending Telegram alert)");
+                }
                 return;
             }
 
@@ -85,7 +91,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
 
             if (validationFailed) {
 
-                log.warn("CAMDX VALIDATION FAILURE for ID {} (score={}, incorrectFields={})",
+                log.warn("CAMDX VALIDATION FAILURE for ID {} | Score: {} | IncorrectFields: {}",
                         idNumber, score, incorrectFields);
 
                 accountOnlineReportLogService.saveLogReport(
@@ -93,9 +99,11 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
                         OpenAccStatusEnum.FAILURE,
                         ErrorMessage.CAMDX_VALIDATE);
 
+                // Always send validation failures (score mismatch or field mismatches need review)
+                log.info("Sending Telegram alert for validation failure - requires human review");
                 sendValidationFailureAlert(request, score, incorrectFields);
             } else {
-                log.info("CAMDX VALIDATION SUCCESS for ID {}", idNumber);
+                log.info("✓ CAMDX VALIDATION SUCCESS for ID {} - no alert sent", idNumber);
             }
 
         } catch (Exception e) {
@@ -112,7 +120,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
     @Override
     public void sendInfraErrorAlertFromException(CamdxValidateNidRequest request, String rawMessage) {
 
-        log.error("CAMDX EXCEPTION for ID {} : {}", request.getIdNumber(), rawMessage);
+        log.error("CAMDX EXCEPTION for ID {} | Message: {}", request.getIdNumber(), rawMessage);
 
         accountOnlineReportLogService.saveLogReport(
                 request.getIdNumber(),
@@ -137,7 +145,13 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
             log.warn("Failed to parse exception JSON. Using raw message.");
         }
 
-        sendInfraFailureAlert(request, -1, errorMessage);
+        // Only send alerts for critical infrastructure exceptions
+        if (isCriticalInfraError(errorMessage)) {
+            log.warn("CRITICAL EXCEPTION detected - sending Telegram alert");
+            sendInfraFailureAlert(request, -1, errorMessage);
+        } else {
+            log.info("Non-critical exception - only logging (not sending Telegram alert)");
+        }
     }
 
     // =====================================================
@@ -265,20 +279,56 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
                 .replace("`", "\\`");
     }
 
+    /**
+     * Filter out non-critical errors that don't need Telegram alerts.
+     * Only critical failures (middleware/connection issues) should be reported.
+     * Regular validation failures and "not found" errors are handled through logs only.
+     */
     private boolean shouldIgnoreError(String message) {
 
         if (message == null || message.isEmpty())
             return false;
 
+        String lower = message.toLowerCase();
+
+        // IGNORE: These are expected cases that don't need alerts
         List<String> ignoreList = new ArrayList<>();
         ignoreList.add("id not found");
         ignoreList.add("nid not found");
         ignoreList.add("no record found");
         ignoreList.add("invalid id");
         ignoreList.add("no data found");
-
-        String lower = message.toLowerCase();
+        ignoreList.add("record not exist");
+        ignoreList.add("does not exist");
+        ignoreList.add("not match");
+        ignoreList.add("information not found");
 
         return ignoreList.stream().anyMatch(lower::contains);
+    }
+
+    /**
+     * Check if this is a critical infrastructure error that requires immediate notification.
+     * Returns true if error should be sent to Telegram.
+     */
+    private boolean isCriticalInfraError(String errorMessage) {
+        if (errorMessage == null)
+            return false;
+
+        String lower = errorMessage.toLowerCase();
+
+        // CRITICAL ERRORS: Connection, network, service issues
+        List<String> criticalPatterns = new ArrayList<>();
+        criticalPatterns.add("connection");
+        criticalPatterns.add("timeout");
+        criticalPatterns.add("moi");
+        criticalPatterns.add("middleware");
+        criticalPatterns.add("server error");
+        criticalPatterns.add("service unavailable");
+        criticalPatterns.add("network");
+        criticalPatterns.add("socket");
+        criticalPatterns.add("refused");
+        criticalPatterns.add("unreachable");
+
+        return criticalPatterns.stream().anyMatch(lower::contains);
     }
 }
