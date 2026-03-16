@@ -44,9 +44,8 @@ public class TelegramService {
             HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
 
             restTemplate.postForObject(url, requestEntity, String.class);
-            log.info("Telegram sent to ACL Internal channel.");
         } catch (Exception e) {
-            log.error("Failed to send Telegram to ACL Internal channel: {}", e.getMessage(), e);
+            log.warn("Failed to send Telegram to ACL channel: {}", e.getMessage());
         }
     }
 
@@ -65,15 +64,17 @@ public class TelegramService {
             HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
 
             restTemplate.postForObject(url, requestEntity, String.class);
-            log.info("Telegram sent to Monitor channel.");
         } catch (Exception e) {
-            log.error("Failed to send Telegram to Monitor channel: {}", e.getMessage(), e);
+            log.warn("Failed to send Telegram to Monitor channel: {}", e.getMessage());
         }
     }
 
     public void sendDetailedErrorToDevTeam(String message) {
+        if (chatId_dev_team == null || chatId_dev_team.trim().isEmpty()) {
+            log.debug("Dev Team chat ID not configured - skipping Telegram alert");
+            return;
+        }
         sendMarkdownToChat(chatId_dev_team, message);
-        log.info("Detailed error message sent to Dev Team channel.");
     }
 
     public void sendCriticalErrorAlert(String title, String details) {
@@ -84,6 +85,9 @@ public class TelegramService {
     }
 
     public void sendMarkdownToChat(String chatId, String message) {
+        if (chatId == null || chatId.trim().isEmpty()) {
+            return;
+        }
         try {
             String url = String.format("https://api.telegram.org/bot%s/sendMessage", botToken);
 
@@ -98,9 +102,9 @@ public class TelegramService {
             HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
 
             restTemplate.postForObject(url, requestEntity, String.class);
-            log.info("Telegram sent to chat: {}", chatId);
+            log.debug("Telegram message sent successfully");
         } catch (Exception e) {
-            log.error("Failed to send Telegram to chat {}: {}", chatId, e.getMessage(), e);
+            log.warn("Telegram send failed - chat_id: {}, error: {}", chatId, e.getMessage());
         }
     }
 

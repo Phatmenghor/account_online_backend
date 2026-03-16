@@ -232,9 +232,8 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
                     .append("═══════════════════════════════════════");
 
             telegramService.sendDetailedErrorToDevTeam(detailedMsg.toString());
-            log.info("Detailed AML alert sent to Dev Team for Legal ID: {}", amlDto.getCustomerInfo().getLegalId());
         } catch (Exception e) {
-            log.error("Failed to send detailed AML alert to Dev Team: {}", e.getMessage(), e);
+            log.debug("Detailed AML alert not sent: {}", e.getMessage());
         }
     }
 

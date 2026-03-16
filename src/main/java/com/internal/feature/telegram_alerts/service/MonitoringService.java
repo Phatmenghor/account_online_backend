@@ -268,7 +268,7 @@ public class MonitoringService {
         try {
             telegramService.sendDetailedErrorToDevTeam(message);
         } catch (Exception e) {
-            log.error("Failed to send monitoring alert to Dev Team: {}", e.getMessage(), e);
+            log.debug("Monitoring alert not sent: {}", e.getMessage());
         }
     }
 
