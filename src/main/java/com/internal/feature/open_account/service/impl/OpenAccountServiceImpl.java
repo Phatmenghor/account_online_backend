@@ -61,7 +61,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             currentStep = "CHECK_EXISTING_COMPLETE_ACCOUNT";
             var recoveryResult = bankingService.checkExistingCompleteAccountAndActivate(request);
             if (recoveryResult.isPresent()) {
-                String mbCode = recoveryResult.get();
                 log.info("========== ACCOUNT OPENING COMPLETED (RECOVERY PATH) ==========");
                 monitoringService.logAccountOpeningCompleted(
                         request.getLegalId(),
