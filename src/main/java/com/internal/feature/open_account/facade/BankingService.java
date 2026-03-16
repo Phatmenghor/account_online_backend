@@ -100,6 +100,7 @@ public class BankingService {
 
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
+                log.info("Calling t24Service.createCustomer() - Attempt {} of {}", attempt, maxRetries);
                 Document resp = t24Service.createCustomer(request);
                 String cif = XmlParser.extractCif(resp);
                 String mnemonic = XmlParser.extractMnemonic(resp);
@@ -109,24 +110,24 @@ public class BankingService {
                 log.warn("Attempt {} failed to create customer: {}", attempt, e.getMessage());
 
                 if (attempt < maxRetries) {
-                    // Delay 3 seconds before verification and retry
+                    // Delay 3 seconds before verification
                     delayMs(retryDelay);
-                    log.info("Delayed 3 seconds. Verifying customer info before retry attempt {}", attempt + 1);
+                    log.info("Delayed 3 seconds. Verifying customer state before retry...");
 
-                    // Verify customer info before retry
+                    // Verify customer info - check if customer was created despite error
                     try {
-                        // Get fresh customer info to verify state
                         Map<String, String> freshCustomerInfo = getCustomerInfo(request.getLegalId());
 
-                        // Check if customer was actually created despite error
+                        // Check if customer already exists
                         String createdCif = freshCustomerInfo != null ? freshCustomerInfo.get("CIF") : null;
                         if (createdCif != null && !createdCif.isEmpty()) {
-                            log.info("Customer already created (verified) → CIF: {}", createdCif);
+                            log.info("✓ Customer found in system → CIF: {}", createdCif);
                             String mnemonic = freshCustomerInfo.get("MNEMONIC");
                             return new CustomerCreationResult(createdCif, mnemonic);
                         }
 
-                        log.info("Customer info verified - no CIF found yet. Retrying customer creation (attempt {} of {})", attempt + 1, maxRetries);
+                        // Customer not found - will retry API call
+                        log.info("✗ Customer NOT found in system. Retrying t24Service.createCustomer() - Attempt {} of {}", attempt + 1, maxRetries);
                     } catch (Exception verifyError) {
                         log.error("Failed to verify customer info before retry: {}", verifyError.getMessage());
                         throw new AccountCreationException("Customer verification failed before retry");
@@ -172,14 +173,15 @@ public class BankingService {
 
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
+                log.info("Calling t24Service.createAccount({}) - Attempt {} of {}", currency, attempt, maxRetries);
                 return createAccount(request, cif, currency);
             } catch (Exception e) {
                 log.warn("Attempt {} failed to create {} account: {}", attempt, currency, e.getMessage());
 
                 if (attempt < maxRetries) {
-                    // Delay 3 seconds before verification and retry
+                    // Delay 3 seconds before verification
                     delayMs(retryDelay);
-                    log.info("Delayed 3 seconds. Verifying customer info before retry attempt {}", attempt + 1);
+                    log.info("Delayed 3 seconds. Verifying customer state before retry...");
 
                     // Verify customer info and check if account was created despite error
                     try {
@@ -188,11 +190,12 @@ public class BankingService {
                         // Check if account was actually created despite error
                         if (validationService.hasAccount(freshCustomerInfo, currency)) {
                             String existingAccount = freshCustomerInfo.get(currency);
-                            log.info("{} account already created (verified) → returning: {}", currency, existingAccount);
+                            log.info("✓ {} account found in system → returning: {}", currency, existingAccount);
                             return existingAccount;
                         }
 
-                        log.info("{} account verified as null. Retrying account creation (attempt {} of {})", currency, attempt + 1, maxRetries);
+                        // Account not found - will retry API call
+                        log.info("✗ {} account NOT found in system. Retrying t24Service.createAccount({}) - Attempt {} of {}", currency, currency, attempt + 1, maxRetries);
                     } catch (Exception verifyError) {
                         log.error("Failed to verify customer info before retry: {}", verifyError.getMessage());
                         throw new AccountCreationException("Customer verification failed before retry");
