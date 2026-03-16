@@ -121,7 +121,7 @@ public class MonitoringService {
             return; // Only send errors to dev team
         }
         StringBuilder msg = new StringBuilder();
-        msg.append("❌ *DATABASE CONNECTION FAILED*\n")
+        msg.append("*DATABASE CONNECTION FAILED*\n")
                 .append("├─ Datasource: `").append(escapeMarkdown(datasource)).append("`\n")
                 .append("├─ Duration: `").append(durationMs).append("ms`\n")
                 .append("└─ Time: `").append(getCurrentTime()).append("`");
@@ -149,7 +149,7 @@ public class MonitoringService {
             return; // Only send errors to dev team
         }
         StringBuilder msg = new StringBuilder();
-        msg.append("❌ *USER AUTHENTICATION FAILED*\n")
+        msg.append("*USER AUTHENTICATION FAILED*\n")
                 .append("├─ Username: `").append(escapeMarkdown(username)).append("`\n")
                 .append("├─ IP Address: `").append(escapeMarkdown(ipAddress)).append("`\n")
                 .append("└─ Time: `").append(getCurrentTime()).append("`");
@@ -179,7 +179,7 @@ public class MonitoringService {
             return; // Only send errors to dev team
         }
         StringBuilder msg = new StringBuilder();
-        msg.append("❌ *EXTERNAL API CALL FAILED*\n")
+        msg.append("*EXTERNAL API CALL FAILED*\n")
                 .append("├─ API: `").append(escapeMarkdown(apiName)).append("`\n")
                 .append("├─ Endpoint: `").append(escapeMarkdown(endpoint)).append("`\n")
                 .append("├─ Status Code: `").append(statusCode).append("`\n")
