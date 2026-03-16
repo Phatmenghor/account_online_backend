@@ -236,7 +236,7 @@ public class BankingService {
     }
 
     // ─── Step 8: Validate At Least One Account Exists ────────────────────────
-    public void validateAtLeastOneAccountExists(Map<String, String> customerInfo, String khrAccount,
+    public void validateAllRequiredAccountsCreated(Map<String, String> customerInfo, String khrAccount,
                                                 String usdAccount) {
         log.info(">>> Step 8: VALIDATE_ACCOUNT_CREATION");
 
@@ -247,8 +247,8 @@ public class BankingService {
         }
 
         // Validate both USD and KHR accounts exist
-        boolean khrExists = khrAccount != null || (customerInfo != null && validationService.hasAccount(customerInfo, AppConstants.CURRENCY_KHR));
-        boolean usdExists = usdAccount != null || (customerInfo != null && validationService.hasAccount(customerInfo, AppConstants.CURRENCY_USD));
+        boolean khrExists = khrAccount != null || validationService.hasAccount(customerInfo, AppConstants.CURRENCY_KHR);
+        boolean usdExists = usdAccount != null || validationService.hasAccount(customerInfo, AppConstants.CURRENCY_USD);
 
         if (!khrExists) {
             throw new AccountCreationException("KHR account not found. Account creation failed.");
