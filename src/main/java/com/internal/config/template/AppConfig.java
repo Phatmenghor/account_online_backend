@@ -18,11 +18,11 @@ public class AppConfig {
         RestTemplate restTemplate = new RestTemplate();
 
         // Configure HTTP client with UTF-8 charset support
-        // Increased timeouts for slow external APIs (T24, Activator, CAMDX)
+        // 5 minutes (300s) timeout for slow operations: Account Opening, T24, Activator, CAMDX
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(60000)
-                .setSocketTimeout(60000)
-                .setConnectionRequestTimeout(60000)
+                .setConnectTimeout(300000)
+                .setSocketTimeout(300000)
+                .setConnectionRequestTimeout(300000)
                 .build();
 
         org.apache.http.client.HttpClient httpClient = HttpClientBuilder.create()
