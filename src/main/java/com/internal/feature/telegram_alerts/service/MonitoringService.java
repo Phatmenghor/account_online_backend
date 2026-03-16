@@ -27,24 +27,17 @@ public class MonitoringService {
      * Account Opening Flow Events
      */
     public void logAccountOpeningStarted(String legalId, String nidImage, String selfieImage) {
-        StringBuilder msg = new StringBuilder();
-        msg.append("🟢 *ACCOUNT OPENING STARTED*\n")
-                .append("═══════════════════════════════════════\n")
-                .append("├─ Legal ID: `").append(escapeMarkdown(legalId)).append("`\n")
-                .append("├─ NID Image: `").append(escapeMarkdown(nidImage)).append("`\n")
-                .append("├─ Selfie Image: `").append(escapeMarkdown(selfieImage)).append("`\n")
-                .append("└─ Time: `").append(getCurrentTime()).append("`\n")
-                .append("═══════════════════════════════════════");
-        sendToDevTeam(msg.toString());
+        // Success logs disabled - only errors sent to dev team
     }
 
     public void logAccountOpeningStepProgress(String legalId, String stepName, boolean success, String details) {
-        String emoji = success ? "✅" : "❌";
+        if (success) {
+            return; // Only send errors to dev team
+        }
         StringBuilder msg = new StringBuilder();
-        msg.append(emoji).append(" *ACCOUNT OPENING STEP: ").append(stepName).append("*\n")
+        msg.append("❌ *ACCOUNT OPENING STEP FAILED: ").append(stepName).append("*\n")
                 .append("─────────────────────────────────\n")
-                .append("├─ Legal ID: `").append(escapeMarkdown(legalId)).append("`\n")
-                .append("├─ Status: `").append(success ? "SUCCESS" : "FAILED").append("`\n");
+                .append("├─ Legal ID: `").append(escapeMarkdown(legalId)).append("`\n");
 
         if (details != null && !details.isEmpty()) {
             msg.append("├─ Details: `").append(escapeMarkdown(details)).append("`\n");
@@ -56,22 +49,7 @@ public class MonitoringService {
     }
 
     public void logAccountOpeningCompleted(String legalId, String cif, String khrAccount, String usdAccount, long durationMs) {
-        StringBuilder msg = new StringBuilder();
-        msg.append("🎉 *ACCOUNT OPENING COMPLETED SUCCESSFULLY*\n")
-                .append("═══════════════════════════════════════\n")
-                .append("*CUSTOMER DETAILS:*\n")
-                .append("├─ Legal ID: `").append(escapeMarkdown(legalId)).append("`\n")
-                .append("├─ CIF: `").append(escapeMarkdown(cif)).append("`\n\n")
-                .append("*CREATED ACCOUNTS:*\n")
-                .append("├─ KHR Account: `").append(escapeMarkdown(khrAccount)).append("`\n")
-                .append("├─ USD Account: `").append(escapeMarkdown(usdAccount)).append("`\n\n")
-                .append("*EXECUTION:*\n")
-                .append("├─ Duration: `").append(durationMs).append("ms`\n")
-                .append("├─ Timestamp: `").append(getCurrentDateTime()).append("`\n")
-                .append("└─ Status: `✅ COMPLETED`\n")
-                .append("═══════════════════════════════════════");
-
-        sendToDevTeam(msg.toString());
+        // Success logs disabled - only errors sent to dev team
     }
 
     public void logAccountOpeningFailed(String legalId, String stepName, String errorMessage, Exception exception) {
@@ -98,13 +76,14 @@ public class MonitoringService {
      * T24 Banking Service Events
      */
     public void logT24ServiceCall(String operation, String customerId, long durationMs, boolean success) {
-        String emoji = success ? "✅" : "❌";
+        if (success) {
+            return; // Only send errors to dev team
+        }
         StringBuilder msg = new StringBuilder();
-        msg.append(emoji).append(" *T24 SERVICE CALL*\n")
+        msg.append("❌ *T24 SERVICE CALL FAILED*\n")
                 .append("├─ Operation: `").append(escapeMarkdown(operation)).append("`\n")
                 .append("├─ Customer ID: `").append(escapeMarkdown(customerId)).append("`\n")
                 .append("├─ Duration: `").append(durationMs).append("ms`\n")
-                .append("├─ Status: `").append(success ? "SUCCESS" : "FAILED").append("`\n")
                 .append("└─ Time: `").append(getCurrentTime()).append("`");
 
         sendToDevTeam(msg.toString());
@@ -127,37 +106,23 @@ public class MonitoringService {
      * AML Processing Events
      */
     public void logAmlCheckStarted(String legalId, String customerName) {
-        StringBuilder msg = new StringBuilder();
-        msg.append("🔍 *AML CHECK STARTED*\n")
-                .append("├─ Legal ID: `").append(escapeMarkdown(legalId)).append("`\n")
-                .append("├─ Customer: `").append(escapeMarkdown(customerName)).append("`\n")
-                .append("└─ Time: `").append(getCurrentTime()).append("`");
-
-        sendToDevTeam(msg.toString());
+        // Success logs disabled - only errors sent to dev team
     }
 
     public void logAmlCheckCompleted(String legalId, String riskLevel, double score, long durationMs) {
-        String emoji = "LOW".equalsIgnoreCase(riskLevel) ? "✅" : "⚠️";
-        StringBuilder msg = new StringBuilder();
-        msg.append(emoji).append(" *AML CHECK COMPLETED*\n")
-                .append("├─ Legal ID: `").append(escapeMarkdown(legalId)).append("`\n")
-                .append("├─ Risk Level: `").append(riskLevel).append("`\n")
-                .append("├─ Score: `").append(String.format("%.2f", score)).append("`\n")
-                .append("├─ Duration: `").append(durationMs).append("ms`\n")
-                .append("└─ Time: `").append(getCurrentTime()).append("`");
-
-        sendToDevTeam(msg.toString());
+        // Success logs disabled - only errors sent to dev team
     }
 
     /**
      * Database Events
      */
     public void logDatabaseConnection(String datasource, boolean success, long durationMs) {
-        String emoji = success ? "✅" : "❌";
+        if (success) {
+            return; // Only send errors to dev team
+        }
         StringBuilder msg = new StringBuilder();
-        msg.append(emoji).append(" *DATABASE CONNECTION TEST*\n")
+        msg.append("❌ *DATABASE CONNECTION FAILED*\n")
                 .append("├─ Datasource: `").append(escapeMarkdown(datasource)).append("`\n")
-                .append("├─ Status: `").append(success ? "CONNECTED" : "FAILED").append("`\n")
                 .append("├─ Duration: `").append(durationMs).append("ms`\n")
                 .append("└─ Time: `").append(getCurrentTime()).append("`");
 
@@ -180,12 +145,13 @@ public class MonitoringService {
      * Authentication/Access Events
      */
     public void logUserAuthentication(String username, String ipAddress, boolean success) {
-        String emoji = success ? "✅" : "❌";
+        if (success) {
+            return; // Only send errors to dev team
+        }
         StringBuilder msg = new StringBuilder();
-        msg.append(emoji).append(" *USER AUTHENTICATION*\n")
+        msg.append("❌ *USER AUTHENTICATION FAILED*\n")
                 .append("├─ Username: `").append(escapeMarkdown(username)).append("`\n")
                 .append("├─ IP Address: `").append(escapeMarkdown(ipAddress)).append("`\n")
-                .append("├─ Status: `").append(success ? "SUCCESS" : "FAILED").append("`\n")
                 .append("└─ Time: `").append(getCurrentTime()).append("`");
 
         sendToDevTeam(msg.toString());
@@ -209,9 +175,11 @@ public class MonitoringService {
      * General System Events
      */
     public void logExternalApiCall(String apiName, String endpoint, long durationMs, int statusCode, boolean success) {
-        String emoji = success ? "✅" : "❌";
+        if (success) {
+            return; // Only send errors to dev team
+        }
         StringBuilder msg = new StringBuilder();
-        msg.append(emoji).append(" *EXTERNAL API CALL*\n")
+        msg.append("❌ *EXTERNAL API CALL FAILED*\n")
                 .append("├─ API: `").append(escapeMarkdown(apiName)).append("`\n")
                 .append("├─ Endpoint: `").append(escapeMarkdown(endpoint)).append("`\n")
                 .append("├─ Status Code: `").append(statusCode).append("`\n")
