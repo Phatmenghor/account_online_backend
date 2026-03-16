@@ -35,7 +35,7 @@ public class MonitoringService {
             return; // Only send errors to dev team
         }
         StringBuilder msg = new StringBuilder();
-        msg.append("❌ *ACCOUNT OPENING STEP FAILED: ").append(stepName).append("*\n")
+        msg.append("*ACCOUNT OPENING STEP FAILED: ").append(stepName).append("*\n")
                 .append("─────────────────────────────────\n")
                 .append("├─ Legal ID: `").append(escapeMarkdown(legalId)).append("`\n");
 
@@ -54,7 +54,7 @@ public class MonitoringService {
 
     public void logAccountOpeningFailed(String legalId, String stepName, String errorMessage, Exception exception) {
         StringBuilder msg = new StringBuilder();
-        msg.append("❌ *ACCOUNT OPENING FAILED*\n")
+        msg.append("*ACCOUNT OPENING FAILED*\n")
                 .append("═══════════════════════════════════════\n")
                 .append("*ERROR INFORMATION:*\n")
                 .append("├─ Legal ID: `").append(escapeMarkdown(legalId)).append("`\n")
@@ -80,7 +80,7 @@ public class MonitoringService {
             return; // Only send errors to dev team
         }
         StringBuilder msg = new StringBuilder();
-        msg.append("❌ *T24 SERVICE CALL FAILED*\n")
+        msg.append("*T24 SERVICE CALL FAILED*\n")
                 .append("├─ Operation: `").append(escapeMarkdown(operation)).append("`\n")
                 .append("├─ Customer ID: `").append(escapeMarkdown(customerId)).append("`\n")
                 .append("├─ Duration: `").append(durationMs).append("ms`\n")
@@ -91,7 +91,7 @@ public class MonitoringService {
 
     public void logT24Error(String operation, String customerId, String errorMessage) {
         StringBuilder msg = new StringBuilder();
-        msg.append("🔴 *T24 SERVICE ERROR*\n")
+        msg.append("*T24 SERVICE ERROR*\n")
                 .append("─────────────────────────────────\n")
                 .append("├─ Operation: `").append(escapeMarkdown(operation)).append("`\n")
                 .append("├─ Customer ID: `").append(escapeMarkdown(customerId)).append("`\n")
@@ -131,7 +131,7 @@ public class MonitoringService {
 
     public void logDatabaseError(String datasource, String operation, String errorMessage) {
         StringBuilder msg = new StringBuilder();
-        msg.append("🔴 *DATABASE ERROR*\n")
+        msg.append("*DATABASE ERROR*\n")
                 .append("─────────────────────────────────\n")
                 .append("├─ Datasource: `").append(escapeMarkdown(datasource)).append("`\n")
                 .append("├─ Operation: `").append(escapeMarkdown(operation)).append("`\n")
@@ -159,7 +159,7 @@ public class MonitoringService {
 
     public void logSuspiciousActivity(String username, String ipAddress, String activityType, String description) {
         StringBuilder msg = new StringBuilder();
-        msg.append("⚠️ *SUSPICIOUS ACTIVITY DETECTED*\n")
+        msg.append("*SUSPICIOUS ACTIVITY DETECTED*\n")
                 .append("═══════════════════════════════════════\n")
                 .append("├─ Username: `").append(escapeMarkdown(username)).append("`\n")
                 .append("├─ IP Address: `").append(escapeMarkdown(ipAddress)).append("`\n")

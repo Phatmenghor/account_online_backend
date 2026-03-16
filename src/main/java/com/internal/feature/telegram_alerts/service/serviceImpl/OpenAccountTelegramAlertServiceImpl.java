@@ -56,16 +56,7 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
 
     @Override
     public void sendTelegramInternalError(String idNumber, OpenAccStatusEnum status, StringBuilder remarkBuilder) {
-        try {
-            StringBuilder bodyBuilder = new StringBuilder();
-            appendIfNotEmpty(bodyBuilder, "NID", idNumber);
-            appendIfNotEmpty(bodyBuilder, "Remark", remarkBuilder != null ? remarkBuilder.toString() : null);
-
-            String message = buildStandardMessage("Request Failed", bodyBuilder.toString(), status.name(), "-");
-            telegramService.sendMarkdownAclInternalMessage(message);
-        } catch (Exception e) {
-            log.error("Telegram internal alert sending failed: {}", e.getMessage(), e);
-        }
+        // Disabled - errors are sent via MonitoringService with detailed context
     }
 
     @Override
@@ -158,7 +149,7 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
                 }
 
                 // Send a short mention message for Compliance review
-                String mentionMessage = "*🚨 AML HIGH RISK ALERT*\n"
+                String mentionMessage = "*AML HIGH RISK ALERT*\n"
                         + "High-risk customer flagged for compliance review.\n"
                         + "Please review and advise.";
 
@@ -186,7 +177,7 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
                     : LocalDateTime.now().format(formatter);
 
             StringBuilder detailedMsg = new StringBuilder();
-            detailedMsg.append("🚨 *AML HIGH RISK ALERT - DEV TEAM*\n")
+            detailedMsg.append("*AML HIGH RISK ALERT - DEV TEAM*\n")
                     .append("═══════════════════════════════════════\n\n")
                     .append("*RISK ASSESSMENT:*\n")
                     .append("├─ Risk Level: `HIGH` ⚠️\n")

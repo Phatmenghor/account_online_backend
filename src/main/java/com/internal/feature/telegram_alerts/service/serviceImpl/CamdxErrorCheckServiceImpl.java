@@ -168,7 +168,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
 
         // DETAILED MESSAGE FOR DEV TEAM
         StringBuilder detailedMsg = new StringBuilder();
-        detailedMsg.append("🚨 *CAMDX MIDDLEWARE FAILURE*\n")
+        detailedMsg.append("*CAMDX MIDDLEWARE FAILURE*\n")
                 .append("═══════════════════════════════════════\n\n")
                 .append("*ERROR DETAILS:*\n")
                 .append("├─ Status: `FAILURE`\n")
@@ -224,7 +224,7 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
 
         // DETAILED MESSAGE FOR DEV TEAM
         StringBuilder detailedMsg = new StringBuilder();
-        detailedMsg.append("⚠️ *CAMDX VALIDATION FAILURE*\n")
+        detailedMsg.append("*CAMDX VALIDATION FAILURE*\n")
                 .append("═══════════════════════════════════════\n\n")
                 .append("*VALIDATION RESULTS:*\n")
                 .append("├─ Status: `FAILURE`\n")
