@@ -81,9 +81,6 @@ public class BankingService {
      * Includes retry logic with customer verification before each retry.
      */
     public CustomerCreationResult createCustomerIfNeeded(CustomerRequest request, Map<String, String> customerInfo) {
-        // Add 3-second delay before creating customer
-        delayMs(3000);
-
         String existingCif = customerInfo.get("CIF");
 
         if (existingCif != null && !existingCif.isEmpty()) {
@@ -112,6 +109,10 @@ public class BankingService {
                 log.warn("Attempt {} failed to create customer: {}", attempt, e.getMessage());
 
                 if (attempt < maxRetries) {
+                    // Delay 3 seconds before verification and retry
+                    delayMs(retryDelay);
+                    log.info("Delayed 3 seconds. Verifying customer info before retry attempt {}", attempt + 1);
+
                     // Verify customer info before retry
                     try {
                         // Get fresh customer info to verify state
@@ -125,15 +126,11 @@ public class BankingService {
                             return new CustomerCreationResult(createdCif, mnemonic);
                         }
 
-                        log.info("Customer info verified before retry attempt {} - no CIF found yet", attempt + 1);
+                        log.info("Customer info verified - no CIF found yet. Retrying customer creation (attempt {} of {})", attempt + 1, maxRetries);
                     } catch (Exception verifyError) {
                         log.error("Failed to verify customer info before retry: {}", verifyError.getMessage());
                         throw new AccountCreationException("Customer verification failed before retry");
                     }
-
-                    // Delay before retry
-                    delayMs(retryDelay);
-                    log.info("Retrying customer creation (attempt {} of {})", attempt + 1, maxRetries);
                 } else {
                     log.error("Max retries ({}) exceeded for customer creation", maxRetries);
                     throw e;
@@ -146,9 +143,6 @@ public class BankingService {
     // ─── Steps 6 & 7: Create Accounts ────────────────────────────────────────
     public String createAccountIfNeeded(CustomerRequest request, Map<String, String> customerInfo, String cif,
                                         String currency) {
-        // Add 3-second delay before creating account
-        delayMs(3000);
-
         if (isTestMode.isSkipCheckAccount()) {
             log.info("TEST MODE ENABLED — Skipping existing account check → creating new {} account", currency);
             return createAccount(request, cif, currency);
@@ -183,18 +177,18 @@ public class BankingService {
                 log.warn("Attempt {} failed to create {} account: {}", attempt, currency, e.getMessage());
 
                 if (attempt < maxRetries) {
+                    // Delay 3 seconds before verification and retry
+                    delayMs(retryDelay);
+                    log.info("Delayed 3 seconds. Verifying customer info before retry attempt {}", attempt + 1);
+
                     // Verify customer info before retry
                     try {
                         Map<String, String> freshCustomerInfo = getCustomerInfo(request.getLegalId());
-                        log.info("Customer info verified before retry attempt {}", attempt + 1);
+                        log.info("Customer info verified - CIF present. Retrying {} account creation (attempt {} of {})", currency, attempt + 1, maxRetries);
                     } catch (Exception verifyError) {
                         log.error("Failed to verify customer info before retry: {}", verifyError.getMessage());
                         throw new AccountCreationException("Customer verification failed before retry");
                     }
-
-                    // Delay before retry
-                    delayMs(retryDelay);
-                    log.info("Retrying {} account creation (attempt {} of {})", currency, attempt + 1, maxRetries);
                 } else {
                     log.error("Max retries ({}) exceeded for {} account creation", maxRetries, currency);
                     throw e;
