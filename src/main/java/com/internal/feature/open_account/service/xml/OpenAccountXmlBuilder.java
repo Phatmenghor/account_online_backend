@@ -286,18 +286,21 @@ public class OpenAccountXmlBuilder {
     }
 
     /**
-     * Sanitizes a string to contain only SWIFT-allowed characters.
+     * Sanitizes a string to contain SWIFT-allowed characters while preserving Unicode (Khmer).
      * SWIFT charset: A-Z a-z 0-9 / - ? : ( ) . , ' + space
-     * Any character outside this set is replaced with a space.
+     * Unicode characters (including Khmer) are preserved as they are valid in XML UTF-8.
+     * Only control characters and certain symbols are removed.
      * Used for fields like STREET that T24 validates against SWIFT rules.
      */
     private String toSwiftSafe(String input) {
         if (input == null) return "";
-        String sanitized = input.replaceAll("[^A-Za-z0-9/ \\-?:()\\.,'\\+]", " ").trim();
+        // Allow Unicode characters (Khmer, etc.) alongside SWIFT characters
+        // Remove only control characters and very problematic symbols
+        String sanitized = input.replaceAll("[\\p{Cc}\\p{Cn}]", " ").trim();
         // Collapse multiple spaces into one
         sanitized = sanitized.replaceAll(" {2,}", " ");
         if (!sanitized.equals(input.trim())) {
-            log.warn("SWIFT sanitization applied to address. Original: [{}] → Sanitized: [{}]", input, sanitized);
+            log.info("Address sanitization applied (control chars removed). Original: [{}] → Sanitized: [{}]", input, sanitized);
         }
         return sanitized;
     }

@@ -38,10 +38,12 @@ public class ComplianceService {
     private final OpenAccountTelegramAlertServiceImpl alertTelegramService;
 
     public AmlStatusDto processAml(CustomerRequest request) throws Exception {
+        log.info("========== START AML Processing for Legal ID: {} ==========", request.getLegalId());
+
         // Always check existing AML status first before calling middleware
         Optional<AmlStatus> existingAmlOpt = amlService.findByLegalId(request.getLegalId());
         if (existingAmlOpt.isPresent()) {
-            log.info("Existing AML status found for Legal ID: {}", request.getLegalId());
+            log.info("Existing AML status found for Legal ID: {} | Status: {}", request.getLegalId(), existingAmlOpt.get().getStatus());
             return handleExistingAml(existingAmlOpt.get(), request.getLegalId());
         }
 
@@ -54,7 +56,6 @@ public class ComplianceService {
 
         // Determine AML status based on risk
         boolean isHighRisk = AppConstants.RISK_HIGH.equalsIgnoreCase(amlResponse.getRiskLevel());
-
         AmlStatusEnum amlStatusEnum = isHighRisk ? AmlStatusEnum.PENDING : AmlStatusEnum.APPROVE;
 
         // Map to CreateAmlRequestDto
@@ -63,9 +64,16 @@ public class ComplianceService {
 
         // Handle high-risk customers
         if (isHighRisk) {
+            log.warn("HIGH RISK customer detected | Legal ID: {} | RiskLevel: {} | Rules: {}",
+                    request.getLegalId(), amlResponse.getRiskLevel(), amlResponse.getRulesTriggered());
             amlService.createAmlStatus(createRequest);
             sendAmlNotification(amlRequestDto, amlResponse, request);
+        } else {
+            log.info("LOW RISK customer approved | Legal ID: {} | RiskLevel: {}",
+                    request.getLegalId(), amlResponse.getRiskLevel());
         }
+
+        log.info("========== END AML Processing for Legal ID: {} | Status: {} ==========", request.getLegalId(), amlStatusEnum);
 
         // Low-risk → return mapped DTO
         return openAccountAmlStatusMapper.fromRequestAndResponse(request, amlResponse, amlStatusEnum);

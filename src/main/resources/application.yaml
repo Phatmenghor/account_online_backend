@@ -47,10 +47,11 @@ spring:
       maximum-pool-size: 20
       minimum-idle: 5
       connection-timeout: 30000
-      idle-timeout: 300000
-      max-lifetime: 600000
-      leak-detection-threshold: 300000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 600000
       pool-name: PostgreSQL-Pool
+      connection-test-query: "SELECT 1"
 
   mail:
     host: 10.18.1.204
@@ -198,13 +199,20 @@ logging:
     com.internal.feature.auth.security.RequestLoggingFilter: DEBUG
     com.internal.feature.auth.service.RequestLogService: INFO
     com.internal.feature.auth.scheduler.RequestLogCleanupScheduler: INFO
+    com.internal.feature.open_account: DEBUG
+    com.internal.feature.aml: DEBUG
   pattern:
-    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{20} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level [%logger{30}] - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{50}] - [%X{userId}] %msg%n"
   file:
     name: logs/account_online.log
     max-size: 100MB
     max-history: 10
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 30
+      total-size-cap: 1GB
 
 springdoc:
   api-docs:

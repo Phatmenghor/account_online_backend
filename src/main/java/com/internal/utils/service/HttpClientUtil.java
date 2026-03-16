@@ -10,6 +10,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Component
@@ -21,7 +22,8 @@ public class HttpClientUtil {
 
     public String postForString(String url, String body, String contentType) {
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(contentType));
+        MediaType mediaType = MediaType.parseMediaType(contentType);
+        headers.setContentType(new MediaType(mediaType.getType(), mediaType.getSubtype(), StandardCharsets.UTF_8));
 
         HttpEntity<String> request = new HttpEntity<>(body, headers);
         ResponseEntity<String> response = restTemplate.exchange(
@@ -126,11 +128,13 @@ public class HttpClientUtil {
     }
 
     /**
-     * Build HTTP headers with optional custom headers
+     * Build HTTP headers with optional custom headers and UTF-8 charset
      */
     private HttpHeaders buildHeaders(Map<String, String> customHeaders) {
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setContentType(new MediaType(MediaType.APPLICATION_JSON.getType(),
+                MediaType.APPLICATION_JSON.getSubtype(), StandardCharsets.UTF_8));
+        headers.setAcceptCharset(java.util.Collections.singletonList(StandardCharsets.UTF_8));
 
         // Add custom headers if provided
         if (customHeaders != null && !customHeaders.isEmpty()) {

@@ -36,12 +36,13 @@ public class AmlMiddlewareService {
 
         try {
             if (simulateAmlServiceError) {
+                log.error("AML Service Error Simulation Enabled");
                 throw new ValidateServiceException(AppConstants.MSG_SYSTEM_BUSY);
             }
 
             if (simulateAmlHighRisk) {
-                log.info("Simulating AML High Risk Response");
-                return AmlExternalResponseDto.builder()
+                log.warn("AML High Risk Simulation Enabled - returning simulated high-risk response");
+                AmlExternalResponseDto simulated = AmlExternalResponseDto.builder()
                         .riskLevel("HIGH")
                         .actionTaken("Review Required")
                         .rulesTriggered("[{\"RuleName\":\"Sanction List Hit\"}]")
@@ -49,11 +50,13 @@ public class AmlMiddlewareService {
                         .totalRulesScore(100)
                         .trxnID("SIM-" + System.currentTimeMillis())
                         .build();
+                log.warn("Simulated AML Response: RiskLevel={}, TrxnID={}", simulated.getRiskLevel(), simulated.getTrxnID());
+                return simulated;
             }
 
             String url = properties.getAml().getUrl();
             String jsonRequest = objectMapper.writeValueAsString(requestBody);
-            log.info("AML Request JSON: {}", jsonRequest);
+            log.debug("AML Request to URL: {} | Customer: {}", url, requestBody.getCustomerId());
 
             String credentials = properties.getAml().getUsername() + ":" + properties.getAml().getPassword();
             String encodedCredentials = Base64.getEncoder()
@@ -61,15 +64,18 @@ public class AmlMiddlewareService {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setCharset(StandardCharsets.UTF_8);
             headers.set("Authorization", "Basic " + encodedCredentials);
 
             HttpEntity<String> entity = new HttpEntity<>(jsonRequest, headers);
 
+            long startTime = System.currentTimeMillis();
             ResponseEntity<String> response = restTemplate.exchange(
                     url, HttpMethod.POST, entity, String.class);
+            long duration = System.currentTimeMillis() - startTime;
 
             String rawBody = response.getBody();
-            log.info("AML raw response body: {}", rawBody);
+            log.debug("AML API Response ({}ms): {}", duration, rawBody);
 
             if (rawBody == null || rawBody.trim().isEmpty()) {
                 throw new RuntimeException("AML Service returned empty response");
@@ -81,10 +87,14 @@ public class AmlMiddlewareService {
             String rulesAsString = rulesArray == null ? "" : objectMapper.writeValueAsString(rulesArray);
             map.put("RulesTriggered", rulesAsString);
 
-            return objectMapper.convertValue(map, AmlExternalResponseDto.class);
+            AmlExternalResponseDto result = objectMapper.convertValue(map, AmlExternalResponseDto.class);
+            log.info("AML Check Completed ({}ms) | RiskLevel: {} | TrxnID: {} | RulesScore: {}",
+                    duration, result.getRiskLevel(), result.getTrxnID(), result.getTotalRulesScore());
+
+            return result;
 
         } catch (Exception e) {
-            log.error("AML API call failed: {}", e.getMessage(), e);
+            log.error("AML API call failed: {} | Message: {}", e.getClass().getSimpleName(), e.getMessage(), e);
             throw new ValidateServiceException(AppConstants.MSG_SYSTEM_BUSY);
         }
     }
