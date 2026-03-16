@@ -78,8 +78,12 @@ public class BankingService {
      * Creates a new customer in T24 if no existing CIF is found.
      * Extracts both CIF and MNEMONIC from a SINGLE t24Service.createCustomer() call.
      * For existing customers, both CIF and MNEMONIC are taken directly from customerInfo.
+     * Includes retry logic with customer verification before each retry.
      */
     public CustomerCreationResult createCustomerIfNeeded(CustomerRequest request, Map<String, String> customerInfo) {
+        // Add 3-second delay before creating customer
+        delayMs(3000);
+
         String existingCif = customerInfo.get("CIF");
 
         if (existingCif != null && !existingCif.isEmpty()) {
@@ -89,13 +93,54 @@ public class BankingService {
             return new CustomerCreationResult(existingCif, existingMnemonic);
         }
 
-        // Single T24 call — extract both CIF and MNEMONIC from one response
-        Document resp = t24Service.createCustomer(request);
-        String cif = XmlParser.extractCif(resp);
-        String mnemonic = XmlParser.extractMnemonic(resp);
-        log.info("New customer created → CIF: {}, MNEMONIC: {}", cif, mnemonic);
+        // Create new customer with retry logic
+        return createCustomerWithRetry(request);
+    }
 
-        return new CustomerCreationResult(cif, mnemonic);
+    private CustomerCreationResult createCustomerWithRetry(CustomerRequest request) {
+        int maxRetries = 3;
+        int retryDelay = 3000; // 3 seconds
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                Document resp = t24Service.createCustomer(request);
+                String cif = XmlParser.extractCif(resp);
+                String mnemonic = XmlParser.extractMnemonic(resp);
+                log.info("New customer created → CIF: {}, MNEMONIC: {}", cif, mnemonic);
+                return new CustomerCreationResult(cif, mnemonic);
+            } catch (Exception e) {
+                log.warn("Attempt {} failed to create customer: {}", attempt, e.getMessage());
+
+                if (attempt < maxRetries) {
+                    // Verify customer info before retry
+                    try {
+                        // Get fresh customer info to verify state
+                        Map<String, String> freshCustomerInfo = getCustomerInfo(request.getLegalId());
+
+                        // Check if customer was actually created despite error
+                        String createdCif = freshCustomerInfo != null ? freshCustomerInfo.get("CIF") : null;
+                        if (createdCif != null && !createdCif.isEmpty()) {
+                            log.info("Customer already created (verified) → CIF: {}", createdCif);
+                            String mnemonic = freshCustomerInfo.get("MNEMONIC");
+                            return new CustomerCreationResult(createdCif, mnemonic);
+                        }
+
+                        log.info("Customer info verified before retry attempt {} - no CIF found yet", attempt + 1);
+                    } catch (Exception verifyError) {
+                        log.error("Failed to verify customer info before retry: {}", verifyError.getMessage());
+                        throw new AccountCreationException("Customer verification failed before retry");
+                    }
+
+                    // Delay before retry
+                    delayMs(retryDelay);
+                    log.info("Retrying customer creation (attempt {} of {})", attempt + 1, maxRetries);
+                } else {
+                    log.error("Max retries ({}) exceeded for customer creation", maxRetries);
+                    throw e;
+                }
+            }
+        }
+        throw new AccountCreationException("Customer creation failed after all retries");
     }
 
     // ─── Steps 6 & 7: Create Accounts ────────────────────────────────────────
