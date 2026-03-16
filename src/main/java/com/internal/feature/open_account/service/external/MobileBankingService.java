@@ -51,7 +51,7 @@ public class MobileBankingService {
         return activationCode;
     }
 
-    public void sendAccountSms(String phone, String usdAccount, String khrAccount, String cif, String activationCode) {
+    private void sendAccountSms(String phone, String usdAccount, String khrAccount, String cif, String activationCode) {
         try {
             StringBuilder message = new StringBuilder();
 
