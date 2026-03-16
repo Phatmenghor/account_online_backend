@@ -4,6 +4,8 @@ import com.internal.config.TestProperties;
 import com.internal.exceptions.error.custom.NidValidationException;
 import com.internal.exceptions.error.custom.ValidateServiceException;
 import com.internal.exceptions.error.openaccount.AccountCreationException;
+import com.internal.feature.logs_report.model.AccountOnlineFinal;
+import com.internal.feature.logs_report.repository.AccountOnlineFinalRepository;
 import com.internal.feature.open_account.dto.request.CustomerCreationResult;
 import com.internal.feature.open_account.dto.request.CustomerRequest;
 import com.internal.feature.open_account.service.external.*;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -28,6 +31,7 @@ public class BankingService {
     private final MobileBankingService mobileBankingService;
     private final JdbcTemplate jdbcTemplate;
     private final TestProperties isTestMode;
+    private final AccountOnlineFinalRepository accountOnlineFinalRepository;
 
     @Value("${simulator.banking.camdx-error:false}")
     private boolean simulateCamdxError;
@@ -64,6 +68,63 @@ public class BankingService {
         Map<String, String> customerInfo = validationService.getCustomerInfo(legalId);
         log.info("Customer info retrieved: {}", customerInfo != null ? "Found" : "Not found");
         return customerInfo;
+    }
+
+    // ─── Step 2.5: Check Existing Complete Account (Recovery) ───────────────────
+    /**
+     * Checks if customer already has complete accounts (USD + KHR + CIF) in the final table.
+     * If accounts exist but MB activation code is null, activates and sends SMS.
+     * If one or more fields are missing, returns empty (continue normal flow).
+     */
+    public Optional<String> checkExistingCompleteAccountAndActivate(CustomerRequest request) {
+        log.info(">>> Step 2.5: CHECK_EXISTING_COMPLETE_ACCOUNT_RECOVERY");
+
+        Optional<AccountOnlineFinal> existingAccount = accountOnlineFinalRepository.findByLegalId(request.getLegalId());
+
+        if (existingAccount.isEmpty()) {
+            log.info("No existing account found → Continue with normal account creation flow");
+            return Optional.empty();
+        }
+
+        AccountOnlineFinal account = existingAccount.get();
+
+        // Check if ALL required fields exist
+        boolean hasAllFields = account.getCif() != null && !account.getCif().isEmpty()
+                && account.getKhrAccount() != null && !account.getKhrAccount().isEmpty()
+                && account.getUsdAccount() != null && !account.getUsdAccount().isEmpty()
+                && account.getLegalId() != null && !account.getLegalId().isEmpty();
+
+        if (!hasAllFields) {
+            log.info("Some account fields are missing → Continue with normal account creation flow");
+            return Optional.empty();
+        }
+
+        log.info("✓ Complete accounts found: CIF={}, KHR={}, USD={}", account.getCif(), account.getKhrAccount(), account.getUsdAccount());
+
+        // Check if MB activation code is missing
+        if (account.getMbActivationCode() == null || account.getMbActivationCode().isEmpty()) {
+            log.warn("MB activation code is null → Attempting activation recovery...");
+
+            try {
+                String activationCode = mobileBankingService.activate(request, account.getCif(),
+                        account.getKhrAccount(), account.getUsdAccount());
+
+                if (activationCode != null && !activationCode.isEmpty()) {
+                    log.info("✓ MB activation successful → Code: {}", activationCode);
+                    // TODO: Send SMS with activation code if needed
+                    return Optional.of(activationCode);
+                } else {
+                    log.warn("MB activation returned null code → Continue to Step 3");
+                    return Optional.empty();
+                }
+            } catch (Exception e) {
+                log.error("MB activation recovery failed: {} → Continue to Step 3", e.getMessage());
+                return Optional.empty();
+            }
+        }
+
+        log.info("✓ Complete account already has activation code → Account opening complete!");
+        return Optional.of(account.getMbActivationCode());
     }
 
     // ─── Step 3: Validate Existing Accounts ───────────────────────────────────
