@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -31,6 +32,8 @@ public class MobileBankingService {
     private final CpbProperties properties;
     private final DefaultProperties defaultProperties;
     private final RestTemplate restTemplate;
+    @Qualifier("mobileBankingRestTemplate")
+    private final RestTemplate mobileBankingRestTemplate;
     private final SoapSmsSender soapSmsSender;
     private final CifActivationLogService cifActivationLogService;
 
@@ -132,22 +135,23 @@ public class MobileBankingService {
     }
 
     private MobileBankingResponse callActivatorApi(MobileBankingRequest request, String cif) {
-        int maxRetries = 2;
-        int retryDelay = 3000; // 3 second
+        int maxRetries = 3;
+        int[] retryDelays = {2000, 4000, 8000, 16000}; // Exponential backoff: 2s, 4s, 8s, 16s
 
-        for (int attempt = 1; attempt <= maxRetries + 1; attempt++) {
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                return attemptApiCall(request, cif, attempt, maxRetries + 1);
+                return attemptApiCall(request, cif, attempt, maxRetries);
             } catch (Exception e) {
-                if (attempt == maxRetries + 1) {
+                if (attempt == maxRetries) {
                     // Final attempt failed, throw error
                     throw e;
                 }
-                // Retry with delay
+                // Retry with exponential backoff
+                int delayMs = retryDelays[attempt - 1];
                 log.warn("Attempt {} failed for CIF {}: {}. Retrying in {}ms...",
-                    attempt, cif, e.getMessage(), retryDelay);
+                    attempt, cif, e.getMessage(), delayMs);
                 try {
-                    Thread.sleep(retryDelay);
+                    Thread.sleep(delayMs);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                     throw new RuntimeException("Retry interrupted", ie);
@@ -181,7 +185,7 @@ public class MobileBankingService {
             log.info("Calling Activator API (Attempt {}/{}): {}", attemptNumber, totalAttempts, url);
             log.info("Request: {}", requestPayload);
 
-            ResponseEntity<String> rawResponse = restTemplate.exchange(
+            ResponseEntity<String> rawResponse = mobileBankingRestTemplate.exchange(
                     url,
                     HttpMethod.POST,
                     entity,
