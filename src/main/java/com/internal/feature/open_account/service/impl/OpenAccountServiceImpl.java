@@ -107,7 +107,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
             // Step 9: Final Validation
             currentStep = AppConstants.VALIDATE_ACCOUNT_CREATION;
-            bankingService.validateAllRequiredAccountsCreated(context.getCustomerInfo(),
+            bankingService.validateAllRequiredAccountsCreated(context.getCif(),
                     context.getKhrAccount(),
                     context.getUsdAccount());
             monitoringService.logAccountOpeningStepProgress(request.getLegalId(), "VALIDATE_ACCOUNT_CREATION", true, "Accounts validated successfully");

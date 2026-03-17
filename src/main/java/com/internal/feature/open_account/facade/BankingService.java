@@ -315,40 +315,35 @@ public class BankingService {
         }
     }
 
-    // ─── Step 8: Validate At Least One Account Exists ────────────────────────
-    public void validateAllRequiredAccountsCreated(Map<String, String> customerInfo, String khrAccount,
-                                                String usdAccount) {
-        log.info(">>> Step 8: VALIDATE_ACCOUNT_CREATION");
+    // ─── Step 9: Validate All Required Accounts Created ────────────────────────
+    public void validateAllRequiredAccountsCreated(String cif, String khrAccount, String usdAccount) {
+        log.info(">>> Step 9: VALIDATE_ACCOUNT_CREATION");
 
         // Validate CIF exists
-        String cif = customerInfo != null ? customerInfo.get("CIF") : null;
         if (cif == null || cif.isEmpty()) {
             throw new AccountCreationException("Customer CIF not found. Account creation failed.");
         }
 
         // Validate both USD and KHR accounts exist
-        boolean khrExists = khrAccount != null || validationService.hasAccount(customerInfo, AppConstants.CURRENCY_KHR);
-        boolean usdExists = usdAccount != null || validationService.hasAccount(customerInfo, AppConstants.CURRENCY_USD);
-
-        if (!khrExists) {
+        if (khrAccount == null || khrAccount.isEmpty()) {
             throw new AccountCreationException("KHR account not found. Account creation failed.");
         }
-        if (!usdExists) {
+        if (usdAccount == null || usdAccount.isEmpty()) {
             throw new AccountCreationException("USD account not found. Account creation failed.");
         }
 
-        log.info("Step 8 SUCCESS: CIF validated with both accounts (KHR: {}, USD: {})", khrExists, usdExists);
+        log.info("Step 9 SUCCESS: All accounts validated - CIF: {}, KHR: {}, USD: {}", cif, khrAccount, usdAccount);
     }
 
-    // ─── Step 9: Activate Mobile Banking ─────────────────────────────────────
+    // ─── Step 10: Activate Mobile Banking ────────────────────────────────────
     public String activateMobileBanking(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
-        log.info(">>> Step 9: ACTIVATE_MOBILE_BANKING");
+        log.info(">>> Step 10: ACTIVATE_MOBILE_BANKING");
         try {
             String activationCode = mobileBankingService.activate(request, cif, khrAccount, usdAccount);
-            log.info("Step 9 SUCCESS: Mobile banking activated");
+            log.info("Step 10 SUCCESS: Mobile banking activated");
             return activationCode;
         } catch (Exception e) {
-            log.warn("Step 9 WARNING: Mobile banking activation failed (non-critical): {}", e.getMessage());
+            log.warn("Step 10 WARNING: Mobile banking activation failed (non-critical): {}", e.getMessage());
             return null;
         }
     }
