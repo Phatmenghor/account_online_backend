@@ -177,45 +177,49 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
                     : LocalDateTime.now().format(formatter);
 
             StringBuilder detailedMsg = new StringBuilder();
-            detailedMsg.append("*AML HIGH RISK ALERT - DEV TEAM*\n")
-                    .append("═══════════════════════════════════════\n\n")
-                    .append("*RISK ASSESSMENT:*\n")
-                    .append("├─ Risk Level: `HIGH` ⚠️\n")
-                    .append("├─ Rules Score: `").append(amlDto.getTotalRulesScore()).append("`\n")
-                    .append("├─ Status: `").append(amlDto.getStatus().name()).append("`\n")
-                    .append("├─ Service: `").append(amlDto.getServiceName()).append("`\n")
-                    .append("├─ Action: `").append(amlDto.getActionTaken()).append("`\n")
-                    .append("└─ Time: `").append(timeFormatted).append("`\n\n")
-                    .append("*CUSTOMER INFORMATION:*\n")
-                    .append("├─ Legal ID: `").append(amlDto.getCustomerInfo().getLegalId()).append("`\n")
-                    .append("├─ Name (EN): `").append(amlDto.getCustomerInfo().getGivenName())
-                    .append(" ").append(amlDto.getCustomerInfo().getFamilyName()).append("`\n")
-                    .append("├─ Name (KH): `").append(amlDto.getCustomerInfo().getFirstNameKh())
-                    .append(" ").append(amlDto.getCustomerInfo().getLastNameKh()).append("`\n")
-                    .append("├─ Gender: `").append(amlDto.getCustomerInfo().getGender()).append("`\n")
-                    .append("├─ DOB: `").append(formatDob(amlDto.getCustomerInfo().getDateOfBirth())).append("`\n")
-                    .append("├─ Nationality: `").append(amlDto.getCustomerInfo().getNationality()).append("`\n")
-                    .append("├─ Phone: `").append(amlDto.getCustomerInfo().getPhoneNumber()).append("`\n")
-                    .append("├─ ID Issued: `").append(amlDto.getCustomerInfo().getIssuedDate()).append("`\n")
-                    .append("└─ ID Expired: `").append(amlDto.getCustomerInfo().getExpiredDate()).append("`\n\n")
-                    .append("*TRIGGERED RULES:*\n");
+            detailedMsg.append("*AML Account Online - HIGH RISK*\n")
+                    .append("--------------------\n")
+                    .append("- Name: ").append(getCustomerDisplayName(
+                            amlDto.getCustomerInfo().getGivenName(),
+                            amlDto.getCustomerInfo().getFamilyName(),
+                            amlDto.getCustomerInfo().getFirstNameKh(),
+                            amlDto.getCustomerInfo().getLastNameKh(),
+                            amlDto.getStatus(),
+                            amlDto.getCustomerInfo().getLegalId())).append("\n")
+                    .append("- Legal ID: `").append(amlDto.getCustomerInfo().getLegalId()).append("`\n")
+                    .append("- Gender: `").append(amlDto.getCustomerInfo().getGender()).append("`\n")
+                    .append("- DOB: `").append(formatDob(amlDto.getCustomerInfo().getDateOfBirth())).append("`\n")
+                    .append("- Nationality: `").append(amlDto.getCustomerInfo().getNationality()).append("`\n")
+                    .append("- Current Address: `").append(amlDto.getCurrentAddressName()).append("`\n")
+                    .append("- Phone Number: `").append(amlDto.getCustomerInfo().getPhoneNumber()).append("`\n")
+                    .append("- Place of Birth: `").append(amlDto.getPlaceOfBirthName()).append("`\n")
+                    .append("- Marital Status: `").append(amlDto.getMaritalStatus()).append("`\n")
+                    .append("- ID Issued: `").append(amlDto.getCustomerInfo().getIssuedDate()).append("`\n")
+                    .append("- ID Expired: `").append(amlDto.getCustomerInfo().getExpiredDate()).append("`\n")
+                    .append("- Occupation: `").append(amlDto.getOccupationStatus()).append("`\n")
+                    .append("- Risk Level: `").append(amlDto.getRiskLevel()).append("`\n")
+                    .append("- Service Name: `").append(amlDto.getServiceName()).append("`\n");
+
+            if (amlDto.getTotalRulesScore() > 0) {
+                detailedMsg.append("- Total Rules Score: `").append(amlDto.getTotalRulesScore()).append("`\n");
+            }
 
             // Format rules triggered (stored as JSON string)
             String rulesTriggered = amlDto.getRulesTriggered();
             if (rulesTriggered != null && !rulesTriggered.isEmpty()) {
-                detailedMsg.append("└─ `").append(escapeMarkdown(rulesTriggered)).append("`\n");
-            } else {
-                detailedMsg.append("└─ No specific rules captured\n");
+                detailedMsg.append("- Rules Triggered: `").append(escapeMarkdown(rulesTriggered)).append("`\n");
             }
 
-            detailedMsg.append("\n*REVIEW NOTES:*\n")
-                    .append("├─ Occupation: `").append(amlDto.getOccupationStatus()).append("`\n")
-                    .append("├─ Address: `").append(amlDto.getCurrentAddressName()).append("`\n")
-                    .append("├─ Marital Status: `").append(amlDto.getMaritalStatus()).append("`\n")
-                    .append("├─ Place of Birth: `").append(amlDto.getPlaceOfBirthName()).append("`\n")
-                    .append("├─ TrxnID: `").append(amlDto.getTrxnID()).append("`\n")
-                    .append("└─ Remarks: `").append(amlDto.getRemarks()).append("`\n")
-                    .append("═══════════════════════════════════════");
+            detailedMsg.append("- Transaction ID: `").append(amlDto.getTrxnID()).append("`\n")
+                    .append("- Remarks: `").append(amlDto.getRemarks()).append("`\n")
+                    .append("--------------------\n")
+                    .append("Status: `").append(amlDto.getStatus().name()).append("`\n");
+
+            if (amlDto.getApprovedBy() != null && amlDto.getApprovedBy().getFullName() != null) {
+                detailedMsg.append("By: ").append(amlDto.getApprovedBy().getFullName()).append("\n");
+            }
+
+            detailedMsg.append("Time: `").append(timeFormatted).append("`");
 
             telegramService.sendDetailedErrorToDevTeam(detailedMsg.toString());
         } catch (Exception e) {

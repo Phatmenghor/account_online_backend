@@ -35,15 +35,15 @@ public class MonitoringService {
             return; // Only send errors to dev team
         }
         StringBuilder msg = new StringBuilder();
-        msg.append("*ACCOUNT OPENING STEP FAILED: ").append(stepName).append("*\n")
-                .append("─────────────────────────────────\n")
-                .append("├─ Legal ID: `").append(escapeMarkdown(legalId)).append("`\n");
+        msg.append("*Account Online - Step Failed: ").append(stepName).append("*\n")
+                .append("--------------------\n")
+                .append("- Legal ID: `").append(escapeMarkdown(legalId)).append("`\n");
 
         if (details != null && !details.isEmpty()) {
-            msg.append("├─ Details: `").append(escapeMarkdown(details)).append("`\n");
+            msg.append("- Details: `").append(escapeMarkdown(details)).append("`\n");
         }
 
-        msg.append("└─ Time: `").append(getCurrentTime()).append("`");
+        msg.append("- Time: `").append(getCurrentTime()).append("`");
 
         sendToDevTeam(msg.toString());
     }
@@ -54,20 +54,19 @@ public class MonitoringService {
 
     public void logAccountOpeningFailed(String legalId, String stepName, String errorMessage, Exception exception) {
         StringBuilder msg = new StringBuilder();
-        msg.append("*ACCOUNT OPENING FAILED*\n")
-                .append("═══════════════════════════════════════\n")
-                .append("*ERROR INFORMATION:*\n")
-                .append("├─ Legal ID: `").append(escapeMarkdown(legalId)).append("`\n")
-                .append("├─ Failed Step: `").append(escapeMarkdown(stepName)).append("`\n")
-                .append("├─ Error Type: `").append(exception.getClass().getSimpleName()).append("`\n")
-                .append("├─ Error Message: `").append(escapeMarkdown(errorMessage)).append("`\n");
+        msg.append("*Account Online - FAILED*\n")
+                .append("--------------------\n")
+                .append("- Legal ID: `").append(escapeMarkdown(legalId)).append("`\n")
+                .append("- Failed Step: `").append(escapeMarkdown(stepName)).append("`\n")
+                .append("- Error Type: `").append(exception.getClass().getSimpleName()).append("`\n")
+                .append("- Error Message: `").append(escapeMarkdown(errorMessage)).append("`\n");
 
         if (exception.getCause() != null) {
-            msg.append("├─ Root Cause: `").append(escapeMarkdown(exception.getCause().getMessage())).append("`\n");
+            msg.append("- Root Cause: `").append(escapeMarkdown(exception.getCause().getMessage())).append("`\n");
         }
 
-        msg.append("└─ Time: `").append(getCurrentDateTime()).append("`\n")
-                .append("═══════════════════════════════════════");
+        msg.append("- Time: `").append(getCurrentDateTime()).append("`\n")
+                .append("--------------------");
 
         sendToDevTeam(msg.toString());
     }
