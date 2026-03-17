@@ -41,17 +41,14 @@ public class BankingService {
 
     // ─── Step 1: Test Connection ──────────────────────────────────────────────
     public void testConnection() {
-        log.info(">>> Step 1: TEST_CONNECTION");
-
         if (simulateInternalError) {
             throw new ValidateServiceException("Simulated Internal T24 Connection Error (SIMULATION)");
         }
 
         try {
             jdbcTemplate.queryForObject("SELECT 1", Integer.class);
-            log.info("Step 1 SUCCESS: Database connection is healthy");
         } catch (Exception e) {
-            log.error("Step 1 FAILED: Database connection test failed", e);
+            log.error("Database connection test failed", e);
             throw new RuntimeException("Unable to connect to the server. Please try again later. "
                     + "If the issue continues, contact our support team at 070 200 002 or 1800 200 888.");
         }
@@ -148,9 +145,7 @@ public class BankingService {
 
     // ─── Step 3: Validate Existing Accounts ───────────────────────────────────
     public void validateExistingAccounts(Map<String, String> customerInfo) {
-        log.info(">>> Step 3: VALIDATE_EXISTING_ACCOUNTS");
         validationService.validateExistingAccounts(customerInfo);
-        log.info("Existing accounts validation passed");
     }
 
     // ─── Step 5: Create Customer ──────────────────────────────────────────────
@@ -317,8 +312,6 @@ public class BankingService {
 
     // ─── Step 9: Validate All Required Accounts Created ────────────────────────
     public void validateAllRequiredAccountsCreated(String cif, String khrAccount, String usdAccount) {
-        log.info(">>> Step 9: VALIDATE_ACCOUNT_CREATION");
-
         // Validate CIF exists
         if (cif == null || cif.isEmpty()) {
             throw new AccountCreationException("Customer CIF not found. Account creation failed.");
@@ -331,19 +324,14 @@ public class BankingService {
         if (usdAccount == null || usdAccount.isEmpty()) {
             throw new AccountCreationException("USD account not found. Account creation failed.");
         }
-
-        log.info("Step 9 SUCCESS: All accounts validated - CIF: {}, KHR: {}, USD: {}", cif, khrAccount, usdAccount);
     }
 
     // ─── Step 10: Activate Mobile Banking ────────────────────────────────────
     public String activateMobileBanking(CustomerRequest request, String cif, String khrAccount, String usdAccount) {
-        log.info(">>> Step 10: ACTIVATE_MOBILE_BANKING");
         try {
-            String activationCode = mobileBankingService.activate(request, cif, khrAccount, usdAccount);
-            log.info("Step 10 SUCCESS: Mobile banking activated");
-            return activationCode;
+            return mobileBankingService.activate(request, cif, khrAccount, usdAccount);
         } catch (Exception e) {
-            log.warn("Step 10 WARNING: Mobile banking activation failed (non-critical): {}", e.getMessage());
+            log.warn("Mobile banking activation failed (non-critical): {}", e.getMessage());
             return null;
         }
     }
