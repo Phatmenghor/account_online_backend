@@ -55,10 +55,15 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             currentStep = "CHECK_EXISTING_COMPLETE_ACCOUNT";
             var recoveryResult = bankingService.checkExistingCompleteAccountAndActivate(request);
             if (recoveryResult.isPresent()) {
-                log.info("Account recovery successful - account already complete");
+                long totalDuration = System.currentTimeMillis() - startTime;
+                log.info("========== ACCOUNT OPENING COMPLETED (RECOVERY) ==========");
+                log.info("✓ Account already exists and is complete ({}ms)", totalDuration);
                 // Build and return full response with account details
                 var existingAccount = bankingService.getExistingAccountDetails(request.getLegalId());
                 if (existingAccount.isPresent()) {
+                    log.info("  • CIF: {} | Mnemonic: {}", existingAccount.get().getCif(), existingAccount.get().getMnemonic());
+                    log.info("  • KHR Account: {}", existingAccount.get().getKhrAccount());
+                    log.info("  • USD Account: {}", existingAccount.get().getUsdAccount());
                     return complianceService.buildCustomerAccInfo(
                             existingAccount.get().getCif(),
                             existingAccount.get().getKhrAccount(),
@@ -129,6 +134,13 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
             long totalDuration = System.currentTimeMillis() - startTime;
             log.info("========== ACCOUNT OPENING COMPLETED ==========");
+            log.info("✓ Successfully created accounts in {}ms", totalDuration);
+            log.info("  • Legal ID: {}", request.getLegalId());
+            log.info("  • CIF: {} | Mnemonic: {}", context.getCif(), context.getMnemonic());
+            log.info("  • KHR Account: {}", context.getKhrAccount());
+            log.info("  • USD Account: {}", context.getUsdAccount());
+            log.info("  • Mobile Banking Code: {}", context.getMbActivationCode() != null ? "✓ Activated" : "N/A");
+
             monitoringService.logAccountOpeningCompleted(
                     request.getLegalId(),
                     context.getCif(),
