@@ -31,9 +31,8 @@ public class OpenAccountController {
         CustomerResponse response = openAccountService.openAccount(request);
 
         log.info("========== ACCOUNT OPENING COMPLETED ==========");
-        log.info("✓ CIF: {} | KHR: {} | USD: {} | Name: {}",
-                response.getCif(), response.getKhrAccount(), response.getUsdAccount(),
-                response.getFullName());
+        log.info("✓ CIF: {} | Mnemonic: {} | KHR: {} | USD: {}",
+                response.getCif(), response.getMnemonic(), response.getKhrAccount(), response.getUsdAccount());
 
         return ResponseEntity.ok(ApiResponse.success(AppConstants.MSG_SUCCESS, response));
     }
