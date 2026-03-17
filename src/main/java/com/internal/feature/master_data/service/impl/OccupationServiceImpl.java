@@ -61,8 +61,6 @@ public class OccupationServiceImpl implements OccupationService {
 
     @Override
     public List<OccupationDto> getAllOccupationsPublic(String search) {
-        log.info("Fetching occupations - status: {}, search: {}", StatusData.ACTIVE, search);
-
         List<Occupation> occupations = repository.findActiveBySearch(StatusData.ACTIVE, search);
         return mapper.toDtoList(occupations);
     }

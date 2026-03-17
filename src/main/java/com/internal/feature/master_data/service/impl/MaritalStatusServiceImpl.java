@@ -54,8 +54,6 @@ public class MaritalStatusServiceImpl implements MaritalStatusService {
 
     @Override
     public List<MaritalStatusDto> getAllPublic(String search) {
-        log.info("Fetching marital statuses - status: {}, search: {}", StatusData.ACTIVE, search);
-
         List<MaritalStatus> list = repository.findActiveBySearch(StatusData.ACTIVE, search);
         return mapper.toDtoList(list);
     }

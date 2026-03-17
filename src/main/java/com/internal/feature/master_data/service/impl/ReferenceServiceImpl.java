@@ -54,8 +54,6 @@ public class ReferenceServiceImpl implements ReferenceService {
 
     @Override
     public List<ReferenceDto> getAllPublic(String search) {
-        log.info("Fetching references - status: {}, search: {}", StatusData.ACTIVE, search);
-
         List<Reference> list = repository.findActiveBySearch(StatusData.ACTIVE, search);
         return mapper.toDtoList(list);
     }

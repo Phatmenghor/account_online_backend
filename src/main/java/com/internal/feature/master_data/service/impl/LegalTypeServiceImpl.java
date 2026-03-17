@@ -53,8 +53,6 @@ public class LegalTypeServiceImpl implements LegalTypeService {
 
     @Override
     public List<LegalTypeDto> getAllLegalTypePublic(String search) {
-        log.info("Fetching legal types - status: {}, search: {}", StatusData.ACTIVE, search);
-
         List<LegalType> list = repository.findActiveBySearch(StatusData.ACTIVE, search);
         return mapper.toDtoList(list);
     }

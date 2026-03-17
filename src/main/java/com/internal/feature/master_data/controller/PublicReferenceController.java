@@ -31,33 +31,41 @@ public class PublicReferenceController {
 
     @PostMapping("/occupation/all")
     public ResponseEntity<ApiResponse<List<OccupationDto>>> getAllOccupations(@RequestBody PublicReferenceRequest request) {
-        log.info("Fetching all occupations (public)");
+        long startTime = System.currentTimeMillis();
+        log.info(">>> FETCHING OCCUPATIONS");
         List<OccupationDto> list = occupationService.getAllOccupationsPublic(request.getSearch());
-        log.info("Successfully retrieved {} occupations", list.size());
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("✓ SUCCESS: Retrieved {} occupations ({}ms)", list.size(), duration);
         return ResponseEntity.ok(ApiResponse.success(ResponseMessage.retrieved(ResponseMessage.ALL_OCCUPATIONS), list));
     }
 
     @PostMapping("/marital-status/all")
     public ResponseEntity<ApiResponse<List<MaritalStatusDto>>> getAllMaritalStatus(@RequestBody PublicReferenceRequest request) {
-        log.info("Fetching all marital statuses (public)");
+        long startTime = System.currentTimeMillis();
+        log.info(">>> FETCHING MARITAL STATUSES");
         List<MaritalStatusDto> list = maritalStatusService.getAllPublic(request.getSearch());
-        log.info("Successfully retrieved {} marital statuses", list.size());
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("✓ SUCCESS: Retrieved {} marital statuses ({}ms)", list.size(), duration);
         return ResponseEntity.ok(ApiResponse.success(ResponseMessage.retrieved(ResponseMessage.ALL_MARITAL_STATUSES), list));
     }
 
     @PostMapping("/bank/all")
     public ResponseEntity<ApiResponse<List<ReferenceDto>>> getAllReferences(@RequestBody PublicReferenceRequest request) {
-        log.info("Fetching all banks (public)");
+        long startTime = System.currentTimeMillis();
+        log.info(">>> FETCHING BANKS");
         List<ReferenceDto> list = referenceService.getAllPublic(request.getSearch());
-        log.info("Successfully retrieved {} banks", list.size());
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("✓ SUCCESS: Retrieved {} banks ({}ms)", list.size(), duration);
         return ResponseEntity.ok(ApiResponse.success(ResponseMessage.retrieved(ResponseMessage.ALL_BANKS), list));
     }
 
     @PostMapping("/legal-type/all")
     public ResponseEntity<ApiResponse<List<LegalTypeDto>>> getAllLegalTypes(@RequestBody PublicReferenceRequest request) {
-        log.info("Fetching all legal types (public)");
+        long startTime = System.currentTimeMillis();
+        log.info(">>> FETCHING LEGAL TYPES");
         List<LegalTypeDto> list = legalTypeService.getAllLegalTypePublic(request.getSearch());
-        log.info("Successfully retrieved {} legal types", list.size());
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("✓ SUCCESS: Retrieved {} legal types ({}ms)", list.size(), duration);
         return ResponseEntity.ok(ApiResponse.success(ResponseMessage.retrieved(ResponseMessage.ALL_LEGAL_TYPES), list));
     }
 }
