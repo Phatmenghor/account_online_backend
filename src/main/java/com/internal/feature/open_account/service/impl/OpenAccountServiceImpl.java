@@ -162,13 +162,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             log.info("  • USD Account: {}", context.getUsdAccount());
             log.info("  • Mobile Banking Code: {}", context.getMbActivationCode() != null ? "✓ Activated" : "N/A");
 
-            monitoringService.logAccountOpeningCompleted(
-                    request.getLegalId(),
-                    context.getCif(),
-                    context.getKhrAccount(),
-                    context.getUsdAccount(),
-                    totalDuration);
-
             return accInfo;
 
         } catch (Exception e) {

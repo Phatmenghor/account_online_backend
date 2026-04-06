@@ -64,14 +64,6 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
                         idNumber,
                         OpenAccStatusEnum.FAILURE,
                         ErrorMessage.CAMDX_VALIDATE);
-
-                // Only send alerts for critical infrastructure failures
-                if (isCriticalInfraError(message)) {
-                    log.warn("CRITICAL INFRA ERROR detected - sending Telegram alert");
-                    sendInfraFailureAlert(request, errorCode, message);
-                } else {
-                    log.info("Non-critical error - only logging (not sending Telegram alert)");
-                }
                 return;
             }
 
@@ -126,86 +118,6 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
                 request.getIdNumber(),
                 OpenAccStatusEnum.FAILURE,
                 ErrorMessage.CAMDX_VALIDATE);
-
-        String errorCode = "Unknown";
-        String errorMessage = rawMessage;
-
-        try {
-            int firstBrace = rawMessage.indexOf("{");
-            int lastBrace = rawMessage.lastIndexOf("}");
-
-            if (firstBrace >= 0 && lastBrace > firstBrace) {
-                String jsonString = rawMessage.substring(firstBrace, lastBrace + 1);
-                JsonNode json = objectMapper.readTree(jsonString);
-
-                errorCode = json.path("error").asText("Unknown");
-                errorMessage = json.path("message").asText("Unknown");
-            }
-        } catch (Exception e) {
-            log.warn("Failed to parse exception JSON. Using raw message.");
-        }
-
-        // Only send alerts for critical infrastructure exceptions
-        if (isCriticalInfraError(errorMessage)) {
-            log.warn("CRITICAL EXCEPTION detected - sending Telegram alert");
-            sendInfraFailureAlert(request, -1, errorMessage);
-        } else {
-            log.info("Non-critical exception - only logging (not sending Telegram alert)");
-        }
-    }
-
-    // =====================================================
-    // TELEGRAM INFRA FAILURE - Detailed for Dev Team
-    // =====================================================
-    private void sendInfraFailureAlert(CamdxValidateNidRequest request,
-            int errorCode,
-            String errorMessage) {
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        DateTimeFormatter detailFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Phnom_Penh"));
-
-        // DETAILED MESSAGE FOR DEV TEAM
-        StringBuilder detailedMsg = new StringBuilder();
-        detailedMsg.append("*CAMDX MIDDLEWARE FAILURE*\n")
-                .append("═══════════════════════════════════════\n\n")
-                .append("*ERROR DETAILS:*\n")
-                .append("├─ Status: `FAILURE`\n")
-                .append("├─ Error Code: `").append(errorCode).append("`\n")
-                .append("├─ Error Type: `INFRASTRUCTURE`\n")
-                .append("├─ Message: `").append(escapeMarkdown(errorMessage)).append("`\n")
-                .append("├─ Time: `").append(now.format(detailFormatter)).append("`\n")
-                .append("└─ Date: `").append(now.format(formatter)).append("`\n\n")
-                .append("*REQUEST INFO:*\n")
-                .append("├─ NID: `").append(escapeMarkdown(request.getIdNumber())).append("`\n")
-                .append("├─ Name KH: `").append(escapeMarkdown(request.getLastNameKh()))
-                .append(" ").append(escapeMarkdown(request.getFirstNameKh())).append("`\n")
-                .append("├─ Name EN: `").append(escapeMarkdown(request.getLastNameEn()))
-                .append(" ").append(escapeMarkdown(request.getFirstNameEn())).append("`\n")
-                .append("├─ Phone: `").append(escapeMarkdown(request.getPhoneNumber())).append("`\n")
-                .append("└─ DOB: `").append(escapeMarkdown(request.getDob())).append("`\n")
-                .append("═══════════════════════════════════════");
-
-        telegramService.sendDetailedErrorToDevTeam(detailedMsg.toString());
-
-        // SIMPLE MESSAGE FOR OPERATIONS/MONITORING CHANNEL
-        StringBuilder simpleMsg = new StringBuilder();
-        simpleMsg.append("*CAMDX / MIDDLEWARE FAILURE*\n")
-                .append("--------------------\n")
-                .append("Status: *FAILURE*\n")
-                .append("Error Code: ").append(errorCode).append("\n")
-                .append("Error Message: ")
-                .append(escapeMarkdown(errorMessage))
-                .append("\n\n")
-                .append("NID: `")
-                .append(escapeMarkdown(request.getIdNumber()))
-                .append("`\n")
-                .append("--------------------\n")
-                .append("Time: ").append(now.format(formatter)).append("\n")
-                .append(AppConstants.SUPPORT_CONTACT);
-
-        telegramService.sendMarkdownAccountOnlineMonitorMessage(simpleMsg.toString());
     }
 
     // =====================================================
@@ -216,50 +128,8 @@ public class CamdxErrorCheckServiceImpl implements ErrorAlertsCamdxService {
             List<String> incorrectFields) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        DateTimeFormatter detailFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Phnom_Penh"));
         String formattedIncorrect = formatIncorrectFields(incorrectFields);
-        String scorePercentage = String.format("%.1f%%", score * 100);
-
-        // DETAILED MESSAGE FOR DEV TEAM
-        StringBuilder detailedMsg = new StringBuilder();
-        detailedMsg.append("*CAMDX VALIDATION FAILURE*\n")
-                .append("═══════════════════════════════════════\n\n")
-                .append("*VALIDATION RESULTS:*\n")
-                .append("├─ Status: `FAILURE`\n")
-                .append("├─ Error Type: `DATA_MISMATCH`\n")
-                .append("├─ Match Score: `").append(scorePercentage).append("` (Required: 100%)\n")
-                .append("├─ Time: `").append(now.format(detailFormatter)).append("`\n")
-                .append("└─ Date: `").append(now.format(formatter)).append("`\n\n")
-                .append("*MISMATCH DETAILS:*\n");
-
-        if (incorrectFields != null && !incorrectFields.isEmpty()) {
-            for (int i = 0; i < incorrectFields.size(); i++) {
-                String field = incorrectFields.get(i);
-                boolean isLast = (i == incorrectFields.size() - 1);
-                detailedMsg.append(isLast ? "└─ " : "├─ ")
-                        .append("*").append(escapeMarkdown(field)).append("*")
-                        .append(" - Data mismatch detected\n");
-            }
-        } else {
-            detailedMsg.append("└─ No field details available\n");
-        }
-
-        detailedMsg.append("\n*SUBMITTED DATA:*\n")
-                .append("├─ NID: `").append(escapeMarkdown(request.getIdNumber())).append("`\n")
-                .append("├─ Name (KH): `").append(escapeMarkdown(request.getLastNameKh()))
-                .append(" ").append(escapeMarkdown(request.getFirstNameKh())).append("`\n")
-                .append("├─ Name (EN): `").append(escapeMarkdown(request.getLastNameEn()))
-                .append(" ").append(escapeMarkdown(request.getFirstNameEn())).append("`\n")
-                .append("├─ Gender: `").append(escapeMarkdown(request.getGender())).append("`\n")
-                .append("├─ DOB: `").append(escapeMarkdown(request.getDob())).append("`\n")
-                .append("├─ Issued: `").append(escapeMarkdown(request.getIssuedDate())).append("`\n")
-                .append("├─ Expired: `").append(escapeMarkdown(request.getExpiredDate())).append("`\n")
-                .append("└─ Phone: `").append(escapeMarkdown(request.getPhoneNumber())).append("`\n")
-                .append("═══════════════════════════════════════");
-
-        telegramService.sendDetailedErrorToDevTeam(detailedMsg.toString());
 
         // SIMPLE MESSAGE FOR OPERATIONS/MONITORING CHANNEL
         StringBuilder simpleMsg = new StringBuilder();

@@ -145,10 +145,10 @@ public class OpenAccountXmlBuilder {
 
                 // Ownership and staff
                 + "<cus:Ownership>" + defaultProperties.getOwnership() + "</cus:Ownership>"
-                + "<cus:RelationManager>" + getOrDefault(referralId, defaultProperties.getCostCenter()) + "</cus:RelationManager>"
-                + "<cus:LoanOfficer>" + getOrDefault(request.getLoanOfficer(), defaultProperties.getCostCenter()) + "</cus:LoanOfficer>"
-                + "<cus:Staff>" + getOrDefault(request.getStaff(), releasedBy) + "</cus:Staff>"
-                + "<cus:ReferralBy>" + getOrDefault(referralId, defaultProperties.getCostCenter()) + "</cus:ReferralBy>"
+                + "<cus:RelationManager></cus:RelationManager>"
+                + "<cus:LoanOfficer></cus:LoanOfficer>"
+                + "<cus:Staff></cus:Staff>"
+                + "<cus:ReferralBy>" + releasedBy + "</cus:ReferralBy>"
 
                 // Place of birth address (Primary P fields)
                 + "<cus:CUSTPROVINCEP>" + pobProvince + "</cus:CUSTPROVINCEP>"

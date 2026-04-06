@@ -32,8 +32,10 @@ public class MobileBankingService {
     private final CpbProperties properties;
     private final DefaultProperties defaultProperties;
     private final RestTemplate restTemplate;
+
     @Qualifier("mobileBankingRestTemplate")
     private final RestTemplate mobileBankingRestTemplate;
+
     private final SoapSmsSender soapSmsSender;
     private final CifActivationLogService cifActivationLogService;
 
@@ -81,6 +83,8 @@ public class MobileBankingService {
 
             message.append("Download CPBank App: http://onelink.to/cpbank");
 
+            log.info("Start send SMS to phone: {}", phone);
+
             // Always send SMS, even if some fields are empty
             soapSmsSender.sendSms(
                     properties.getMb().getOtpUrl(),
@@ -97,12 +101,12 @@ public class MobileBankingService {
     }
 
     private MobileBankingRequest buildRequest(CustomerRequest request, String cif,
-            String khrAccount, String usdAccount) {
+                                              String khrAccount, String usdAccount) {
         String formattedDob = formatDateOfBirth(request.getDateOfBirth());
         String signData = generateSignature(cif, request.getPhoneNumber());
 //        String branchCode = "KH0011090"; // Hardcoded for testing as requested
-         String branchCode = request.getBranchCode() != null ? request.getBranchCode()
-         : defaultProperties.getBranchCode();
+        String branchCode = request.getBranchCode() != null ? request.getBranchCode()
+                : defaultProperties.getBranchCode();
         String accountNumber = usdAccount != null ? usdAccount : khrAccount;
         String currency = usdAccount != null ? AppConstants.CURRENCY_USD : AppConstants.CURRENCY_KHR;
 
@@ -149,7 +153,7 @@ public class MobileBankingService {
                 // Retry with exponential backoff
                 int delayMs = retryDelays[attempt - 1];
                 log.warn("Attempt {} failed for CIF {}: {}. Retrying in {}ms...",
-                    attempt, cif, e.getMessage(), delayMs);
+                        attempt, cif, e.getMessage(), delayMs);
                 try {
                     Thread.sleep(delayMs);
                 } catch (InterruptedException ie) {

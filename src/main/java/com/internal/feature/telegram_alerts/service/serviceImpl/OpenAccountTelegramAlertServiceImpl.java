@@ -138,24 +138,6 @@ public class OpenAccountTelegramAlertServiceImpl implements AlertsOpenAccOnlineS
                 log.error("Failed to attach images for High Risk AML alert: {}", e.getMessage());
             }
 
-            // Send mention ONLY if PENDING (First hit)
-            if (amlDto.getStatus() == AmlStatusEnum.PENDING) {
-                try {
-                    // Delay for 2 seconds before sending high risk alert
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    log.error("Thread interrupted while waiting for high risk alert delay", e);
-                }
-
-                // Send a short mention message for Compliance review
-                String mentionMessage = "*AML HIGH RISK ALERT*\n"
-                        + "High-risk customer flagged for compliance review.\n"
-                        + "Please review and advise.";
-
-                // Send to Monitor Channel as requested
-                telegramService.sendMarkdownAccountOnlineMonitorMessage(mentionMessage);
-            }
         } else {
             telegramService.sendMarkdownAccountOnlineMonitorMessage(message);
         }

@@ -48,10 +48,6 @@ public class MonitoringService {
         sendToDevTeam(msg.toString());
     }
 
-    public void logAccountOpeningCompleted(String legalId, String cif, String khrAccount, String usdAccount, long durationMs) {
-        // Success logs disabled - only errors sent to dev team
-    }
-
     public void logAccountOpeningFailed(String legalId, String stepName, String errorMessage, Exception exception) {
         StringBuilder msg = new StringBuilder();
         msg.append("*Account Online - FAILED*\n")

@@ -11,7 +11,7 @@ public class DefaultProperties {
 
     private String branchCode = "KH0012011";
     private String sector = "4501";
-    private String costCenter = "1000";
+    private String costCenter = "";
     private String industry = "4500";
     private String target = "220";
     private String language = "2";
