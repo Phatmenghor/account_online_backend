@@ -44,7 +44,7 @@ public class SoapSmsSender {
                     "<cpb:requestId>" + requestId + "</cpb:requestId>" +
                     "<cpb:keyword>CPBSMS</cpb:keyword>" +
                     "<cpb:mobileNo>" + phone + "</cpb:mobileNo>" +
-                    "<cpb:content>" + message + "</cpb:content>" +   // ← no CDATA
+                    "<cpb:content><![CDATA[" + message + "]]></cpb:content>" +
                     "<cpb:requestTime></cpb:requestTime>" +
                     "<cpb:contentType>9</cpb:contentType>" +
                     "<cpb:secretKey>" + secretKey + "</cpb:secretKey>" +

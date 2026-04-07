@@ -60,26 +60,22 @@ public class MobileBankingService {
         try {
             StringBuilder message = new StringBuilder();
 
-            message.append("Welcome to CPBank!%0a");
-            message.append("Your new account details:%0a");
+            message.append("Welcome to CPBank!\r\n");
+            message.append("Your new account details:\r\n");
 
             if (usdAccount != null && !usdAccount.isEmpty()) {
-                message.append("USD Account: ").append(usdAccount).append("%0a");
+                message.append("USD Account: ").append(usdAccount).append("\r\n");
             }
-
             if (khrAccount != null && !khrAccount.isEmpty()) {
-                message.append("KHR Account: ").append(khrAccount).append("%0a");
+                message.append("KHR Account: ").append(khrAccount).append("\r\n");
             }
-
             if (cif != null && !cif.isEmpty()) {
-                message.append("CIF: ").append(cif).append("%0a");
+                message.append("CIF: ").append(cif).append("\r\n");
             }
-
             if (activationCode != null && !activationCode.isEmpty()) {
                 activationCode = activationCode.replaceAll("(?i)registCode:\\s*", "").trim();
-                message.append("MB Activation Code: ").append(activationCode).append("%0a");
+                message.append("MB Activation Code: ").append(activationCode).append("\r\n");
             }
-
             message.append("Download CPBank App: http://onelink.to/cpbank");
 
             log.info("Start send SMS to phone: {}", phone);
