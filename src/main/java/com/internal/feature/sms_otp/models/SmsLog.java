@@ -18,6 +18,9 @@ public class SmsLog extends BaseEntity {
     @Column(name = "phone", nullable = false, length = 20)
     private String phone;
 
+    @Column(name = "request_id")
+    private String requestId;
+
     @Column(name = "message", columnDefinition = "TEXT")
     private String message;
 

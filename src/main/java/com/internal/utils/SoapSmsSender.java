@@ -9,6 +9,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 
@@ -27,6 +28,7 @@ public class SoapSmsSender {
         String status = "FAILED";
         String responseCode = null;
         String errorMessage = null;
+        String requestId = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
 
         try {
             if (message != null) {
@@ -34,7 +36,6 @@ public class SoapSmsSender {
                 message = message.replaceAll(" +", " ");
             }
 
-            String requestId = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
 
             String soapXml = "<?xml version=\"1.0\"?>" +
                     "<soap:Envelope xmlns:soap='http://www.w3.org/2003/05/soap-envelope' xmlns:cpb='http://cpbmobile.vnpay.vn'>" +
@@ -75,6 +76,7 @@ public class SoapSmsSender {
                     .status(status)
                     .responseCode(responseCode)
                     .errorMessage(errorMessage)
+                    .requestId(requestId)
                     .build());
         }
     }
