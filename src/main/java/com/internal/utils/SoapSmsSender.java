@@ -1,5 +1,7 @@
 package com.internal.utils;
 
+import com.internal.feature.sms_otp.models.SmsLog;
+import com.internal.feature.sms_otp.service.SmsLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -7,22 +9,28 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.*;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class SoapSmsSender {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+    private final SmsLogService smsLogService;
 
     /**
      * Sends a raw SMS message via SOAP API.
      */
     public void sendSms(String url, String secretKey, String phone, String message) {
+        String status = "FAILED";
+        String responseCode = null;
+        String errorMessage = null;
+
         try {
             if (message != null) {
-                // Remove duplicate "registCode:" if present, trim spaces
                 message = message.replaceAll("(?i)registCode:\\s*", "").trim();
-                // Optional: collapse multiple spaces into one while keeping line breaks
                 message = message.replaceAll(" +", " ");
             }
 
@@ -36,7 +44,7 @@ public class SoapSmsSender {
                     "<cpb:requestId>" + requestId + "</cpb:requestId>" +
                     "<cpb:keyword>CPBSMS</cpb:keyword>" +
                     "<cpb:mobileNo>" + phone + "</cpb:mobileNo>" +
-                    "<cpb:content>" + message + "</cpb:content>" +
+                    "<cpb:content>" + message + "</cpb:content>" +   // ← no CDATA
                     "<cpb:requestTime></cpb:requestTime>" +
                     "<cpb:contentType>9</cpb:contentType>" +
                     "<cpb:secretKey>" + secretKey + "</cpb:secretKey>" +
@@ -50,9 +58,24 @@ public class SoapSmsSender {
 
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 
+            responseCode = response.getStatusCode().toString();
+            status = "SUCCESS";
+
             log.info("SMS sent to {} - Response: {}", phone, response.getStatusCode());
+
         } catch (Exception ex) {
+            errorMessage = ex.getMessage() != null && ex.getMessage().length() > 500
+                    ? ex.getMessage().substring(0, 500)
+                    : ex.getMessage();
             log.error("Failed to send SMS to {} - {}", phone, ex.getMessage(), ex);
+        } finally {
+            smsLogService.saveLog(SmsLog.builder()
+                    .phone(phone)
+                    .message(message)
+                    .status(status)
+                    .responseCode(responseCode)
+                    .errorMessage(errorMessage)
+                    .build());
         }
     }
 }
