@@ -35,11 +35,7 @@ public class MenuMapper {
                         .collect(Collectors.toList())
                         : new ArrayList<>())
                 .isActive(menu.getIsActive())
-                .children(menu.getChildren() != null
-                        ? menu.getChildren().stream()
-                        .map(this::toDto)
-                        .collect(Collectors.toList())
-                        : new ArrayList<>())
+                .children(new ArrayList<>())
                 .build();
 
     }
