@@ -22,6 +22,7 @@
         <app.name>account-online</app.name>
 
         <java.version>17</java.version>
+        <lombok.version>1.18.30</lombok.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <jwt.version>0.11.5</jwt.version>
         <springdoc.version>1.6.14</springdoc.version>

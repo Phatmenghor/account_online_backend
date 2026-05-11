@@ -3,8 +3,8 @@ package com.internal.feature.open_account.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.internal.enumation.AccountOpeningRequestStatusEnum;
 import com.internal.enumation.AmlStatusEnum;
-import com.internal.exceptions.error.custom.BusinessException;
 import com.internal.exceptions.error.custom.NotFoundException;
+import com.internal.exceptions.error.openaccount.OpenAccountException;
 import com.internal.feature.open_account.dto.OpenAccountContext;
 import com.internal.feature.open_account.dto.request.ApproveAccountOpeningRequestDto;
 import com.internal.feature.open_account.dto.request.CustomerCreationResult;
@@ -28,6 +28,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -215,7 +216,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
         var existingPending = pendingRequestRepository.findByLegalIdAndStatus(
                 request.getLegalId(), AccountOpeningRequestStatusEnum.PENDING);
         if (existingPending.isPresent()) {
-            throw new BusinessException("Account opening request for legal ID " + request.getLegalId() +
+            throw new OpenAccountException("PENDING_REQUEST_EXISTS", "Account opening request for legal ID " + request.getLegalId() +
                     " is already pending approval. Please wait for admin review.");
         }
 
@@ -240,7 +241,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                 long totalDuration = System.currentTimeMillis() - startTime;
                 log.info("Step 2 ✓ SUCCESS: Account recovery completed");
                 log.info("========== ACCOUNT OPENING COMPLETED (RECOVERY) ==========");
-                throw new BusinessException("Account already exists and is complete");
+                throw new OpenAccountException("ACCOUNT_ALREADY_EXISTS", "Account already exists and is complete");
             }
             log.info("Step 2 ✓ INFO: No existing complete account found - continuing normal flow");
 
@@ -296,7 +297,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
             return mapToDto(saved);
 
-        } catch (BusinessException e) {
+        } catch (OpenAccountException e) {
             log.error("========== BUSINESS EXCEPTION AT STEP: {} ==========", currentStep);
             monitoringService.logAccountOpeningFailed(request.getLegalId(), currentStep, e.getMessage(), e);
             throw e;
@@ -320,10 +321,11 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                 .orElseThrow(() -> new NotFoundException("Account opening request not found with ID: " + requestId));
 
         if (pendingRequest.getStatus() != AccountOpeningRequestStatusEnum.APPROVED) {
-            throw new BusinessException("Request must be in APPROVED status to complete account opening. Current status: " +
+            throw new OpenAccountException("INVALID_REQUEST_STATUS", "Request must be in APPROVED status to complete account opening. Current status: " +
                     pendingRequest.getStatus());
         }
 
+        String currentStep = "COMPLETION";
         try {
             // Deserialize stored data
             CustomerRequest request = objectMapper.readValue(pendingRequest.getRequestData(), CustomerRequest.class);
@@ -335,7 +337,6 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                     .customerInfo(customerInfo)
                     .build();
 
-            String currentStep = "COMPLETION";
             long startTime = System.currentTimeMillis();
 
             // Step 0: Check if account already exists (staff might have opened in T24)
@@ -446,7 +447,8 @@ public class OpenAccountServiceImpl implements OpenAccountService {
 
         } catch (Exception e) {
             log.error("========== ACCOUNT OPENING COMPLETION FAILED ==========");
-            monitoringService.logAccountOpeningFailed(pendingRequest.getLegalId(), currentStep, e.getMessage(), e);
+            String failureStep = currentStep != null ? currentStep : "COMPLETION";
+            monitoringService.logAccountOpeningFailed(pendingRequest.getLegalId(), failureStep, e.getMessage(), e);
             throw e;
         }
     }
@@ -462,12 +464,12 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                 .orElseThrow(() -> new NotFoundException("Request not found with ID: " + dto.getRequestId()));
 
         if (pendingRequest.getStatus() != AccountOpeningRequestStatusEnum.PENDING) {
-            throw new BusinessException("Only PENDING requests can be approved. Current status: " +
+            throw new OpenAccountException("INVALID_REQUEST_STATUS", "Only PENDING requests can be approved. Current status: " +
                     pendingRequest.getStatus());
         }
 
         pendingRequest.setStatus(AccountOpeningRequestStatusEnum.APPROVED);
-        pendingRequest.setApprovedBy(securityUtils.getCurrentUsername());
+        pendingRequest.setApprovedBy(securityUtils.getCurrentUser().getUsername());
         pendingRequest.setApprovedAt(System.currentTimeMillis());
         pendingRequest.setApprovalRemark(dto.getApprovalRemark());
 
@@ -488,12 +490,12 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                 .orElseThrow(() -> new NotFoundException("Request not found with ID: " + dto.getRequestId()));
 
         if (pendingRequest.getStatus() != AccountOpeningRequestStatusEnum.PENDING) {
-            throw new BusinessException("Only PENDING requests can be rejected. Current status: " +
+            throw new OpenAccountException("INVALID_REQUEST_STATUS", "Only PENDING requests can be rejected. Current status: " +
                     pendingRequest.getStatus());
         }
 
         pendingRequest.setStatus(AccountOpeningRequestStatusEnum.REJECTED);
-        pendingRequest.setRejectedBy(securityUtils.getCurrentUsername());
+        pendingRequest.setRejectedBy(securityUtils.getCurrentUser().getUsername());
         pendingRequest.setRejectedAt(System.currentTimeMillis());
         pendingRequest.setRejectionReason(dto.getRejectionReason());
 
@@ -519,6 +521,14 @@ public class OpenAccountServiceImpl implements OpenAccountService {
     }
 
     private PendingAccountOpeningRequestDto mapToDto(PendingAccountOpeningRequest entity) {
+        Long createdAtMillis = null;
+        if (entity.getCreatedAt() != null) {
+            createdAtMillis = entity.getCreatedAt()
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli();
+        }
+
         return PendingAccountOpeningRequestDto.builder()
                 .id(entity.getId())
                 .legalId(entity.getLegalId())
@@ -528,7 +538,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
                 .rejectedBy(entity.getRejectedBy())
                 .approvalRemark(entity.getApprovalRemark())
                 .approvedBy(entity.getApprovedBy())
-                .createdAt(entity.getCreatedAt())
+                .createdAt(createdAtMillis)
                 .approvedAt(entity.getApprovedAt())
                 .rejectedAt(entity.getRejectedAt())
                 .build();
