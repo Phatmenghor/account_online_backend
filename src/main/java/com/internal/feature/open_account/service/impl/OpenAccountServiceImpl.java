@@ -338,6 +338,40 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             String currentStep = "COMPLETION";
             long startTime = System.currentTimeMillis();
 
+            // Step 0: Check if account already exists (staff might have opened in T24)
+            log.info(">>> Step 0: CHECK_EXISTING_COMPLETE_ACCOUNT");
+            currentStep = "CHECK_EXISTING_COMPLETE_ACCOUNT";
+            var existingAccountResult = bankingService.checkExistingCompleteAccountAndActivate(request);
+            if (existingAccountResult.isPresent()) {
+                long totalDuration = System.currentTimeMillis() - startTime;
+                log.info("Step 0 ✓ INFO: Account already exists in T24 (possibly opened by staff)");
+                log.warn("========== ACCOUNT ALREADY EXISTS - RECOVERY MODE ==========");
+
+                // Get existing account details
+                var existingAccount = bankingService.getExistingAccountDetails(request.getLegalId());
+                if (existingAccount.isPresent()) {
+                    log.info("  • CIF: {} | Mnemonic: {}", existingAccount.get().getCif(), existingAccount.get().getMnemonic());
+                    log.info("  • KHR Account: {}", existingAccount.get().getKhrAccount());
+                    log.info("  • USD Account: {}", existingAccount.get().getUsdAccount());
+
+                    // Update pending request status to COMPLETED since account already exists
+                    pendingRequest.setStatus(AccountOpeningRequestStatusEnum.COMPLETED);
+                    pendingRequestRepository.save(pendingRequest);
+                    log.info("✓ Pending request status updated to COMPLETED (account already exists)");
+
+                    monitoringService.logAccountOpeningStepProgress(request.getLegalId(),
+                            "CHECK_EXISTING_COMPLETE_ACCOUNT", true,
+                            "Account already exists with CIF: " + existingAccount.get().getCif());
+
+                    return complianceService.buildCustomerAccInfo(
+                            existingAccount.get().getCif(),
+                            existingAccount.get().getKhrAccount(),
+                            existingAccount.get().getUsdAccount(),
+                            existingAccount.get().getMnemonic());
+                }
+            }
+            log.info("Step 0 ✓ SUCCESS: No existing complete account found - continuing with creation");
+
             // Step 6: Create customer
             log.info(">>> Step 6: CREATE_CUSTOMER");
             currentStep = AppConstants.CREATE_CUSTOMER;
@@ -394,6 +428,7 @@ public class OpenAccountServiceImpl implements OpenAccountService {
             // Update pending request to COMPLETED
             pendingRequest.setStatus(AccountOpeningRequestStatusEnum.COMPLETED);
             pendingRequestRepository.save(pendingRequest);
+            log.info("✓ Pending request status updated to COMPLETED");
 
             // PUBLISH SUCCESS EVENT
             eventPublisher.publishEvent(new AccountOpenedEvent(this, context));
